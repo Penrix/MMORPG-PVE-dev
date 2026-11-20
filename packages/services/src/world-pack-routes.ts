@@ -331,6 +331,41 @@ export function adoptWorldPack(
       }
     }
 
+    // MMO content-production affords real options. These are accepted
+    // world services/activities, NOT events already won by the protagonist.
+    // The requirements and potential returns are kept separate from actual
+    // ownership/rights; only a future settled action can grant them.
+    for (const action of pack.document.interactions ?? []) {
+      const operatorId = resolve(action.offeredByRef);
+      const operator = canon.requireEntity(projectId, operatorId);
+      if (operator.type !== "character" && operator.type !== "organization") {
+        throw new WorldPackRouteError("world.action.invalid_operator",
+          "A world activity must be offered by a real person or organization");
+      }
+      const prior = canon.listEffectiveFacts(projectId, { subjectId: operatorId })
+        .find(fact => fact.predicate === "world.affordance" &&
+          fact.value !== null && typeof fact.value === "object" &&
+          "localId" in fact.value && fact.value.localId === action.localId);
+      if (prior?.authority === "locked") {
+        throw new WorldPackRouteError("world.action.locked",
+          "A locked world activity cannot be replaced by generation");
+      }
+      canon.insertFact(createCanonFact({
+        id: randomUuid(), projectId, subjectId: operatorId,
+        predicate: "world.affordance",
+        value: {
+          localId: action.localId, name: action.name, action: action.action,
+          locationId: action.locationRef ? resolve(action.locationRef) : null,
+          requires: action.requires.map(term=>({kind:term.kind,ref:resolve(term.ref)})),
+          yields: action.yields.map(term=>({kind:term.kind,ref:resolve(term.ref)})),
+          state: action.state,
+        },
+        authority: "confirmed", sourceType:"world-pack", sourceId:pack.id,
+        ...(prior ? {supersedesFactId:prior.id} : {}),
+        now,
+      }));
+    }
+
     // Pack is marked adopted inside the same SQLite transaction.
     // An error anywhere above rolls back every entity, relation and fact.
     return packs.markAdopted(projectId, packId, expectedVersion, ids, now);
