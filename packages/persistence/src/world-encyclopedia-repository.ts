@@ -334,9 +334,12 @@ export class SqliteWorldEncyclopediaRepository {
         projectId,
         entityId,
       ),
-      sourceIdentities: this.projectWorld.listSourceLinks(projectId,entityId),
-      worldAffiliations: this.projectWorld.listEntitySpaces(projectId,entityId),
-      travelHistory: this.projectWorld.listTravelerHistory(projectId,entityId),
+      sourceIdentities: this.projectWorld.listSourceLinks(projectId, entityId),
+      worldAffiliations: this.projectWorld.listEntitySpaces(
+        projectId,
+        entityId,
+      ),
+      travelHistory: this.projectWorld.listTravelerHistory(projectId, entityId),
     };
   }
 

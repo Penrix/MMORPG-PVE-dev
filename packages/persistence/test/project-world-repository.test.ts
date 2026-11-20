@@ -237,14 +237,17 @@ describe("Module 2: one Project Reality with many mother worlds and time travel"
     expect(worlds.listSourceLinks("novel", "itachi")[0]?.sourceKey).toBe(
       "character:itachi",
     );
-    const encyclopedia=new SqliteWorldEncyclopediaRepository(db!);
-    const itachiDossier=encyclopedia.getDossier("novel","itachi");
-    const heroDossier=encyclopedia.getDossier("novel","hero");
+    const encyclopedia = new SqliteWorldEncyclopediaRepository(db!);
+    const itachiDossier = encyclopedia.getDossier("novel", "itachi");
+    const heroDossier = encyclopedia.getDossier("novel", "hero");
     expect(itachiDossier.sourceIdentities).toEqual([
-      expect.objectContaining({corpusId:"naruto",sourceKey:"character:itachi"}),
+      expect.objectContaining({
+        corpusId: "naruto",
+        sourceKey: "character:itachi",
+      }),
     ]);
     expect(heroDossier.worldAffiliations).toEqual([
-      expect.objectContaining({spaceId:"ninja",linkKind:"origin"}),
+      expect.objectContaining({ spaceId: "ninja", linkKind: "origin" }),
     ]);
     expect(heroDossier.travelHistory).toHaveLength(3);
     expect(source.getRecord("naruto", "character:itachi")?.raw).toEqual({
