@@ -7,10 +7,16 @@ import {
 export const NARUTO_DATTEBAYO_CORPUS = "naruto-dattebayo";
 export const NARUTO_WIKI_CORPUS = "naruto-wiki-scraper";
 export const NARUTO_COLLECTIONS = [
-  "characters","clans","villages","teams","kekkei-genkai",
-  "tailed-beasts","akatsuki","kara",
+  "characters",
+  "clans",
+  "villages",
+  "teams",
+  "kekkei-genkai",
+  "tailed-beasts",
+  "akatsuki",
+  "kara",
 ] as const;
-export type NarutoCollection = typeof NARUTO_COLLECTIONS[number];
+export type NarutoCollection = (typeof NARUTO_COLLECTIONS)[number];
 export type NarutoData = Record<NarutoCollection, unknown[]>;
 
 const DATTEBAYO_ROOT =
@@ -19,16 +25,18 @@ const WIKI_ROOT = "https://github.com/simon8800/naruto-wiki-scraper";
 
 type Row = Record<string, unknown>;
 const asRow = (v: unknown): Row | null =>
-  v !== null && typeof v === "object" && !Array.isArray(v) ? v as Row : null;
-const asText = (v: unknown): string =>
-  typeof v === "string" ? v.trim() : "";
-const asList = (v: unknown): unknown[] => Array.isArray(v) ? v : [];
+  v !== null && typeof v === "object" && !Array.isArray(v) ? (v as Row) : null;
+const asText = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
+const asList = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 const numberId = (v: unknown): number | null =>
   typeof v === "number" && Number.isSafeInteger(v) && v >= 0 ? v : null;
 const rowName = (v: Row): string => asText(v.name);
-const sourceKey = (collection: string, id: number): string => `${collection}:${id}`;
+const sourceKey = (collection: string, id: number): string =>
+  `${collection}:${id}`;
 const isJutsuName = (s: string): boolean =>
-  s.length >= 2 && s.length <= 140 && !/[\r\n]/.test(s) &&
+  s.length >= 2 &&
+  s.length <= 140 &&
+  !/[\r\n]/.test(s) &&
   !/https?:|not in the list|[0-9]{6}|<|>/.test(s);
 
 export interface NarutoImportReport {
@@ -55,51 +63,82 @@ export function importNarutoDattebayo(
       throw new Error(`Naruto source is missing array: ${key}`);
   }
   if (!data.characters.length)
-    throw new Error("Refusing to replace Naruto source with empty characters collection");
+    throw new Error(
+      "Refusing to replace Naruto source with empty characters collection",
+    );
 
   const repo = new SqliteSourceCorpusRepository(db);
   const stats: NarutoImportReport = {
-    corpusId: NARUTO_DATTEBAYO_CORPUS, records: 0, relations: 0,
-    skippedReferences: 0, skippedRecords: 0, collections: {},
+    corpusId: NARUTO_DATTEBAYO_CORPUS,
+    records: 0,
+    relations: 0,
+    skippedReferences: 0,
+    skippedRecords: 0,
+    collections: {},
   };
   const corpusId = NARUTO_DATTEBAYO_CORPUS;
   const recordKeys = new Set<string>();
 
   return db.transaction(() => {
     repo.upsertCorpus({
-      id: corpusId, title: "火影忍者：Dattebayo原生母体",
+      id: corpusId,
+      title: "火影忍者：Dattebayo原生母体",
       sourceUrl: DATTEBAYO_ROOT,
-      rightsNotice: "Community data from Naruto Wiki / franchise. Source material is not covered by this app's Apache-2.0 license; inspect upstream terms before reuse.",
+      rightsNotice:
+        "Community data from Naruto Wiki / franchise. Source material is not covered by this app's Apache-2.0 license; inspect upstream terms before reuse.",
       importer: "naruto-dattebayo-v1",
       metadata: {
         collections: NARUTO_COLLECTIONS,
-        warning: "Mixed manga, anime, novels and games; all-time records are not a time-sliced world. Treat as source assertions only.",
+        warning:
+          "Mixed manga, anime, novels and games; all-time records are not a time-sliced world. Treat as source assertions only.",
       },
       importedAt,
     });
     // Source snapshots are rederived, never author-edited Canon. Reimports
     // must drop stale relations and records atomically while preserving books.
-    db.raw.prepare("DELETE FROM source_records WHERE corpus_id=?").run(corpusId);
+    db.raw
+      .prepare("DELETE FROM source_records WHERE corpus_id=?")
+      .run(corpusId);
 
     const supplement = new Map<number, Row>();
-    for (const group of ["akatsuki","kara"] as const) {
+    for (const group of ["akatsuki", "kara"] as const) {
       stats.collections[group] = data[group].length;
       for (const entry of data[group]) {
         const row = asRow(entry);
         const id = row ? numberId(row.id) : null;
-        if (id === null || !row) { stats.skippedRecords++; continue; }
+        if (id === null || !row) {
+          stats.skippedRecords++;
+          continue;
+        }
         supplement.set(id, { ...(supplement.get(id) ?? {}), [group]: row });
       }
     }
 
-    const add = (key: string, kind: SourceKind, name: string, raw: Row,
-      collection: string, summary = "", aliases: string[] = []): void => {
-      if (!name || recordKeys.has(key)) { stats.skippedRecords++; return; }
+    const add = (
+      key: string,
+      kind: SourceKind,
+      name: string,
+      raw: Row,
+      collection: string,
+      summary = "",
+      aliases: string[] = [],
+    ): void => {
+      if (!name || recordKeys.has(key)) {
+        stats.skippedRecords++;
+        return;
+      }
       recordKeys.add(key);
       repo.upsertRecord({
-        corpusId, sourceKey: key, kind, name, aliases,
-        summary, raw, sourceUrl: `${DATTEBAYO_ROOT}/${collection}.json`,
-        originCollection: collection, importedAt,
+        corpusId,
+        sourceKey: key,
+        kind,
+        name,
+        aliases,
+        summary,
+        raw,
+        sourceUrl: `${DATTEBAYO_ROOT}/${collection}.json`,
+        originCollection: collection,
+        importedAt,
       });
       stats.records++;
     };
@@ -108,78 +147,167 @@ export function importNarutoDattebayo(
     for (const entry of data.characters) {
       const row = asRow(entry);
       const id = row ? numberId(row.id) : null;
-      if (id === null || !row) { stats.skippedRecords++; continue; }
+      if (id === null || !row) {
+        stats.skippedRecords++;
+        continue;
+      }
       const extra = supplement.get(id);
       const personal = asRow(row.personal);
       const descriptions = [
-        asText(personal?.occupation), asText(personal?.affiliation),
-        ...asList(row.jutsu).slice(0,3).map(asText),
+        asText(personal?.occupation),
+        asText(personal?.affiliation),
+        ...asList(row.jutsu).slice(0, 3).map(asText),
       ].filter(Boolean);
-      add(sourceKey("character",id),"character",rowName(row),
+      add(
+        sourceKey("character", id),
+        "character",
+        rowName(row),
         extra ? { ...row, _sourceSupplements: extra } : row,
-        "characters", descriptions.join(" | "));
+        "characters",
+        descriptions.join(" | "),
+      );
       supplement.delete(id);
     }
     // Profiles that the upstream specialty lists include but main characters
     // omit remain source characters. No fabricated identities.
     for (const [id, extra] of supplement) {
-      const parts = Object.values(extra).map(asRow).filter((v): v is Row => !!v);
+      const parts = Object.values(extra)
+        .map(asRow)
+        .filter((v): v is Row => !!v);
       const first = parts[0];
       if (!first) continue;
-      add(sourceKey("character",id),"character",rowName(first),
+      add(
+        sourceKey("character", id),
+        "character",
+        rowName(first),
         { ...first, _sourceSupplements: extra },
-        "characters", "Additional specialty-profile source only");
+        "characters",
+        "Additional specialty-profile source only",
+      );
     }
 
     const groups: readonly {
-      collection: NarutoCollection; kind: SourceKind; prefix: string; relation: string;
+      collection: NarutoCollection;
+      kind: SourceKind;
+      prefix: string;
+      relation: string;
     }[] = [
-      {collection:"clans",kind:"organization",prefix:"clan",relation:"clan_member_recorded"},
-      {collection:"villages",kind:"location",prefix:"village",relation:"village_affiliation_recorded"},
-      {collection:"teams",kind:"organization",prefix:"team",relation:"team_member_recorded"},
-      {collection:"kekkei-genkai",kind:"ability",prefix:"kekkei",relation:"kekkei_genkai_recorded"},
-      {collection:"tailed-beasts",kind:"creature",prefix:"beast",relation:"tailed_beast_association_recorded"},
+      {
+        collection: "clans",
+        kind: "organization",
+        prefix: "clan",
+        relation: "clan_member_recorded",
+      },
+      {
+        collection: "villages",
+        kind: "location",
+        prefix: "village",
+        relation: "village_affiliation_recorded",
+      },
+      {
+        collection: "teams",
+        kind: "organization",
+        prefix: "team",
+        relation: "team_member_recorded",
+      },
+      {
+        collection: "kekkei-genkai",
+        kind: "ability",
+        prefix: "kekkei",
+        relation: "kekkei_genkai_recorded",
+      },
+      {
+        collection: "tailed-beasts",
+        kind: "creature",
+        prefix: "beast",
+        relation: "tailed_beast_association_recorded",
+      },
     ];
     for (const group of groups) {
       stats.collections[group.collection] = data[group.collection].length;
       for (const entry of data[group.collection]) {
         const row = asRow(entry);
         const id = row ? numberId(row.id) : null;
-        if (id === null || !row) { stats.skippedRecords++; continue; }
-        add(sourceKey(group.prefix,id),group.kind,rowName(row),row,group.collection);
+        if (id === null || !row) {
+          stats.skippedRecords++;
+          continue;
+        }
+        add(
+          sourceKey(group.prefix, id),
+          group.kind,
+          rowName(row),
+          row,
+          group.collection,
+        );
       }
     }
 
     // The upstream's Akatsuki/Kara lists contain incidental people/animals.
     // "listed_in_specialty_dataset" is NOT asserted as membership.
-    add("org:akatsuki","organization","Akatsuki",
-      { label: "Akatsuki", sourceCollection:"akatsuki", sourceMeaning:"specialty character list, NOT confirmed member roster" },
-      "akatsuki");
-    add("org:kara","organization","Kara",
-      { label: "Kara", sourceCollection:"kara", sourceMeaning:"specialty character list, NOT confirmed member roster" },
-      "kara");
+    add(
+      "org:akatsuki",
+      "organization",
+      "Akatsuki",
+      {
+        label: "Akatsuki",
+        sourceCollection: "akatsuki",
+        sourceMeaning: "specialty character list, NOT confirmed member roster",
+      },
+      "akatsuki",
+    );
+    add(
+      "org:kara",
+      "organization",
+      "Kara",
+      {
+        label: "Kara",
+        sourceCollection: "kara",
+        sourceMeaning: "specialty character list, NOT confirmed member roster",
+      },
+      "kara",
+    );
 
     // Preserve the source's jutsu strings as references; skip obvious scraper
     // garbage, never invent costs, prerequisites or power balancing.
     const jutsu = new Set<string>();
-    for (const entry of [...data.characters,...data.akatsuki,...data.kara]) {
+    for (const entry of [...data.characters, ...data.akatsuki, ...data.kara]) {
       const row = asRow(entry);
       for (const name of asList(row?.jutsu).map(asText)) {
         if (isJutsuName(name)) jutsu.add(name);
       }
     }
     for (const name of jutsu) {
-      add(`jutsu:${name}`,"ability",name,
-        { name, extraction: "verbatim jutsu list; mechanics not separately verified" },
-        "characters", "Source-listed jutsu; see original character records for context.");
+      add(
+        `jutsu:${name}`,
+        "ability",
+        name,
+        {
+          name,
+          extraction: "verbatim jutsu list; mechanics not separately verified",
+        },
+        "characters",
+        "Source-listed jutsu; see original character records for context.",
+      );
     }
     stats.collections.jutsu = jutsu.size;
 
-    const link = (fromKey: string,toKey: string,relation: string,note: string): void => {
+    const link = (
+      fromKey: string,
+      toKey: string,
+      relation: string,
+      note: string,
+    ): void => {
       if (!recordKeys.has(fromKey) || !recordKeys.has(toKey)) {
-        stats.skippedReferences++; return;
+        stats.skippedReferences++;
+        return;
       }
-      repo.upsertRelation({ corpusId,fromKey,toKey,relation,sourceNote:note });
+      repo.upsertRelation({
+        corpusId,
+        fromKey,
+        toKey,
+        relation,
+        sourceNote: note,
+      });
       stats.relations++;
     };
     for (const group of groups) {
@@ -188,30 +316,47 @@ export function importNarutoDattebayo(
         const id = row ? numberId(row.id) : null;
         if (id === null || !row) continue;
         for (const characterId of asList(row.characters).map(numberId)) {
-          if (characterId === null) { stats.skippedReferences++; continue; }
-          link(sourceKey("character",characterId),
-            sourceKey(group.prefix,id),group.relation,
-            `Dattebayo ${group.collection}.json characters[]; not a dated project fact`);
+          if (characterId === null) {
+            stats.skippedReferences++;
+            continue;
+          }
+          link(
+            sourceKey("character", characterId),
+            sourceKey(group.prefix, id),
+            group.relation,
+            `Dattebayo ${group.collection}.json characters[]; not a dated project fact`,
+          );
         }
       }
     }
-    for (const [group,org] of [["akatsuki","org:akatsuki"],["kara","org:kara"]] as const) {
+    for (const [group, org] of [
+      ["akatsuki", "org:akatsuki"],
+      ["kara", "org:kara"],
+    ] as const) {
       for (const entry of data[group]) {
         const row = asRow(entry);
         const id = row ? numberId(row.id) : null;
         if (id === null) continue;
-        link(sourceKey("character",id),org,"listed_in_specialty_dataset",
-          `Listed by Dattebayo ${group}.json; this alone does NOT establish membership`);
+        link(
+          sourceKey("character", id),
+          org,
+          "listed_in_specialty_dataset",
+          `Listed by Dattebayo ${group}.json; this alone does NOT establish membership`,
+        );
       }
     }
-    for (const entry of [...data.characters,...data.akatsuki,...data.kara]) {
+    for (const entry of [...data.characters, ...data.akatsuki, ...data.kara]) {
       const row = asRow(entry);
       const id = row ? numberId(row.id) : null;
       if (id === null) continue;
       for (const name of asList(row?.jutsu).map(asText)) {
         if (jutsu.has(name))
-          link(sourceKey("character",id),`jutsu:${name}`,"jutsu_listed",
-            "Explicit upstream character jutsu[] entry; ability availability varies by historical period");
+          link(
+            sourceKey("character", id),
+            `jutsu:${name}`,
+            "jutsu_listed",
+            "Explicit upstream character jutsu[] entry; ability availability varies by historical period",
+          );
       }
     }
     return stats;
@@ -221,36 +366,62 @@ export function importNarutoDattebayo(
 /** Optional second source with detailed bios. Separate identities retain
  * conflicting canon/anime/game/novel notes without silently merging people. */
 export function importNarutoWikiScraper(
-  db: NarrativeDatabase, rows: unknown[], importedAt = new Date().toISOString(),
+  db: NarrativeDatabase,
+  rows: unknown[],
+  importedAt = new Date().toISOString(),
 ): NarutoImportReport {
-  if (!rows.length) throw new Error("Refusing to import an empty Naruto Wiki snapshot");
+  if (!rows.length)
+    throw new Error("Refusing to import an empty Naruto Wiki snapshot");
   const repo = new SqliteSourceCorpusRepository(db);
   const stats: NarutoImportReport = {
-    corpusId: NARUTO_WIKI_CORPUS,records:0,relations:0,
-    skippedRecords:0,skippedReferences:0,collections:{characters:rows.length},
+    corpusId: NARUTO_WIKI_CORPUS,
+    records: 0,
+    relations: 0,
+    skippedRecords: 0,
+    skippedReferences: 0,
+    collections: { characters: rows.length },
   };
   return db.transaction(() => {
     repo.upsertCorpus({
-      id:NARUTO_WIKI_CORPUS,title:"火影忍者：Wiki人物档案母体",
-      sourceUrl:WIKI_ROOT,
-      rightsNotice:"Naruto Wiki fan-scraped material. No source contents are redistributed in the app repository.",
-      importer:"naruto-wiki-scraper-v1",
-      metadata:{warning:"All-life character bios, mixed source media, not current time-sliced Reality."},
+      id: NARUTO_WIKI_CORPUS,
+      title: "火影忍者：Wiki人物档案母体",
+      sourceUrl: WIKI_ROOT,
+      rightsNotice:
+        "Naruto Wiki fan-scraped material. No source contents are redistributed in the app repository.",
+      importer: "naruto-wiki-scraper-v1",
+      metadata: {
+        warning:
+          "All-life character bios, mixed source media, not current time-sliced Reality.",
+      },
       importedAt,
     });
-    db.raw.prepare("DELETE FROM source_records WHERE corpus_id=?").run(NARUTO_WIKI_CORPUS);
+    db.raw
+      .prepare("DELETE FROM source_records WHERE corpus_id=?")
+      .run(NARUTO_WIKI_CORPUS);
     const names = new Set<string>();
     for (const raw of rows) {
       const row = asRow(raw);
-      if (!row) { stats.skippedRecords++;continue; }
+      if (!row) {
+        stats.skippedRecords++;
+        continue;
+      }
       const name = rowName(row);
-      if (!name || names.has(name)) { stats.skippedRecords++;continue; }
+      if (!name || names.has(name)) {
+        stats.skippedRecords++;
+        continue;
+      }
       names.add(name);
       repo.upsertRecord({
-        corpusId:NARUTO_WIKI_CORPUS,sourceKey:`wiki:${name}`,
-        kind:"character",name, aliases:[],summary:asText(row.summary),
-        raw:row,sourceUrl:WIKI_ROOT + "/blob/master/cleanCharacters.json",
-        originCollection:"cleanCharacters",importedAt,
+        corpusId: NARUTO_WIKI_CORPUS,
+        sourceKey: `wiki:${name}`,
+        kind: "character",
+        name,
+        aliases: [],
+        summary: asText(row.summary),
+        raw: row,
+        sourceUrl: WIKI_ROOT + "/blob/master/cleanCharacters.json",
+        originCollection: "cleanCharacters",
+        importedAt,
       });
       stats.records++;
     }
