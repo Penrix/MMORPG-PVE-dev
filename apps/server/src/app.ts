@@ -15,6 +15,7 @@ import {
   AutomationWorkerSuite,
   AssistantWorkerSuite,
   CanonCandidateWorkerSuite,
+  WorldPackWorkerSuite,
   ChapterWorkerSuite,
   CollaborationWorkerSuite,
   DeliveryWorkerSuite,
@@ -32,6 +33,7 @@ import {
   registerAssistantRoutes,
   registerAutomationRoutes,
   registerCanonCandidateRoutes,
+  registerWorldPackRoutes,
   registerDeliveryRoutes,
   registerLongNovelRoutes,
   registerProjectCoverRoutes,
@@ -98,6 +100,7 @@ export async function buildApp(
   const workers = {
     ...new AssistantWorkerSuite(database, modelClient).registry(),
     ...new CanonCandidateWorkerSuite(database, modelClient).registry(),
+    ...new WorldPackWorkerSuite(database, modelClient).registry(),
     ...new ChapterWorkerSuite(database, modelClient).registry(),
     ...new AutomationWorkerSuite(database, modelClient).registry(),
     ...new CollaborationWorkerSuite(database, modelClient).registry(),
@@ -350,6 +353,11 @@ export async function buildApp(
     environment,
   });
   registerCanonCandidateRoutes(routes, database, {
+    runCoordinator: coordinator,
+    enableBackgroundWorker,
+    environment,
+  });
+  registerWorldPackRoutes(routes, database, {
     runCoordinator: coordinator,
     enableBackgroundWorker,
     environment,
