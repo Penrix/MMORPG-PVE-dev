@@ -26,7 +26,7 @@
 
 ### 现有 NarraLume 的**真实工程缺口**（不可说已解决）
 
-- `canon_entities` 当前有 `UNIQUE(project_id,type,name)`，没有显式的 **世界/时空范围与源实体映射**。多个世界同名的人物、旧人不同时间实例，不能只靠名字避免冲突。
+- **历史缺口与现行纠正**：原版 `canon_entities` 曾使用 `UNIQUE(project_id,type,name)`。Migration 050 已有源实体映射，052 改为支持可选 `world_scope_id` 的世界范围唯一性，同时维持人物稳定 Canon ID。单独的时间实例仍由 050 的显式实例表处理。迁移兼容性必须通过旧数据/全文检索/外键测试。
 - `timeline_events.story_time_start/end` 为单组字符串；没有**项目事件顺序 × 目的地本地时间 × 历史分支** 的明确结构。
 - `canon_entities/project_id` 与 `world_lore_bindings` 保留项目隔离是对的，但还没有**多个共享原生母体对一个项目的只读参照和差异化继承**，不能把每换原著就新建项目当补丁。
 - 现有 `world_chronicle_links`、组织、声望、信息、权利等专项表已经有用途，但**没有跨时空的统一实体实例/事件定位与查询语义**，不能凭表多声称“多世界已支持”。
@@ -59,6 +59,14 @@
 **050 尚未解决**：同一项目不同世界同名角色的 Core Canon 唯一约束（原表 `UNIQUE(project_id,type,name)`）、不同世界版本规则的完整有效时间查询、分支时间下所有人物/社会状态的自动推演、实际长期回访。不能把记录了一次 Travel 就冒充完整时间旅行或多世界运行引擎。
 
 **本轮优先交付的验证**：`project-world-repository.test.ts` 检查火影→楼兰过去→海贼→返回火影只有一个男主和一个小说项目、故事事件顺序与本地年代不同、没有强制建支线、原生资料未被写回；`project-world-api.test.ts` 验证公共服务接口；数据库跨项目引用和导入项目隔离必须通过。
+
+### 新增 Fork/Diff 工作模式（2026-11-20）
+
+作者进一步明确：**原生母体可视为基线，项目世界是 Fork，故事产生实际差异；原著人物人格标签不能无故改变，否则会发生 OOC。** 完整定义与验收见 [11：世界 Fork/Diff 与人物核心锚点](11-world-fork-diff-character-invariants.md)。
+
+- **051** `project_character_anchors` 锁定经作者确认的人格标签/判断倾向，不让正文结算自动覆写；`project_fork_claim_baselines` 只固定真正选定、能溯源的原生字段，实际改变继续写 NarraLume Canon。`SqliteProjectForkRepository.diffEntity` 读取基线、确认事实和变化，绝不把“没有本项目事实”直接说成“原著未来都已经发生”。
+- **052** 为不同世界的同名角色保留真实名字，并用可选 `world_scope_id` 消歧。不把不同世界同名人物自动认作同一个人；具体对应还要查 049 Source Corpus 与 050 Project Source Identity。
+- **Checkout 仍缺**：按指定故事事件序号 + 世界坐标 + 时间分支准确恢复所有事实和社会状态，目前并未因 Fork/Diff 第一版就自动解决。
 
 ## 第一裁决：一个世界，四层相互连通的数据
 
