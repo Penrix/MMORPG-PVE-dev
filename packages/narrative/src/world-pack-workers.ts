@@ -661,7 +661,8 @@ export class WorldPackWorkerSuite {
         // not enough to control NPC continuity and gameplay conditions.
         existingWorld: projectExistingWorldForProduction({
           entities: nodes.slice(0, 70),
-          facts, relationships,
+          facts,
+          relationships,
         }),
         // Data for the actual WorldForge independent-agent dispatcher.
         // This projection uses accepted Canon identities, not generated IDs.
