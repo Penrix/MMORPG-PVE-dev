@@ -119,37 +119,46 @@ describe("Project world: author-facing API, one reality and multiple source worl
     expect(links.json()).toEqual([
       expect.objectContaining({ corpusId: "naruto", sourceKey: "itachi" }),
     ]);
-    const anchored=await app.inject({
-      method:"POST",
-      url:"/api/projects/novel/world-fork/itachi-proj/core",
-      payload:{
-        sourceCorpusId:"naruto",sourceKey:"itachi",
-        tags:["冷静","珍视重要的人"],
-        decisionPattern:"先核实关系与风险再作决定",
-        sourceNote:"测试作者明确批准的角色锚点，不是模型从姓名推断",
+    const anchored = await app.inject({
+      method: "POST",
+      url: "/api/projects/novel/world-fork/itachi-proj/core",
+      payload: {
+        sourceCorpusId: "naruto",
+        sourceKey: "itachi",
+        tags: ["冷静", "珍视重要的人"],
+        decisionPattern: "先核实关系与风险再作决定",
+        sourceNote: "测试作者明确批准的角色锚点，不是模型从姓名推断",
       },
     });
     expect(anchored.statusCode).toBe(201);
-    const field=await app.inject({
-      method:"POST",
-      url:"/api/projects/novel/world-fork/itachi-proj/source-fields",
-      payload:{
-        sourceCorpusId:"naruto",sourceKey:"itachi",
-        sourceJsonPath:"$.world",projectPredicate:"original_world",
+    const field = await app.inject({
+      method: "POST",
+      url: "/api/projects/novel/world-fork/itachi-proj/source-fields",
+      payload: {
+        sourceCorpusId: "naruto",
+        sourceKey: "itachi",
+        sourceJsonPath: "$.world",
+        projectPredicate: "original_world",
       },
     });
     expect(field.statusCode).toBe(201);
-    const fork=await app.inject({
-      method:"GET",url:"/api/projects/novel/world-fork/itachi-proj",
+    const fork = await app.inject({
+      method: "GET",
+      url: "/api/projects/novel/world-fork/itachi-proj",
     });
     expect(fork.statusCode).toBe(200);
-    expect(fork.json()).toEqual(expect.objectContaining({
-      core:expect.objectContaining({tags:["冷静","珍视重要的人"]}),
-      compared:[expect.objectContaining({
-        baseline:"naruto",status:"reference_inherited",
-      })],
-      additions:[],
-    }));
+    expect(fork.json()).toEqual(
+      expect.objectContaining({
+        core: expect.objectContaining({ tags: ["冷静", "珍视重要的人"] }),
+        compared: [
+          expect.objectContaining({
+            baseline: "naruto",
+            status: "reference_inherited",
+          }),
+        ],
+        additions: [],
+      }),
+    );
     db.raw
       .prepare(
         `
