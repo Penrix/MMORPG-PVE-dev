@@ -28,3 +28,4 @@ export * from "./lore-repository.js";
 export * from "./delivery-repository.js";
 export * from "./story-repository.js";
 export * from "./template-repository.js";
+export * from "./world-pack-repository.js";
