@@ -86,13 +86,16 @@ export type AssistantStepKind =
 export type CanonCandidateStepKind =
   "canon.context" | "canon.candidate" | "canon.stage";
 
+export type WorldPackStepKind = "world.context" | "world.generate" | "world.stage";
+
 export type RunStepKind =
   | ChapterStepKind
   | AutomationStepKind
   | CollaborationStepKind
   | DeliveryStepKind
   | AssistantStepKind
-  | CanonCandidateStepKind;
+  | CanonCandidateStepKind
+  | WorldPackStepKind;
 
 export interface RunBudgetUsage {
   inputTokens: number;
