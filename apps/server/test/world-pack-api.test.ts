@@ -452,14 +452,26 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
     expect(pack.document.activities).toHaveLength(2);
     expect(pack.document.interactions).toHaveLength(3);
     expect(pack.document.production?.engine).toBe("mmorpg-world-workshop-v1");
-    const actualWorkshops: string[] = pack.document.production?.executed.map(
-      (step: {workshop:string})=>step.workshop
-    ) ?? [];
+    const actualWorkshops: string[] =
+      pack.document.production?.executed.map(
+        (step: { workshop: string }) => step.workshop,
+      ) ?? [];
     expect(new Set(actualWorkshops)).toEqual(
-      new Set(["geography","factions","people","economy","power","events","social","playability"])
+      new Set([
+        "geography",
+        "factions",
+        "people",
+        "economy",
+        "power",
+        "events",
+        "social",
+        "playability",
+      ]),
     );
     // Real world deficiencies, not a static seven-stage table, decide order.
-    expect(actualWorkshops.indexOf("events")).toBeLessThan(actualWorkshops.indexOf("power"));
+    expect(actualWorkshops.indexOf("events")).toBeLessThan(
+      actualWorkshops.indexOf("power"),
+    );
     expect(pack.document.production?.playtestedPaths).toContainEqual([
       "public_arrival",
       "buy_resource",
