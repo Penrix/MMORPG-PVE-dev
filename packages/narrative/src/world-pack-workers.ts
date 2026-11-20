@@ -17,6 +17,7 @@ import {
   type NarrativeDatabase,
 } from "@narralume/persistence";
 import type { NarrativeModelClient } from "./model-client.js";
+import { MMORPG_WORLD_METHOD_EXCERPTS } from "./mmorpg-world-method.js";
 
 const txt = (description: string) => ({ type: "string", description });
 const nullable = (description: string) => ({
@@ -110,7 +111,7 @@ function makePrompt(input: WorldPackRequest, project: { title: string; premise: 
     worldMethod: [
       "不是章节编剧：先制造男主不存在时就能自行运作的现实。写具体有价值的人、地、物、机构、力量和当前正在做的事。",
       "W0 从世界大局生成区域、不同社会系统、真实权力机构、价格与流通路径，不能整个世界只围绕男主职业；W1 在已确认W0之下根据类型文×时间地点×稀缺性打开一个区域、行业或圈层。",
-      "一轮产出成套互相关联的世界对象：场所、势力、NPC、宝物/资格/权利、社会门槛、独立事务。不能只交单项列表或政治经济目录。至少四个真实对象、两条关系和一项由具体人行动的事务；需要时继续丰富，不机械凑数。",
+      "一轮产出成套互相关联的世界对象：场所、势力、NPC、宝物/资格/权利、社会门槛、独立事务。不能只交单项列表或政治经济目录。W0 建议12-30个具体对象、8-20条有效关系、至少4项人物独立事务；W1建议8-25个具体对象。已有材料充足或范围狭小时可相应调整，不能仅凑数量。",
       "每个人和组织都有自己的目标和当前行动；Resource要有实际持有人、争取者、使用价值与取得路径；关系边具体说明谁控制/引荐/竞争/交易，而不是单一好感条。",
       "对于玄幻，考虑功法、境界、丹药、法器、宗门、家族、坊市、朝廷的力量与高价资源。对于历史/现代，力量表现为真实授权、资本、产业、身份、名望与社会关系，仍要形成真正昂贵的男性人生可能性。",
       "以当前已确认世界为Reality。使用给出的已存在实体ID请写 existingCanonId 或 canon:ID；新增节点使用唯一 localId。全部图引用必须能由本包或现有Canon解析；不要捏造数据库ID。",
@@ -118,6 +119,7 @@ function makePrompt(input: WorldPackRequest, project: { title: string; premise: 
       "用户如果给了已确定的高价目标，应帮助它获得社会共识、稀缺条件和真实人物的争取行为，而不是偷偷改选更普通目标。取得资源后应有真实资产、身份、关系或能力权益并能进一步利用。",
       "给出足够丰富且具体的对象描述、人物实际动作和跨系统连接。输出所有 nodes/links/activities 是同一个互相引用的世界包，不是分七轮的泛用Canon修改候选。",
     ],
+    originalMMORPGMethod: MMORPG_WORLD_METHOD_EXCERPTS,
     currentReality: known,
   });
 }
@@ -156,19 +158,23 @@ export class WorldPackWorkerSuite {
     if (!project) throw error("project.not_found", "Project is missing");
     const request = WorldPackRequestSchema.parse(snapshot.run.policy.worldPackRequest);
     const allEntities = this.canon.listEntities(project.id);
-    const nodes = allEntities.slice(-240);
-    const facts = this.canon.listEffectiveFacts(project.id).slice(-300);
-    const relationships = this.state.listCurrentRelationships(project.id).slice(-250);
-    const timeline = this.state.listTimeline(project.id).slice(-180);
+    const query = [request.focus, request.premise].join(" ").toLowerCase();
+    const prioritized = [...allEntities].sort((a,b) => Number(query.includes(b.name.toLowerCase())) - Number(query.includes(a.name.toLowerCase())));
+    const nodes = prioritized.slice(0, 110);
+    const facts = this.canon.listEffectiveFacts(project.id).slice(-140);
+    const relationships = this.state.listCurrentRelationships(project.id).slice(-130);
+    const timeline = this.state.listTimeline(project.id).slice(-65);
     const packet = {
       authorIntent: this.story.getAuthorIntent(project.id),
       entities: nodes.map((node) => ({
-        id: node.id, type: node.type, name: node.name, description: node.description,
-        attributes: node.attributes,
+        id: node.id, type: node.type, name: node.name,
+        description: node.description?.slice(0, 900),
+        attributes: JSON.stringify(node.attributes).slice(0, 900),
       })),
       facts: facts.map((fact) => ({
         subjectId: fact.subjectId, predicate: fact.predicate,
-        objectEntityId: fact.objectEntityId, value: fact.value,
+        objectEntityId: fact.objectEntityId,
+        value: typeof fact.value === "string" ? fact.value.slice(0, 500) : JSON.stringify(fact.value).slice(0,500),
         knowledgeScope: fact.knowledgeScope, authority: fact.authority,
       })),
       relationships: relationships.map((event) => ({
