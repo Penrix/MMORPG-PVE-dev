@@ -86,7 +86,9 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
         },
       ],
     };
-    expect(playtestWorld(doc, req).next?.workshop).toBe("power");
+    // The v0.5 playable-action deficit is prioritized before public-power
+    // expansion. The separate mandatory power workshop still runs afterward.
+    expect(playtestWorld(doc, req).next?.workshop).toBe("playability");
     doc = {
       ...doc,
       nodes: [...doc.nodes, node("cultivation", "rule", "灵脉炼器规则")],
