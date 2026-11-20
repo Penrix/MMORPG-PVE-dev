@@ -138,13 +138,40 @@ export function adoptWorldPack(
       }));
     }
 
+    // WorldForge-inspired event projection: a new state for the same pair
+    // supersedes the previous relationship, instead of appending two
+    // incompatible currently-effective versions.
+    const currentRelations = state.listCurrentRelationships(projectId);
     for (const link of pack.document.links) {
-      if (link.status !== "current") continue; // possibilities remain a pack-only plan
+      if (link.status !== "current") continue; // possible events remain only in the pack
+      const from = resolve(link.fromRef);
+      const to = resolve(link.toRef);
+      const superseded = currentRelations.find((event) =>
+        event.fromEntityId === from && event.toEntityId === to && event.relation === link.relation
+      );
+      // Explicit ownership change voids prior owner's active ownership.
+      // No automatic cost/penalty applies, and other kinds of relationship
+      // can coexist unless the author explicitly changes them.
+      if (link.relation === "owns") {
+        for (const previous of currentRelations) {
+          if (previous.relation !== "owns" || previous.toEntityId !== to ||
+            previous.fromEntityId === from) continue;
+          state.insertRelationship({
+            ...previous,
+            id: randomUuid(),
+            state: { ...previous.state, lifecycle: "voided", worldPackId: pack.id },
+            supersedesEventId: previous.id,
+            storyTime: pack.request.worldTime,
+            sourceId: pack.id,
+            createdAt: now,
+          });
+        }
+      }
       state.insertRelationship({
         id: randomUuid(),
         projectId,
-        fromEntityId: resolve(link.fromRef),
-        toEntityId: resolve(link.toRef),
+        fromEntityId: from,
+        toEntityId: to,
         relation: link.relation,
         intensity: null,
         state: {
@@ -156,20 +183,35 @@ export function adoptWorldPack(
         outlineNodeId: null,
         storyTime: pack.request.worldTime,
         sourceId: pack.id,
-        supersedesEventId: null,
+        supersedesEventId: superseded?.id ?? null,
         createdAt: now,
       });
     }
 
-    // An ongoing activity is a fact about an actor's current occupation.
-    // An opportunity/potential event never becomes a historical timeline event.
+    // Ongoing/ended activities are actor-scoped state facts, not already
+    // finished timeline history. The stable activityLocalId allows the
+    // next world advance to replace or close the previous activity.
     for (const activity of pack.document.activities) {
-      if (activity.stage !== "ongoing") continue;
+      if (activity.stage === "potential") continue;
       for (const actorRef of activity.actorRefs) {
+        const subjectId = resolve(actorRef);
+        const previous = canon.listEffectiveFacts(projectId, {
+          subjectId,
+        }).find((fact) => fact.predicate === "world.ongoing_activity" &&
+          fact.value !== null && typeof fact.value === "object" &&
+          "activityLocalId" in fact.value &&
+          fact.value.activityLocalId === activity.localId
+        );
+        if (activity.stage === "ended" && !previous) {
+          throw new WorldPackRouteError(
+            "world.pack.activity_not_found",
+            `Cannot end activity ${activity.localId}: it has no prior Canon state for ${subjectId}`,
+          );
+        }
         canon.insertFact(createCanonFact({
           id: randomUuid(),
           projectId,
-          subjectId: resolve(actorRef),
+          subjectId,
           predicate: "world.ongoing_activity",
           value: {
             description: activity.description,
@@ -177,10 +219,12 @@ export function adoptWorldPack(
             worldTime: activity.worldTime,
             resourceIds: activity.resourceRefs.map(resolve),
             activityLocalId: activity.localId,
+            stage: activity.stage,
           },
           authority: "confirmed",
           sourceType: "world-pack",
           sourceId: pack.id,
+          ...(previous ? { supersedesFactId: previous.id } : {}),
           now,
         }));
       }
