@@ -1,3 +1,4 @@
+import type { WorldPackRequest, WorldPackRecord, WorldPackDocument } from "@narralume/contracts";
 import {
   type StoryStateQuery,
   type StoryStateSnapshotDto,
@@ -3754,7 +3755,7 @@ export function decideStoryLineProposal(projectId: string, setId: string, itemId
  * contains named objects, references and NPC/organization activities. */
 export async function generateWorldPack(
   projectId: string,
-  input: import("@narralume/contracts").WorldPackRequest,
+  input: WorldPackRequest,
 ): Promise<{ runId: string; idempotentReplay: boolean }> {
   return requestJson(
     `/api/projects/${encodeURIComponent(projectId)}/world-packs/generate`,
@@ -3765,7 +3766,7 @@ export async function generateWorldPack(
 export async function listWorldPacks(
   projectId: string,
   signal?: AbortSignal,
-): Promise<import("@narralume/contracts").WorldPackRecord[]> {
+): Promise<WorldPackRecord[]> {
   return requestJson(
     `/api/projects/${encodeURIComponent(projectId)}/world-packs`,
     signal ? { signal } : {},
@@ -3776,8 +3777,8 @@ export async function reviseWorldPack(
   projectId: string,
   packId: string,
   expectedVersion: number,
-  document: import("@narralume/contracts").WorldPackDocument,
-): Promise<import("@narralume/contracts").WorldPackRecord> {
+  document: WorldPackDocument,
+): Promise<WorldPackRecord> {
   return requestJson(
     `/api/projects/${encodeURIComponent(projectId)}/world-packs/${encodeURIComponent(packId)}`,
     jsonRequest("PUT", { expectedVersion, document }),
@@ -3788,7 +3789,7 @@ export async function adoptWorldPack(
   projectId: string,
   packId: string,
   expectedVersion: number,
-): Promise<import("@narralume/contracts").WorldPackRecord> {
+): Promise<WorldPackRecord> {
   return requestJson(
     `/api/projects/${encodeURIComponent(projectId)}/world-packs/${encodeURIComponent(packId)}/adopt`,
     jsonRequest("POST", { expectedVersion }),
