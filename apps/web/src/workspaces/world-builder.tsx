@@ -33,6 +33,7 @@ const ENDED = new Set(["completed", "failed", "cancelled"]);
 type FormValues = Omit<WorldPackRequest, "requestId">;
 
 const EMPTY: FormValues = {
+  intent: "create",
   scale: "W0",
   premise: "",
   worldTime: "",
@@ -50,6 +51,7 @@ function loadForm(projectId: string): FormValues {
     ) as Partial<FormValues> | null;
     if (!saved || typeof saved !== "object") return { ...EMPTY };
     return {
+      intent: saved.intent === "advance" ? "advance" : "create",
       scale: saved.scale === "W1" ? "W1" : "W0",
       premise: typeof saved.premise === "string" ? saved.premise : "",
       worldTime: typeof saved.worldTime === "string" ? saved.worldTime : "",
@@ -171,6 +173,17 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
             <button className="btn" type="button" aria-pressed={form.scale === "W1"}
               onClick={() => update("scale", "W1")}>W1 · 新地图与社会圈层</button>
           </div>
+          <div className="world-builder__scale" role="group" aria-label="世界工作">
+            <button className="btn" type="button" aria-pressed={form.intent !== "advance"}
+              onClick={() => update("intent", "create")}>制作新区域与内容</button>
+            <button className="btn" type="button" aria-pressed={form.intent === "advance"}
+              onClick={() => update("intent", "advance")}>推进已有NPC / 组织的生活</button>
+          </div>
+          <p className="world-builder__hint">
+            {form.intent === "advance"
+              ? "使用已有世界的真实人物、资源和当前状态，生成新的行动及状态变化候选。重复出现的人物必须复用旧 Canon 身份。"
+              : "制作能进入、能经营、能争夺、能生活的新世界内容。"}
+          </p>
           <p className="world-builder__hint">
             {form.scale === "W0"
               ? "涵盖真实地区、各类势力、不同生活与产业、社会力量和可争取的高价对象。不是只为男主修一条任务路线。"
@@ -398,7 +411,7 @@ function WorldPackReview({
             <li key={activity.localId}>
               <strong>{activity.actorRefs.map(nodeName).join("、")}</strong>：
               {activity.description}。缘由：{activity.reason}
-              {activity.stage === "potential" ? "（可能发生，尚非现实）" : "（当前正在进行）"}
+              {activity.stage === "potential" ? "（可能发生，尚非现实）" : activity.stage === "ended" ? "（这项事务已经结束）" : "（当前正在进行）"}
             </li>
           ))}
         </ul>
