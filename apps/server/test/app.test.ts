@@ -55,7 +55,7 @@ describe("server API", () => {
     expect(response.json()).toMatchObject({
       status: "ok",
       service: "narralume",
-      database: { status: "ready", migration: 50 },
+      database: { status: "ready", migration: 51 },
     });
   });
 
