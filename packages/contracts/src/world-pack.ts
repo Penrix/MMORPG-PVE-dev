@@ -16,6 +16,8 @@ export const WorldPackRequestSchema = z.object({
   scarcity: z.string().trim().max(2_000),
   instruction: z.string().trim().max(8_000),
   parentAreaId: z.string().trim().max(300).nullable(),
+  /** Covel WORLD_YAML / WORLD_MD / WORLD_PACKAGE_YAML multi-section authoring source. */
+  sourcePackageText: z.string().max(100_000).optional(),
 });
 export type WorldPackRequest = z.infer<typeof WorldPackRequestSchema>;
 
@@ -61,6 +63,16 @@ export const WorldPackDocumentSchema = z.object({
   links: z.array(WorldPackLinkSchema).max(180),
   activities: z.array(WorldPackActivitySchema).max(80),
   openThreads: z.array(z.string().trim().min(1).max(3_000)).max(70),
+  /** Explicit observed emergent dimensions; WorldForge registry evaluates promotion. */
+  dimensionSignals: z.array(z.object({
+    dim: z.string().trim().min(1).max(100),
+    kind: z.enum(["tech", "value"]),
+    frequency: z.number().min(0).max(1),
+    consequence: z.number().min(0).max(1),
+    lawConsistency: z.number().min(0).max(1),
+    potential: z.number().min(0).max(100),
+    description: z.string().max(300).optional(),
+  }).strict()).max(30).optional(),
 }).strict();
 export type WorldPackDocument = z.infer<typeof WorldPackDocumentSchema>;
 
