@@ -341,5 +341,16 @@ export async function runWorldWorkshops(args: {
         steps.map((s) => s.workshop).join(","),
     );
   }
-  return { document: state, usage, steps, remaining: null };
+  const playtest = playtestWorld(state,args.request);
+  const document:WorldPackDocument = {
+    ...state,
+    production: {
+      engine:"mmorpg-world-workshop-v1",
+      executed: steps.map(step=>({
+        workshop:step.workshop,subjectRef:step.subjectRef,changedRefs:step.changedRefs,
+      })),
+      playtestedPaths:playtest.interactionPaths,
+    },
+  };
+  return { document, usage, steps, remaining: null };
 }
