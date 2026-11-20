@@ -11,7 +11,10 @@ import {
   type NarrativeDatabase,
 } from "@narralume/persistence";
 import { z } from "zod";
-import { getRelLabel, getInverseLabel } from "./vendor/campaignrepo/relationships.js";
+import {
+  getRelLabel,
+  getInverseLabel,
+} from "./vendor/campaignrepo/relationships.js";
 import type { RouteApp } from "./route-app.js";
 import { ServiceError } from "./service-error.js";
 

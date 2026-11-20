@@ -38,7 +38,6 @@ Both upstream licenses grant permission to use, copy, modify, merge, publish, di
 
 The adapter code is identified separately and is not represented as verbatim upstream source.
 
-
 ## CampaignRepo (actual copied source)
 
 - Upstream repository: https://github.com/avorial/CampaignRepo
