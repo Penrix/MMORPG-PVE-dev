@@ -51,6 +51,7 @@ import { migration047 } from "./migrations/047-world-database-crosswalk.js";
 import { migration048 } from "./migrations/048-world-map-power-production-information.js";
 import { migration049 } from "./migrations/049-shared-source-corpora.js";
 import { migration050 } from "./migrations/050-project-world-identity-and-travel.js";
+import { migration051 } from "./migrations/051-project-fork-baselines.js";
 
 export interface Migration {
   readonly version: number;
@@ -123,6 +124,7 @@ const MIGRATIONS: readonly Migration[] = [
   migration048,
   migration049,
   migration050,
+  migration051,
 ];
 
 interface MigrationRow {
