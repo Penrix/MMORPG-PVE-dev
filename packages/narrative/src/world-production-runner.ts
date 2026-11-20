@@ -329,7 +329,7 @@ export async function runWorldWorkshops(args: {
     ...(args.initialCheckpoint?.steps ?? []),
   ];
   const existingWorld = args.existingWorld ?? emptyWorldDocument();
-  const view = () => previewProductionReality(existingWorld,state);
+  const view = () => previewProductionReality(existingWorld, state);
   const workshops = requiredWorkshops(args.request);
   // Additional focused iterations are chosen from actual shortcomings of
   // the world graph, not a model-authored generic TODO or number of cards.
@@ -396,8 +396,13 @@ export async function runWorldWorkshops(args: {
             op.workshop,
             op.subjectRef,
           );
-          if (!hasWorkshopOutput(op.workshop, view(),
-            previewProductionReality(existingWorld,merged.document))) {
+          if (
+            !hasWorkshopOutput(
+              op.workshop,
+              view(),
+              previewProductionReality(existingWorld, merged.document),
+            )
+          ) {
             return {
               success: false,
               issues: [
