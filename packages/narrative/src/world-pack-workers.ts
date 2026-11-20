@@ -269,7 +269,12 @@ export class WorldPackWorkerSuite {
       .filter((pack) => pack.status === "adopted").reverse();
     for (const [index, pack] of adoptedPacks.entries()) {
       for (const signal of pack.document.dimensionSignals ?? []) {
-        tryRegisterDimension(dimensions, signal, index + 1);
+        const { description, ...replaySignal } = signal;
+        tryRegisterDimension(
+          dimensions,
+          description === undefined ? replaySignal : { ...replaySignal, description },
+          index + 1,
+        );
       }
     }
 
