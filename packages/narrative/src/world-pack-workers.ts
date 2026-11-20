@@ -124,6 +124,7 @@ export const WORLD_PACK_MODEL_CONTRACT: JsonSchemaContract = {
       "nodes",
       "links",
       "activities",
+      "interactions",
       "openThreads",
       "dimensionSignals",
     ],
@@ -186,6 +187,43 @@ export const WORLD_PACK_MODEL_CONTRACT: JsonSchemaContract = {
             worldTime: txt(
               "Time in the world's current calendar or relative to current reality",
             ),
+          },
+        },
+      },
+      interactions: {
+        type: "array",
+        maxItems: 90,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["localId","name","offeredByRef","locationRef","action","requires","yields","state"],
+          properties: {
+            localId: txt("Stable action ID"),
+            name: txt("Specific world activity a person can actually perform"),
+            offeredByRef: txt("Concrete NPC or organization offering this actual opportunity"),
+            locationRef: nullable("Actual location ID, or null for location-independent action"),
+            action: txt("What this action physically or socially entails and whose choices matter"),
+            requires: {
+              type: "array", maxItems: 20,
+              items: {
+                type: "object", additionalProperties: false, required: ["kind","ref"],
+                properties: {
+                  kind: { type:"string",enum:["asset","permission","relationship","knowledge","ability","access"] },
+                  ref: txt("Existing local ID or canon:<actual UUID>; no invented prerequisites"),
+                },
+              },
+            },
+            yields: {
+              type:"array", minItems: 1, maxItems:20,
+              items: {
+                type:"object", additionalProperties:false, required:["kind","ref"],
+                properties: {
+                  kind:{type:"string",enum:["asset","permission","relationship","knowledge","ability","access"]},
+                  ref:txt("Concrete potential asset, social right or capability that this action can yield"),
+                },
+              },
+            },
+            state:{type:"string",enum:["available","potential"]},
           },
         },
       },
