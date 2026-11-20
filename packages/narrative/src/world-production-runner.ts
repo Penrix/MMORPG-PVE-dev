@@ -236,7 +236,7 @@ export async function runWorldWorkshops(args: {
     const unfinished = workshops.find((w) => !completedWorkshops.has(w));
     // An actual newly exposed deficit may move ahead of the old work queue.
     // Every core workshop still runs; no model may declare one unnecessary.
-    const op = gap && !completedWorkshops.has(gap.workshop)
+    const op = gap && workshops.includes(gap.workshop) && !completedWorkshops.has(gap.workshop)
       ? gap
       : unfinished ? workOrder(unfinished, state) : gap;
     if (!op) break;
