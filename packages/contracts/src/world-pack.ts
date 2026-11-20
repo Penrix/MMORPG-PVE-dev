@@ -193,9 +193,15 @@ export function worldPackReferenceProblems(
   knownCanonIds: ReadonlySet<string>,
 ): string[] {
   const problems: string[] = [];
-  if (!document.nodes.length && !document.links.length &&
-      !document.activities.length && !(document.interactions?.length??0)) {
-    problems.push("empty world production: no objects, relationships, activities or playable actions");
+  if (
+    !document.nodes.length &&
+    !document.links.length &&
+    !document.activities.length &&
+    !(document.interactions?.length ?? 0)
+  ) {
+    problems.push(
+      "empty world production: no objects, relationships, activities or playable actions",
+    );
   }
   const nodes = new Map<string, WorldPackNode>();
   const names = new Set<string>();
