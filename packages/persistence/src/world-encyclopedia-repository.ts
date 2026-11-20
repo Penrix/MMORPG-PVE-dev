@@ -253,7 +253,13 @@ export class SqliteWorldEncyclopediaRepository {
       ORDER BY id
     `,
       )
-      .all(projectId, entityId, entityId, entityId, entityId) as WorldPowerChannel[];
+      .all(
+        projectId,
+        entityId,
+        entityId,
+        entityId,
+        entityId,
+      ) as WorldPowerChannel[];
     const valueAppraisals = this.db.raw
       .prepare(
         `
@@ -297,23 +303,34 @@ export class SqliteWorldEncyclopediaRepository {
     // World sections extend the canonical relationship graph. These IDs are
     // links to real Canon entities, never copies of their biographies.
     for (const fn of dossier.functions)
-      for (const id of [fn.unit_entity_id,fn.officeholder_entity_id,
-        fn.jurisdiction_entity_id,fn.resource_entity_id])
+      for (const id of [
+        fn.unit_entity_id,
+        fn.officeholder_entity_id,
+        fn.jurisdiction_entity_id,
+        fn.resource_entity_id,
+      ])
         if (id) ids.add(id);
     for (const stance of dossier.stances)
-      for (const id of [stance.issue_entity_id,stance.target_entity_id])
+      for (const id of [stance.issue_entity_id, stance.target_entity_id])
         if (id) ids.add(id);
     for (const standing of dossier.standings)
-      for (const id of [standing.evaluator_entity_id,
-        standing.intermediary_entity_id,standing.actual_right_entity_id])
+      for (const id of [
+        standing.evaluator_entity_id,
+        standing.intermediary_entity_id,
+        standing.actual_right_entity_id,
+      ])
         if (id) ids.add(id);
     for (const channel of dossier.powerChannels)
-      for (const id of [channel.holder_entity_id,
-        channel.intermediary_entity_id,channel.authority_entity_id,
-        channel.target_entity_id,channel.jurisdiction_entity_id])
+      for (const id of [
+        channel.holder_entity_id,
+        channel.intermediary_entity_id,
+        channel.authority_entity_id,
+        channel.target_entity_id,
+        channel.jurisdiction_entity_id,
+      ])
         if (id) ids.add(id);
     for (const value of dossier.valueAppraisals)
-      for (const id of [value.subject_entity_id,value.evaluator_entity_id])
+      for (const id of [value.subject_entity_id, value.evaluator_entity_id])
         if (id) ids.add(id);
     ids.delete(entityId);
     return [...ids].sort().flatMap((id) => {
