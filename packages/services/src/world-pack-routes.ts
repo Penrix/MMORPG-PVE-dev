@@ -112,14 +112,25 @@ export function adoptWorldPack(
     }
 
     for (const node of pack.document.nodes) {
-      if (!node.areaRef) continue;
-      // Area relationship is a confirmed world fact, not a second JSON map.
+      // W1 inherits its selected parent area unless the model explicitly
+      // connects the node to a finer local location in the same world pack.
+      const areaId = node.areaRef
+        ? resolve(node.areaRef)
+        : pack.request.scale === "W1" ? pack.request.parentAreaId : null;
+      if (!areaId || areaId === ids[node.localId]) continue;
+      const area = canon.requireEntity(projectId, areaId);
+      if (area.type !== "location") {
+        throw new WorldPackRouteError(
+          "world.pack.area_type",
+          `Area ${areaId} for ${node.name} must be a location`,
+        );
+      }
       canon.insertFact(createCanonFact({
         id: randomUuid(),
         projectId,
         subjectId: ids[node.localId]!,
         predicate: "world.area",
-        objectEntityId: resolve(node.areaRef),
+        objectEntityId: areaId,
         authority: "confirmed",
         sourceType: "world-pack",
         sourceId: pack.id,
@@ -206,6 +217,8 @@ export function registerWorldPackRoutes(
     const input = WorldPackRequestSchema.parse(request.body);
     if (input.scale === "W1" && !input.focus)
       throw new WorldPackRouteError("world.pack.focus_required", "W1 requires a specific zone or social circle");
+    if (input.scale === "W1" && !input.genre)
+      throw new WorldPackRouteError("world.pack.genre_required", "W1 requires a genre and Reader experience");
     if (input.parentAreaId) {
       const area = new SqliteCanonRepository(database).getEntity(projectId, input.parentAreaId);
       if (!area || area.type !== "location")
