@@ -175,56 +175,117 @@ function hasWorkshopOutput(
   previous: WorldPackDocument,
   current: WorldPackDocument,
 ): boolean {
-  const beforeNodes=new Set(previous.nodes.map(n=>n.localId));
-  const added=current.nodes.filter(n=>!beforeNodes.has(n.localId));
-  const oldEdges=new Set(previous.links.map(l=>l.fromRef+"|"+l.relation+"|"+l.toRef));
-  const edges=current.links.filter(l=>l.status==="current" &&
-    !oldEdges.has(l.fromRef+"|"+l.relation+"|"+l.toRef));
-  const actors=new Set(current.nodes.filter(n=>n.type==="character"||n.type==="organization")
-    .map(n=>n.localId));
-  const zones=new Set(current.nodes.filter(n=>n.type==="location").map(n=>n.localId));
-  const resources=new Set(current.nodes.filter(n=>n.type==="item"||n.type==="concept"||n.type==="rule")
-    .map(n=>n.localId));
-  const newActions=current.activities.filter(a=>!previous.activities.some(b=>b.localId===a.localId));
-  const newInteractions=(current.interactions??[])
-    .filter(a=>!(previous.interactions??[]).some(b=>b.localId===a.localId));
+  const beforeNodes = new Set(previous.nodes.map((n) => n.localId));
+  const added = current.nodes.filter((n) => !beforeNodes.has(n.localId));
+  const oldEdges = new Set(
+    previous.links.map((l) => l.fromRef + "|" + l.relation + "|" + l.toRef),
+  );
+  const edges = current.links.filter(
+    (l) =>
+      l.status === "current" &&
+      !oldEdges.has(l.fromRef + "|" + l.relation + "|" + l.toRef),
+  );
+  const actors = new Set(
+    current.nodes
+      .filter((n) => n.type === "character" || n.type === "organization")
+      .map((n) => n.localId),
+  );
+  const zones = new Set(
+    current.nodes.filter((n) => n.type === "location").map((n) => n.localId),
+  );
+  const resources = new Set(
+    current.nodes
+      .filter(
+        (n) => n.type === "item" || n.type === "concept" || n.type === "rule",
+      )
+      .map((n) => n.localId),
+  );
+  const newActions = current.activities.filter(
+    (a) => !previous.activities.some((b) => b.localId === a.localId),
+  );
+  const newInteractions = (current.interactions ?? []).filter(
+    (a) => !(previous.interactions ?? []).some((b) => b.localId === a.localId),
+  );
 
-  if(workshop==="geography")
-    return added.some(n=>n.type==="location" && n.description.length>15 && n.access.length>0);
-  if(workshop==="factions")
-    return current.nodes.some(n=>n.type==="organization" &&
-      (added.some(x=>x.localId===n.localId) || edges.some(e=>
-        e.fromRef===n.localId || e.toRef===n.localId)) &&
-      (zones.has(n.areaRef??"") || edges.some(e=>
-        (e.fromRef===n.localId && zones.has(e.toRef)) ||
-        (e.toRef===n.localId && zones.has(e.fromRef)))));
-  if(workshop==="people")
-    return current.nodes.some(n=>n.type==="character" &&
-      (added.some(x=>x.localId===n.localId) || edges.some(e=>
-        e.fromRef===n.localId || e.toRef===n.localId)) &&
-      edges.some(e=>e.fromRef===n.localId && actors.has(e.toRef) ||
-        e.toRef===n.localId && actors.has(e.fromRef)));
-  if(workshop==="economy")
-    return edges.some(e=>
-      actors.has(e.fromRef) && resources.has(e.toRef) ||
-      actors.has(e.toRef) && resources.has(e.fromRef)) &&
-      current.nodes.some(n=>resources.has(n.localId) && n.value.trim().length>0 && n.access.trim().length>0);
-  if(workshop==="power")
-    return current.nodes.some(n=>n.type==="rule" &&
-      (added.some(x=>x.localId===n.localId) || edges.some(e=>
-        e.fromRef===n.localId || e.toRef===n.localId)));
-  if(workshop==="events")
-    return newActions.some(a=>a.stage==="ongoing" && a.actorRefs.some(id=>actors.has(id)) &&
-      a.resourceRefs.some(id=>resources.has(id)));
-  if(workshop==="living")
-    return newActions.some(a=>a.actorRefs.some(id=>actors.has(id)));
-  if(workshop==="social")
-    return edges.some(e=>
-      (zones.has(e.fromRef)||zones.has(e.toRef)) &&
-      (actors.has(e.fromRef)||actors.has(e.toRef)));
-  if(workshop==="playability")
-    return newInteractions.length>0 &&
-      newInteractions.some(a=>a.state==="available" && a.yields.length>0);
+  if (workshop === "geography")
+    return added.some(
+      (n) =>
+        n.type === "location" &&
+        n.description.length > 15 &&
+        n.access.length > 0,
+    );
+  if (workshop === "factions")
+    return current.nodes.some(
+      (n) =>
+        n.type === "organization" &&
+        (added.some((x) => x.localId === n.localId) ||
+          edges.some(
+            (e) => e.fromRef === n.localId || e.toRef === n.localId,
+          )) &&
+        (zones.has(n.areaRef ?? "") ||
+          edges.some(
+            (e) =>
+              (e.fromRef === n.localId && zones.has(e.toRef)) ||
+              (e.toRef === n.localId && zones.has(e.fromRef)),
+          )),
+    );
+  if (workshop === "people")
+    return current.nodes.some(
+      (n) =>
+        n.type === "character" &&
+        (added.some((x) => x.localId === n.localId) ||
+          edges.some(
+            (e) => e.fromRef === n.localId || e.toRef === n.localId,
+          )) &&
+        edges.some(
+          (e) =>
+            (e.fromRef === n.localId && actors.has(e.toRef)) ||
+            (e.toRef === n.localId && actors.has(e.fromRef)),
+        ),
+    );
+  if (workshop === "economy")
+    return (
+      edges.some(
+        (e) =>
+          (actors.has(e.fromRef) && resources.has(e.toRef)) ||
+          (actors.has(e.toRef) && resources.has(e.fromRef)),
+      ) &&
+      current.nodes.some(
+        (n) =>
+          resources.has(n.localId) &&
+          n.value.trim().length > 0 &&
+          n.access.trim().length > 0,
+      )
+    );
+  if (workshop === "power")
+    return current.nodes.some(
+      (n) =>
+        n.type === "rule" &&
+        (added.some((x) => x.localId === n.localId) ||
+          edges.some((e) => e.fromRef === n.localId || e.toRef === n.localId)),
+    );
+  if (workshop === "events")
+    return newActions.some(
+      (a) =>
+        a.stage === "ongoing" &&
+        a.actorRefs.some((id) => actors.has(id)) &&
+        a.resourceRefs.some((id) => resources.has(id)),
+    );
+  if (workshop === "living")
+    return newActions.some((a) => a.actorRefs.some((id) => actors.has(id)));
+  if (workshop === "social")
+    return edges.some(
+      (e) =>
+        (zones.has(e.fromRef) || zones.has(e.toRef)) &&
+        (actors.has(e.fromRef) || actors.has(e.toRef)),
+    );
+  if (workshop === "playability")
+    return (
+      newInteractions.length > 0 &&
+      newInteractions.some(
+        (a) => a.state === "available" && a.yields.length > 0,
+      )
+    );
   return false;
 }
 
