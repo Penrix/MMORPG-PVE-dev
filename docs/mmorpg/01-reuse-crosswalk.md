@@ -1,6 +1,6 @@
 # 对标项目复用 Crosswalk｜除 NarraLume 底座以外究竟要吸收什么
 
-> 日期：2026-11-20；状态：架构候选与已核对源码来源。**“借鉴”不等于“已经移植”。** 当前 PR #1 只实际复用 NarraLume 的 `canon-spread-candidate`，其它项目在本文件登记为待开发来源。决定移植前须再次检查上游版本、测试和许可证。
+> 日期：2026-11-20；状态：架构候选与已核对源码来源。**“借鉴”不等于“已经移植”。** PR #1 最初只复用 NarraLume 的 `canon-spread-candidate`；随后实现了新的 WorldPack生成/校验/采纳及图检索，参考 Covel/WorldForge 的架构与算法但**未直接复制第三方源码**。详情见 [04 真实代码](04-world-pack-implementation.md)。决定移植前须再次检查上游版本、测试和许可证。
 
 ## 0. 确定的主底座：NarraLume（Apache-2.0）
 
