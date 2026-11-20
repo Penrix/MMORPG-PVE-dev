@@ -1,0 +1,126 @@
+import { z } from "zod";
+
+/**
+ * Covel-inspired package boundary: a single AI run creates mutually
+ * referential world content. Local references are resolved atomically only
+ * when the author explicitly adopts the package into NarraLume Canon.
+ */
+export const WorldPackRequestSchema = z.object({
+  requestId: z.string().uuid(),
+  scale: z.enum(["W0", "W1"]),
+  premise: z.string().trim().min(1).max(8_000),
+  worldTime: z.string().trim().min(1).max(500),
+  focus: z.string().trim().max(2_000),
+  genre: z.string().trim().max(2_000),
+  scarcity: z.string().trim().max(2_000),
+  instruction: z.string().trim().max(8_000),
+  parentAreaId: z.string().trim().max(300).nullable(),
+});
+export type WorldPackRequest = z.infer<typeof WorldPackRequestSchema>;
+
+export const WorldPackNodeSchema = z.object({
+  localId: z.string().regex(/^[a-z][a-z0-9_-]{1,79}$/),
+  existingCanonId: z.string().trim().min(1).nullable(),
+  type: z.enum(["character", "location", "organization", "item", "rule", "concept"]),
+  name: z.string().trim().min(1).max(300),
+  description: z.string().trim().min(1).max(30_000),
+  areaRef: z.string().trim().min(1).nullable(),
+  value: z.string().trim().max(5_000),
+  access: z.string().trim().max(5_000),
+  motive: z.string().trim().max(5_000),
+  currentActivity: z.string().trim().max(5_000),
+  origin: z.enum(["original", "inference", "historical_claim", "source_canon"]),
+  sourceNote: z.string().trim().max(3_000),
+}).strict();
+export type WorldPackNode = z.infer<typeof WorldPackNodeSchema>;
+
+export const WorldPackLinkSchema = z.object({
+  fromRef: z.string().trim().min(1),
+  toRef: z.string().trim().min(1),
+  relation: z.string().trim().min(1).max(300),
+  description: z.string().trim().min(1).max(5_000),
+  status: z.enum(["current", "possible"]),
+}).strict();
+export type WorldPackLink = z.infer<typeof WorldPackLinkSchema>;
+
+export const WorldPackActivitySchema = z.object({
+  localId: z.string().regex(/^[a-z][a-z0-9_-]{1,79}$/),
+  actorRefs: z.array(z.string().trim().min(1)).min(1).max(20),
+  description: z.string().trim().min(1).max(12_000),
+  reason: z.string().trim().min(1).max(5_000),
+  resourceRefs: z.array(z.string().trim().min(1)).max(30),
+  stage: z.enum(["ongoing", "potential"]),
+  worldTime: z.string().trim().min(1).max(500),
+}).strict();
+export type WorldPackActivity = z.infer<typeof WorldPackActivitySchema>;
+
+export const WorldPackDocumentSchema = z.object({
+  summary: z.string().trim().min(1).max(16_000),
+  nodes: z.array(WorldPackNodeSchema).min(1).max(80),
+  links: z.array(WorldPackLinkSchema).max(180),
+  activities: z.array(WorldPackActivitySchema).max(80),
+  openThreads: z.array(z.string().trim().min(1).max(3_000)).max(70),
+}).strict();
+export type WorldPackDocument = z.infer<typeof WorldPackDocumentSchema>;
+
+export const WorldPackRecordSchema = z.object({
+  id: z.string(),
+  projectId: z.string(),
+  runId: z.string(),
+  status: z.enum(["draft", "adopted"]),
+  version: z.number().int().positive(),
+  request: WorldPackRequestSchema,
+  document: WorldPackDocumentSchema,
+  canonIds: z.record(z.string(), z.string()),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type WorldPackRecord = z.infer<typeof WorldPackRecordSchema>;
+
+export const UpdateWorldPackRequestSchema = z.object({
+  expectedVersion: z.number().int().positive(),
+  document: WorldPackDocumentSchema,
+});
+export const AdoptWorldPackRequestSchema = z.object({
+  expectedVersion: z.number().int().positive(),
+});
+
+/**
+ * WorldForge-style graph references: local IDs or `canon:<existing-id>`.
+ * Models cannot invent database IDs; references must resolve before adoption.
+ */
+export function worldPackReferenceProblems(
+  document: WorldPackDocument,
+  knownCanonIds: ReadonlySet<string>,
+): string[] {
+  const problems: string[] = [];
+  const nodes = new Map<string, WorldPackNode>();
+  for (const node of document.nodes) {
+    if (nodes.has(node.localId)) problems.push(`duplicate local node: ${node.localId}`);
+    nodes.set(node.localId, node);
+    if (node.existingCanonId && !knownCanonIds.has(node.existingCanonId))
+      problems.push(`unknown existing Canon entity: ${node.existingCanonId}`);
+  }
+  const resolve = (ref: string) => {
+    if (ref.startsWith("canon:")) {
+      if (!knownCanonIds.has(ref.slice(6))) problems.push(`unknown Canon ref: ${ref}`);
+    } else if (!nodes.has(ref)) {
+      problems.push(`unresolved world ref: ${ref}`);
+    }
+  };
+  for (const node of document.nodes) {
+    if (node.areaRef) resolve(node.areaRef);
+    if (node.areaRef === node.localId) problems.push(`self-referential area: ${node.localId}`);
+  }
+  for (const link of document.links) {
+    resolve(link.fromRef); resolve(link.toRef);
+    if (link.fromRef === link.toRef) problems.push(`self-link: ${link.fromRef}`);
+  }
+  const activities = new Set<string>();
+  for (const event of document.activities) {
+    if (activities.has(event.localId)) problems.push(`duplicate activity: ${event.localId}`);
+    activities.add(event.localId);
+    for (const ref of [...event.actorRefs, ...event.resourceRefs]) resolve(ref);
+  }
+  return [...new Set(problems)];
+}
