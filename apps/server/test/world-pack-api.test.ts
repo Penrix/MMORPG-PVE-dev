@@ -153,6 +153,95 @@ const baseDocument: WorldPackDocument = {
 
 let mockDocument: WorldPackDocument = structuredClone(baseDocument);
 
+/** The mock produces a different *actual world increment* for every
+ * program-selected MMORPG workshop. Returning the same all-in-one list for
+ * every stage would conceal the original shortcut and must not pass. */
+function workshopPatch(request: unknown): WorldPackDocument {
+  const call = request as { messages?: Array<{ content?: string }> };
+  const command = JSON.parse(call.messages?.[0]?.content ?? "{}") as {
+    operation: string;
+    authorRequest: { scale: "W0" | "W1"; intent?: string };
+  };
+  const op = command.operation;
+  const scale = command.authorRequest.scale;
+  const advance = command.authorRequest.intent === "advance";
+  const market = mockDocument.nodes.find(n => n.type === "location") ?? baseDocument.nodes[0]!;
+  const org = advance ? mockDocument.nodes.find(n => n.localId === "jade_guild")! :
+    scale === "W0" ? baseDocument.nodes[1]! : {
+      ...baseDocument.nodes[1]!, localId: "river_guild", name: "河湾行会", areaRef: "jade_market",
+    };
+  const person = advance ? mockDocument.nodes.find(n => n.localId === "guild_master")! :
+    scale === "W0" ? baseDocument.nodes[2]! : {
+      ...baseDocument.nodes[2]!, localId: "river_master", name: "河湾掌船人", areaRef: "jade_market",
+    };
+  const asset = mockDocument.nodes.find(n => n.type === "item") ?? baseDocument.nodes[3]!;
+  const rule = {
+    ...baseDocument.nodes[3]!, type: "rule" as const,
+    localId: "alchemy_rule", name: "宗门神识炼丹术",
+    areaRef: "jade_market", existingCanonId: null,
+    description: "已被宗门多个炼丹师修习的公共力量，能炼制补神丹。",
+  };
+  const relation = (fromRef: string, toRef: string, type: string) => ({
+    fromRef,toRef,relation:type,status:"current" as const,
+    description:"双方实际进行业务往来，受到各自契约与职位权限制约。",
+  });
+  const patch: WorldPackDocument = {
+    summary: mockDocument.summary,
+    nodes: [market], links: [], activities: [],
+    openThreads: [], dimensionSignals: [],
+  };
+  if (advance) {
+    if (op === "living") {
+      patch.nodes = [...mockDocument.nodes];
+      patch.links = [...mockDocument.links];
+      patch.activities = [...mockDocument.activities];
+    } else if (op === "events") {
+      patch.activities = [{
+        localId:"trade_followup",actorRefs:["guild_master"],resourceRefs:["moon_pill"],
+        stage:"ongoing",worldTime:"宗门大比时",
+        description:"掌柜正接触另一批丹药买家，旧商会继续营业。",
+        reason:"继续利用已有丹药权益经营交易",
+      }];
+    } else if (op === "social") {
+      patch.links = [
+        relation("jade_guild","jade_market","operates"),
+        relation("guild_master","jade_guild","leads"),
+        relation("guild_master","jade_market","visits"),
+        relation("guild_master","moon_pill","owns"),
+      ];
+    } else if (op === "playability") {
+      patch.links = [relation("moon_pill","guild_master","enables")];
+    }
+    return patch;
+  }
+  if (op === "geography") return patch;
+  if (op === "factions") {
+    patch.nodes = [org];patch.links = [relation(org.localId,market.localId,"operates")];
+  } else if (op === "people") {
+    patch.nodes = [person];patch.links = [relation(person.localId,org.localId,"leads")];
+  } else if (op === "economy") {
+    patch.nodes = [asset];patch.links = [relation(org.localId,asset.localId,"owns")];
+  } else if (op === "power") {
+    patch.nodes = [rule];patch.links = [relation(person.localId,rule.localId,"can_use")];
+  } else if (op === "events") {
+    patch.activities = [{
+      ...baseDocument.activities[0]!,
+      actorRefs:[person.localId,org.localId],resourceRefs:[asset.localId],
+    }];
+    if (scale === "W0") patch.activities.push(baseDocument.activities[1]!);
+  } else if (op === "social") {
+    patch.links = [
+      relation(person.localId,market.localId,"visits"),
+      ...(scale === "W0" ? [baseDocument.links[3]!] : [
+        relation(asset.localId,market.localId,"found_in"),
+      ]),
+    ];
+  } else if (op === "playability") {
+    patch.links = [relation(asset.localId,person.localId,"enables")];
+  }
+  return patch;
+}
+
 let independentFactionAgentCalls = 0;
 
 async function setup() {
@@ -188,7 +277,7 @@ async function setup() {
     async structured(_run, _step, purpose, _request, _contract, validate) {
       if (purpose !== "world-pack")
         throw new Error(`Wrong purpose: ${purpose}`);
-      const result = validate(mockDocument);
+      const result = validate(workshopPatch(_request));
       if (!result.success) throw new Error(result.issues.join("; "));
       return {
         value: result.data,
