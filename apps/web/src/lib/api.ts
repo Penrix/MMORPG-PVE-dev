@@ -3746,3 +3746,48 @@ export function getStoryLineProposals(projectId: string, signal?: AbortSignal): 
 export function decideStoryLineProposal(projectId: string, setId: string, itemId: string, action: "apply" | "reject"): Promise<StoryLineProposalSetDto> {
   return requestJson(`/api/projects/${encodeURIComponent(projectId)}/compass/proposals/${encodeURIComponent(setId)}/items/${encodeURIComponent(itemId)}/decision`, jsonRequest("POST", { action }));
 }
+
+/* WorldPack is an independent world-content production run: one document
+ * contains named objects, references and NPC/organization activities. */
+export async function generateWorldPack(
+  projectId: string,
+  input: import("@narralume/contracts").WorldPackRequest,
+): Promise<{ runId: string; idempotentReplay: boolean }> {
+  return requestJson(
+    `/api/projects/${encodeURIComponent(projectId)}/world-packs/generate`,
+    jsonRequest("POST", input),
+  );
+}
+
+export async function listWorldPacks(
+  projectId: string,
+  signal?: AbortSignal,
+): Promise<import("@narralume/contracts").WorldPackRecord[]> {
+  return requestJson(
+    `/api/projects/${encodeURIComponent(projectId)}/world-packs`,
+    signal ? { signal } : {},
+  );
+}
+
+export async function reviseWorldPack(
+  projectId: string,
+  packId: string,
+  expectedVersion: number,
+  document: import("@narralume/contracts").WorldPackDocument,
+): Promise<import("@narralume/contracts").WorldPackRecord> {
+  return requestJson(
+    `/api/projects/${encodeURIComponent(projectId)}/world-packs/${encodeURIComponent(packId)}`,
+    jsonRequest("PUT", { expectedVersion, document }),
+  );
+}
+
+export async function adoptWorldPack(
+  projectId: string,
+  packId: string,
+  expectedVersion: number,
+): Promise<import("@narralume/contracts").WorldPackRecord> {
+  return requestJson(
+    `/api/projects/${encodeURIComponent(projectId)}/world-packs/${encodeURIComponent(packId)}/adopt`,
+    jsonRequest("POST", { expectedVersion }),
+  );
+}
