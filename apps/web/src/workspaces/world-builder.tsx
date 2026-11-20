@@ -42,6 +42,7 @@ const EMPTY: FormValues = {
   scarcity: "",
   instruction: "",
   parentAreaId: null,
+  sourcePackageText: "",
 };
 
 function loadForm(projectId: string): FormValues {
@@ -60,6 +61,7 @@ function loadForm(projectId: string): FormValues {
       scarcity: typeof saved.scarcity === "string" ? saved.scarcity : "",
       instruction: typeof saved.instruction === "string" ? saved.instruction : "",
       parentAreaId: typeof saved.parentAreaId === "string" ? saved.parentAreaId : null,
+      sourcePackageText: typeof saved.sourcePackageText === "string" ? saved.sourcePackageText : "",
     };
   } catch {
     return { ...EMPTY };
@@ -225,6 +227,11 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
             </div>
           ) : null}
 
+          <label htmlFor="wp-covel">Covel 格式的已有世界包（可选，真正解析原生格式）</label>
+          <textarea id="wp-covel" rows={4} maxLength={100_000} value={form.sourcePackageText ?? ""}
+            onChange={(event) => update("sourcePackageText", event.target.value)}
+            placeholder={"===WORLD_YAML===\\nworld: 你的世界\\n===WORLD_MD===\\n现有世界资料、势力与人物……\\n===END==="} />
+          <p className="world-builder__hint">使用实际移植的 Covel 分段解析器读取 WORLD_YAML / WORLD_MD / WORLD_PACKAGE_YAML，不要求作者自行拆成单项实体卡。</p>
           <label htmlFor="wp-extra">本轮世界生产重点（可选）</label>
           <textarea id="wp-extra" rows={3} value={form.instruction} maxLength={8_000}
             onChange={(event) => update("instruction", event.target.value)}
@@ -416,6 +423,10 @@ function WorldPackReview({
           ))}
         </ul>
       </details>
+      {pack.document.dimensionSignals?.length ? <details>
+        <summary>世界正在涌现的力量与发展维度</summary>
+        <ul className="world-builder__relations">{pack.document.dimensionSignals.map((signal) => <li key={signal.dim}>{signal.dim} · {signal.kind} · {signal.description}</li>)}</ul>
+      </details> : null}
       {pack.document.openThreads.length ? <details>
         <summary>以后还能继续打开的世界内容</summary>
         <ul className="world-builder__relations">
