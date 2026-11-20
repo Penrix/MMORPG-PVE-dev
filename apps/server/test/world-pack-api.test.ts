@@ -215,24 +215,38 @@ function workshopPatch(request: unknown): WorldPackDocument {
     interactions: [],
     dimensionSignals: [],
   };
-  const gameActions = () => [{
-    localId:"public_arrival",name:"商会招徕新人入坊市",offeredByRef:org.localId,
-    locationRef:market.localId,action:"取得进场资格，先接触真实的商会柜台。",
-    requires:[],yields:[{kind:"access" as const,ref:market.localId}],
-    state:"available" as const,
-  },{
-    localId:"buy_resource",name:"竞购稀有资源",offeredByRef:person.localId,
-    locationRef:market.localId,action:"与柜台掌柜面谈并取得资源的实际交割。",
-    requires:[{kind:"access" as const,ref:market.localId}],
-    yields:[{kind:"asset" as const,ref:asset.localId}],
-    state:"available" as const,
-  },{
-    localId:"invest_resource",name:"凭已有资产进入商会更高圈层",offeredByRef:person.localId,
-    locationRef:market.localId,action:"以已取得的资源联系商会关键人物争取资格。",
-    requires:[{kind:"asset" as const,ref:asset.localId}],
-    yields:[{kind:"permission" as const,ref:org.localId}],
-    state:"available" as const,
-  }];
+  const gameActions = () => [
+    {
+      localId: "public_arrival",
+      name: "商会招徕新人入坊市",
+      offeredByRef: org.localId,
+      locationRef: market.localId,
+      action: "取得进场资格，先接触真实的商会柜台。",
+      requires: [],
+      yields: [{ kind: "access" as const, ref: market.localId }],
+      state: "available" as const,
+    },
+    {
+      localId: "buy_resource",
+      name: "竞购稀有资源",
+      offeredByRef: person.localId,
+      locationRef: market.localId,
+      action: "与柜台掌柜面谈并取得资源的实际交割。",
+      requires: [{ kind: "access" as const, ref: market.localId }],
+      yields: [{ kind: "asset" as const, ref: asset.localId }],
+      state: "available" as const,
+    },
+    {
+      localId: "invest_resource",
+      name: "凭已有资产进入商会更高圈层",
+      offeredByRef: person.localId,
+      locationRef: market.localId,
+      action: "以已取得的资源联系商会关键人物争取资格。",
+      requires: [{ kind: "asset" as const, ref: asset.localId }],
+      yields: [{ kind: "permission" as const, ref: org.localId }],
+      state: "available" as const,
+    },
+  ];
   if (advance) {
     if (op === "living") {
       patch.nodes = [...mockDocument.nodes];
