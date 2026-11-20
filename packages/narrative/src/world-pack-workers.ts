@@ -54,9 +54,9 @@ export const WORLD_PACK_MODEL_CONTRACT: JsonSchemaContract = {
     required: ["summary", "nodes", "links", "activities", "openThreads"],
     properties: {
       summary: txt("What actual world has been produced and how people live there"),
-      nodes: { type: "array", minItems: 4, maxItems: 80, items: NODE_SCHEMA },
+      nodes: { type: "array", minItems: 1, maxItems: 80, items: NODE_SCHEMA },
       links: {
-        type: "array", minItems: 2, maxItems: 180,
+        type: "array", maxItems: 180,
         items: {
           type: "object", additionalProperties: false,
           required: ["fromRef", "toRef", "relation", "description", "status"],
@@ -70,7 +70,7 @@ export const WORLD_PACK_MODEL_CONTRACT: JsonSchemaContract = {
         },
       },
       activities: {
-        type: "array", minItems: 1, maxItems: 80,
+        type: "array", maxItems: 80,
         items: {
           type: "object", additionalProperties: false,
           required: ["localId", "actorRefs", "description", "reason", "resourceRefs", "stage", "worldTime"],
