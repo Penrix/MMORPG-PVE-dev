@@ -6,12 +6,27 @@
     "rootDir": "src",
     "tsBuildInfoFile": "dist/.tsbuildinfo"
   },
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/**/*.ts"
+  ],
   "references": [
-    { "path": "../context" },
-    { "path": "../domain" },
-    { "path": "../harness" },
-    { "path": "../llm" },
-    { "path": "../persistence" }
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../domain"
+    },
+    {
+      "path": "../harness"
+    },
+    {
+      "path": "../llm"
+    },
+    {
+      "path": "../persistence"
+    },
+    {
+      "path": "../contracts"
+    }
   ]
 }
