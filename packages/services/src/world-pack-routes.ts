@@ -169,6 +169,17 @@ export function adoptWorldPack(
           `Area ${areaId} for ${node.name} must be a location`,
         );
       }
+      const priorArea = canon.listEffectiveFacts(projectId, {
+        subjectId: ids[node.localId]!,
+      }).find((fact) => fact.predicate === "world.area");
+      if (priorArea?.authority === "locked" && priorArea.objectEntityId !== areaId) {
+        throw new WorldPackRouteError(
+          "world.pack.locked_area",
+          `The location of ${node.name} is locked; change it through the Story Bible`,
+          409,
+        );
+      }
+      if (priorArea?.objectEntityId === areaId) continue;
       canon.insertFact(createCanonFact({
         id: randomUuid(),
         projectId,
@@ -176,11 +187,7 @@ export function adoptWorldPack(
         predicate: "world.area",
         objectEntityId: areaId,
         authority: "confirmed",
-        ...(canon.listEffectiveFacts(projectId, { subjectId: ids[node.localId]! })
-          .find((fact) => fact.predicate === "world.area")
-          ? { supersedesFactId: canon.listEffectiveFacts(projectId, { subjectId: ids[node.localId]! })
-              .find((fact) => fact.predicate === "world.area")!.id }
-          : {}),
+        ...(priorArea ? { supersedesFactId: priorArea.id } : {}),
         sourceType: "world-pack",
         sourceId: pack.id,
         now,
