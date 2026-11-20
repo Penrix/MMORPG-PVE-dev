@@ -134,13 +134,14 @@ test("主链只经由 UI：设置 → 建书 → 大纲 → 写作 → AI 接续
     const railBox = await page.locator(".rail").boundingBox();
     expect(railBox?.height ?? 999).toBeLessThanOrEqual(80);
     const links = page.locator(".rail__nav .rail__item");
-    await expect(links).toHaveCount(5);
-    for (let index = 0; index < 5; index += 1) {
+    // World Builder is a sixth peer workspace next to the original five.
+    await expect(links).toHaveCount(6);
+    for (let index = 0; index < 6; index += 1) {
       const box = await links.nth(index).boundingBox();
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
       expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
     }
-    await expect(page.locator(".rail__nav .rail__item-label")).toHaveCount(5);
+    await expect(page.locator(".rail__nav .rail__item-label")).toHaveCount(6);
   }
 
   await page.getByRole("link", { name: "前往交付" }).click();
