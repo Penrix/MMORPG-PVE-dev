@@ -12,7 +12,7 @@
 | [03 实施顺序与实际验收](03-build-order-and-acceptance.md)             | 从世界包、复杂内容生产、Canon 采用、世界关系图、NPC 动态到正文世界缺口往返                                        |
 | [04 WorldPack 当前实际代码](04-world-pack-implementation.md)          | 世界包生成/修订/原子采纳、图查询、NPC活动推进、正文实际上下文与待验收部分                                         |
 
-另见原型说明：[当前 World Builder 技术入口](../mmorpg-world-builder.md)。
+**当前直接移植与研究全文**：[05 已移植的第三方源码和运行接线](05-actual-upstream-ports.md) · [v0.1～v0.7 七版独立母本](research/README.md)。另见 [World Builder 技术入口](../mmorpg-world-builder.md)。
 
 ## 一句话判断
 
@@ -22,9 +22,9 @@
 
 - GitHub Fork：[`Penrix/MMORPG-PVE-dev`](https://github.com/Penrix/MMORPG-PVE-dev)，**当前公开**。
 - 原 NarraLume 正文生成、版本、审阅、知识、Canon 和状态管理保持不变。
-- 旧版只是提示词/Canonical候选接线原型；现在已经新增**独立WorldPack生成链、SQLite包级候选、引用校验、原子采纳和世界图查询代码**，但尚未完成CI或真实模型验收。第三方机制是参照后再实现，非直接源码移植。
+- 旧版只是提示词/Canonical候选接线原型；现在已经新增**独立WorldPack生成链、SQLite包级候选、引用校验、原子采纳和世界图查询代码**，但尚未完成CI或真实模型验收。其中部分第三方机制已实际移植 MIT 原始源码，且投入运行路径，详见 [05 移植记录](05-actual-upstream-ports.md)；完整引擎尚待续迁。
 - 本目录文档属于设计与实现指导，**不是**已通过模型/CI 验收的功能声明。
-- 私有 `Penrix/MMORPG-PVE` 的 v0.1/v0.7 全文研究与旧 Atlas 是本项目原始资产；不要以本目录的提炼替换原文，也不要未经授权复制到本公开 Fork。
+- 完整 v0.1～v0.7 七个独立研究版本已在用户明确公开授权下收入 [research](research/README.md)；旧 Atlas 在原仓库。原文不能被运行时摘录或简要指南替换。
 
 ## 提醒
 
