@@ -38,6 +38,7 @@ import {
   registerWorldPackRoutes,
   registerWorldGraphRoutes,
   registerSourceCorpusRoutes,
+  registerUnifiedSourceWorldRoutes,
   registerProjectWorldRoutes,
   registerDeliveryRoutes,
   registerLongNovelRoutes,
@@ -311,6 +312,7 @@ async function boot(): Promise<void> {
   });
   registerWorldGraphRoutes(table, database);
   registerSourceCorpusRoutes(table, database);
+  registerUnifiedSourceWorldRoutes(table, database);
   registerProjectWorldRoutes(table, database);
   registerWorldPackRoutes(table, database, {
     runCoordinator: coordinator,
