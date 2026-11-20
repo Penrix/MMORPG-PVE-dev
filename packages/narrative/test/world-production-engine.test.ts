@@ -86,15 +86,15 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
         },
       ],
     };
-    // The v0.5 playable-action deficit is prioritized before public-power
-    // expansion. The separate mandatory power workshop still runs afterward.
-    expect(playtestWorld(doc, req).next?.workshop).toBe("playability");
+    // Every world needs concrete public powers; playable action chains are
+    // optional diagnostics rather than mandatory game-runtime mechanics.
+    expect(playtestWorld(doc, req).next?.workshop).toBe("power");
     doc = {
       ...doc,
       nodes: [...doc.nodes, node("cultivation", "rule", "灵脉炼器规则")],
       links: [...doc.links, link("chief", "cultivation", "can_use")],
     };
-    expect(playtestWorld(doc, req).next?.workshop).toBe("playability");
+    expect(playtestWorld(doc, req).next).toBeNull();
     doc = {
       ...doc,
       interactions: [
