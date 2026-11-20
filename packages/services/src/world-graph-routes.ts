@@ -153,19 +153,30 @@ export function registerWorldGraphRoutes(
     hops: z.coerce.number().int().min(0).max(3).default(2),
   });
   // Same Canon entity ID opens all facets, not an isolated four-field card.
-  app.route("GET", "/api/projects/:projectId/world-encyclopedia/:entityId", async (request) => {
-    const {projectId,entityId} = z.object({
-      projectId:z.string().min(1),entityId:z.string().min(1),
-    }).parse(request.params);
-    if (!projects.get(projectId))
-      throw new ServiceError("project.not_found","Project not found",404);
-    if (!canon.getEntity(projectId,entityId))
-      throw new ServiceError("world.entity.not_found","World entity not found",404);
-    return {
-      dossier: encyclopedia.getDossier(projectId,entityId),
-      linkedEntities: encyclopedia.listLinkedEntities(projectId,entityId),
-    };
-  });
+  app.route(
+    "GET",
+    "/api/projects/:projectId/world-encyclopedia/:entityId",
+    async (request) => {
+      const { projectId, entityId } = z
+        .object({
+          projectId: z.string().min(1),
+          entityId: z.string().min(1),
+        })
+        .parse(request.params);
+      if (!projects.get(projectId))
+        throw new ServiceError("project.not_found", "Project not found", 404);
+      if (!canon.getEntity(projectId, entityId))
+        throw new ServiceError(
+          "world.entity.not_found",
+          "World entity not found",
+          404,
+        );
+      return {
+        dossier: encyclopedia.getDossier(projectId, entityId),
+        linkedEntities: encyclopedia.listLinkedEntities(projectId, entityId),
+      };
+    },
+  );
   app.route("GET", "/api/projects/:projectId/world-graph", async (request) => {
     const { projectId } = z
       .object({ projectId: z.string().min(1) })
