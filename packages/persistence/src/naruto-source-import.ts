@@ -98,9 +98,7 @@ export function importNarutoDattebayo(
     });
     // Source snapshots are rederived, never author-edited Canon. Reimports
     // must drop stale relations and records atomically while preserving books.
-    db.raw
-      .prepare("DELETE FROM source_records WHERE corpus_id=?")
-      .run(corpusId);
+    repo.beginCorpusSnapshot(corpusId);
 
     const supplement = new Map<number, Row>();
     for (const group of ["akatsuki", "kara"] as const) {
@@ -401,9 +399,7 @@ export function importNarutoWikiScraper(
       },
       importedAt,
     });
-    db.raw
-      .prepare("DELETE FROM source_records WHERE corpus_id=?")
-      .run(NARUTO_WIKI_CORPUS);
+    repo.beginCorpusSnapshot(NARUTO_WIKI_CORPUS);
     const knownByName = new Map<string, string[]>();
     stats.exactDuplicates = 0;
     stats.duplicateNameVariants = 0;
