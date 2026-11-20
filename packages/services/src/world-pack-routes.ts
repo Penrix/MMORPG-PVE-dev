@@ -176,40 +176,34 @@ export function adoptWorldPack(
         predicate: "world.area",
         objectEntityId: areaId,
         authority: "confirmed",
+        ...(canon.listEffectiveFacts(projectId, { subjectId: ids[node.localId]! })
+          .find((fact) => fact.predicate === "world.area")
+          ? { supersedesFactId: canon.listEffectiveFacts(projectId, { subjectId: ids[node.localId]! })
+              .find((fact) => fact.predicate === "world.area")!.id }
+          : {}),
         sourceType: "world-pack",
         sourceId: pack.id,
         now,
       }));
     }
 
-    // WorldForge-inspired event projection: a new state for the same pair
-    // supersedes the previous relationship, instead of appending two
-    // incompatible currently-effective versions.
+    // WorldForge-inspired event projection. A relationship may be explicitly
+    // superseded or ended, but no unrelated owner's rights are withdrawn.
+    // Shared ownership and contested titles are legitimate world realities.
     const currentRelations = state.listCurrentRelationships(projectId);
     for (const link of pack.document.links) {
-      if (link.status !== "current") continue; // possible events remain only in the pack
+      if (link.status === "possible") continue;
       const from = resolve(link.fromRef);
       const to = resolve(link.toRef);
-      const superseded = currentRelations.find((event) =>
-        event.fromEntityId === from && event.toEntityId === to && event.relation === link.relation
+      const prior = currentRelations.find((event) =>
+        event.fromEntityId === from && event.toEntityId === to &&
+        event.relation === link.relation
       );
-      // Explicit ownership change voids prior owner's active ownership.
-      // No automatic cost/penalty applies, and other kinds of relationship
-      // can coexist unless the author explicitly changes them.
-      if (link.relation === "owns") {
-        for (const previous of currentRelations) {
-          if (previous.relation !== "owns" || previous.toEntityId !== to ||
-            previous.fromEntityId === from) continue;
-          state.insertRelationship({
-            ...previous,
-            id: randomUuid(),
-            state: { ...previous.state, lifecycle: "voided", worldPackId: pack.id },
-            supersedesEventId: previous.id,
-            storyTime: pack.request.worldTime,
-            sourceId: pack.id,
-            createdAt: now,
-          });
-        }
+      if (link.status === "ended" && !prior) {
+        throw new WorldPackRouteError(
+          "world.pack.relationship_not_found",
+          `Cannot end ${link.relation} between ${from} and ${to}: no current relationship exists`,
+        );
       }
       state.insertRelationship({
         id: randomUuid(),
@@ -220,14 +214,14 @@ export function adoptWorldPack(
         intensity: null,
         state: {
           description: link.description,
-          lifecycle: "active",
+          lifecycle: link.status === "ended" ? "voided" : "active",
           worldPackId: pack.id,
           worldTime: pack.request.worldTime,
         },
         outlineNodeId: null,
         storyTime: pack.request.worldTime,
         sourceId: pack.id,
-        supersedesEventId: superseded?.id ?? null,
+        supersedesEventId: prior?.id ?? null,
         createdAt: now,
       });
     }
