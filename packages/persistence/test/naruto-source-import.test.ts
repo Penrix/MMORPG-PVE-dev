@@ -180,5 +180,28 @@ describe("Naruto mother-world import into the ONE NarraLume SQLite", () => {
     expect(
       refs.getRecord(NARUTO_WIKI_CORPUS, "wiki:Rahyō#2")?.raw.summary,
     ).toBe("Different source record");
+    // Second import arrives in reverse order. The real person/source variant
+    // mapped to each stable source key must NOT swap identity.
+    importNarutoWikiScraper(db!, [
+      {name:"Rahyō",summary:"Different source record"},
+      {name:"Rahyō",summary:"First source record"},
+    ],"2026-11-21T01:00:00.000Z");
+    expect(refs.getRecord(NARUTO_WIKI_CORPUS,"wiki:Rahyō")?.raw.summary)
+      .toBe("First source record");
+    expect(refs.getRecord(NARUTO_WIKI_CORPUS,"wiki:Rahyō#2")?.raw.summary)
+      .toBe("Different source record");
+    expect(refs.search("Rahyō",{corpusId:NARUTO_WIKI_CORPUS})).toHaveLength(2);
+    // New claim with an identical name but different source contents gets
+    // a NEW ID rather than overwriting an existing linked biography.
+    importNarutoWikiScraper(db!, [
+      {name:"Rahyō",summary:"Third source record"},
+    ],"2026-11-21T02:00:00.000Z");
+    expect(refs.getRecord(NARUTO_WIKI_CORPUS,"wiki:Rahyō")?.raw.summary)
+      .toBe("First source record");
+    expect(refs.getRecord(NARUTO_WIKI_CORPUS,"wiki:Rahyō#2")?.raw.summary)
+      .toBe("Different source record");
+    expect(refs.getRecord(NARUTO_WIKI_CORPUS,"wiki:Rahyō#3")?.raw.summary)
+      .toBe("Third source record");
+    expect(refs.search("Rahyō",{corpusId:NARUTO_WIKI_CORPUS})).toHaveLength(1);
   });
 });
