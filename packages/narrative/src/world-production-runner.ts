@@ -203,6 +203,12 @@ function hasWorkshopOutput(
   return newLinks || newActions;
 }
 
+export interface WorldWorkshopCheckpoint {
+  document: WorldPackDocument;
+  usage: RunBudgetUsage;
+  steps: readonly WorldProductionStep[];
+}
+
 export interface WorldWorkshopRun {
   document: WorldPackDocument;
   usage: RunBudgetUsage;
@@ -226,16 +232,18 @@ export async function runWorldWorkshops(args: {
   contract: JsonSchemaContract;
   signal: AbortSignal;
   extraContext?: string;
+  initialCheckpoint?: WorldWorkshopCheckpoint | null;
+  onCheckpoint?: (checkpoint: WorldWorkshopCheckpoint) => Promise<void> | void;
 }): Promise<WorldWorkshopRun> {
-  let state = emptyWorldDocument();
-  let usage = { ...ZERO };
-  const steps: WorldProductionStep[] = [];
+  let state = args.initialCheckpoint?.document ?? emptyWorldDocument();
+  let usage = args.initialCheckpoint?.usage ?? { ...ZERO };
+  const steps: WorldProductionStep[] = [...(args.initialCheckpoint?.steps ?? [])];
   const workshops = requiredWorkshops(args.request);
   // Additional focused iterations are chosen from actual shortcomings of
   // the world graph, not a model-authored generic TODO or number of cards.
   const maxExtra = 6;
-  const completedWorkshops = new Set<WorldWorkshop>();
-  for (let index = 0; index < workshops.length + maxExtra; index++) {
+  const completedWorkshops = new Set<WorldWorkshop>(steps.map(s=>s.workshop));
+  for (let index = steps.length; index < workshops.length + maxExtra; index++) {
     const gap = playtestWorld(state, args.request).next;
     const unfinished = workshops.find((w) => !completedWorkshops.has(w));
     // An actual newly exposed deficit may move ahead of the old work queue.
@@ -325,6 +333,7 @@ export async function runWorldWorkshops(args: {
     steps.push(merged.step);
     completedWorkshops.add(op.workshop);
     usage = addUsage(usage, result.usage);
+    await args.onCheckpoint?.({document:state,usage,steps:[...steps]});
   }
   const remaining = playtestWorld(state, args.request).next;
   if (remaining) {
