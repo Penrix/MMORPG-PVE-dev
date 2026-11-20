@@ -2,7 +2,10 @@ import type { CanonEntity, TimelineEvent } from "@narralume/domain";
 
 import { deriveBeliefs } from "./vendor/sneq/core/derive-beliefs.js";
 import type { NarrativeEvent } from "./vendor/sneq/domain/event.js";
-import type { GroupHolder, IndividualHolder } from "./vendor/sneq/domain/holder.js";
+import type {
+  GroupHolder,
+  IndividualHolder,
+} from "./vendor/sneq/domain/holder.js";
 import type {
   CampaignId,
   EntityID,
@@ -39,7 +42,9 @@ export function projectNpcWitnessedEvents(input: {
   const groupId = `${input.projectId}:witness-default` as HolderId;
   const placeId = `${input.projectId}:witness-place` as EntityID;
   const characters = input.characters
-    .filter((entity) => entity.type === "character" && entity.status === "active")
+    .filter(
+      (entity) => entity.type === "character" && entity.status === "active",
+    )
     .slice(0, input.maxCharacters ?? 24);
   const group: GroupHolder = {
     kind: "GROUP",

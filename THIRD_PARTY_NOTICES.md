@@ -46,7 +46,6 @@ The adapter code is identified separately and is not represented as verbatim ups
 - License: MIT. Copyright © the CampaignRepo contributors, as declared by its upstream license.
 - The relationship taxonomy and inverse lookup implementations are preserved; the NarraLume Canon graph route uses the exported functions to label ownership and social links. The same MIT permission notice and warranty disclaimer above apply to this copied source.
 
-
 ## SNEQ Narrative System (actual copied source)
 
 - Upstream: https://github.com/JeanDes-Code/sneq-narrative-system
@@ -60,7 +59,7 @@ The adapter code is identified separately and is not represented as verbatim ups
 - All other source files carry their individual exact blob SHA in file headers.
 - Original belief projection is called from `packages/narrative/src/world-pack-knowledge.ts`; NarraLume Canon remains the sole authoritative accepted-world source. Unrecorded transmission is **not** invented by this adapter.
 - The original MIT license permission and warranty disclaimer above also apply to these copied files:
-  
+
   Permission is hereby granted, free of charge, to any person obtaining a copy of
   this software and associated documentation files (the "Software"), to deal
   in the Software without restriction, including without limitation the rights
@@ -69,7 +68,7 @@ The adapter code is identified separately and is not represented as verbatim ups
   furnished to do so, subject to the following conditions: The above copyright
   notice and this permission notice shall be included in all copies or
   substantial portions of the Software.
-  
+
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
