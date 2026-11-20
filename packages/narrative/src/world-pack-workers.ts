@@ -28,7 +28,10 @@ import type { NarrativeModelClient } from "./model-client.js";
 import { selectWorldMethodExcerpts } from "./mmorpg-method-catalog.js";
 import { selectWorldContextIds } from "./world-pack-context.js";
 import { projectNpcWitnessedEvents } from "./world-pack-knowledge.js";
-import { previewWorldForgeFactions, type WorldForgeFactionSeed } from "./worldforge-faction-bridge.js";
+import {
+  previewWorldForgeFactions,
+  type WorldForgeFactionSeed,
+} from "./worldforge-faction-bridge.js";
 import { parseWorldOutput } from "./vendor/covel/lore-processor.js";
 import { createRevisionCache } from "./vendor/covel/revision-cache.js";
 import { orderSources } from "./vendor/covel/source-order.js";
@@ -632,11 +635,15 @@ export class WorldPackWorkerSuite {
         call: async ({ systemPrompt, userMessage, maxTokens }) => {
           if (signal.aborted) throw new Error("WorldForge preview cancelled");
           const answer = await this.model.text(
-            snapshot.run, step, "world-pack",
+            snapshot.run,
+            step,
+            "world-pack",
             {
               instructions: systemPrompt,
               messages: [{ role: "user", content: userMessage }],
-              ...(maxTokens === undefined ? {} : { maxOutputTokens: maxTokens }),
+              ...(maxTokens === undefined
+                ? {}
+                : { maxOutputTokens: maxTokens }),
             },
             signal,
           );
@@ -650,7 +657,8 @@ export class WorldPackWorkerSuite {
           return answer.text;
         },
       });
-      factionReviewPrompt = "\\n\\n# WorldForge 已有势力的独立行动候选（不是发生过的事实）\\n" +
+      factionReviewPrompt =
+        "\\n\\n# WorldForge 已有势力的独立行动候选（不是发生过的事实）\\n" +
         JSON.stringify(preview) +
         "\\n这些内容只提供已有组织的自行行动线索。不得把尚未发生的交涉、能力代价、经济数字或资源转移自动写成已确认 Reality。";
     }
@@ -661,7 +669,9 @@ export class WorldPackWorkerSuite {
       {
         instructions:
           "根据用户给定的当前世界与真实实体ID，一次生成互有关联的完整世界包。具体丰富，使用中文。候选世界不得自动变成已发生的历史。严格遵循Schema。",
-        messages: [{ role: "user", content: String(data.prompt) + factionReviewPrompt }],
+        messages: [
+          { role: "user", content: String(data.prompt) + factionReviewPrompt },
+        ],
         reasoningEffort: "medium",
       },
       WORLD_PACK_MODEL_CONTRACT,
