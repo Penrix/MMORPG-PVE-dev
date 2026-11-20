@@ -41,7 +41,26 @@
 3. **楼兰时间穿越**：同一空间不同时点、可选历史分支、源历史与项目改变按事件和权限区分；不得自动选择分支或自动恢复原著未来。
 4. **前瞻/回访查询**：源母体历史全量可见；项目世界事实依据实际发生取得权威；人物只知亲历/得知部分；Reader 可展示的内容独立维护。
 
-**本轮仅校正语义与验收合同。047/048 的原有表不等于已满足这些接口；在统一身份/时空范围的程序语义确定前，不继续无目的地加表。**
+**进度更新：在原先 049 多原生母体资料基础上，已新增 050 的项目身份/时空关系与穿越事件，实现第一批查询和 API，并为两个世界与楼兰写回建立自动测试。047/048 的专项世界表和 050 都不等于完整世界设计 v0.1～v0.7 已全部数据库化，当前实装与剩余缺口见下。**
+
+### 049 已存在、050 新增的真实数据结构
+
+| 数据层 | 表或接口 | 正确语义 |
+|---|---|---|
+| NarraLume 原版 | Story Bible、Lorebook、Canon、Timeline、Knowledge | 写前完整设定 + 写中调用 + 正文后候选采纳；小说 Project Reality 的基础 |
+| 049 原生母体 | `source_corpora`/`source_records`/`source_relations`/`project_source_bindings` | 一个小说项目可挂多个参考母体；仅用于检索，原著未来不自动变成项目事实 |
+| 050 世界区域 | `project_world_spaces`/`project_entity_space_links` | 一个项目内可有火影忍界、海贼大海、楼兰等区域，原生身份与当前位置不同 |
+| 050 项目身份 | `project_source_entity_links` | 将项目 Canon 实体有证据地对应一个或多个母体条目，不复制原作未来 |
+| 050 时空 | `project_event_coordinates`/`project_travel_events` | 同一原有时间线事件对应项目行为顺序，以及出发与抵达的不同本地世界时间 |
+| 050 非必选扩展 | `project_time_branches`/`project_entity_instances` | 只在原著/作者设定确实有时间分支或同时存在的自我实例时才建 |
+| 世界档案 | `SqliteWorldEncyclopediaRepository.getDossier` | 在原有 Lorebook/Canon 档案内统一返回来源身份、地点身份、旅行历史，而不是另造一份真相 |
+| API | `project-world-routes.ts` | 两端一致的空间、项目身份关联、穿越历史、事件坐标读取，以及明确作者登记接口 |
+
+**050 尚未解决**：同一项目不同世界同名角色的 Core Canon 唯一约束（原表 `UNIQUE(project_id,type,name)`）、不同世界版本规则的完整有效时间查询、分支时间下所有人物/社会状态的自动推演、实际长期回访。不能把记录了一次 Travel 就冒充完整时间旅行或多世界运行引擎。
+
+**本轮优先交付的验证**：`project-world-repository.test.ts` 检查火影→楼兰过去→海贼→返回火影只有一个男主和一个小说项目、故事事件顺序与本地年代不同、没有强制建支线、原生资料未被写回；`project-world-api.test.ts` 验证公共服务接口；数据库跨项目引用和导入项目隔离必须通过。
+
+
 
 ## 第一裁决：一个世界，四层相互连通的数据
 
