@@ -19,6 +19,7 @@ import {
   type WorldWorkshop,
   type WorldProductionStep,
 } from "./world-production-engine.js";
+import { previewProductionReality } from "./world-production-reality.js";
 
 const ZERO: RunBudgetUsage = {
   inputTokens: 0,
@@ -315,6 +316,7 @@ export async function runWorldWorkshops(args: {
   request: WorldPackRequest;
   basePrompt: string;
   knownCanonIds: ReadonlySet<string>;
+  existingWorld?: WorldPackDocument;
   contract: JsonSchemaContract;
   signal: AbortSignal;
   extraContext?: string;
@@ -326,6 +328,8 @@ export async function runWorldWorkshops(args: {
   const steps: WorldProductionStep[] = [
     ...(args.initialCheckpoint?.steps ?? []),
   ];
+  const existingWorld = args.existingWorld ?? emptyWorldDocument();
+  const view = () => previewProductionReality(existingWorld,state);
   const workshops = requiredWorkshops(args.request);
   // Additional focused iterations are chosen from actual shortcomings of
   // the world graph, not a model-authored generic TODO or number of cards.
@@ -334,7 +338,7 @@ export async function runWorldWorkshops(args: {
     steps.map((s) => s.workshop),
   );
   for (let index = steps.length; index < workshops.length + maxExtra; index++) {
-    const gap = playtestWorld(state, args.request).next;
+    const gap = playtestWorld(view(), args.request).next;
     const unfinished = workshops.find((w) => !completedWorkshops.has(w));
     // An actual newly exposed deficit may move ahead of the old work queue.
     // Every core workshop still runs; no model may declare one unnecessary.
@@ -344,11 +348,11 @@ export async function runWorldWorkshops(args: {
       !completedWorkshops.has(gap.workshop)
         ? gap
         : unfinished
-          ? workOrder(unfinished, state)
+          ? workOrder(unfinished, view())
           : gap;
     if (!op) break;
     const instruction = {
-      ...worldWorkOrderInput(op, state),
+      ...worldWorkOrderInput(op, view()),
       authorRequest: args.request,
       ...(index === 0
         ? {
@@ -392,7 +396,8 @@ export async function runWorldWorkshops(args: {
             op.workshop,
             op.subjectRef,
           );
-          if (!hasWorkshopOutput(op.workshop, state, merged.document)) {
+          if (!hasWorkshopOutput(op.workshop, view(),
+            previewProductionReality(existingWorld,merged.document))) {
             return {
               success: false,
               issues: [
@@ -425,7 +430,7 @@ export async function runWorldWorkshops(args: {
     usage = addUsage(usage, result.usage);
     await args.onCheckpoint?.({ document: state, usage, steps: [...steps] });
   }
-  const remaining = playtestWorld(state, args.request).next;
+  const remaining = playtestWorld(view(), args.request).next;
   if (remaining) {
     // Never silently stage an incomplete package as if a game world exists.
     // The Run remains recoverably failed for the author to inspect/retry.
@@ -440,7 +445,7 @@ export async function runWorldWorkshops(args: {
         steps.map((s) => s.workshop).join(","),
     );
   }
-  const playtest = playtestWorld(state, args.request);
+  const playtest = playtestWorld(view(), args.request);
   const document: WorldPackDocument = {
     ...state,
     production: {
