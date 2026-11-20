@@ -115,16 +115,32 @@ export const WorldPackDocumentSchema = z
     openThreads: z.array(z.string().trim().min(1).max(3_000)).max(70),
     interactions: z.array(WorldActionSchema).max(90).optional(),
     /** This is written by the world engine only, not by the LLM. */
-    production: z.object({
-      engine: z.literal("mmorpg-world-workshop-v1"),
-      executed: z.array(z.object({
-        workshop: z.enum(["geography","factions","people","economy","power",
-          "events","social","playability","living"]),
-        subjectRef: z.string().nullable(),
-        changedRefs: z.array(z.string()),
-      }).strict()),
-      playtestedPaths: z.array(z.array(z.string())),
-    }).strict().optional(),
+    production: z
+      .object({
+        engine: z.literal("mmorpg-world-workshop-v1"),
+        executed: z.array(
+          z
+            .object({
+              workshop: z.enum([
+                "geography",
+                "factions",
+                "people",
+                "economy",
+                "power",
+                "events",
+                "social",
+                "playability",
+                "living",
+              ]),
+              subjectRef: z.string().nullable(),
+              changedRefs: z.array(z.string()),
+            })
+            .strict(),
+        ),
+        playtestedPaths: z.array(z.array(z.string())),
+      })
+      .strict()
+      .optional(),
     /** Explicit observed emergent dimensions; WorldForge registry evaluates promotion. */
     dimensionSignals: z
       .array(
