@@ -40,7 +40,7 @@ export const WorldPackLinkSchema = z.object({
   toRef: z.string().trim().min(1),
   relation: z.string().trim().min(1).max(300),
   description: z.string().trim().min(1).max(5_000),
-  status: z.enum(["current", "possible"]),
+  status: z.enum(["current", "possible", "ended"]),
 }).strict();
 export type WorldPackLink = z.infer<typeof WorldPackLinkSchema>;
 
@@ -132,9 +132,13 @@ export function worldPackReferenceProblems(
       ancestor = nodes.get(ancestor)?.areaRef ?? null;
     }
   }
+  const seenCurrentLinks = new Set<string>();
   for (const link of document.links) {
     resolve(link.fromRef); resolve(link.toRef);
     if (link.fromRef === link.toRef) problems.push(`self-link: ${link.fromRef}`);
+    const key = `${link.fromRef}|${link.relation}|${link.toRef}`;
+    if (seenCurrentLinks.has(key)) problems.push(`duplicate relationship action: ${key}`);
+    seenCurrentLinks.add(key);
   }
   const activities = new Set<string>();
   for (const event of document.activities) {
