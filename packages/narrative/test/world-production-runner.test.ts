@@ -65,7 +65,7 @@ const step = {
 describe("program-owned world production, not LLM self-reported completion", () => {
   it("forces distinct real-world workshop outputs and resumes without repeating completed ones", async () => {
     let calls: string[] = [];
-    let checkpoint: WorldWorkshopCheckpoint | null = null;
+    const checkpoints: WorldWorkshopCheckpoint[] = [];
     const model = {
       async structured<T>(
         _run: NarrativeRun,
@@ -101,19 +101,19 @@ describe("program-owned world production, not LLM self-reported completion", () 
       contract: WORLD_PACK_MODEL_CONTRACT,
       signal: new AbortController().signal,
       onCheckpoint: (saved: WorldWorkshopCheckpoint) => {
-        checkpoint = saved;
+        checkpoints.push(saved);
       },
     };
     await expect(runWorldWorkshops(args)).rejects.toThrow(
       "world.workshop.no_product",
     );
     expect(calls).toEqual(["geography", "factions"]);
-    expect(checkpoint).not.toBeNull();
-    expect(checkpoint?.steps).toHaveLength(1);
-    expect(checkpoint?.steps[0]?.workshop).toBe("geography");
+    expect(checkpoints).toHaveLength(1);
+    expect(checkpoints[0]?.steps).toHaveLength(1);
+    expect(checkpoints[0]?.steps[0]?.workshop).toBe("geography");
     calls = [];
     await expect(
-      runWorldWorkshops({ ...args, initialCheckpoint: checkpoint }),
+      runWorldWorkshops({ ...args, initialCheckpoint: checkpoints[0] }),
     ).rejects.toThrow("world.workshop.no_product");
     expect(calls).toEqual(["factions"]);
   });
