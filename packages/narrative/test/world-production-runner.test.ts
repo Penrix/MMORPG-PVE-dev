@@ -140,30 +140,45 @@ describe("program-owned world production, not LLM self-reported completion", () 
         },
       ],
     };
-    const seen:string[]=[];
+    const seen: string[] = [];
     const model = {
       async structured<T>(
-        _run:NarrativeRun,
-        _step:NarrativeRunStep,
-        _purpose:string,
-        prompt:{messages:Array<{content:string}>},
-        _contract:unknown,
-        validate:(value:unknown)=>{success:true;data:T}|{success:false;issues:string[]},
-      ){
-        const input=JSON.parse(prompt.messages[0]!.content) as {operation:string};
+        _run: NarrativeRun,
+        _step: NarrativeRunStep,
+        _purpose: string,
+        prompt: { messages: Array<{ content: string }> },
+        _contract: unknown,
+        validate: (
+          value: unknown,
+        ) => { success: true; data: T } | { success: false; issues: string[] },
+      ) {
+        const input = JSON.parse(prompt.messages[0]!.content) as {
+          operation: string;
+        };
         seen.push(input.operation);
-        const parsed=validate(place);
-        if(!parsed.success)throw new Error(parsed.issues.join("; "));
-        return {value:parsed.data,usage,mode:"native" as const,attempts:1};
+        const parsed = validate(place);
+        if (!parsed.success) throw new Error(parsed.issues.join("; "));
+        return {
+          value: parsed.data,
+          usage,
+          mode: "native" as const,
+          attempts: 1,
+        };
       },
     } as unknown as NarrativeModelClient;
-    await expect(runWorldWorkshops({
-      run,step,model,request:focus,basePrompt:"真实世界制作",
-      existingWorld,knownCanonIds:new Set(["licensing-rights"]),
-      contract:WORLD_PACK_MODEL_CONTRACT,
-      signal:new AbortController().signal,
-    })).rejects.toThrow("world.workshop.no_product");
+    await expect(
+      runWorldWorkshops({
+        run,
+        step,
+        model,
+        request: focus,
+        basePrompt: "真实世界制作",
+        existingWorld,
+        knownCanonIds: new Set(["licensing-rights"]),
+        contract: WORLD_PACK_MODEL_CONTRACT,
+        signal: new AbortController().signal,
+      }),
+    ).rejects.toThrow("world.workshop.no_product");
     expect(seen).toEqual(["power"]);
   });
-
 });
