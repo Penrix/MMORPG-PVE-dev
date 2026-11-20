@@ -174,8 +174,12 @@ export function WorldBuilderWorkspace() {
   const committedCount = bibleQuery.data?.entities.filter(
     (entity) => entity.status === "active",
   ).length ?? 0;
-  const modify = <K extends keyof WorldBuilderInput>(field: K, value: WorldBuilderInput[K]) =>
+  function modify<K extends keyof WorldBuilderInput>(
+    field: K,
+    value: WorldBuilderInput[K],
+  ) {
     setDraft((previous) => ({ ...previous, [field]: value }));
+  }
 
   if (!projectId) {
     return (
