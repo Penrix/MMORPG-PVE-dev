@@ -23,6 +23,7 @@ import {
   generateWorldPack,
   getProjectRuns,
   getStoryBible,
+  getWorldGraph,
   listWorldPacks,
   reviseWorldPack,
 } from "../lib/api";
@@ -82,6 +83,7 @@ export function WorldBuilderWorkspace() {
 function WorldBuilderProject({ projectId }: { projectId: string }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<FormValues>(() => loadForm(projectId));
+  const [graphCenter, setGraphCenter] = useState<string | null>(null);
   const requestRef = useRef<{ serialized: string; id: string } | null>(null);
 
   useEffect(() => {
@@ -95,6 +97,10 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
   const bible = useQuery({
     queryKey: ["project", projectId, "bible"],
     queryFn: ({ signal }) => getStoryBible(projectId, signal),
+  });
+  const graph = useQuery({
+    queryKey: ["project", projectId, "world-graph", graphCenter],
+    queryFn: ({ signal }) => getWorldGraph(projectId, graphCenter ?? undefined, signal),
   });
   const runs = useQuery({
     queryKey: ["project", projectId, "runs"],
@@ -139,6 +145,7 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ["project", projectId, "world-packs"] });
     void queryClient.invalidateQueries({ queryKey: ["project", projectId, "bible"] });
+    void queryClient.invalidateQueries({ queryKey: ["project", projectId, "world-graph"] });
   };
 
   return (
@@ -247,11 +254,46 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
               <strong>已有可再次展开的地图</strong>
               <ul className="world-builder__entity-list">
                 {areas.slice(-15).map((area) => (
-                  <li key={area.id}><span>{area.name}</span><small>{area.id.slice(0,8)}</small></li>
+                  <li key={area.id}>
+                    <button className="world-builder__area-btn" type="button"
+                      onClick={() => {
+                        setGraphCenter(area.id);
+                        update("parentAreaId", area.id);
+                        update("scale", "W1");
+                        update("focus", area.name);
+                      }}>{area.name}</button>
+                    <small>{area.id.slice(0,8)}</small>
+                  </li>
                 ))}
               </ul>
             </div>
           ) : <p className="world-builder__hint">暂无已确认的区域，可先生成 W0。</p>}
+          <div className="world-builder__graph">
+            <h4>{graphCenter ? "所选地区的两跳世界关系" : "当前世界的关系网"}</h4>
+            {graphCenter ? <button type="button" className="btn"
+              onClick={() => setGraphCenter(null)}>查看全世界</button> : null}
+            <p className="world-builder__hint">
+              {graph.data?.nodes.length ?? 0} 个关联对象 · {graph.data?.edges.length ?? 0} 条关系 ·
+              {graph.data?.ongoingActivities.length ?? 0} 项正在进行的事务
+            </p>
+            {graph.isError ? <ErrorNote error={graph.error} title="世界关系读取失败" /> : null}
+            <ul className="world-builder__entity-list">
+              {(graph.data?.edges ?? []).slice(0, 12).map((edge) => {
+                const from = graph.data!.nodes.find((e) => e.id === edge.from)?.name ?? edge.from;
+                const to = graph.data!.nodes.find((e) => e.id === edge.to)?.name ?? edge.to;
+                return <li key={edge.id}><span>{from} · {edge.relation} · {to}</span></li>;
+              })}
+            </ul>
+            {(graph.data?.ongoingActivities ?? []).slice(0, 5).map((activity) => (
+              <p className="world-builder__hint" key={activity.id}>
+                {graph.data!.nodes.find((e) => e.id === activity.actorId)?.name}：
+                {typeof activity.detail === "object" && activity.detail !== null &&
+                  "description" in activity.detail
+                    ? String(activity.detail.description)
+                    : "正在进行的世界事务"}
+              </p>
+            ))}
+          </div>
           <Link className="world-builder__link" to={projectWorkspacePath(projectId, "bible")}>
             查看世界百科与人物资料 <ArrowUpRight size={14}/>
           </Link>
