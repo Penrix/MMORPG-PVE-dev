@@ -46,6 +46,8 @@ export interface NarutoImportReport {
   skippedReferences: number;
   skippedRecords: number;
   collections: Record<string, number>;
+  exactDuplicates?: number;
+  duplicateNameVariants?: number;
 }
 
 /**
@@ -398,7 +400,9 @@ export function importNarutoWikiScraper(
     db.raw
       .prepare("DELETE FROM source_records WHERE corpus_id=?")
       .run(NARUTO_WIKI_CORPUS);
-    const names = new Set<string>();
+    const knownByName = new Map<string, string[]>();
+    stats.exactDuplicates = 0;
+    stats.duplicateNameVariants = 0;
     for (const raw of rows) {
       const row = asRow(raw);
       if (!row) {
@@ -406,14 +410,24 @@ export function importNarutoWikiScraper(
         continue;
       }
       const name = rowName(row);
-      if (!name || names.has(name)) {
+      if (!name) {
         stats.skippedRecords++;
         continue;
       }
-      names.add(name);
+      const serialized = JSON.stringify(row);
+      const variants = knownByName.get(name) ?? [];
+      if (variants.includes(serialized)) {
+        stats.exactDuplicates = (stats.exactDuplicates ?? 0) + 1;
+        continue;
+      }
+      variants.push(serialized);
+      knownByName.set(name, variants);
+      if (variants.length > 1) {
+        stats.duplicateNameVariants = (stats.duplicateNameVariants ?? 0) + 1;
+      }
       repo.upsertRecord({
         corpusId: NARUTO_WIKI_CORPUS,
-        sourceKey: `wiki:${name}`,
+        sourceKey: variants.length === 1 ? `wiki:${name}` : `wiki:${name}#${variants.length}`,
         kind: "character",
         name,
         aliases: [],
