@@ -21,6 +21,9 @@ export const migration053 = {
     ) WITHOUT ROWID;
     CREATE INDEX source_record_presence_active_idx
       ON source_record_presence(corpus_id,active);
+    -- Upgrade existing source records without changing their imported IDs.
+    INSERT INTO source_record_presence(corpus_id,source_key,active,last_seen_at)
+      SELECT corpus_id,source_key,1,imported_at FROM source_records;
 
     -- Complete prose belongs to the reference object, not to a novel.
     CREATE TABLE source_world_lore_sections (
