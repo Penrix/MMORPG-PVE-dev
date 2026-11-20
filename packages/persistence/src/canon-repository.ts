@@ -67,7 +67,7 @@ export class SqliteCanonRepository {
         entity.projectId,
         entity.type,
         entity.name,
-        entity.worldScopeId ?? "",
+        entity.worldScopeId ?? null,
         JSON.stringify(entity.aliases),
         entity.description,
         JSON.stringify(entity.attributes),
@@ -82,7 +82,7 @@ export class SqliteCanonRepository {
     const result = this.database.raw
       .prepare(
         `
-        UPDATE canon_entities SET name = ?, world_scope_id = ?, aliases_json = ?, description = ?,
+        UPDATE canon_entities SET name = ?, world_scope_id = COALESCE(?, world_scope_id), aliases_json = ?, description = ?,
           attributes_json = ?, status = ?, updated_at = ?
         WHERE project_id = ? AND id = ?
       `,
