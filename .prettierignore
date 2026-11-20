@@ -10,3 +10,4 @@ docs/mmorpg/research/
 packages/narrative/src/vendor/
 
 packages/services/src/vendor/
+# Sources below are copied under MIT licenses: formatting them would alter upstream code identity.
