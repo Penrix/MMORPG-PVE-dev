@@ -75,6 +75,26 @@ export const WorldPackActivitySchema = z
   .strict();
 export type WorldPackActivity = z.infer<typeof WorldPackActivitySchema>;
 
+/** Actual MMORPG interactions. These are playable rules, not a list of
+ * proposed plot beats. No cost is invented by the engine: the authoring
+ * workshop must state real prerequisites and concrete possible results. */
+export const WorldActionTermSchema = z.object({
+  kind: z.enum(["asset", "permission", "relationship", "knowledge", "ability", "access"]),
+  ref: z.string().trim().min(1),
+}).strict();
+
+export const WorldActionSchema = z.object({
+  localId: z.string().regex(/^[a-z][a-z0-9_-]{1,79}$/),
+  name: z.string().trim().min(1).max(300),
+  offeredByRef: z.string().trim().min(1),
+  locationRef: z.string().trim().min(1).nullable(),
+  action: z.string().trim().min(1).max(5000),
+  requires: z.array(WorldActionTermSchema).max(20),
+  yields: z.array(WorldActionTermSchema).min(1).max(20),
+  state: z.enum(["available", "potential"]),
+}).strict();
+export type WorldAction = z.infer<typeof WorldActionSchema>;
+
 export const WorldPackDocumentSchema = z
   .object({
     summary: z.string().trim().min(1).max(16_000),
@@ -82,6 +102,7 @@ export const WorldPackDocumentSchema = z
     links: z.array(WorldPackLinkSchema).max(180),
     activities: z.array(WorldPackActivitySchema).max(80),
     openThreads: z.array(z.string().trim().min(1).max(3_000)).max(70),
+    interactions: z.array(WorldActionSchema).max(90).optional(),
     /** Explicit observed emergent dimensions; WorldForge registry evaluates promotion. */
     dimensionSignals: z
       .array(
@@ -192,6 +213,20 @@ export function worldPackReferenceProblems(
       problems.push(`duplicate activity: ${event.localId}`);
     activities.add(event.localId);
     for (const ref of [...event.actorRefs, ...event.resourceRefs]) resolve(ref);
+  }
+  const actions = new Set<string>();
+  for (const action of document.interactions ?? []) {
+    if (actions.has(action.localId))
+      problems.push("duplicate world action: " + action.localId);
+    actions.add(action.localId);
+    resolve(action.offeredByRef);
+    if (action.locationRef) {
+      resolve(action.locationRef);
+      const at = nodes.get(action.locationRef);
+      if (at && at.type !== "location")
+        problems.push("non-location action: " + action.localId);
+    }
+    for (const term of [...action.requires, ...action.yields]) resolve(term.ref);
   }
   return [...new Set(problems)];
 }
