@@ -196,6 +196,8 @@ function hasWorkshopOutput(
     return count("rule", current) > count("rule", previous) || newLinks;
   if (workshop === "events" || workshop === "living") return newActions;
   if (workshop === "social") return newLinks;
+  if (workshop === "playability")
+    return (current.interactions?.length??0)>(previous.interactions?.length??0);
   return newLinks || newActions;
 }
 
@@ -260,7 +262,7 @@ export async function runWorldWorkshops(args: {
         changedRefs: s.changedRefs,
       })),
       resultContract:
-        "Return a structured increment with nodes, links, activities, openThreads and dimensionSignals. Reuse the same local IDs for edits. Existing Canon IDs must not be fabricated. Partial refs may point to prior increments. One new playable object, relation or actual action is required for this workshop.",
+        "Return a structured increment with nodes, links, activities, interactions, openThreads and dimensionSignals. Reuse the same local IDs for edits. Existing Canon IDs must not be fabricated. Partial refs may point to prior increments. One new playable object, relation or actual action is required for this workshop.",
     };
     const result = await args.model.structured<WorldPackDocument>(
       args.run,
