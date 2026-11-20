@@ -376,8 +376,8 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
     expect(response.statusCode, response.body).toBe(200);
     const pack = response.json()[0];
     expect(pack.status).toBe("draft");
-    expect(pack.document.nodes).toHaveLength(4);
-    expect(pack.document.links).toHaveLength(4);
+    expect(pack.document.nodes).toHaveLength(5);
+    expect(pack.document.links).toHaveLength(7);
     expect(pack.document.activities).toHaveLength(2);
     const before = await app.inject({
       method: "GET",
@@ -393,13 +393,13 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
     expect(adopted.statusCode, adopted.body).toBe(200);
     const result = adopted.json();
     expect(result.status).toBe("adopted");
-    expect(Object.keys(result.canonIds)).toHaveLength(4);
+    expect(Object.keys(result.canonIds)).toHaveLength(5);
     const after = await app.inject({
       method: "GET",
       url: `/api/projects/${projectId}/story-bible`,
     });
-    expect(after.json().entities).toHaveLength(4);
-    expect(after.json().relationships).toHaveLength(3);
+    expect(after.json().entities).toHaveLength(5);
+    expect(after.json().relationships).toHaveLength(6);
     expect(
       after
         .json()
@@ -554,7 +554,7 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
         url: `/api/projects/${projectId}/story-bible`,
       })
     ).json();
-    expect(bible.entities).toHaveLength(5);
+    expect(bible.entities).toHaveLength(8);
   });
   it("advances existing NPCs, closes old activities, and never silently revokes ownership", async () => {
     const { app, projectId } = await setup();
