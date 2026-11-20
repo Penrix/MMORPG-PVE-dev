@@ -111,6 +111,50 @@ export function adoptWorldPack(
       }));
     }
 
+    // The original NarraLume story context is fact-centric: an isolated
+    // Canon entity with no facts may be invisible during chapter generation.
+    // Attach a source-backed content fact to every accepted world object.
+    // Thus abilities, prices, access, motives and current occupations survive
+    // beyond the World Builder UI and can be recalled by Novel Studio.
+    const seenContent = new Set<string>();
+    for (const node of pack.document.nodes) {
+      const subjectId = ids[node.localId]!;
+      if (seenContent.has(subjectId)) continue;
+      seenContent.add(subjectId);
+      const previous = canon.listEffectiveFacts(projectId, {
+        subjectId,
+      }).find((fact) => fact.predicate === "world.content");
+      if (previous?.authority === "locked") {
+        throw new WorldPackRouteError(
+          "world.pack.locked_content",
+          `World content for ${node.name} is locked; revise it explicitly in the Story Bible`,
+          409,
+        );
+      }
+      canon.insertFact(createCanonFact({
+        id: randomUuid(),
+        projectId,
+        subjectId,
+        predicate: "world.content",
+        value: {
+          scale: pack.request.scale,
+          worldTime: pack.request.worldTime,
+          value: node.value,
+          access: node.access,
+          motive: node.motive,
+          currentActivity: node.currentActivity,
+          origin: node.origin,
+          sourceNote: node.sourceNote,
+          approvedDescription: node.description,
+        },
+        authority: "confirmed",
+        sourceType: "world-pack",
+        sourceId: pack.id,
+        ...(previous ? { supersedesFactId: previous.id } : {}),
+        now,
+      }));
+    }
+
     for (const node of pack.document.nodes) {
       // W1 inherits its selected parent area unless the model explicitly
       // connects the node to a finer local location in the same world pack.
