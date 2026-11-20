@@ -7,6 +7,7 @@ import { z } from "zod";
  */
 export const WorldPackRequestSchema = z.object({
   requestId: z.string().uuid(),
+  intent: z.enum(["create", "advance"]).optional(),
   scale: z.enum(["W0", "W1"]),
   premise: z.string().trim().min(1).max(8_000),
   worldTime: z.string().trim().min(1).max(500),
@@ -49,7 +50,7 @@ export const WorldPackActivitySchema = z.object({
   description: z.string().trim().min(1).max(12_000),
   reason: z.string().trim().min(1).max(5_000),
   resourceRefs: z.array(z.string().trim().min(1)).max(30),
-  stage: z.enum(["ongoing", "potential"]),
+  stage: z.enum(["ongoing", "potential", "ended"]),
   worldTime: z.string().trim().min(1).max(500),
 }).strict();
 export type WorldPackActivity = z.infer<typeof WorldPackActivitySchema>;
