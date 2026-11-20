@@ -52,6 +52,7 @@ import { migration048 } from "./migrations/048-world-map-power-production-inform
 import { migration049 } from "./migrations/049-shared-source-corpora.js";
 import { migration050 } from "./migrations/050-project-world-identity-and-travel.js";
 import { migration051 } from "./migrations/051-project-fork-baselines.js";
+import { migration052 } from "./migrations/052-scoped-canon-identity.js";
 
 export interface Migration {
   readonly version: number;
@@ -125,6 +126,7 @@ const MIGRATIONS: readonly Migration[] = [
   migration049,
   migration050,
   migration051,
+  migration052,
 ];
 
 interface MigrationRow {
