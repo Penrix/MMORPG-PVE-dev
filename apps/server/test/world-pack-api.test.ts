@@ -1,6 +1,11 @@
 import type { WorldPackDocument } from "@narralume/contracts";
-import type { NarrativeModelClient } from "@narralume/narrative";
+import { StoryStatePacketBuilder, type NarrativeModelClient } from "@narralume/narrative";
 import { NodeNarrativeDatabase } from "@narralume/persistence/node";
+import {
+  SqliteCanonRepository,
+  SqliteStoryRepository,
+  SqliteNarrativeStateRepository,
+} from "@narralume/persistence";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { buildApp } from "../src/app.js";
@@ -215,6 +220,18 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
       fact.predicate === "world.ongoing_activity",
     )).toBe(true);
     expect(after.json().timeline).toHaveLength(0);
+    // This is the actual bridge into NarraLume's writing context:
+    // all important world objects carry an adopted world.content fact.
+    const canonRepo = new SqliteCanonRepository(db);
+    const storyRepo = new SqliteStoryRepository(db);
+    const stateRepo = new SqliteNarrativeStateRepository(db, canonRepo, storyRepo);
+    const promptPacket = new StoryStatePacketBuilder(canonRepo, stateRepo, storyRepo)
+      .build({ projectId, audience: "author" });
+    const storyContext = promptPacket.sources.map((source) => source.content).join("\\n");
+    expect(storyContext).toContain("月华补神丹");
+    expect(storyContext).toContain("修补神识");
+    expect(storyContext).toContain("商会");
+
     // Adoption of the same version cannot duplicate official facts.
     const again = await app.inject({
       method: "POST",
