@@ -20,6 +20,7 @@ import {
   SqliteProjectRepository,
   SqliteStoryRepository,
   SqliteWorldPackRepository,
+  SqliteRunRepository,
   type NarrativeDatabase,
 } from "@narralume/persistence";
 import type { NarrativeModelClient } from "./model-client.js";
@@ -31,7 +32,7 @@ import {
   type WorldForgeFactionSeed,
 } from "./worldforge-faction-bridge.js";
 import { parseWorldOutput } from "./vendor/covel/lore-processor.js";
-import { runWorldWorkshops } from "./world-production-runner.js";
+import { runWorldWorkshops, type WorldWorkshopCheckpoint } from "./world-production-runner.js";
 import { createRevisionCache } from "./vendor/covel/revision-cache.js";
 import { orderSources } from "./vendor/covel/source-order.js";
 import { causalCandidates } from "./vendor/worldforge/causality.js";
@@ -446,6 +447,7 @@ export class WorldPackWorkerSuite {
   private readonly story: SqliteStoryRepository;
   private readonly state: SqliteNarrativeStateRepository;
   private readonly packs: SqliteWorldPackRepository;
+  private readonly runs: SqliteRunRepository;
   private readonly parseCovelCached =
     createRevisionCache<ReturnType<typeof parseWorldOutput>>(16);
 
@@ -462,6 +464,7 @@ export class WorldPackWorkerSuite {
       this.story,
     );
     this.packs = new SqliteWorldPackRepository(database);
+    this.runs = new SqliteRunRepository(database);
   }
 
   registry(): WorkerRegistry {
@@ -745,6 +748,14 @@ export class WorldPackWorkerSuite {
         JSON.stringify(preview) +
         "\\n这些内容只提供已有组织的自行行动线索。不得把尚未发生的交涉、能力代价、经济数字或资源转移自动写成已确认 Reality。";
     }
+    const checkpointRaw=this.runs.getWorldProductionCheckpoint(snapshot.run.id);
+    const initialCheckpoint:WorldWorkshopCheckpoint|null= checkpointRaw &&
+      Array.isArray(checkpointRaw.steps) && checkpointRaw.usage
+      ? {
+          document:WorldPackDocumentSchema.parse(checkpointRaw.document),
+          steps:checkpointRaw.steps as unknown as WorldWorkshopCheckpoint["steps"],
+          usage:checkpointRaw.usage as WorldWorkshopCheckpoint["usage"],
+        } : null;
     const produced = await runWorldWorkshops({
       run: snapshot.run,
       step,
@@ -755,6 +766,11 @@ export class WorldPackWorkerSuite {
       knownCanonIds: ids,
       contract: WORLD_PACK_MODEL_CONTRACT,
       signal,
+      initialCheckpoint,
+      onCheckpoint: async (checkpoint) => {
+        this.runs.saveWorldProductionCheckpoint(snapshot.run.id,step.id,
+          checkpoint as unknown as Record<string,unknown>,new Date().toISOString());
+      },
     });
     return {
       artifactKind: "world-pack-generation",
