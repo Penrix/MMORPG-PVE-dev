@@ -16,6 +16,8 @@ export interface WorldLoreSection {
   facet: string;
   title: string;
   content: string;
+  source_type: string;
+  source_id: string | null;
   source_note: string;
 }
 export interface WorldChronicleRow {
@@ -27,6 +29,8 @@ export interface WorldChronicleRow {
   sequence: number;
   relevance: string;
   consequence: string;
+  source_type: string;
+  source_id: string | null;
   source_note: string;
 }
 export interface WorldOrganizationProfile {
@@ -38,6 +42,8 @@ export interface WorldOrganizationProfile {
   funding: string;
   purpose: string;
   current_agenda: string;
+  source_type: string;
+  source_id: string | null;
   source_note: string;
 }
 export interface WorldOrganizationFunction {
@@ -53,6 +59,8 @@ export interface WorldOrganizationFunction {
   real_process: string;
   valid_from_event_id: string | null;
   valid_to_event_id: string | null;
+  source_type: string;
+  source_id: string | null;
   source_note: string;
 }
 export interface WorldStance {
@@ -67,6 +75,8 @@ export interface WorldStance {
   valid_from_event_id: string | null;
   valid_to_event_id: string | null;
   evidence_event_id: string | null;
+  source_type: string;
+  source_id: string | null;
   source_note: string;
 }
 export interface WorldStanding {
@@ -80,6 +90,8 @@ export interface WorldStanding {
   actual_response: string;
   actual_right_entity_id: string | null;
   world_time: string | null;
+  source_type: string;
+  source_id: string | null;
   source_note: string;
 }
 export interface WorldPowerChannel {
@@ -93,6 +105,8 @@ export interface WorldPowerChannel {
   prerequisites: string;
   cannot_grant: string;
   evidence_event_id: string | null;
+  source_type: string;
+  source_id: string | null;
   source_note: string;
 }
 export interface WorldValueAppraisal {
@@ -106,6 +120,8 @@ export interface WorldValueAppraisal {
   future_use: string;
   status: "potential" | "contested" | "available" | "realized" | "retired";
   realization_event_id: string | null;
+  source_type: string;
+  source_id: string | null;
   source_note: string;
 }
 export interface WorldNetworkEdge {
@@ -145,7 +161,7 @@ export class SqliteWorldEncyclopediaRepository {
         `
       SELECT link.id, link.timeline_event_id, event.title,
              event.story_time_start, event.story_time_end, event.sequence,
-             link.relevance, link.consequence, link.source_note
+             link.relevance, link.consequence, link.source_type, link.source_id, link.source_note
       FROM world_chronicle_links link
       JOIN timeline_events event ON event.id=link.timeline_event_id
       WHERE link.project_id=? AND link.entity_id=?
@@ -185,7 +201,7 @@ export class SqliteWorldEncyclopediaRepository {
       .prepare(
         `
       SELECT binding.id, binding.entity_id, binding.facet, entry.title,
-             entry.content, binding.source_note
+             entry.content, binding.source_type, binding.source_id, binding.source_note
       FROM world_lore_bindings binding
       JOIN lore_entries entry ON entry.id=binding.lore_entry_id
       WHERE binding.project_id=? AND binding.entity_id=?
@@ -197,7 +213,7 @@ export class SqliteWorldEncyclopediaRepository {
       .prepare(
         `
       SELECT organization_id, social_kind, governance, membership,
-             succession, funding, purpose, current_agenda, source_note
+             succession, funding, purpose, current_agenda, source_type, source_id, source_note
       FROM world_organization_profiles WHERE project_id=? AND organization_id=?
     `,
       )
@@ -208,7 +224,7 @@ export class SqliteWorldEncyclopediaRepository {
       SELECT id, organization_id, unit_entity_id, officeholder_entity_id,
              jurisdiction_entity_id, resource_entity_id, function_name,
              responsibility, decision_right, real_process, valid_from_event_id,
-             valid_to_event_id, source_note
+             valid_to_event_id, source_type, source_id, source_note
       FROM world_organization_functions
       WHERE project_id=? AND organization_id=?
       ORDER BY function_name, id
@@ -220,7 +236,7 @@ export class SqliteWorldEncyclopediaRepository {
         `
       SELECT id, actor_entity_id, issue_entity_id, target_entity_id,
              stance, interest, intended_action, visibility, valid_from_event_id,
-             valid_to_event_id, evidence_event_id, source_note
+             valid_to_event_id, evidence_event_id, source_type, source_id, source_note
       FROM world_stances
       WHERE project_id=? AND actor_entity_id=?
       ORDER BY created_at, id
@@ -232,7 +248,7 @@ export class SqliteWorldEncyclopediaRepository {
         `
       SELECT id, subject_entity_id, evaluator_entity_id, dimension,
              assessment, evidence_event_id, intermediary_entity_id,
-             actual_response, actual_right_entity_id, world_time, source_note
+             actual_response, actual_right_entity_id, world_time, source_type, source_id, source_note
       FROM world_standings
       WHERE project_id=? AND subject_entity_id=?
       ORDER BY world_time, id
@@ -244,7 +260,7 @@ export class SqliteWorldEncyclopediaRepository {
         `
       SELECT id, holder_entity_id, intermediary_entity_id, authority_entity_id,
              target_entity_id, jurisdiction_entity_id, real_action,
-             prerequisites, cannot_grant, evidence_event_id, source_note
+             prerequisites, cannot_grant, evidence_event_id, source_type, source_id, source_note
       FROM world_power_channels
       WHERE project_id=? AND (
         holder_entity_id=? OR target_entity_id=? OR
@@ -265,7 +281,7 @@ export class SqliteWorldEncyclopediaRepository {
         `
       SELECT id, subject_entity_id, evaluator_entity_id, value_kind,
              value_basis, scarcity, access_path, future_use, status,
-             realization_event_id, source_note
+             realization_event_id, source_type, source_id, source_note
       FROM world_value_appraisals
       WHERE project_id=? AND (subject_entity_id=? OR evaluator_entity_id=?)
       ORDER BY status, id
