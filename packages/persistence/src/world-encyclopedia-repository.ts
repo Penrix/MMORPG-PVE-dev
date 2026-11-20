@@ -315,11 +315,14 @@ export class SqliteWorldEncyclopediaRepository {
       powerChannels,
       valueAppraisals,
       network: this.listNetwork(projectId, entityId),
-      mapEdges: this.structures.listMapEdges(projectId,entityId),
-      capability: this.structures.getCapability(projectId,entityId),
-      capabilityLinks: this.structures.listCapabilityLinks(projectId,entityId),
-      productionLinks: this.structures.listProductionLinks(projectId,entityId),
-      informationFlows: this.structures.listInformationFlows(projectId,entityId),
+      mapEdges: this.structures.listMapEdges(projectId, entityId),
+      capability: this.structures.getCapability(projectId, entityId),
+      capabilityLinks: this.structures.listCapabilityLinks(projectId, entityId),
+      productionLinks: this.structures.listProductionLinks(projectId, entityId),
+      informationFlows: this.structures.listInformationFlows(
+        projectId,
+        entityId,
+      ),
     };
   }
 
@@ -369,18 +372,30 @@ export class SqliteWorldEncyclopediaRepository {
       for (const id of [value.subject_entity_id, value.evaluator_entity_id])
         if (id) ids.add(id);
     for (const edge of dossier.mapEdges)
-      for (const id of [edge.from_entity_id,edge.to_entity_id,edge.intermediary_entity_id])
+      for (const id of [
+        edge.from_entity_id,
+        edge.to_entity_id,
+        edge.intermediary_entity_id,
+      ])
         if (id) ids.add(id);
     for (const edge of dossier.capabilityLinks)
-      for (const id of [edge.source_entity_id,edge.target_entity_id])
+      for (const id of [edge.source_entity_id, edge.target_entity_id])
         if (id) ids.add(id);
     for (const flow of dossier.productionLinks)
-      for (const id of [flow.input_entity_id,flow.output_entity_id,
-        flow.operator_entity_id,flow.site_entity_id,flow.intermediary_entity_id])
+      for (const id of [
+        flow.input_entity_id,
+        flow.output_entity_id,
+        flow.operator_entity_id,
+        flow.site_entity_id,
+        flow.intermediary_entity_id,
+      ])
         if (id) ids.add(id);
     for (const flow of dossier.informationFlows)
-      for (const id of [flow.sender_entity_id,flow.receiver_entity_id,
-        flow.carrier_entity_id])
+      for (const id of [
+        flow.sender_entity_id,
+        flow.receiver_entity_id,
+        flow.carrier_entity_id,
+      ])
         if (id) ids.add(id);
     ids.delete(entityId);
     return [...ids].sort().flatMap((id) => {
