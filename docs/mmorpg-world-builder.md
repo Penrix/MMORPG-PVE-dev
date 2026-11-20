@@ -1,6 +1,8 @@
 # MMORPG-PVE · World Builder（第一轮接口原型 / 尚未完成）
 
-**Status correction (2026-11-20):** The code described here is a **self-authored prompt/UI adapter to NarraLume's existing Canon candidate mechanism**, inspired by the private MMORPG v0.1/v0.7 ideas. It has **not** ported Covel world-package or WorldForge graph/agent architecture. No complete W0/W1 creative-model or CI acceptance is evidenced yet. Read [architecture](mmorpg/00-architecture-decisions.md), [source Crosswalk](mmorpg/01-reuse-crosswalk.md), [full audit](mmorpg/02-world-builder-audit-and-design.md), and [next implementation order](mmorpg/03-build-order-and-acceptance.md).\n\nThis development fork keeps NarraLume's original manuscript editor, Story Compass, rolling outline, Canon repositories, revision history, and candidate/approval machinery intact.
+**Status correction (2026-11-20):** The code described here is a **self-authored prompt/UI adapter to NarraLume's existing Canon candidate mechanism**, inspired by the private MMORPG v0.1/v0.7 ideas. It has **not** ported Covel world-package or WorldForge graph/agent architecture. No complete W0/W1 creative-model or CI acceptance is evidenced yet. Read [architecture](mmorpg/00-architecture-decisions.md), [source Crosswalk](mmorpg/01-reuse-crosswalk.md), [full audit](mmorpg/02-world-builder-audit-and-design.md), and [next implementation order](mmorpg/03-build-order-and-acceptance.md).
+
+This development fork keeps NarraLume's original manuscript editor, Story Compass, rolling outline, Canon repositories, revision history, and candidate/approval machinery intact.
 
 ## Currently implemented
 
