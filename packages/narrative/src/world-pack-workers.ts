@@ -25,7 +25,7 @@ import {
   type NarrativeDatabase,
 } from "@narralume/persistence";
 import type { NarrativeModelClient } from "./model-client.js";
-import { MMORPG_WORLD_METHOD_EXCERPTS } from "./mmorpg-world-method.js";
+import { selectWorldMethodExcerpts } from "./mmorpg-method-catalog.js";
 import { selectWorldContextIds } from "./world-pack-context.js";
 import { parseWorldOutput } from "./vendor/covel/lore-processor.js";
 import { createRevisionCache } from "./vendor/covel/revision-cache.js";
@@ -260,32 +260,40 @@ function makePrompt(
   // The existing Covel topological sorter is used to preserve authoring
   // dependencies. The current accepted Canon wins over historical design
   // text; the user's immediate request is placed last.
-  const inputs = [
-    {
-      id: "research-method",
-      order: 0,
-      descriptor: {},
-      content: MMORPG_WORLD_METHOD_EXCERPTS,
+  const selectedMethods = selectWorldMethodExcerpts(input);
+  const methodSources = selectedMethods.map((method, i) => ({
+    id: method.id,
+    order: i,
+    descriptor: i === 0 ? {} : { after: selectedMethods[i - 1]!.id },
+    content: {
+      version: method.version,
+      source: method.sourceFile,
+      sourceLines: method.sourceLines,
+      method: method.verbatim,
     },
+  }));
+  const lastMethod = selectedMethods[selectedMethods.length - 1]!.id;
+  const inputs = [
+    ...methodSources,
     ...(covelPackage
       ? [
           {
             id: "covel-source",
-            order: 1,
-            descriptor: { after: "research-method" },
+            order: methodSources.length,
+            descriptor: { after: lastMethod },
             content: covelPackage,
           },
         ]
       : []),
     {
       id: "accepted-reality",
-      order: 2,
-      descriptor: { after: covelPackage ? "covel-source" : "research-method" },
+      order: methodSources.length + 1,
+      descriptor: { after: covelPackage ? "covel-source" : lastMethod },
       content: known,
     },
     {
       id: "author-goal",
-      order: 3,
+      order: methodSources.length + 2,
       descriptor: { after: "accepted-reality" },
       content: {
         premise: input.premise,
