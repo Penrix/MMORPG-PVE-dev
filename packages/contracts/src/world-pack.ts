@@ -95,9 +95,13 @@ export function worldPackReferenceProblems(
 ): string[] {
   const problems: string[] = [];
   const nodes = new Map<string, WorldPackNode>();
+  const names = new Set<string>();
   for (const node of document.nodes) {
     if (nodes.has(node.localId)) problems.push(`duplicate local node: ${node.localId}`);
     nodes.set(node.localId, node);
+    const nameKey = `${node.type}:${node.name.toLocaleLowerCase()}`;
+    if (names.has(nameKey)) problems.push(`duplicate Canon name in package: ${node.name}`);
+    names.add(nameKey);
     if (node.existingCanonId && !knownCanonIds.has(node.existingCanonId))
       problems.push(`unknown existing Canon entity: ${node.existingCanonId}`);
   }
@@ -109,8 +113,23 @@ export function worldPackReferenceProblems(
     }
   };
   for (const node of document.nodes) {
-    if (node.areaRef) resolve(node.areaRef);
+    if (node.areaRef) {
+      resolve(node.areaRef);
+      const local = nodes.get(node.areaRef);
+      if (local && local.type !== "location")
+        problems.push(`non-location area: ${node.localId} -> ${node.areaRef}`);
+    }
     if (node.areaRef === node.localId) problems.push(`self-referential area: ${node.localId}`);
+    const visited = new Set([node.localId]);
+    let ancestor = node.areaRef;
+    while (ancestor && nodes.has(ancestor)) {
+      if (visited.has(ancestor)) {
+        problems.push(`cyclic area ancestry: ${node.localId}`);
+        break;
+      }
+      visited.add(ancestor);
+      ancestor = nodes.get(ancestor)?.areaRef ?? null;
+    }
   }
   for (const link of document.links) {
     resolve(link.fromRef); resolve(link.toRef);
