@@ -30,3 +30,4 @@ export * from "./story-repository.js";
 export * from "./template-repository.js";
 export * from "./world-pack-repository.js";
 export * from "./world-encyclopedia-repository.js";
+export * from "./world-structures-repository.js";
