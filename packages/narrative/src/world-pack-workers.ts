@@ -781,7 +781,7 @@ export class WorldPackWorkerSuite {
       extraContext: factionReviewPrompt,
       knownCanonIds: ids,
       ...(data.existingWorld
-        ? {existingWorld: data.existingWorld as WorldPackDocument}
+        ? { existingWorld: data.existingWorld as WorldPackDocument }
         : {}),
       contract: WORLD_PACK_MODEL_CONTRACT,
       signal,
