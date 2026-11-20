@@ -3,7 +3,6 @@ import {
   UpdateWorldPackRequestSchema,
   WorldPackRequestSchema,
   worldPackReferenceProblems,
-  type WorldPackDocument,
   type WorldPackRecord,
 } from "@narralume/contracts";
 import {
