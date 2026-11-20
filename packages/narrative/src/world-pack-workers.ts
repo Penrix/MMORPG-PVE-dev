@@ -312,7 +312,10 @@ function makePrompt(
       "world.source_order_invalid",
       ordered.diagnostics.map((d) => d.message).join("; "),
     );
-  const { sourcePackageText: _sourcePackageText, ...request } = input;
+  const request = {
+    ...input,
+    sourcePackageText: undefined,
+  };
   return JSON.stringify({
     role: "单主角开放世界PVE的世界设计师 + 游戏内容制作人",
     project,
