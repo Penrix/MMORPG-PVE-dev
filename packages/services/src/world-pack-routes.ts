@@ -1,0 +1,279 @@
+import {
+  AdoptWorldPackRequestSchema,
+  UpdateWorldPackRequestSchema,
+  WorldPackRequestSchema,
+  worldPackReferenceProblems,
+  type WorldPackDocument,
+  type WorldPackRecord,
+} from "@narralume/contracts";
+import { createCanonEntity, createCanonFact, randomUuid } from "@narralume/domain";
+import { buildWorldPackRecipe } from "@narralume/harness";
+import {
+  SqliteCanonRepository,
+  SqliteNarrativeStateRepository,
+  SqliteProjectRepository,
+  SqliteRunRepository,
+  SqliteStoryRepository,
+  SqliteWorldPackRepository,
+  WorldPackVersionError,
+  type NarrativeDatabase,
+} from "@narralume/persistence";
+import { z } from "zod";
+import type { RouteApp, RunCoordinator } from "@narralume/services";
+import {
+  requireWritingAssignment,
+  withRuntimeModelPolicy,
+} from "@narralume/services";
+
+const ProjectParams = z.object({ projectId: z.string().min(1) });
+const PackParams = ProjectParams.extend({ packId: z.string().min(1) });
+
+export class WorldPackRouteError extends Error {
+  readonly statusCode: number;
+  readonly code: string;
+  constructor(code: string, message: string, statusCode = 422) {
+    super(message);
+    this.code = code;
+    this.statusCode = statusCode;
+  }
+}
+
+export function adoptWorldPack(
+  database: NarrativeDatabase,
+  projectId: string,
+  packId: string,
+  expectedVersion: number,
+): WorldPackRecord {
+  const packs = new SqliteWorldPackRepository(database);
+  const canon = new SqliteCanonRepository(database);
+  const story = new SqliteStoryRepository(database);
+  const state = new SqliteNarrativeStateRepository(database, canon, story);
+  const now = new Date().toISOString();
+
+  return database.transaction(() => {
+    const pack = packs.get(projectId, packId);
+    if (!pack) throw new WorldPackRouteError("world.pack.not_found", "World package not found", 404);
+    if (pack.status !== "draft" || pack.version !== expectedVersion)
+      throw new WorldPackVersionError("world.pack.stale", "World package is already adopted or has been edited");
+
+    const known = new Set(canon.listEntities(projectId).map((e) => e.id));
+    const issues = worldPackReferenceProblems(pack.document, known);
+    if (issues.length) throw new WorldPackRouteError(
+      "world.pack.bad_references", issues.join("; "),
+    );
+
+    // Bind every local ID first, so links may reference later nodes.
+    const ids: Record<string, string> = {};
+    const names = new Map(
+      canon.listEntities(projectId).map((entry) => [`${entry.type}:${entry.name}`, entry.id]),
+    );
+    for (const node of pack.document.nodes) {
+      if (node.existingCanonId) {
+        const reused = canon.requireEntity(projectId, node.existingCanonId);
+        if (reused.type !== node.type)
+          throw new WorldPackRouteError("world.pack.type_mismatch", `Type mismatch for ${node.name}`);
+        ids[node.localId] = reused.id;
+      } else {
+        const duplicate = names.get(`${node.type}:${node.name}`);
+        if (duplicate) throw new WorldPackRouteError(
+          "world.pack.existing_entity",
+          `${node.name} already exists in Canon (${duplicate}); use existingCanonId instead of creating a duplicate`,
+          409,
+        );
+        ids[node.localId] = randomUuid();
+        names.set(`${node.type}:${node.name}`, ids[node.localId]!);
+      }
+    }
+
+    const resolve = (ref: string) =>
+      ref.startsWith("canon:") ? ref.slice(6) : ids[ref]!;
+    for (const node of pack.document.nodes) {
+      if (node.existingCanonId) continue;
+      canon.insertEntity(createCanonEntity({
+        id: ids[node.localId]!,
+        projectId,
+        type: node.type,
+        name: node.name,
+        description: node.description,
+        attributes: {
+          "worldPackId": pack.id,
+          "worldPackLocalId": node.localId,
+          "worldScale": pack.request.scale,
+          "worldTime": pack.request.worldTime,
+          "worldValue": node.value,
+          "worldAccess": node.access,
+          "worldMotive": node.motive,
+          "currentActivity": node.currentActivity,
+          "origin": node.origin,
+          "sourceNote": node.sourceNote,
+        },
+        now,
+      }));
+    }
+
+    for (const node of pack.document.nodes) {
+      if (!node.areaRef) continue;
+      // Area relationship is a confirmed world fact, not a second JSON map.
+      canon.insertFact(createCanonFact({
+        id: randomUuid(),
+        projectId,
+        subjectId: ids[node.localId]!,
+        predicate: "world.area",
+        objectEntityId: resolve(node.areaRef),
+        authority: "confirmed",
+        sourceType: "world-pack",
+        sourceId: pack.id,
+        now,
+      }));
+    }
+
+    for (const link of pack.document.links) {
+      if (link.status !== "current") continue; // possibilities remain a pack-only plan
+      state.insertRelationship({
+        id: randomUuid(),
+        projectId,
+        fromEntityId: resolve(link.fromRef),
+        toEntityId: resolve(link.toRef),
+        relation: link.relation,
+        intensity: null,
+        state: {
+          description: link.description,
+          lifecycle: "active",
+          worldPackId: pack.id,
+          worldTime: pack.request.worldTime,
+        },
+        outlineNodeId: null,
+        storyTime: pack.request.worldTime,
+        sourceId: pack.id,
+        supersedesEventId: null,
+        createdAt: now,
+      });
+    }
+
+    // An ongoing activity is a fact about an actor's current occupation.
+    // An opportunity/potential event never becomes a historical timeline event.
+    for (const activity of pack.document.activities) {
+      if (activity.stage !== "ongoing") continue;
+      for (const actorRef of activity.actorRefs) {
+        canon.insertFact(createCanonFact({
+          id: randomUuid(),
+          projectId,
+          subjectId: resolve(actorRef),
+          predicate: "world.ongoing_activity",
+          value: {
+            description: activity.description,
+            reason: activity.reason,
+            worldTime: activity.worldTime,
+            resourceIds: activity.resourceRefs.map(resolve),
+            activityLocalId: activity.localId,
+          },
+          authority: "confirmed",
+          sourceType: "world-pack",
+          sourceId: pack.id,
+          now,
+        }));
+      }
+    }
+
+    // Pack is marked adopted inside the same SQLite transaction.
+    // An error anywhere above rolls back every entity, relation and fact.
+    return packs.markAdopted(projectId, packId, expectedVersion, ids, now);
+  });
+}
+
+export function registerWorldPackRoutes(
+  app: RouteApp,
+  database: NarrativeDatabase,
+  options: {
+    runCoordinator: RunCoordinator;
+    enableBackgroundWorker: boolean;
+    environment: Readonly<Record<string, string | undefined>>;
+  },
+): void {
+  const projects = new SqliteProjectRepository(database);
+  const runs = new SqliteRunRepository(database);
+  const packs = new SqliteWorldPackRepository(database);
+
+  const requireProject = (projectId: string) => {
+    const project = projects.get(projectId);
+    if (!project)
+      throw new WorldPackRouteError("project.not_found", "Project not found", 404);
+  };
+
+  app.route("POST", "/api/projects/:projectId/world-packs/generate", async (request) => {
+    const { projectId } = ProjectParams.parse(request.params);
+    requireProject(projectId);
+    const input = WorldPackRequestSchema.parse(request.body);
+    if (input.scale === "W1" && !input.focus)
+      throw new WorldPackRouteError("world.pack.focus_required", "W1 requires a specific zone or social circle");
+    if (input.parentAreaId) {
+      const area = new SqliteCanonRepository(database).getEntity(projectId, input.parentAreaId);
+      if (!area || area.type !== "location")
+        throw new WorldPackRouteError("world.pack.area_not_found", "Parent area must be an existing location in this project");
+    }
+    const runId = `world-pack:${projectId}:${input.requestId}`;
+    const replay = runs.getRun(runId);
+    if (replay) {
+      if (replay.projectId !== projectId ||
+          JSON.stringify(replay.policy.worldPackRequest) !== JSON.stringify(input))
+        throw new WorldPackRouteError("world.pack.idempotency_conflict", "requestId was used for another world pack", 409);
+      return { status: 202, body: { runId, idempotentReplay: true } };
+    }
+    const active = runs.listActiveRuns(projectId).find((r) => r.recipe === "world-pack-production");
+    if (active)
+      throw new WorldPackRouteError("world.pack.active_run", `World generation already running: ${active.id}`, 409);
+    requireWritingAssignment(database, options.environment);
+    const recipe = buildWorldPackRecipe(runId);
+    runs.create({
+      id: runId,
+      projectId,
+      recipe: recipe.name,
+      recipeVersion: recipe.version,
+      mode: "manual",
+      targetOutlineNodeId: null,
+      policy: withRuntimeModelPolicy({
+        worldPackRequest: input,
+        origin: { surface: "world", kind: "world-pack" },
+      }, options.environment),
+      steps: recipe.steps,
+      now: new Date().toISOString(),
+    });
+    if (options.enableBackgroundWorker) options.runCoordinator.wake();
+    return { status: 202, body: { runId, idempotentReplay: false } };
+  });
+
+  app.route("GET", "/api/projects/:projectId/world-packs", async (request) => {
+    const { projectId } = ProjectParams.parse(request.params);
+    requireProject(projectId);
+    return packs.list(projectId);
+  });
+
+  app.route("GET", "/api/projects/:projectId/world-packs/:packId", async (request) => {
+    const { projectId, packId } = PackParams.parse(request.params);
+    requireProject(projectId);
+    const pack = packs.get(projectId, packId);
+    if (!pack) throw new WorldPackRouteError("world.pack.not_found", "World package not found", 404);
+    return pack;
+  });
+
+  app.route("PUT", "/api/projects/:projectId/world-packs/:packId", async (request) => {
+    const { projectId, packId } = PackParams.parse(request.params);
+    requireProject(projectId);
+    const input = UpdateWorldPackRequestSchema.parse(request.body);
+    const known = new Set(new SqliteCanonRepository(database).listEntities(projectId).map(e => e.id));
+    const issues = worldPackReferenceProblems(input.document, known);
+    if (issues.length)
+      throw new WorldPackRouteError("world.pack.bad_references", issues.join("; "));
+    return packs.revise({
+      projectId, id: packId, expectedVersion: input.expectedVersion,
+      document: input.document, now: new Date().toISOString(),
+    });
+  });
+
+  app.route("POST", "/api/projects/:projectId/world-packs/:packId/adopt", async (request) => {
+    const { projectId, packId } = PackParams.parse(request.params);
+    requireProject(projectId);
+    const input = AdoptWorldPackRequestSchema.parse(request.body);
+    return adoptWorldPack(database, projectId, packId, input.expectedVersion);
+  });
+}
