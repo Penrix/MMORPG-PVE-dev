@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { createSession, defaultConfig, makeEntity, runTicks } from "../src/vendor/worldforge/full/engine.js";
+import {
+  createSession,
+  defaultConfig,
+  makeEntity,
+  runTicks,
+} from "../src/vendor/worldforge/full/engine.js";
 import { EARTH_LAWS } from "../src/vendor/worldforge/full/physics.js";
 import { runAllAgents } from "../src/vendor/worldforge/full/agent.js";
 import { createMockLLM } from "../src/vendor/worldforge/full/llm.js";
@@ -23,14 +28,24 @@ describe("upstream WorldForge complete simulation source", () => {
 
   function testSession() {
     const first = makeEntity(
-      "merchant-guild", "星河商会", "plains-mid", "人类", "商会",
+      "merchant-guild",
+      "星河商会",
+      "plains-mid",
+      "人类",
+      "商会",
       { population: 1000, economy: 70, military: 100 },
-      { 冶金: 25, 航海: 10 }, {},
+      { 冶金: 25, 航海: 10 },
+      {},
     );
     const second = makeEntity(
-      "sect", "青冥宗", "mountains-north", "人类", "宗门",
+      "sect",
+      "青冥宗",
+      "mountains-north",
+      "人类",
+      "宗门",
       { population: 850, economy: 60, military: 150 },
-      { 冶金: 15, 农业: 45 }, {},
+      { 冶金: 15, 农业: 45 },
+      {},
     );
     first.geography.neighbors = ["sect"];
     second.geography.neighbors = ["merchant-guild"];
@@ -48,7 +63,9 @@ describe("upstream WorldForge complete simulation source", () => {
     expect(session.regions["plains-mid"]).toBeDefined();
     expect(session.registry.dims).toBeDefined();
     expect(session.lore.facts.length).toBeGreaterThan(0);
-    expect(buildEntityKnowledge(session, session.entities["merchant-guild"]!)).toBeDefined();
+    expect(
+      buildEntityKnowledge(session, session.entities["merchant-guild"]!),
+    ).toBeDefined();
     expect(session.laws.rules).toEqual([]);
   });
 
@@ -81,14 +98,19 @@ describe("upstream WorldForge complete simulation source", () => {
     );
     const independent = await runAllAgents(session, { llm, maxTokens: 1000 });
     expect(independent.events.length).toBeGreaterThan(0);
-    expect(independent.events.every((event) => event.source === "agent")).toBe(true);
-    const ruling = await arbitrate({
-      laws: session.laws,
-      config: session.config,
-      entities: session.entities,
-      lore: session.lore,
-      currentTick: session.current_tick,
-    }, independent.events);
+    expect(independent.events.every((event) => event.source === "agent")).toBe(
+      true,
+    );
+    const ruling = await arbitrate(
+      {
+        laws: session.laws,
+        config: session.config,
+        entities: session.entities,
+        lore: session.lore,
+        currentTick: session.current_tick,
+      },
+      independent.events,
+    );
     expect(ruling.accepted.length + ruling.rejected.length).toBeGreaterThan(0);
     // The arbiter returns candidates; this test does NOT adopt them as novel reality.
     expect(session.events).toHaveLength(0);
