@@ -335,7 +335,7 @@ export async function runWorldWorkshops(args: {
   // A W1 request can open an already-known rule or unusual resource directly.
   // Do not suppress that branch merely because the shared W0 already
   // produced its foundational power system.
-  const requestedSubject = resolveWorldDesignEntry(args.request,view());
+  const requestedSubject = resolveWorldDesignEntry(args.request, view());
   if (requestedSubject && !workshops.includes(requestedSubject.workshop))
     workshops.unshift(requestedSubject.workshop);
   // Additional focused iterations are chosen from actual shortcomings of
