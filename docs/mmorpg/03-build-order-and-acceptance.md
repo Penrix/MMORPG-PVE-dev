@@ -5,8 +5,8 @@
 ## 1. 当前断点
 
 - 原版底座：`Penrix/MMORPG-PVE-dev` 是 NarraLume 的真实 GitHub Fork，`main` 仍保留原版。
-- 第一轮原型：`feat/world-builder-w0-w1-mvp` / [Draft PR #1](https://github.com/Penrix/MMORPG-PVE-dev/pull/1)。世界生成页面、W0/W1文字输入、七项语义入口、Canon候选调用和单元测试已提交；**尚未证实本轮构建和端到端质量**。
-- 初始研究资料：`Penrix/MMORPG-PVE` 私有旧Atlas与 v0.1/v0.7，必须保持原始文件和历史，不能向公开Fork默默全量同步。
+- 当前分支：`feat/world-builder-w0-w1-mvp` / [Draft PR #1](https://github.com/Penrix/MMORPG-PVE-dev/pull/1)。已将原单项提示词接口升级为独立WorldPack生成、候选存档、对象/关系一次采用和图查询，见[04实际代码](04-world-pack-implementation.md)。尚未完成CI构建和真实模型验收。
+- 初始研究资料：原 `Penrix/MMORPG-PVE` 的旧Atlas与 v0.1/v0.7。经用户明确授权后完整原文已复制至开发Fork的 `docs/mmorpg/research`；旧Atlas代码仍保留原仓库。
 - 技术路径：保留 NarraLume TypeScript/SQLite/React；只增加必要的新域模型、组件和任务，避免并入 Covel 游戏插件运行时、WorldForge Tauri壳、CampaignRepo Next.js服务或第二个 SNEQ/Spindle Canon。
 
 ## 2. 下一轮代码工作的依赖关系
