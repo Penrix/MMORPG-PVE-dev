@@ -258,11 +258,11 @@ export class SqliteWorldEncyclopediaRepository {
              value_basis, scarcity, access_path, future_use, status,
              realization_event_id, source_note
       FROM world_value_appraisals
-      WHERE project_id=? AND subject_entity_id=?
+      WHERE project_id=? AND (subject_entity_id=? OR evaluator_entity_id=?)
       ORDER BY status, id
     `,
       )
-      .all(projectId, entityId) as WorldValueAppraisal[];
+      .all(projectId, entityId, entityId) as WorldValueAppraisal[];
     return {
       entity,
       facts: this.canon.listEffectiveFacts(projectId, { subjectId: entityId }),
