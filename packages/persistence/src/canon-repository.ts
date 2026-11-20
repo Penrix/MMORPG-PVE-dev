@@ -402,7 +402,7 @@ function mapEntity(row: EntityRow): CanonEntity {
     projectId: row.project_id,
     type: row.type,
     name: row.name,
-    ...(row.world_scope_id ? {worldScopeId:row.world_scope_id} : {}),
+    ...(row.world_scope_id ? { worldScopeId: row.world_scope_id } : {}),
     aliases: parseStringArray(row.aliases_json),
     description: row.description,
     attributes: parseObject(row.attributes_json),
