@@ -2,6 +2,10 @@ import type { CanonEntity, CanonFact } from "@narralume/domain";
 import { SqliteCanonRepository } from "./canon-repository.js";
 import type { NarrativeDatabase } from "./database.js";
 import {
+  SqliteProjectForkRepository,
+  type ProjectForkDiff,
+} from "./project-fork-repository.js";
+import {
   SqliteProjectWorldRepository,
   type ProjectSourceIdentity,
   type ProjectEntitySpaceLink,
@@ -167,17 +171,20 @@ export interface WorldEntityDossier {
   sourceIdentities: ProjectSourceIdentity[];
   worldAffiliations: ProjectEntitySpaceLink[];
   travelHistory: ProjectTravelHistoryRow[];
+  sourceForkDiff: ProjectForkDiff;
 }
 
 export class SqliteWorldEncyclopediaRepository {
   private readonly canon: SqliteCanonRepository;
   private readonly structures: SqliteWorldStructuresRepository;
   private readonly projectWorld: SqliteProjectWorldRepository;
+  private readonly projectFork: SqliteProjectForkRepository;
 
   constructor(private readonly db: NarrativeDatabase) {
     this.canon = new SqliteCanonRepository(db);
     this.structures = new SqliteWorldStructuresRepository(db);
     this.projectWorld = new SqliteProjectWorldRepository(db);
+    this.projectFork = new SqliteProjectForkRepository(db);
   }
 
   /** Source-of-truth chronology is timeline_events, never another history list. */
@@ -340,6 +347,7 @@ export class SqliteWorldEncyclopediaRepository {
         entityId,
       ),
       travelHistory: this.projectWorld.listTravelerHistory(projectId, entityId),
+      sourceForkDiff: this.projectFork.diffEntity(projectId, entityId),
     };
   }
 
