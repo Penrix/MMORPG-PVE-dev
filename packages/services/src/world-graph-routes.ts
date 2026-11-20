@@ -90,7 +90,9 @@ export function projectWorldGraph(
     nodes: [...selected].map((id) => available.get(id)!).filter(Boolean),
     edges: edges.filter((edge) => selected.has(edge.from) && selected.has(edge.to)),
     ongoingActivities: facts
-      .filter((fact) => fact.predicate === "world.ongoing_activity" && selected.has(fact.subjectId))
+      .filter((fact) => fact.predicate === "world.ongoing_activity" && selected.has(fact.subjectId) &&
+        (fact.value === null || typeof fact.value !== "object" ||
+        !("stage" in fact.value) || fact.value.stage === "ongoing"))
       .map((fact) => ({
         id: fact.id,
         actorId: fact.subjectId,
