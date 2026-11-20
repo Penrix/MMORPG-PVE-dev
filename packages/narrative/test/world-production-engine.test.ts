@@ -93,19 +93,34 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
       links: [...doc.links, link("chief", "cultivation", "can_use")],
     };
     expect(playtestWorld(doc, req).next?.workshop).toBe("playability");
-    doc = { ...doc, interactions: [{
-      localId: "enter",name:"进入市场",offeredByRef:"guild",locationRef:"market",
-      action:"商会柜台允许初次来访者进入市场",
-      requires:[],yields:[{kind:"access",ref:"market"}],state:"available",
-    },{
-      localId:"purchase",name:"取得矿权",offeredByRef:"chief",locationRef:"market",
-      action:"用已有准入权参与具体竞价并完成交割",
-      requires:[{kind:"access",ref:"market"}],
-      yields:[{kind:"asset",ref:"ore"}],state:"available",
-    }] };
+    doc = {
+      ...doc,
+      interactions: [
+        {
+          localId: "enter",
+          name: "进入市场",
+          offeredByRef: "guild",
+          locationRef: "market",
+          action: "商会柜台允许初次来访者进入市场",
+          requires: [],
+          yields: [{ kind: "access", ref: "market" }],
+          state: "available",
+        },
+        {
+          localId: "purchase",
+          name: "取得矿权",
+          offeredByRef: "chief",
+          locationRef: "market",
+          action: "用已有准入权参与具体竞价并完成交割",
+          requires: [{ kind: "access", ref: "market" }],
+          yields: [{ kind: "asset", ref: "ore" }],
+          state: "available",
+        },
+      ],
+    };
     const state = playtestWorld(doc, req);
     expect(state.next).toBeNull();
-    expect(state.interactionPaths).toContainEqual(["enter","purchase"]);
+    expect(state.interactionPaths).toContainEqual(["enter", "purchase"]);
     expect(state.independentActivities).toEqual(["bidding"]);
     expect(state.controlledResources).toEqual(["ore"]);
     expect(state.feedbackPaths).toEqual(["bidding"]);
