@@ -12,4 +12,29 @@ Reviewed license families include MIT/MIT-0, ISC, BSD-2-Clause, BSD-3-Clause, Ap
 
 The demo cover in `assets/narralume-demo-cover.jpg` is derived from [Night Sky - Boney Mountain](<https://commons.wikimedia.org/wiki/File:Night_Sky_-_Boney_Mountain_(12957596483).jpg>), photographed by Santa Monica Mountains National Recreation Area. Wikimedia Commons identifies the source as a work of the U.S. National Park Service and marks it as public domain. The source image is retained as `assets/narralume-cover-source.jpg` for provenance.
 
-The installed packages include their own license and notice files. Release archives must preserve those files inside `node_modules`; removing them is not supported. Projects referenced in design/research documents were studied for patterns but their source is not copied into NarraLume.
+The installed packages include their own license and notice files. Release archives must preserve those files inside `node_modules`; removing them is not supported. Some projects referenced in design/research documents are study-only. **Covel and WorldForge now have actual source modules copied into this fork**, fully attributed below.
+
+
+## Actual copied upstream modules added by MMORPG-PVE
+
+The following sources were *ported* (not merely inspired), from their original MIT-licensed TypeScript files. The original algorithm bodies are preserved; the only modifications are provenance headers, NodeNext `.js` import spellings, and separate type adapters.
+
+| Upstream project/source | In this fork | Upstream source blob |
+| --- | --- | --- |
+| [Covel](https://github.com/ackness/covel) `packages/create/src/lore-processor.ts` | `packages/narrative/src/vendor/covel/lore-processor.ts` | `dbfc129c7f3a197a20c604e8cd4c53547dc5f551` |
+| Covel `apps/server/src/world-data/source-order.ts` | `packages/narrative/src/vendor/covel/source-order.ts` | `2a67c97d5e8f06eaf8d2511a27892bbfc4547ce6` |
+| Covel `apps/server/src/world-data/revision-cache.ts` | `packages/narrative/src/vendor/covel/revision-cache.ts` | `64bab876da828774ac99454c93f4cb518404c37f` |
+| [WorldForge](https://github.com/Fange12306/worldforge) `src/lib/simulation/causality.ts` | `packages/narrative/src/vendor/worldforge/causality.ts` | `afbe5ecf4a85c855cc00272e57fbc0cefe9585e7` |
+| WorldForge `src/lib/simulation/registry.ts` | `packages/narrative/src/vendor/worldforge/registry.ts` | `c15e31ddc0afbd2a7489fef5aa440367e57ccca3` |
+
+**Covel MIT notice**: Copyright (c) 2026 Covel Contributors.
+
+**WorldForge MIT notice**: Copyright (c) 2025 WorldForge.
+
+Both upstream licenses grant permission to use, copy, modify, merge, publish, distribute, sublicense and sell copies, provided the following copyright and permission notice stays with copies or substantial portions of the Software:
+
+> Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+The adapter code is identified separately and is not represented as verbatim upstream source.
