@@ -1,21 +1,40 @@
 import {
-  WorldPackDocumentSchema, type WorldPackDocument, type WorldPackRequest,
+  WorldPackDocumentSchema,
+  type WorldPackDocument,
+  type WorldPackRequest,
 } from "@narralume/contracts";
 import type { JsonSchemaContract } from "@narralume/llm";
-import type { NarrativeRun, NarrativeRunStep, RunBudgetUsage } from "@narralume/domain";
+import type {
+  NarrativeRun,
+  NarrativeRunStep,
+  RunBudgetUsage,
+} from "@narralume/domain";
 import type { NarrativeModelClient } from "./model-client.js";
 import {
-  applyWorldProductionDelta, emptyWorldDocument, playtestWorld,
-  worldWorkOrderInput, type WorldWorkOrder, type WorldWorkshop,
+  applyWorldProductionDelta,
+  emptyWorldDocument,
+  playtestWorld,
+  worldWorkOrderInput,
+  type WorldWorkOrder,
+  type WorldWorkshop,
   type WorldProductionStep,
 } from "./world-production-engine.js";
 
-const ZERO: RunBudgetUsage = { inputTokens:0, outputTokens:0, calls:0, costUsd:0, wallTimeMs:0 };
+const ZERO: RunBudgetUsage = {
+  inputTokens: 0,
+  outputTokens: 0,
+  calls: 0,
+  costUsd: 0,
+  wallTimeMs: 0,
+};
 
 function addUsage(a: RunBudgetUsage, b: RunBudgetUsage): RunBudgetUsage {
   return {
-    inputTokens:a.inputTokens+b.inputTokens, outputTokens:a.outputTokens+b.outputTokens,
-    calls:a.calls+b.calls, costUsd:a.costUsd+b.costUsd, wallTimeMs:a.wallTimeMs+b.wallTimeMs,
+    inputTokens: a.inputTokens + b.inputTokens,
+    outputTokens: a.outputTokens + b.outputTokens,
+    calls: a.calls + b.calls,
+    costUsd: a.costUsd + b.costUsd,
+    wallTimeMs: a.wallTimeMs + b.wallTimeMs,
   };
 }
 
@@ -25,73 +44,156 @@ function addUsage(a: RunBudgetUsage, b: RunBudgetUsage): RunBudgetUsage {
  * v0.2 §§3,8 and v0.5 content-production mechanics are the design source.
  */
 function requiredWorkshops(request: WorldPackRequest): WorldWorkshop[] {
-  if (request.intent === "advance") return ["living", "events", "social", "playability"];
-  const supernatural = /玄幻|修仙|武侠|忍术|火影|斗气|魔法|奇幻|超凡/.test(request.genre + request.premise);
-  return ["geography", "factions", "people", "economy",
-    ...(supernatural ? ["power" as const] : []), "events", "social", "playability"];
+  if (request.intent === "advance")
+    return ["living", "events", "social", "playability"];
+  const supernatural = /玄幻|修仙|武侠|忍术|火影|斗气|魔法|奇幻|超凡/.test(
+    request.genre + request.premise,
+  );
+  return [
+    "geography",
+    "factions",
+    "people",
+    "economy",
+    ...(supernatural ? ["power" as const] : []),
+    "events",
+    "social",
+    "playability",
+  ];
 }
 
-function subjectFor(workshop: WorldWorkshop, doc: WorldPackDocument): string | null {
-  const org = doc.nodes.find(n=>n.type==="organization");
-  const npc = doc.nodes.find(n=>n.type==="character");
-  const zone = doc.nodes.find(n=>n.type==="location");
-  const resource = doc.nodes.find(n=>n.type==="item" || n.type==="rule" || n.type==="concept");
-  if (workshop==="factions" || workshop==="social") return zone?.localId ?? null;
-  if (workshop==="people" || workshop==="economy" || workshop==="living") return org?.localId ?? zone?.localId ?? null;
-  if (workshop==="events") return npc?.localId ?? org?.localId ?? null;
-  if (workshop==="playability") return resource?.localId ?? zone?.localId ?? null;
+function subjectFor(
+  workshop: WorldWorkshop,
+  doc: WorldPackDocument,
+): string | null {
+  const org = doc.nodes.find((n) => n.type === "organization");
+  const npc = doc.nodes.find((n) => n.type === "character");
+  const zone = doc.nodes.find((n) => n.type === "location");
+  const resource = doc.nodes.find(
+    (n) => n.type === "item" || n.type === "rule" || n.type === "concept",
+  );
+  if (workshop === "factions" || workshop === "social")
+    return zone?.localId ?? null;
+  if (workshop === "people" || workshop === "economy" || workshop === "living")
+    return org?.localId ?? zone?.localId ?? null;
+  if (workshop === "events") return npc?.localId ?? org?.localId ?? null;
+  if (workshop === "playability")
+    return resource?.localId ?? zone?.localId ?? null;
   return null;
 }
 
-function workOrder(workshop: WorldWorkshop, doc: WorldPackDocument): WorldWorkOrder {
-  const ref = subjectFor(workshop,doc);
-  const node = doc.nodes.find(n => n.localId===ref);
-  const workshops: Record<WorldWorkshop,{reason:string;products:string[]}> = {
+function workOrder(
+  workshop: WorldWorkshop,
+  doc: WorldPackDocument,
+): WorldWorkOrder {
+  const ref = subjectFor(workshop, doc);
+  const node = doc.nodes.find((n) => n.localId === ref);
+  const workshops: Record<
+    WorldWorkshop,
+    { reason: string; products: string[] }
+  > = {
     geography: {
-      reason:"构建可进入的地理、控制、社会与信息地图，区域可以被生活而非只用作背景",
-      products:["Zone/Hub/POI、真实场所及已有来往","进入区域的社会/交通通道，连接相邻地图"] },
-    factions:{
-      reason:"让既存区域有真实运行的组织机器，不是阵营名称",
-      products:["组织的实际内部工作、掌权人物和对外利益","负责人、岗位和区域权利的具体关系"] },
-    people:{
-      reason:"使组织变成有家庭、职业、欲望、具体行动能力和私人关系的人",
-      products:["具名人物、当前独立目标与真实日常","人物在组织或私人关系中的实际权限和交往"] },
-    economy:{
-      reason:"生产资源链/资产权属/进阶资本，不能拿到东西后只加一行数字",
-      products:["一件具体可生产、交换、争夺、享受的高价资源","实际所有人、供应生产链、取得程序和能复用的收益"] },
-    power:{
-      reason:"制作本世界公共可执行的能力规则和社会价格，保持作者指定金手指独立",
-      products:["具有具体效果的公共技能/力量/资格","掌握该力量的人、可用动作、与物品/社会权限的关系"] },
-    events:{
-      reason:"让人物因自己的目标与利益进行事务，男主不出现也不会停止",
-      products:["具体 actor、已投入的凭借、正在采取的动作","行动涉及真实资源与另一方利益、可能改变的后续状态"] },
-    social:{
-      reason:"把地图、人物、组织与高价内容连接成可进入的真实社会",
-      products:["中介人/资格/推荐/交易形成的不同入口","不同入口的实际价格和可获取权限"] },
-    playability:{
-      reason:"玩一次已有世界：具体人物凭现有资源做事、取得新权利、再引出下一行动",
-      products:["可重复利用的资产/权限/行动关系而非一次任务列表","到下一片地区或另一个社会圈层的非唯一通路"] },
-    living:{
-      reason:"由既存 NPC/势力自主提出行动和变更，保留已有历史和资产",
-      products:["既有角色因已知利益主动行动，复用其 Canon ID","NPC采取的具体动作、持续事务状态与他人回应"] },
+      reason:
+        "构建可进入的地理、控制、社会与信息地图，区域可以被生活而非只用作背景",
+      products: [
+        "Zone/Hub/POI、真实场所及已有来往",
+        "进入区域的社会/交通通道，连接相邻地图",
+      ],
+    },
+    factions: {
+      reason: "让既存区域有真实运行的组织机器，不是阵营名称",
+      products: [
+        "组织的实际内部工作、掌权人物和对外利益",
+        "负责人、岗位和区域权利的具体关系",
+      ],
+    },
+    people: {
+      reason: "使组织变成有家庭、职业、欲望、具体行动能力和私人关系的人",
+      products: [
+        "具名人物、当前独立目标与真实日常",
+        "人物在组织或私人关系中的实际权限和交往",
+      ],
+    },
+    economy: {
+      reason: "生产资源链/资产权属/进阶资本，不能拿到东西后只加一行数字",
+      products: [
+        "一件具体可生产、交换、争夺、享受的高价资源",
+        "实际所有人、供应生产链、取得程序和能复用的收益",
+      ],
+    },
+    power: {
+      reason:
+        "制作本世界公共可执行的能力规则和社会价格，保持作者指定金手指独立",
+      products: [
+        "具有具体效果的公共技能/力量/资格",
+        "掌握该力量的人、可用动作、与物品/社会权限的关系",
+      ],
+    },
+    events: {
+      reason: "让人物因自己的目标与利益进行事务，男主不出现也不会停止",
+      products: [
+        "具体 actor、已投入的凭借、正在采取的动作",
+        "行动涉及真实资源与另一方利益、可能改变的后续状态",
+      ],
+    },
+    social: {
+      reason: "把地图、人物、组织与高价内容连接成可进入的真实社会",
+      products: [
+        "中介人/资格/推荐/交易形成的不同入口",
+        "不同入口的实际价格和可获取权限",
+      ],
+    },
+    playability: {
+      reason:
+        "玩一次已有世界：具体人物凭现有资源做事、取得新权利、再引出下一行动",
+      products: [
+        "可重复利用的资产/权限/行动关系而非一次任务列表",
+        "到下一片地区或另一个社会圈层的非唯一通路",
+      ],
+    },
+    living: {
+      reason: "由既存 NPC/势力自主提出行动和变更，保留已有历史和资产",
+      products: [
+        "既有角色因已知利益主动行动，复用其 Canon ID",
+        "NPC采取的具体动作、持续事务状态与他人回应",
+      ],
+    },
   };
-  const spec=workshops[workshop];
-  return { workshop,subjectRef:ref,subjectName:node?.name??"当前世界",reason:spec.reason,
-    deliverables:spec.products };
+  const spec = workshops[workshop];
+  return {
+    workshop,
+    subjectRef: ref,
+    subjectName: node?.name ?? "当前世界",
+    reason: spec.reason,
+    deliverables: spec.products,
+  };
 }
 
-function hasWorkshopOutput(workshop: WorldWorkshop,
-  previous: WorldPackDocument, current: WorldPackDocument): boolean {
-  const count=(type:string,doc:WorldPackDocument)=>doc.nodes.filter(n=>n.type===type).length;
-  const newLinks=current.links.length>previous.links.length;
-  const newActions=current.activities.length>previous.activities.length;
-  if (workshop==="geography") return count("location",current)>count("location",previous);
-  if (workshop==="factions") return count("organization",current)>count("organization",previous) || newLinks;
-  if (workshop==="people") return count("character",current)>count("character",previous) || newLinks;
-  if (workshop==="economy") return count("item",current)>count("item",previous) || newLinks;
-  if (workshop==="power") return count("rule",current)>count("rule",previous) || newLinks;
-  if (workshop==="events" || workshop==="living") return newActions;
-  if (workshop==="social") return newLinks;
+function hasWorkshopOutput(
+  workshop: WorldWorkshop,
+  previous: WorldPackDocument,
+  current: WorldPackDocument,
+): boolean {
+  const count = (type: string, doc: WorldPackDocument) =>
+    doc.nodes.filter((n) => n.type === type).length;
+  const newLinks = current.links.length > previous.links.length;
+  const newActions = current.activities.length > previous.activities.length;
+  if (workshop === "geography")
+    return count("location", current) > count("location", previous);
+  if (workshop === "factions")
+    return (
+      count("organization", current) > count("organization", previous) ||
+      newLinks
+    );
+  if (workshop === "people")
+    return (
+      count("character", current) > count("character", previous) || newLinks
+    );
+  if (workshop === "economy")
+    return count("item", current) > count("item", previous) || newLinks;
+  if (workshop === "power")
+    return count("rule", current) > count("rule", previous) || newLinks;
+  if (workshop === "events" || workshop === "living") return newActions;
+  if (workshop === "social") return newLinks;
   return newLinks || newActions;
 }
 
@@ -119,56 +221,108 @@ export async function runWorldWorkshops(args: {
   signal: AbortSignal;
   extraContext?: string;
 }): Promise<WorldWorkshopRun> {
-  let state=emptyWorldDocument();
-  let usage={...ZERO};
-  const steps:WorldProductionStep[]=[];
-  const workshops=requiredWorkshops(args.request);
+  let state = emptyWorldDocument();
+  let usage = { ...ZERO };
+  const steps: WorldProductionStep[] = [];
+  const workshops = requiredWorkshops(args.request);
   // Additional focused iterations are chosen from actual shortcomings of
   // the world graph, not a model-authored generic TODO or number of cards.
-  const maxExtra=4;
-  for (let index=0; index<workshops.length+maxExtra; index++) {
-    const gap=playtestWorld(state,args.request).next;
-    if (index>=workshops.length && !gap) break;
-    const op=index<workshops.length
-      ? workOrder(workshops[index]!,state)
-      : gap!;
-    const instruction={
-      ...worldWorkOrderInput(op,state),
+  const maxExtra = 4;
+  for (let index = 0; index < workshops.length + maxExtra; index++) {
+    const gap = playtestWorld(state, args.request).next;
+    if (index >= workshops.length && !gap) break;
+    const op =
+      index < workshops.length ? workOrder(workshops[index]!, state) : gap!;
+    const instruction = {
+      ...worldWorkOrderInput(op, state),
       authorRequest: args.request,
-      ...(index===0 ? { sourceWorldAndMethods: args.basePrompt, notes: args.extraContext??"" } : {}),
-      alreadyProduced: steps.map(s=>({workshop:s.workshop,subjectRef:s.subjectRef,changedRefs:s.changedRefs})),
-      resultContract:"Return a structured increment with nodes, links, activities, openThreads and dimensionSignals. Reuse the same local IDs for edits. Existing Canon IDs must not be fabricated. Partial refs may point to prior increments. One new playable object, relation or actual action is required for this workshop.",
-    };
-    const result=await args.model.structured<WorldPackDocument>(
-      args.run,args.step,"world-pack",
-      { instructions:"执行一个明确的MMORPG世界内容生产工序。不是写剧情大纲，不是填十个标题。程序将按实际图关系另行选择后续工序。",
-        messages:[{role:"user",content:JSON.stringify(instruction)}],
-        reasoningEffort:"medium" },
-      args.contract,
-      (value)=>{
-        const parsed=WorldPackDocumentSchema.safeParse(value);
-        if(!parsed.success)return {success:false,issues:parsed.error.issues.map(i=>i.path.join(".")+": "+i.message)};
-        try{
-          const merged=applyWorldProductionDelta(state,parsed.data,args.knownCanonIds,op.workshop,op.subjectRef);
-          if (!hasWorkshopOutput(op.workshop,state,merged.document)) {
-            return {success:false,issues:["world.workshop.no_product: "+op.workshop+
-              " did not produce its promised world entities/relations/actions. Continue this actual object."]};
+      ...(index === 0
+        ? {
+            sourceWorldAndMethods: args.basePrompt,
+            notes: args.extraContext ?? "",
           }
-          return {success:true,data:parsed.data};
-        }catch(e){return {success:false,issues:[e instanceof Error?e.message:String(e)]};}
-      },args.signal);
-    const merged=applyWorldProductionDelta(state,result.value,args.knownCanonIds,op.workshop,op.subjectRef);
-    state=merged.document;
+        : {}),
+      alreadyProduced: steps.map((s) => ({
+        workshop: s.workshop,
+        subjectRef: s.subjectRef,
+        changedRefs: s.changedRefs,
+      })),
+      resultContract:
+        "Return a structured increment with nodes, links, activities, openThreads and dimensionSignals. Reuse the same local IDs for edits. Existing Canon IDs must not be fabricated. Partial refs may point to prior increments. One new playable object, relation or actual action is required for this workshop.",
+    };
+    const result = await args.model.structured<WorldPackDocument>(
+      args.run,
+      args.step,
+      "world-pack",
+      {
+        instructions:
+          "执行一个明确的MMORPG世界内容生产工序。不是写剧情大纲，不是填十个标题。程序将按实际图关系另行选择后续工序。",
+        messages: [{ role: "user", content: JSON.stringify(instruction) }],
+        reasoningEffort: "medium",
+      },
+      args.contract,
+      (value) => {
+        const parsed = WorldPackDocumentSchema.safeParse(value);
+        if (!parsed.success)
+          return {
+            success: false,
+            issues: parsed.error.issues.map(
+              (i) => i.path.join(".") + ": " + i.message,
+            ),
+          };
+        try {
+          const merged = applyWorldProductionDelta(
+            state,
+            parsed.data,
+            args.knownCanonIds,
+            op.workshop,
+            op.subjectRef,
+          );
+          if (!hasWorkshopOutput(op.workshop, state, merged.document)) {
+            return {
+              success: false,
+              issues: [
+                "world.workshop.no_product: " +
+                  op.workshop +
+                  " did not produce its promised world entities/relations/actions. Continue this actual object.",
+              ],
+            };
+          }
+          return { success: true, data: parsed.data };
+        } catch (e) {
+          return {
+            success: false,
+            issues: [e instanceof Error ? e.message : String(e)],
+          };
+        }
+      },
+      args.signal,
+    );
+    const merged = applyWorldProductionDelta(
+      state,
+      result.value,
+      args.knownCanonIds,
+      op.workshop,
+      op.subjectRef,
+    );
+    state = merged.document;
     steps.push(merged.step);
-    usage=addUsage(usage,result.usage);
+    usage = addUsage(usage, result.usage);
   }
-  const remaining=playtestWorld(state,args.request).next;
+  const remaining = playtestWorld(state, args.request).next;
   if (remaining) {
     // Never silently stage an incomplete package as if a game world exists.
     // The Run remains recoverably failed for the author to inspect/retry.
-    throw new Error("world.production.unfinished: "+remaining.workshop+" "+
-      remaining.subjectName+" "+remaining.reason+
-      "; completed workshops: "+steps.map(s=>s.workshop).join(","));
+    throw new Error(
+      "world.production.unfinished: " +
+        remaining.workshop +
+        " " +
+        remaining.subjectName +
+        " " +
+        remaining.reason +
+        "; completed workshops: " +
+        steps.map((s) => s.workshop).join(","),
+    );
   }
-  return {document:state,usage,steps,remaining:null};
+  return { document: state, usage, steps, remaining: null };
 }
