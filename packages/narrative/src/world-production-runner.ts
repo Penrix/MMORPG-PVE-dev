@@ -197,7 +197,9 @@ function hasWorkshopOutput(
   if (workshop === "events" || workshop === "living") return newActions;
   if (workshop === "social") return newLinks;
   if (workshop === "playability")
-    return (current.interactions?.length??0)>(previous.interactions?.length??0);
+    return (
+      (current.interactions?.length ?? 0) > (previous.interactions?.length ?? 0)
+    );
   return newLinks || newActions;
 }
 
