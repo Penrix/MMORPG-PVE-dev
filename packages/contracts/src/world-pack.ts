@@ -13,6 +13,8 @@ export const WorldPackRequestSchema = z.object({
   worldTime: z.string().trim().min(1).max(500),
   focus: z.string().trim().max(2_000),
   genre: z.string().trim().max(2_000),
+  /** World-physics design fork only; source provenance is handled per fact. */
+  worldPower: z.enum(["ordinary", "supernatural"]).optional(),
   scarcity: z.string().trim().max(2_000),
   instruction: z.string().trim().max(8_000),
   parentAreaId: z.string().trim().max(300).nullable(),
