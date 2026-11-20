@@ -138,7 +138,7 @@ export const WORLD_PACK_MODEL_CONTRACT: JsonSchemaContract = {
       summary: txt(
         "What actual world has been produced and how people live there",
       ),
-      nodes: { type: "array", minItems: 1, maxItems: 80, items: NODE_SCHEMA },
+      nodes: { type: "array", maxItems: 80, items: NODE_SCHEMA },
       links: {
         type: "array",
         maxItems: 180,
