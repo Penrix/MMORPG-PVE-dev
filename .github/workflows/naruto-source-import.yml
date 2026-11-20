@@ -1,0 +1,47 @@
+name: Naruto original-source real import smoke
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/naruto-source-import.yml"
+      - "scripts/import-naruto.ts"
+      - "packages/persistence/src/naruto-source-import.ts"
+      - "packages/persistence/src/source-corpus-repository.ts"
+      - "packages/persistence/src/migrations/049-shared-source-corpora.ts"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  naruto-real-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Download pinned Naruto data and import into real NarraLume SQLite
+        run: npm run import:naruto -- --db /tmp/narralume-naruto-smoke.sqlite
+      - name: Check full records and original-source isolation
+        run: |
+          node --input-type=module <<'EOF'
+          import { DatabaseSync } from "node:sqlite";
+          import assert from "node:assert/strict";
+          const db = new DatabaseSync("/tmp/narralume-naruto-smoke.sqlite", {readOnly:true});
+          const counts = db.prepare("SELECT corpus_id,COUNT(*) AS total FROM source_records GROUP BY corpus_id ORDER BY corpus_id").all();
+          const links = db.prepare("SELECT COUNT(*) AS n FROM source_relations").get().n;
+          const projects = db.prepare("SELECT COUNT(*) AS n FROM canon_entities").get().n;
+          console.log({counts,sourceRelations:links,canonEntities:projects});
+          assert(counts.some(c => c.corpus_id==="naruto-dattebayo" && c.total > 500), "Dattebayo data missing");
+          assert(counts.some(c => c.corpus_id==="naruto-wiki-scraper" && c.total > 500), "Wiki records missing");
+          assert(links > 500, "Expected actual relations, not empty attribute cards");
+          assert.equal(projects, 0, "Source import must not fabricate any Project Canon facts");
+          db.close();
+          EOF
+      - name: Re-import to prove idempotence
+        run: npm run import:naruto -- --db /tmp/narralume-naruto-smoke.sqlite
