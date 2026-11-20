@@ -213,6 +213,21 @@ describe("Module 2: one Project Reality with many mother worlds and time travel"
       "从海贼返回火影",
     ]);
     expect(history.map((h) => h.storySequence)).toEqual([1, 2, 3]);
+    // A second write of the SAME person's SAME event must fail atomically.
+    expect(() =>
+      worlds.recordTravel(
+        travel(
+          "duplicate-trip",
+          "e-ocean",
+          "loulan",
+          "ocean",
+          "忍界某个时间",
+          "大海贼时代",
+          "cross_world",
+        ),
+      ),
+    ).toThrow();
+    expect(worlds.listEventCoordinates("novel", "e-ocean")).toHaveLength(2);
     expect(history.map((h) => h.travelerEntityId)).toEqual([
       "hero",
       "hero",
