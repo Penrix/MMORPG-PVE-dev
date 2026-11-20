@@ -77,7 +77,7 @@ export function createCanonEntity(input: CreateCanonEntityInput): CanonEntity {
     projectId: input.projectId,
     type: input.type,
     name,
-    ...(input.worldScopeId ? {worldScopeId:input.worldScopeId} : {}),
+    ...(input.worldScopeId ? { worldScopeId: input.worldScopeId } : {}),
     aliases: aliases.filter((alias) => alias !== name),
     description: input.description?.trim() || null,
     attributes: input.attributes ?? {},
