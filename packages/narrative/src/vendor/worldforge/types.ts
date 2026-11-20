@@ -9,7 +9,7 @@ export type DimensionDef = {
   kind: DimensionKind;
   potential: number;
   weight: number;
-  description?: string;
+  description?: string | undefined;
   first_tick: number;
   last_active: number;
 };
