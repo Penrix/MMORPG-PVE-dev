@@ -1,0 +1,24 @@
+# MMORPG-PVE Development Agent Guide
+
+**For any coding or architecture task in this fork, read [docs/mmorpg/README.md](docs/mmorpg/README.md) and its linked architecture / reuse / audit / implementation files first.** This repository is a NarraLume-based development fork, not a from-scratch rewrite.
+
+## Working agreements, current as of 2026-11-20
+
+1. **Task and scope first.** Read the most recent user correction and the code you are changing. This fork uses NarraLume as the complete novel-authoring substrate; World Builder is the main missing business module. Do not reopen the S01–S08 implementation unless specifically requested.
+2. **Distinguish implemented from proposed.** The W0/W1 World Builder in Draft PR #1 is a semantic instruction and UI adapter around existing NarraLume `canon-spread-candidate` endpoints. It is **not** a port of Covel or WorldForge and is **not** a validated full world content producer.
+3. **Reuse code, not just names.** Before implementing a module, inspect the verified upstream files in [reuse Crosswalk](docs/mmorpg/01-reuse-crosswalk.md). Decide the exact extraction/interface, source commit, license, tests, and what it adds over NarraLume. Credit upstream code you actually copy; call conceptual references *inspiration* rather than porting.
+4. **No duplicate Reality store.** Use NarraLume Canon and the manuscript settlement history as the authoritative accepted world facts. A proposed WorldPack, new NPC activity, M03 creative component, or planned plot is not already-occurred history. Model outputs must remain author-reviewable before promotion.
+5. **World creation is not writing an outline.** W0 makes the strategic map of real people, places, resources, institutions and activity. W1 grows detailed content from existing world state using genre × time/place × scarcity; the same world continues when moving to another map. Existing characters and possessions retain IDs/history. People and organizations live and act without waiting for the protagonist. The full conceptual source resides in the original private MMORPG research; this fork's short summaries do not replace it.
+6. **Respect male-reader commercial novel goals.** Produce concrete high-price encounters, access, ownership, pleasure, relationships, advancement and enduring actual gains, not mere labels or perfunctory tasks. Do not redesign away protagonist capabilities with invented costs or silently turn the world into a rescue/business/cooperation checklist. These are creative goals, not permission to invent past factual events.
+7. **Peer-level user operations; shared infrastructure.** ① World Builder produces; ② World Atlas displays/maintains accepted Reality; ③ Novel Studio uses it and produces chapters. A common SQLite and IDs are compatible with three peer workspaces. A change in one module must be reflected through authorized event/change records, not independent copies.
+8. **Don't publish private work by accident.** This fork is currently **public**. Never copy original private `Penrix/MMORPG-PVE` files, the full v0.1/v0.7 research, M03 proprietary cards, unpublished samples, personal content, or credentials into this repository without explicit permission. Read private material only for the authorized task; put public-compatible abstractions here.
+9. **Preserve NarraLume.** Avoid wholesale rewrites of manuscript, review, migrations, editor, or run management. Introduce additive, backward-compatible changes and tests. Don't flatten existing World/Story data into another undocumented JSON format. The legacy Atlas is preserved separately; migration requires identity mapping and provenance.
+10. **Verification honesty.** A README/PR, prompt template, compile success, and candidate schema do not prove creative results. Demonstrate true W0/W1 generated packages, authorship/approval to Canon, a novel chapter using those records, chapter-caused state changes, and next-map continuity. Never report CI, real model tests, migrations or deployments as done without a verified result.
+
+## Architecture / code reading order
+
+- [Architecture and discussion history](docs/mmorpg/00-architecture-decisions.md)
+- [Real upstream source paths and licenses](docs/mmorpg/01-reuse-crosswalk.md)
+- [World Builder prototype audit](docs/mmorpg/02-world-builder-audit-and-design.md)
+- [Implementation acceptance](docs/mmorpg/03-build-order-and-acceptance.md)
+- Original NarraLume modules: `packages/domain`, `packages/persistence`, `packages/context`, `packages/harness`, `packages/narrative`, `packages/services`, `apps/web`.
