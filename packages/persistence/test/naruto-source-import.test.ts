@@ -53,7 +53,7 @@ afterEach(() => {
 describe("Naruto mother-world import into the ONE NarraLume SQLite", () => {
   it("imports real source entities, source links and full payload without declaring Project Reality", () => {
     db = new NodeNarrativeDatabase();
-    expect(db.migrate()).toBe(51);
+    expect(db.migrate()).toBe(52);
     const projects = new SqliteProjectRepository(db);
     projects.insert(
       createProject({ id: "novel", title: "一书多世界的男频小说", now }),
