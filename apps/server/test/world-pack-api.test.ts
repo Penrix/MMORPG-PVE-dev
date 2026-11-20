@@ -477,7 +477,7 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
       db.raw
         .prepare("SELECT COUNT(*) AS n FROM canon_entities WHERE project_id=?")
         .get(projectId),
-    ).toMatchObject({ n: 4 });
+    ).toMatchObject({ n: 5 });
   });
 
   it("edits a linked draft with CAS and rejects invalid cross-references", async () => {
