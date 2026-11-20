@@ -96,23 +96,32 @@ export function resolveWorldDesignEntry(
   request: WorldPackRequest,
   world: WorldPackDocument,
 ): { workshop: WorldWorkshop; subjectRef: string } | null {
-  const focus=request.focus.trim();
-  if(!focus)return null;
-  const exact=world.nodes.filter(n=>
-    n.localId===focus || n.name===focus ||
-    n.existingCanonId===focus || (n.existingCanonId!=null && "canon:"+n.existingCanonId===focus));
-  const candidates=exact.length?exact:world.nodes.filter(n=>
-    focus.length>=3 && n.name.length>=3 &&
-    (focus.includes(n.name)||n.name.includes(focus)));
-  if(candidates.length!==1)return null;
-  const node=candidates[0]!;
-  const typeMap:Record<typeof node.type,WorldWorkshop>={
-    location:"geography",
-    organization:"factions",
-    character:"people",
-    item:"economy",
-    rule:"power",
-    concept:"power",
+  const focus = request.focus.trim();
+  if (!focus) return null;
+  const exact = world.nodes.filter(
+    (n) =>
+      n.localId === focus ||
+      n.name === focus ||
+      n.existingCanonId === focus ||
+      (n.existingCanonId != null && "canon:" + n.existingCanonId === focus),
+  );
+  const candidates = exact.length
+    ? exact
+    : world.nodes.filter(
+        (n) =>
+          focus.length >= 3 &&
+          n.name.length >= 3 &&
+          (focus.includes(n.name) || n.name.includes(focus)),
+      );
+  if (candidates.length !== 1) return null;
+  const node = candidates[0]!;
+  const typeMap: Record<typeof node.type, WorldWorkshop> = {
+    location: "geography",
+    organization: "factions",
+    character: "people",
+    item: "economy",
+    rule: "power",
+    concept: "power",
   };
-  return {workshop:typeMap[node.type],subjectRef:node.localId};
+  return { workshop: typeMap[node.type], subjectRef: node.localId };
 }
