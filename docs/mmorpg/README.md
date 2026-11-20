@@ -12,7 +12,7 @@
 | [03 实施顺序与实际验收](03-build-order-and-acceptance.md)             | 从世界包、复杂内容生产、Canon 采用、世界关系图、NPC 动态到正文世界缺口往返                                        |
 | [04 WorldPack 当前实际代码](04-world-pack-implementation.md)          | 世界包生成/修订/原子采纳、图查询、NPC活动推进、正文实际上下文与待验收部分                                         |
 
-**当前直接移植与研究全文**：[06 WorldForge完整模拟核心迁入](06-worldforge-full-engine-port.md) · [05 已移植的第三方源码和运行接线](05-actual-upstream-ports.md) · [v0.1～v0.7 七版独立母本](research/README.md)。另见 [World Builder 技术入口](../mmorpg-world-builder.md) 与 [07 可执行世界制作工序与游戏试玩](07-executable-world-workshops.md)，后者记录本轮真正新增的生产状态机、互动行动和断点续作。
+**当前直接移植与研究全文**：[06 WorldForge完整模拟核心迁入](06-worldforge-full-engine-port.md) · [05 已移植的第三方源码和运行接线](05-actual-upstream-ports.md) · [v0.1～v0.7 七版独立母本](research/README.md)。另见 [World Builder 技术入口](../mmorpg-world-builder.md) 与 [07 可执行世界制作、状态继承与游戏试玩](07-executable-world-workshops.md)，后者记录本轮真正新增的生产状态机、互动行动和断点续作。
 
 ## 一句话判断
 
