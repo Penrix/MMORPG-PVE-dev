@@ -117,4 +117,53 @@ describe("program-owned world production, not LLM self-reported completion", () 
     ).rejects.toThrow("world.workshop.no_product");
     expect(calls).toEqual(["factions"]);
   });
+  it("starts W1 from a known historical power instead of recreating geography", async () => {
+    const focus: WorldPackRequest = {
+      ...request,
+      scale: "W1",
+      worldPower: "ordinary",
+      premise: "1878巴黎报业与版权社会",
+      genre: "历史",
+      focus: "版权经营制度",
+    };
+    const existingWorld: WorldPackDocument = {
+      ...place,
+      nodes: [
+        {
+          ...place.nodes[0]!,
+          localId: "canon:licensing-rights",
+          existingCanonId: "licensing-rights",
+          type: "rule",
+          name: "版权经营制度",
+          description: "报业许可与出版契约赋予具体法人经营权利",
+          origin: "source_canon",
+        },
+      ],
+    };
+    const seen:string[]=[];
+    const model = {
+      async structured<T>(
+        _run:NarrativeRun,
+        _step:NarrativeRunStep,
+        _purpose:string,
+        prompt:{messages:Array<{content:string}>},
+        _contract:unknown,
+        validate:(value:unknown)=>{success:true;data:T}|{success:false;issues:string[]},
+      ){
+        const input=JSON.parse(prompt.messages[0]!.content) as {operation:string};
+        seen.push(input.operation);
+        const parsed=validate(place);
+        if(!parsed.success)throw new Error(parsed.issues.join("; "));
+        return {value:parsed.data,usage,mode:"native" as const,attempts:1};
+      },
+    } as unknown as NarrativeModelClient;
+    await expect(runWorldWorkshops({
+      run,step,model,request:focus,basePrompt:"真实世界制作",
+      existingWorld,knownCanonIds:new Set(["licensing-rights"]),
+      contract:WORLD_PACK_MODEL_CONTRACT,
+      signal:new AbortController().signal,
+    })).rejects.toThrow("world.workshop.no_product");
+    expect(seen).toEqual(["power"]);
+  });
+
 });
