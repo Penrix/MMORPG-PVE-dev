@@ -12,6 +12,8 @@
 
 **Source mother-world reference is not Project Reality**: existing Migration 049 supports multiple corpora per one novel. A protagonist can travel Naruto → Loulan past → One Piece → Naruto inside ONE project with stable identity, a project event sequence and distinct local clocks. Preserve all source history, including late/future material. Source lookup, Character knowledge, Reader knowledge and project-accepted events are separate. Time travel does NOT automatically impose a branch, reset world state, overwrite native source canon or create a new Project.
 
+**Character Fork/Diff rule (2026-11-20):** read [11-world-fork-diff-character-invariants.md](docs/mmorpg/11-world-fork-diff-character-invariants.md). Source mother worlds are immutable reference baselines; Project Reality is a copy-on-write branch and accepted Canon changes are its actual Diff. Original characters retain their evidence-backed core tags and decision patterns; altered events, goals, social relationships and choices are not OOC by definition, while silent persona-core replacement is. Names are not entity IDs. This does NOT yet mean as-of time/branch checkout or same-name storage are fully implemented.
+
 **Do not reimplement existing Migration 049 or claim new SQL tables prove a world has been fully populated or validated.** Report verified status and outstanding schema/API/test gaps separately.
 
 ## Working agreements, current as of 2026-11-20
