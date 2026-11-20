@@ -37,3 +37,12 @@ Both upstream licenses grant permission to use, copy, modify, merge, publish, di
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 The adapter code is identified separately and is not represented as verbatim upstream source.
+
+
+## CampaignRepo (actual copied source)
+
+- Upstream repository: https://github.com/avorial/CampaignRepo
+- Source: `lib/relationships.ts` at blob `acbeeaa995e789e593723d5893ac833e846e7eca`
+- Destination: `packages/services/src/vendor/campaignrepo/relationships.ts`
+- License: MIT. Copyright © the CampaignRepo contributors, as declared by its upstream license.
+- The relationship taxonomy and inverse lookup implementations are preserved; the NarraLume Canon graph route uses the exported functions to label ownership and social links. The same MIT permission notice and warranty disclaimer above apply to this copied source.
