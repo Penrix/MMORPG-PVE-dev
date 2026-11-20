@@ -60,8 +60,8 @@ function subjectFor(
   doc: WorldPackDocument,
   request: WorldPackRequest,
 ): string | null {
-  const entry=resolveWorldDesignEntry(request,doc);
-  if(entry?.workshop===workshop)return entry.subjectRef;
+  const entry = resolveWorldDesignEntry(request, doc);
+  if (entry?.workshop === workshop) return entry.subjectRef;
   const org = doc.nodes.find((n) => n.type === "organization");
   const npc = doc.nodes.find((n) => n.type === "character");
   const zone = doc.nodes.find((n) => n.type === "location");
@@ -341,17 +341,20 @@ export async function runWorldWorkshops(args: {
   for (let index = steps.length; index < workshops.length + maxExtra; index++) {
     const gap = playtestWorld(view(), args.request).next;
     const unfinished = workshops.find((w) => !completedWorkshops.has(w));
-    const requestedEntry = index === 0 ? resolveWorldDesignEntry(args.request,view()) : null;
+    const requestedEntry =
+      index === 0 ? resolveWorldDesignEntry(args.request, view()) : null;
     // An actual newly exposed deficit may move ahead of the old work queue.
     // Every core workshop still runs; no model may declare one unnecessary.
-    const op = requestedEntry && workshops.includes(requestedEntry.workshop)
-      ? workOrder(requestedEntry.workshop,view(),args.request)
-      : gap && workshops.includes(gap.workshop) &&
-          !completedWorkshops.has(gap.workshop)
-        ? gap
-        : unfinished
-          ? workOrder(unfinished, view(), args.request)
-          : gap;
+    const op =
+      requestedEntry && workshops.includes(requestedEntry.workshop)
+        ? workOrder(requestedEntry.workshop, view(), args.request)
+        : gap &&
+            workshops.includes(gap.workshop) &&
+            !completedWorkshops.has(gap.workshop)
+          ? gap
+          : unfinished
+            ? workOrder(unfinished, view(), args.request)
+            : gap;
     if (!op) break;
     const instruction = {
       ...worldWorkOrderInput(op, view()),
