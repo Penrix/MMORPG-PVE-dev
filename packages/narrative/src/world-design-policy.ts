@@ -20,7 +20,9 @@ export function worldPowerMode(
   // choose worldPower to avoid genre-label heuristics.
   return /玄幻|修仙|武侠|仙侠|灵力|斗气|魔法|忍术|火影|咒术|查克拉|奇幻|超凡|灵异|神通|异能|妖魔/.test(
     request.genre + request.premise,
-  ) ? "supernatural" : "ordinary";
+  )
+    ? "supernatural"
+    : "ordinary";
 }
 
 /** v0.2's ten world systems share one content-production framework.
@@ -28,9 +30,16 @@ export function worldPowerMode(
  * they are NOT ten separate one-shot prompts or genre-specific pipelines.
  */
 export const WORLD_DESIGN_SYSTEMS = [
-  "world-map", "factions", "npc-ecology", "power-system",
-  "resources", "event-ecology", "progression", "living-world",
-  "social-world", "endgame",
+  "world-map",
+  "factions",
+  "npc-ecology",
+  "power-system",
+  "resources",
+  "event-ecology",
+  "progression",
+  "living-world",
+  "social-world",
+  "endgame",
 ] as const;
 
 export function powerDesignProducts(
@@ -54,12 +63,22 @@ export function powerDesignProducts(
  * does not change. W0 establishes world-wide foundations; W1 inherits those
  * laws and expands locally without demanding duplicate public rules.
  */
-export function initialWorldWorkshopOrder(request: WorldPackRequest): readonly (
-  "geography"|"factions"|"people"|"economy"|"power"|"events"|"social"|"playability"|"living"
+export function initialWorldWorkshopOrder(
+  request: WorldPackRequest,
+): readonly (
+  | "geography"
+  | "factions"
+  | "people"
+  | "economy"
+  | "power"
+  | "events"
+  | "social"
+  | "playability"
+  | "living"
 )[] {
   if (request.intent === "advance") return ["living", "events"];
-  const common = ["geography","factions","people","economy"] as const;
+  const common = ["geography", "factions", "people", "economy"] as const;
   if (request.scale === "W0")
-    return [...common,"power","events","social","playability"];
-  return [...common,"events","social","playability"];
+    return [...common, "power", "events", "social", "playability"];
+  return [...common, "events", "social", "playability"];
 }
