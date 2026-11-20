@@ -20,6 +20,7 @@ import {
   type WorldProductionStep,
 } from "./world-production-engine.js";
 import { previewProductionReality } from "./world-production-reality.js";
+import { initialWorldWorkshopOrder, powerDesignProducts } from "./world-design-policy.js";
 
 const ZERO: RunBudgetUsage = {
   inputTokens: 0,
@@ -45,25 +46,9 @@ function addUsage(a: RunBudgetUsage, b: RunBudgetUsage): RunBudgetUsage {
  * v0.2 §§3,8 and v0.5 content-production mechanics are the design source.
  */
 function requiredWorkshops(request: WorldPackRequest): WorldWorkshop[] {
-  if (request.intent === "advance")
-    // Existing social networks, resources and affordances persist in Canon.
-    // Only run their workshops when a *real* world-playtest gap is found.
-    return ["living", "events"];
-  const supernatural =
-    request.scale === "W0" &&
-    /玄幻|修仙|武侠|忍术|火影|斗气|魔法|奇幻|超凡/.test(
-      request.genre + request.premise,
-    );
-  return [
-    "geography",
-    "factions",
-    "people",
-    "economy",
-    ...(supernatural ? ["power" as const] : []),
-    "events",
-    "social",
-    "playability",
-  ];
+  // One world design method for every source: the program always builds an
+  // actual world. History/IP provenance never selects a simplified path.
+  return [...initialWorldWorkshopOrder(request)];
 }
 
 function subjectFor(
@@ -89,6 +74,7 @@ function subjectFor(
 function workOrder(
   workshop: WorldWorkshop,
   doc: WorldPackDocument,
+  request: WorldPackRequest,
 ): WorldWorkOrder {
   const ref = subjectFor(workshop, doc);
   const node = doc.nodes.find((n) => n.localId === ref);
@@ -169,7 +155,7 @@ function workOrder(
     subjectRef: ref,
     subjectName: node?.name ?? "当前世界",
     reason: spec.reason,
-    deliverables: spec.products,
+    deliverables: workshop === "power" ? powerDesignProducts(request) : spec.products,
   };
 }
 
@@ -355,7 +341,7 @@ export async function runWorldWorkshops(args: {
       !completedWorkshops.has(gap.workshop)
         ? gap
         : unfinished
-          ? workOrder(unfinished, view())
+          ? workOrder(unfinished, view(), args.request)
           : gap;
     if (!op) break;
     const instruction = {
