@@ -100,20 +100,28 @@ describe("Project world: author-facing API, one reality and multiple source worl
     expect(ocean.projectId).toBe("novel");
     // Both are displayed under their *real* identical names, while the
     // project/world identity scope resolves them to separate Canon records.
-    const named=async(worldScopeId:string)=>{
-      const response=await app.inject({
-        method:"POST",url:"/api/projects/novel/entities",
-        payload:{
-          type:"character",name:"同名旅者",worldScopeId,
-          aliases:[],description:"世界不同，人物身份不能仅按姓名判断",
-          attributes:{},
+    const named = async (worldScopeId: string) => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/projects/novel/entities",
+        payload: {
+          type: "character",
+          name: "同名旅者",
+          worldScopeId,
+          aliases: [],
+          description: "世界不同，人物身份不能仅按姓名判断",
+          attributes: {},
         },
       });
       expect(response.statusCode).toBe(201);
-      return response.json() as {id:string,name:string,worldScopeId:string};
+      return response.json() as {
+        id: string;
+        name: string;
+        worldScopeId: string;
+      };
     };
-    const ninjaNamed=await named(ninja.id);
-    const oceanNamed=await named(ocean.id);
+    const ninjaNamed = await named(ninja.id);
+    const oceanNamed = await named(ocean.id);
     expect(ninjaNamed.name).toBe("同名旅者");
     expect(oceanNamed.name).toBe("同名旅者");
     expect(ninjaNamed.id).not.toBe(oceanNamed.id);
