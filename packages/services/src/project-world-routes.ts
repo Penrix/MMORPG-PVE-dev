@@ -129,27 +129,48 @@ export function registerProjectWorldRoutes(
   // Fork is a read-time comparison against native Project Canon.
   // Source baselines and character cores are explicit author inputs, never
   // extracted from novel outcomes or rewritten by a model's chapter draft.
-  app.route("GET", "/api/projects/:projectId/world-fork/:entityId", async request => {
-    const {projectId,entityId}=SubjectParams.parse(request.params);
-    requireProject(projectId);requireEntity(projectId,entityId);
-    return forks.diffEntity(projectId,entityId);
-  });
-  app.route("POST", "/api/projects/:projectId/world-fork/:entityId/core", async request => {
-    const {projectId,entityId}=SubjectParams.parse(request.params);
-    requireProject(projectId);requireEntity(projectId,entityId);
-    const body=CharacterCoreBody.parse(request.body);
-    const anchor={projectId,entityId,...body,createdAt:now()};
-    forks.createCharacterCore(anchor);
-    return {status:201,body:anchor};
-  });
-  app.route("POST", "/api/projects/:projectId/world-fork/:entityId/source-fields", async request => {
-    const {projectId,entityId}=SubjectParams.parse(request.params);
-    requireProject(projectId);requireEntity(projectId,entityId);
-    const body=ForkFieldBody.parse(request.body);
-    const binding={id:randomUuid(),projectId,entityId,...body,createdAt:now()};
-    forks.bindSourceField(binding);
-    return {status:201,body:binding};
-  });
+  app.route(
+    "GET",
+    "/api/projects/:projectId/world-fork/:entityId",
+    async (request) => {
+      const { projectId, entityId } = SubjectParams.parse(request.params);
+      requireProject(projectId);
+      requireEntity(projectId, entityId);
+      return forks.diffEntity(projectId, entityId);
+    },
+  );
+  app.route(
+    "POST",
+    "/api/projects/:projectId/world-fork/:entityId/core",
+    async (request) => {
+      const { projectId, entityId } = SubjectParams.parse(request.params);
+      requireProject(projectId);
+      requireEntity(projectId, entityId);
+      const body = CharacterCoreBody.parse(request.body);
+      const anchor = { projectId, entityId, ...body, createdAt: now() };
+      forks.createCharacterCore(anchor);
+      return { status: 201, body: anchor };
+    },
+  );
+  app.route(
+    "POST",
+    "/api/projects/:projectId/world-fork/:entityId/source-fields",
+    async (request) => {
+      const { projectId, entityId } = SubjectParams.parse(request.params);
+      requireProject(projectId);
+      requireEntity(projectId, entityId);
+      const body = ForkFieldBody.parse(request.body);
+      const binding = {
+        id: randomUuid(),
+        projectId,
+        entityId,
+        ...body,
+        createdAt: now(),
+      };
+      forks.bindSourceField(binding);
+      return { status: 201, body: binding };
+    },
+  );
 
   app.route("GET", "/api/projects/:projectId/world-spaces", async (request) => {
     const { projectId } = Params.parse(request.params);
