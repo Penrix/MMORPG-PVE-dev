@@ -333,6 +333,75 @@ describe("v0.1-v0.7 world encyclopedia database over the ONE NarraLume Canon", (
         .run(id, person, value, now);
     }
 
+    // v0.2: four simultaneous maps are different views, not four copies
+    // of Konoha or four ungrounded arrow labels.
+    database.raw.prepare(`
+      INSERT INTO world_map_edges(
+        id,project_id,from_entity_id,to_entity_id,layer,edge_kind,
+        intermediary_entity_id,access_conditions,source_type,source_note,created_at
+      ) VALUES ('map-control','naruto','uchiha','police','control',
+        'institutional_access','leaf_authority',
+        '警务权限由具体村政授权和岗位程序决定',
+        'author_design','测试关系示例，不能当作无来源原著结论',?)
+    `).run(now);
+    database.raw.prepare(`
+      INSERT INTO world_map_edges(
+        id,project_id,from_entity_id,to_entity_id,layer,edge_kind,
+        intermediary_entity_id,access_conditions,source_type,created_at
+      ) VALUES ('map-social','naruto','fugaku','leaf_authority','social',
+        'political_contact','uchiha','与村政的交往需经过实际人物与安排',
+        'author_design',?)
+    `).run(now);
+    // v0.3: mechanism and social value of the ability are independently
+    // expandable, linked to actual holders and other abilities.
+    database.raw.prepare(`
+      INSERT INTO world_capability_profiles(
+        entity_id,project_id,power_mode,mechanism,actual_actions,
+        effective_scope,activation_conditions,countermeasures,
+        knowledge_or_training,social_effects,source_type,updated_at
+      ) VALUES ('sharingan','naruto','supernatural',
+        '血继限界及其瞳术机制须以原作资料作有证据的细化',
+        '洞察、幻术等各项能力分开记录作用事实',
+        '具体距离、适用环境与对象需分技能核实',
+        '开眼条件需与人物经历和时间对照',
+        '对抗与反制需按具体忍术核实',
+        '传承与能力取得不等于直接移植',
+        '忍族社会价格与保密机制','author_design',?)
+    `).run(now);
+    database.raw.prepare(`
+      INSERT INTO world_capability_links(
+        id,project_id,source_entity_id,target_entity_id,relation,
+        mechanism,source_type,created_at
+      ) VALUES ('ability-holder','naruto','sharingan','madara','used_by',
+        '有关持有与作用的原著时间事实仍需逐条证据化',
+        'author_design',?)
+    `).run(now);
+    // v0.5 economy and logistics: a process is linked to an actual
+    // organization, location and resource instead of one generic reward.
+    database.raw.prepare(`
+      INSERT INTO world_production_links(
+        id,project_id,input_entity_id,output_entity_id,operator_entity_id,
+        site_entity_id,process_kind,concrete_process,prerequisites,
+        source_type,source_note,created_at
+      ) VALUES ('train-clan','naruto','sharingan','sharingan','uchiha',
+        'konoha','train','族内忍术教育与人员训练，详细分工待补齐',
+        '血继能力不因普通训练自动授予所有族人',
+        'author_design','这里只测试生产与培训的数据库引用',?)
+    `).run(now);
+    // v0.6: public world fact and another person's belief are distinct.
+    // This is an example transmission, not a claim that the cited characters
+    // actually exchanged such information in the source work.
+    database.raw.prepare(`
+      INSERT INTO world_information_flows(
+        id,project_id,fact_id,sender_entity_id,receiver_entity_id,
+        carrier_entity_id,event_id,world_time,belief,transmission,
+        source_type,source_note,created_at
+      ) VALUES ('info-flow','naruto','bloodline','fugaku','leaf_authority',
+        'police','e-police','建村后某阶段','suspected',
+        '警务机构掌握的信息，经具体联系人传递，收件方仍需要核验',
+        'author_design','示例传播链，与实际原作情节分开',?)
+    `).run(now);
+
     const encyclopedia = new SqliteWorldEncyclopediaRepository(database);
     const dossier = encyclopedia.getDossier("naruto", "uchiha");
     expect(dossier.entity.name).toBe("宇智波一族");
@@ -355,6 +424,18 @@ describe("v0.1-v0.7 world encyclopedia database over the ONE NarraLume Canon", (
       dossier.standings[1]!.evaluator_entity_id,
     );
     expect(dossier.powerChannels).toHaveLength(1);
+    expect(dossier.mapEdges.map(x=>x.layer).sort()).toEqual(["control"]);
+    expect(dossier.capability).toBeNull(); // a clan is not itself a jutsu
+    expect(dossier.productionLinks).toHaveLength(1);
+    expect(dossier.informationFlows).toHaveLength(0);
+    const eye = encyclopedia.getDossier("naruto","sharingan");
+    expect(eye.capability?.power_mode).toBe("supernatural");
+    expect(eye.capabilityLinks[0]?.target_entity_id).toBe("madara");
+    expect(eye.productionLinks).toHaveLength(1);
+    expect(encyclopedia.getDossier("naruto","leaf_authority")
+      .informationFlows[0]?.belief).toBe("suspected");
+    expect(encyclopedia.getDossier("naruto","fugaku")
+      .mapEdges.some(e=>e.layer==="social")).toBe(true);
     expect(
       dossier.valueAppraisals.map((v) => v.subject_entity_id).sort(),
     ).toEqual(["madara", "shisui"]);
