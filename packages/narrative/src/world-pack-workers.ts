@@ -19,6 +19,13 @@ import {
 import type { NarrativeModelClient } from "./model-client.js";
 import { MMORPG_WORLD_METHOD_EXCERPTS } from "./mmorpg-world-method.js";
 import { selectWorldContextIds } from "./world-pack-context.js";
+import { parseWorldOutput } from "./vendor/covel/lore-processor.js";
+import { createRevisionCache } from "./vendor/covel/revision-cache.js";
+import { orderSources } from "./vendor/covel/source-order.js";
+import { causalCandidates } from "./vendor/worldforge/causality.js";
+import { emptyRegistry, tryRegisterDimension } from "./vendor/worldforge/registry.js";
+import type { SimulationEvent } from "./vendor/worldforge/types.js";
+
 
 const txt = (description: string) => ({ type: "string", description });
 const nullable = (description: string) => ({
@@ -51,7 +58,7 @@ export const WORLD_PACK_MODEL_CONTRACT: JsonSchemaContract = {
   strict: true,
   schema: {
     type: "object", additionalProperties: false,
-    required: ["summary", "nodes", "links", "activities", "openThreads"],
+    required: ["summary", "nodes", "links", "activities", "openThreads", "dimensionSignals"],
     properties: {
       summary: txt("What actual world has been produced and how people live there"),
       nodes: { type: "array", minItems: 1, maxItems: 80, items: NODE_SCHEMA },
@@ -86,6 +93,22 @@ export const WORLD_PACK_MODEL_CONTRACT: JsonSchemaContract = {
         },
       },
       openThreads: { type: "array", maxItems: 70, items: txt("Further naturally arising world content to develop") },
+      dimensionSignals: {
+        type: "array", maxItems: 30,
+        items: {
+          type: "object", additionalProperties: false,
+          required: ["dim", "kind", "frequency", "consequence", "lawConsistency", "potential", "description"],
+          properties: {
+            dim: txt("Emergent power, technique, belief, social or industrial dimension observed in actual world behavior"),
+            kind: { type: "string", enum: ["tech", "value"] },
+            frequency: { type: "number", minimum: 0, maximum: 1 },
+            consequence: { type: "number", minimum: 0, maximum: 1 },
+            lawConsistency: { type: "number", minimum: 0, maximum: 1 },
+            potential: { type: "number", minimum: 0, maximum: 100 },
+            description: txt("What real actions demonstrate the influence of this dimension"),
+          },
+        },
+      },
     },
   },
 };
@@ -104,11 +127,51 @@ function artifact(snapshot: RunSnapshot, kind: NarrativeRunStep["kind"]): Record
   return { ...result };
 }
 
-function makePrompt(input: WorldPackRequest, project: { title: string; premise: string | null }, known: Record<string, unknown>): string {
+function makePrompt(
+  input: WorldPackRequest,
+  project: { title: string; premise: string | null },
+  known: Record<string, unknown>,
+  covelPackage: { yaml: string; lore: string; packageYaml?: string } | null,
+  dimensions: ReturnType<typeof emptyRegistry>,
+  causalHints: SimulationEvent[],
+): string {
+  // The existing Covel topological sorter is used to preserve authoring
+  // dependencies. The current accepted Canon wins over historical design
+  // text; the user's immediate request is placed last.
+  const inputs = [
+    { id: "research-method", order: 0, descriptor: {}, content: MMORPG_WORLD_METHOD_EXCERPTS },
+    ...(covelPackage ? [{
+      id: "covel-source", order: 1,
+      descriptor: { after: "research-method" },
+      content: covelPackage,
+    }] : []),
+    {
+      id: "accepted-reality", order: 2,
+      descriptor: { after: covelPackage ? "covel-source" : "research-method" },
+      content: known,
+    },
+    {
+      id: "author-goal", order: 3,
+      descriptor: { after: "accepted-reality" },
+      content: {
+        premise: input.premise, scale: input.scale, focus: input.focus,
+        genre: input.genre, worldTime: input.worldTime,
+        scarcity: input.scarcity, instruction: input.instruction,
+      },
+    },
+  ];
+  const ordered = orderSources(inputs);
+  if (ordered.diagnostics.some((d) => d.level === "error"))
+    throw error("world.source_order_invalid",
+      ordered.diagnostics.map((d) => d.message).join("; "));
+  const { sourcePackageText: _sourcePackageText, ...request } = input;
   return JSON.stringify({
     role: "单主角开放世界PVE的世界设计师 + 游戏内容制作人",
     project,
-    input,
+    input: request,
+    sourceOrder: ordered.sources.map((source) => ({ id: source.id, content: source.content })),
+    activeDimensions: dimensions,
+    possibleHistoricalCauses: causalHints.map((event) => ({ id: event.id, description: event.description })),
     productionIntent: input.intent === "advance"
       ? "本轮是世界自主推进。基于现存人物/组织/关系/活动继续做决定，不为换地图重置现实。既有人物要用 existingCanonId 复用，不重新发明同名角色；可以生成新的关系变化、未完成事务、结束的旧事务与新进入世界的人。注意以现在世界时间推进 NPC 的独立生活，而不是写男主章纲。"
       : "本轮是世界内容生产。创作完整的地图和社会生活，留足不同人物自己行动和男主未来进入的空间。",
@@ -122,9 +185,11 @@ function makePrompt(input: WorldPackRequest, project: { title: string; premise: 
       "不同身份要分开：当前正在行动 ongoing、尚有可能的 potential、已经结束的 ended。ended 要沿用先前事实记录的 activityLocalId；不能把未来可能发生的事冒充历史事件。历史/原著仅凭模型记忆不能冒称已核实，历史未来不能当当前现实。",
       "用户如果给了已确定的高价目标，应帮助它获得社会共识、稀缺条件和真实人物的争取行为，而不是偷偷改选更普通目标。取得资源后应有真实资产、身份、关系或能力权益并能进一步利用。",
       "给出足够丰富且具体的对象描述、人物实际动作和跨系统连接。输出所有 nodes/links/activities 是同一个互相引用的世界包，不是分七轮的泛用Canon修改候选。",
+      "发展轴 dimensionSignals 要来自具体行为反复产生的真实影响，频率和后果权重是观察依据，不是新创造修炼限制/天赋代价的许可；WorldForge引擎会按阈值追踪它们。",
+      "possibleHistoricalCauses 是 WorldForge 从旧已确认事件中推荐的前因候选，不等于已确立的因果事实；须依据对象和行动判断，不能直接强行连接。",
     ],
-    originalMMORPGMethod: MMORPG_WORLD_METHOD_EXCERPTS,
-    currentReality: known,
+    // Full content is in sourceOrder; avoid transmitting it twice.
+    worldSourceFormat: "Covel WORLD_YAML/WORLD_MD/WORLD_PACKAGE_YAML",
   });
 }
 
@@ -134,6 +199,7 @@ export class WorldPackWorkerSuite {
   private readonly story: SqliteStoryRepository;
   private readonly state: SqliteNarrativeStateRepository;
   private readonly packs: SqliteWorldPackRepository;
+  private readonly parseCovelCached = createRevisionCache<ReturnType<typeof parseWorldOutput>>(16);
 
   constructor(private readonly database: NarrativeDatabase, private readonly model: NarrativeModelClient) {
     this.projects = new SqliteProjectRepository(database);
@@ -187,6 +253,46 @@ export class WorldPackWorkerSuite {
       .filter((event) => event.participants.some((id) => nearby.has(id)) ||
         event.title.toLocaleLowerCase().includes(request.focus.toLocaleLowerCase()))
       .slice(-65);
+    const sourceText = request.sourcePackageText?.trim() ?? "";
+    const covelPackage = sourceText
+      ? await this.parseCovelCached(snapshot.run.id, sourceText,
+          async () => parseWorldOutput(sourceText))
+      : null;
+    if (sourceText && !covelPackage)
+      throw error("world.covel_source_invalid",
+        "Covel source must include ===WORLD_YAML=== and ===WORLD_MD=== sections");
+
+    // WorldForge's original dynamic-dimension registry is replayed from
+    // *adopted* world packages, never from unapproved drafts.
+    const dimensions = emptyRegistry();
+    const adoptedPacks = this.packs.list(project.id)
+      .filter((pack) => pack.status === "adopted").reverse();
+    for (const [index, pack] of adoptedPacks.entries()) {
+      for (const signal of pack.document.dimensionSignals ?? []) {
+        tryRegisterDimension(dimensions, signal, index + 1);
+      }
+    }
+
+    // WorldForge causal candidates never become confirmed causality by
+    // themselves. These are suggestions for the next production prompt.
+    const knownTimeline = this.state.listTimeline(project.id);
+    const history: SimulationEvent[] = knownTimeline.map((event, index) => ({
+      id: event.id, tick: index + 1, time_label: event.storyTimeStart ?? "",
+      type: "historical-event", participants: event.participants,
+      region: "", description: event.description ?? event.title,
+      major: Boolean(event.isMajor), changes: [],
+    }));
+    const causalHints = causalCandidates(
+      { events: history },
+      {
+        id: "world-next", tick: history.length + 1,
+        time_label: request.worldTime, type: "world-production",
+        participants: contextIds,
+        region: "", description: request.focus || request.premise,
+        changes: [],
+      },
+      6,
+    );
     const packet = {
       authorIntent: this.story.getAuthorIntent(project.id),
       entities: nodes.map((node) => ({
@@ -216,7 +322,7 @@ export class WorldPackWorkerSuite {
       artifactKind: "world-context",
       output: {
         request, knownCanonIds: allEntities.map((node) => node.id),
-        prompt: makePrompt(request, project, packet),
+        prompt: makePrompt(request, project, packet, covelPackage, dimensions, causalHints),
       },
       usage: NO_USAGE,
     };
