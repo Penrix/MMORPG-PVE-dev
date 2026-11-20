@@ -384,7 +384,38 @@ function WorldPackReview({
         <span>{pack.document.nodes.length} 个对象</span>
         <span>{pack.document.links.length} 条联系</span>
         <span>{pack.document.activities.length} 项自主活动</span>
+        <span>{pack.document.interactions?.length ?? 0} 种可执行玩法</span>
       </div>
+      {pack.document.production ? (
+        <details>
+          <summary>程序实际执行的世界生产工序（{pack.document.production.executed.length}）</summary>
+          <ul className="world-builder__relations">
+            {pack.document.production.executed.map((step,index) => (
+              <li key={index}>
+                <strong>{step.workshop}</strong>
+                {step.subjectRef ? " · " + nodeName(step.subjectRef) : ""}
+                ：实际变更 {step.changedRefs.length} 处
+              </li>
+            ))}
+          </ul>
+          <p>沙盒试玩产生 {pack.document.production.playtestedPaths.length} 条行动路径（不等于剧情已发生）。</p>
+        </details>
+      ) : null}
+      {(pack.document.interactions?.length ?? 0) > 0 ? (
+        <details>
+          <summary>实际玩法与取得路径（{pack.document.interactions?.length ?? 0}）</summary>
+          <ul className="world-builder__relations">
+            {pack.document.interactions?.map((action) => (
+              <li key={action.localId}>
+                <strong>{action.name}</strong> · {nodeName(action.offeredByRef)}
+                ：{action.action}
+                <p>前置：{action.requires.length ? action.requires.map(t => t.kind + " · " + nodeName(t.ref)).join("；") : "公开入口"}</p>
+                <p>可能取得：{action.yields.map(t => t.kind + " · " + nodeName(t.ref)).join("；")}</p>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
       <details open={pack.status === "draft"}>
         <summary>地点、势力、人物与高价资源</summary>
         <div className="world-builder__nodes">
