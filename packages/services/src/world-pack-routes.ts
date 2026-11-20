@@ -268,6 +268,12 @@ export function registerWorldPackRoutes(
       if (!area || area.type !== "location")
         throw new WorldPackRouteError("world.pack.area_not_found", "Parent area must be an existing location in this project");
     }
+    if (input.intent === "advance" && !new SqliteCanonRepository(database).listEntities(projectId).length) {
+      throw new WorldPackRouteError(
+        "world.pack.empty_reality",
+        "Create and adopt a W0/W1 world package before advancing existing NPC activities",
+      );
+    }
     const runId = `world-pack:${projectId}:${input.requestId}`;
     const replay = runs.getRun(runId);
     if (replay) {
