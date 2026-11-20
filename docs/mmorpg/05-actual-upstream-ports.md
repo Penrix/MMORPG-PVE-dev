@@ -39,7 +39,7 @@ NarraLume 本身已负责作者项目、正式Canon、卷弧章节、大纲、�
 
 - Covel 原主体 `packages/create/src/create-world.ts` 的多阶段生成、分区、修改、校验与修复及它的配套依赖。
 - WorldForge 原 `src/lib/simulation/agent.ts`、`arbiter.ts`、`engine.ts` 的运行主体及边界适配；目前运行的只是因果与维度算法。
-- CampaignRepo 图形关系 UI及其更多 Wiki / 地图交互，SNEQ知识/信息传播、Spindle补强能力。
+- CampaignRepo 图形关系 UI及其更多 Wiki / 地图交互；SNEQ 已移植纯 belief/salience 推导，但跨区域Carriage传播/官方记录/传言延误的Canon集成仍待实施；Spindle补强能力。
 - 世界生成完整开放状态机，NPC按个人知识/目标/行动前提独立行动，GM对男主任意主动动作的世界裁定，长期世界游玩及创作回环的实际模型验收。
 
 **目标状态**：对标成熟实现成为可执行工程基础；v0.1～v0.7 则使这些能力生产更昂贵、更有生活和更多可分叉玩法的男频世界。WorldPack/Canon负责存储采纳结果，不冒充创作引擎本身。
