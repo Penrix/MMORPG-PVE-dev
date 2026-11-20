@@ -36,6 +36,7 @@ import {
   registerAutomationRoutes,
   registerCanonCandidateRoutes,
   registerWorldPackRoutes,
+  registerWorldGraphRoutes,
   registerDeliveryRoutes,
   registerLongNovelRoutes,
   registerProjectCoverRoutes,
@@ -306,6 +307,7 @@ async function boot(): Promise<void> {
     enableBackgroundWorker: true,
     environment: {},
   });
+  registerWorldGraphRoutes(table, database);
   registerWorldPackRoutes(table, database, {
     runCoordinator: coordinator,
     enableBackgroundWorker: true,
