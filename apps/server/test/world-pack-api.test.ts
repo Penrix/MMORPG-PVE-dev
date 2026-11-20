@@ -219,9 +219,11 @@ function workshopPatch(request: unknown): WorldPackDocument {
     interactions: [],
     dimensionSignals: [],
   };
+  const actionPrefix = advance ? (later ? "next_day_" : "today_") :
+    scale === "W1" ? "river_" : "";
   const gameActions = () => [
     {
-      localId: "public_arrival",
+      localId: actionPrefix + "public_arrival",
       name: "商会招徕新人入坊市",
       offeredByRef: org.localId,
       locationRef: market.localId,
@@ -231,7 +233,7 @@ function workshopPatch(request: unknown): WorldPackDocument {
       state: "available" as const,
     },
     {
-      localId: "buy_resource",
+      localId: actionPrefix + "buy_resource",
       name: "竞购稀有资源",
       offeredByRef: person.localId,
       locationRef: market.localId,
@@ -241,7 +243,7 @@ function workshopPatch(request: unknown): WorldPackDocument {
       state: "available" as const,
     },
     {
-      localId: "invest_resource",
+      localId: actionPrefix + "invest_resource",
       name: "凭已有资产进入商会更高圈层",
       offeredByRef: person.localId,
       locationRef: market.localId,
