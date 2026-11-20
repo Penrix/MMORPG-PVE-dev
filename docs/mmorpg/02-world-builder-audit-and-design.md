@@ -4,13 +4,13 @@
 
 ## A. 历史原型逐项定性（非当前版本）
 
-| 当前源码 | 真正实现了什么 | **没有实现什么** | 判定 |
-|---|---|---|---|
-| [`apps/web/src/lib/world-builder.ts`](../../apps/web/src/lib/world-builder.ts) | 自己写的 W0/W1、五轮内容生成 + 事实/关系补充指令；从已有 MMORPG 思想摘要提取世界内容要求 | 未接入 v0.1/v0.7 **完整内容生成方法**；未引用 Covel schema/世界包、WorldForge agent/graph；输出仍是 NarraLume 泛用 Canon 修改候选 | **自行编写的语义接线，不是对标架构移植** |
-| [`apps/web/src/workspaces/world-builder.tsx`](../../apps/web/src/workspaces/world-builder.tsx) | W0/W1 界面、分轮选择、调用旧 AI 任务、展示旧候选采纳组件、显示 Canon 概况 | 不是分层世界地图生产器；没有 W0/W1 稳定对象ID、世界包浏览/版本/局部深入、图关联与可行动内容导航 | **页面原型** |
-| [`apps/web/src/styles/world-builder.css`](../../apps/web/src/styles/world-builder.css) | 使用 NarraLume 主题设计令牌、响应式排版 | 没有地图/网络可视化 | UI接线 |
-| [`apps/web/test/world-builder.test.ts`](../../apps/web/test/world-builder.test.ts) | 检查生成指令包含目标关键词、W0/W1校验 | **没有跑真实 LLM 世界创作，也没检验一包实体与关系从候选到Canon，再到正文的完整链** | 仅提示词装配测试 |
-| NarraLume 原生 `canon-spread-candidate` | 多模型调用、单类 Canon 候选、逐条接受/拒绝、审阅差异、结果写入旧Canon | 不知道 MMORPG 新世界应有什么社会生态；每次生成局限一个 Canon spread；没有“先建世界包再多类关系协同提交”的事务 | **复用了基础设施，不能当世界引擎** |
+| 当前源码                                                                                       | 真正实现了什么                                                                           | **没有实现什么**                                                                                                                  | 判定                                     |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| [`apps/web/src/lib/world-builder.ts`](../../apps/web/src/lib/world-builder.ts)                 | 自己写的 W0/W1、五轮内容生成 + 事实/关系补充指令；从已有 MMORPG 思想摘要提取世界内容要求 | 未接入 v0.1/v0.7 **完整内容生成方法**；未引用 Covel schema/世界包、WorldForge agent/graph；输出仍是 NarraLume 泛用 Canon 修改候选 | **自行编写的语义接线，不是对标架构移植** |
+| [`apps/web/src/workspaces/world-builder.tsx`](../../apps/web/src/workspaces/world-builder.tsx) | W0/W1 界面、分轮选择、调用旧 AI 任务、展示旧候选采纳组件、显示 Canon 概况                | 不是分层世界地图生产器；没有 W0/W1 稳定对象ID、世界包浏览/版本/局部深入、图关联与可行动内容导航                                   | **页面原型**                             |
+| [`apps/web/src/styles/world-builder.css`](../../apps/web/src/styles/world-builder.css)         | 使用 NarraLume 主题设计令牌、响应式排版                                                  | 没有地图/网络可视化                                                                                                               | UI接线                                   |
+| [`apps/web/test/world-builder.test.ts`](../../apps/web/test/world-builder.test.ts)             | 检查生成指令包含目标关键词、W0/W1校验                                                    | **没有跑真实 LLM 世界创作，也没检验一包实体与关系从候选到Canon，再到正文的完整链**                                                | 仅提示词装配测试                         |
+| NarraLume 原生 `canon-spread-candidate`                                                        | 多模型调用、单类 Canon 候选、逐条接受/拒绝、审阅差异、结果写入旧Canon                    | 不知道 MMORPG 新世界应有什么社会生态；每次生成局限一个 Canon spread；没有“先建世界包再多类关系协同提交”的事务                     | **复用了基础设施，不能当世界引擎**       |
 
 ## B. 当前模型会在哪里掉链子
 
@@ -67,15 +67,15 @@ WorldPackDraft / Typed Graph / 来源引用
 
 ### 最少应有的逻辑记录（不是要求额外建七张数据库）
 
-| 建议逻辑记录 | 不可缺少的内容和作用 | 借鉴来源 |
-|---|---|---|
-| `WorldRoot` | 世界身份、时间和宏观区域/社会力量/高价资源、来源与现状；下挂多个局部区域 | MMORPG原始v0.1/v0.7，OnlyWorlds `world` |
-| `Zone` / `Hub` / `POI` | W0/W1层级、区域ID/父ID、真实地点、地理与社会通道、入口条件、可进入场所和主要活动 | Covel世界包、OnlyWorlds `zone/location/map`、WorldForge图 |
-| `Faction` | 具体领导和组织结构、职责/权力、地盘、资源、经济来源、内部派系及正在行动的人 | 原研究的 Factions，WorldForge entity agent |
-| `NPC` | 具体身份、独立愿望、社会角色/价格、关系、日常活动、当前目标与知识边界 | 原研究 NPC Ecology、WorldForge agent |
-| `Resource/Right` | 高价物品/资格/产权/使用权、当前持有人与控制者、接近/夺取/享受通路与社会价值 | 原研究 Resources，OnlyWorlds Object/Relation |
-| `Activity` / `WorldOpportunity` | 独立行动者、现在正在做的事、参与者、资源、原因、变化可能性；**计划/趋势不能直接登记成已发生事件** | 原研究 Living World / Storylets、WorldForge agent/event |
-| `WorldSource` / `WorldChange` | 历史/原著/推断/原创身份、证据位置、作者采纳/修订、故事时间与可见范围 | Covel校验，SNEQ投影，NarraLume原Canon与变更事务 |
+| 建议逻辑记录                    | 不可缺少的内容和作用                                                                              | 借鉴来源                                                  |
+| ------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `WorldRoot`                     | 世界身份、时间和宏观区域/社会力量/高价资源、来源与现状；下挂多个局部区域                          | MMORPG原始v0.1/v0.7，OnlyWorlds `world`                   |
+| `Zone` / `Hub` / `POI`          | W0/W1层级、区域ID/父ID、真实地点、地理与社会通道、入口条件、可进入场所和主要活动                  | Covel世界包、OnlyWorlds `zone/location/map`、WorldForge图 |
+| `Faction`                       | 具体领导和组织结构、职责/权力、地盘、资源、经济来源、内部派系及正在行动的人                       | 原研究的 Factions，WorldForge entity agent                |
+| `NPC`                           | 具体身份、独立愿望、社会角色/价格、关系、日常活动、当前目标与知识边界                             | 原研究 NPC Ecology、WorldForge agent                      |
+| `Resource/Right`                | 高价物品/资格/产权/使用权、当前持有人与控制者、接近/夺取/享受通路与社会价值                       | 原研究 Resources，OnlyWorlds Object/Relation              |
+| `Activity` / `WorldOpportunity` | 独立行动者、现在正在做的事、参与者、资源、原因、变化可能性；**计划/趋势不能直接登记成已发生事件** | 原研究 Living World / Storylets、WorldForge agent/event   |
+| `WorldSource` / `WorldChange`   | 历史/原著/推断/原创身份、证据位置、作者采纳/修订、故事时间与可见范围                              | Covel校验，SNEQ投影，NarraLume原Canon与变更事务           |
 
 **关键工程决策**：上表是“生成内容如何具有稳定身份和关系”的逻辑层；可使用 NarraLume 既有 `canon_entities` / `canon_facts` / `timeline_events` / `relationship_events` + 少量新表/索引完成。不要未验证就搬进另一整个世界数据库或复制事实到多个 Canon。
 

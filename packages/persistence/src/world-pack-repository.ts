@@ -40,7 +40,9 @@ export class SqliteWorldPackRepository {
 
   list(projectId: string): WorldPackRecord[] {
     const rows = this.database.raw
-      .prepare("SELECT * FROM world_pack_drafts WHERE project_id=? ORDER BY created_at DESC, id DESC")
+      .prepare(
+        "SELECT * FROM world_pack_drafts WHERE project_id=? ORDER BY created_at DESC, id DESC",
+      )
       .all(projectId) as WorldPackRow[];
     return rows.map(decode);
   }
@@ -54,7 +56,9 @@ export class SqliteWorldPackRepository {
 
   byRun(projectId: string, runId: string): WorldPackRecord | null {
     const row = this.database.raw
-      .prepare("SELECT * FROM world_pack_drafts WHERE project_id=? AND run_id=?")
+      .prepare(
+        "SELECT * FROM world_pack_drafts WHERE project_id=? AND run_id=?",
+      )
       .get(projectId, runId) as WorldPackRow | undefined;
     return row ? decode(row) : null;
   }
@@ -68,18 +72,25 @@ export class SqliteWorldPackRepository {
     document: WorldPackDocument;
     now: string;
   }): WorldPackRecord {
-    this.database.raw.prepare(`
+    this.database.raw
+      .prepare(
+        `
       INSERT INTO world_pack_drafts(
         id, project_id, run_id, status, version, request_json,
         document_json, canon_ids_json, created_at, updated_at
       ) VALUES (?,?,?,'draft',1,?,?,'{}',?,?)
       ON CONFLICT(id) DO NOTHING
-    `).run(
-      input.id, input.projectId, input.runId,
-      JSON.stringify(WorldPackRequestSchema.parse(input.request)),
-      JSON.stringify(WorldPackDocumentSchema.parse(input.document)),
-      input.now, input.now,
-    );
+    `,
+      )
+      .run(
+        input.id,
+        input.projectId,
+        input.runId,
+        JSON.stringify(WorldPackRequestSchema.parse(input.request)),
+        JSON.stringify(WorldPackDocumentSchema.parse(input.document)),
+        input.now,
+        input.now,
+      );
     return this.get(input.projectId, input.id)!;
   }
 
@@ -90,16 +101,26 @@ export class SqliteWorldPackRepository {
     document: WorldPackDocument;
     now: string;
   }): WorldPackRecord {
-    const result = this.database.raw.prepare(`
+    const result = this.database.raw
+      .prepare(
+        `
       UPDATE world_pack_drafts
       SET document_json=?, version=version+1, updated_at=?
       WHERE project_id=? AND id=? AND status='draft' AND version=?
-    `).run(
-      JSON.stringify(WorldPackDocumentSchema.parse(input.document)),
-      input.now, input.projectId, input.id, input.expectedVersion,
-    );
+    `,
+      )
+      .run(
+        JSON.stringify(WorldPackDocumentSchema.parse(input.document)),
+        input.now,
+        input.projectId,
+        input.id,
+        input.expectedVersion,
+      );
     if (result.changes !== 1)
-      throw new WorldPackVersionError("world_pack.stale", "WorldPack is missing, already adopted, or has changed");
+      throw new WorldPackVersionError(
+        "world_pack.stale",
+        "WorldPack is missing, already adopted, or has changed",
+      );
     return this.get(input.projectId, input.id)!;
   }
 
@@ -110,14 +131,21 @@ export class SqliteWorldPackRepository {
     canonIds: Record<string, string>,
     now: string,
   ): WorldPackRecord {
-    const result = this.database.raw.prepare(`
+    const result = this.database.raw
+      .prepare(
+        `
       UPDATE world_pack_drafts
       SET status='adopted', version=version+1,
           canon_ids_json=?, updated_at=?
       WHERE project_id=? AND id=? AND status='draft' AND version=?
-    `).run(JSON.stringify(canonIds), now, projectId, id, expectedVersion);
+    `,
+      )
+      .run(JSON.stringify(canonIds), now, projectId, id, expectedVersion);
     if (result.changes !== 1)
-      throw new WorldPackVersionError("world_pack.stale", "WorldPack adoption requires the latest draft version");
+      throw new WorldPackVersionError(
+        "world_pack.stale",
+        "WorldPack adoption requires the latest draft version",
+      );
     return this.get(projectId, id)!;
   }
 }

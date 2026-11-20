@@ -36,9 +36,13 @@ export function selectWorldContextIds(input: {
 
   const focus = `${input.focus} ${input.premise}`.toLocaleLowerCase();
   const seeds = new Set<string>();
-  if (input.parentAreaId && byId.has(input.parentAreaId)) seeds.add(input.parentAreaId);
+  if (input.parentAreaId && byId.has(input.parentAreaId))
+    seeds.add(input.parentAreaId);
   for (const entity of input.entities) {
-    if (entity.name.length > 1 && focus.includes(entity.name.toLocaleLowerCase()))
+    if (
+      entity.name.length > 1 &&
+      focus.includes(entity.name.toLocaleLowerCase())
+    )
       seeds.add(entity.id);
   }
 
@@ -59,16 +63,21 @@ export function selectWorldContextIds(input: {
 
   const score = (entity: CanonEntity) => {
     const distance = distances.get(entity.id);
-    const relationshipScore = distance === undefined ? 0 : [100, 75, 50, 20][distance] ?? 0;
+    const relationshipScore =
+      distance === undefined ? 0 : ([100, 75, 50, 20][distance] ?? 0);
     const matched = focus.includes(entity.name.toLocaleLowerCase()) ? 80 : 0;
-    const hasContent = typeof entity.description === "string" && entity.description.length > 30 ? 3 : 0;
+    const hasContent =
+      typeof entity.description === "string" && entity.description.length > 30
+        ? 3
+        : 0;
     return relationshipScore + matched + hasContent;
   };
   return [...input.entities]
-    .sort((a, b) =>
-      score(b) - score(a) ||
-      b.updatedAt.localeCompare(a.updatedAt) ||
-      a.id.localeCompare(b.id),
+    .sort(
+      (a, b) =>
+        score(b) - score(a) ||
+        b.updatedAt.localeCompare(a.updatedAt) ||
+        a.id.localeCompare(b.id),
     )
     .slice(0, Math.max(1, input.maxCount))
     .map((entity) => entity.id);

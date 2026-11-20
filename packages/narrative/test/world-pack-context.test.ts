@@ -6,9 +6,17 @@ import { selectWorldContextIds } from "../src/world-pack-context.js";
 const now = "2026-11-20T00:00:00.000Z";
 const projectId = "story";
 
-function entity(id: string, type: "character" | "location" | "organization", name: string) {
+function entity(
+  id: string,
+  type: "character" | "location" | "organization",
+  name: string,
+) {
   return createCanonEntity({
-    id, projectId, type, name, now,
+    id,
+    projectId,
+    type,
+    name,
+    now,
     description: `${name}正在推进自己的生活和事务，已经有真实权力、地盘或长期目标。`,
   });
 }
@@ -24,22 +32,39 @@ describe("WorldForge-style W1 context selection", () => {
     ];
     const facts = [
       createCanonFact({
-        id: "inside", projectId, subjectId: "publisher",
-        predicate: "world.area", objectEntityId: "paris",
-        sourceType: "world-pack", now,
+        id: "inside",
+        projectId,
+        subjectId: "publisher",
+        predicate: "world.area",
+        objectEntityId: "paris",
+        sourceType: "world-pack",
+        now,
       }),
     ];
-    const relationships: RelationshipEvent[] = [{
-      id: "negotiation", projectId,
-      fromEntityId: "publisher", toEntityId: "writer", relation: "contracts",
-      intensity: null, state: { lifecycle: "active" },
-      outlineNodeId: null, storyTime: "1878",
-      sourceId: null, supersedesEventId: null, createdAt: now,
-    }];
+    const relationships: RelationshipEvent[] = [
+      {
+        id: "negotiation",
+        projectId,
+        fromEntityId: "publisher",
+        toEntityId: "writer",
+        relation: "contracts",
+        intensity: null,
+        state: { lifecycle: "active" },
+        outlineNodeId: null,
+        storyTime: "1878",
+        sourceId: null,
+        supersedesEventId: null,
+        createdAt: now,
+      },
+    ];
     const ids = selectWorldContextIds({
-      entities, facts, relationships,
-      parentAreaId: "paris", focus: "巴黎出版圈层",
-      premise: "1878法国不同的社会阶层", maxCount: 3,
+      entities,
+      facts,
+      relationships,
+      parentAreaId: "paris",
+      focus: "巴黎出版圈层",
+      premise: "1878法国不同的社会阶层",
+      maxCount: 3,
     });
     expect(ids[0]).toBe("paris");
     expect(new Set(ids)).toEqual(new Set(["paris", "publisher", "writer"]));
@@ -51,17 +76,30 @@ describe("WorldForge-style W1 context selection", () => {
       entity("guild", "organization", "天风商会"),
       entity("elsewhere", "character", "不相关路人"),
     ];
-    const relationships: RelationshipEvent[] = [{
-      id: "old", projectId,
-      fromEntityId: "market", toEntityId: "guild", relation: "owns",
-      intensity: null, state: { lifecycle: "voided" },
-      outlineNodeId: null, storyTime: null,
-      sourceId: null, supersedesEventId: null, createdAt: now,
-    }];
+    const relationships: RelationshipEvent[] = [
+      {
+        id: "old",
+        projectId,
+        fromEntityId: "market",
+        toEntityId: "guild",
+        relation: "owns",
+        intensity: null,
+        state: { lifecycle: "voided" },
+        outlineNodeId: null,
+        storyTime: null,
+        sourceId: null,
+        supersedesEventId: null,
+        createdAt: now,
+      },
+    ];
     const ids = selectWorldContextIds({
-      entities, relationships, facts: [],
-      parentAreaId: "market", focus: "万宝坊市",
-      premise: "修仙世界", maxCount: 1,
+      entities,
+      relationships,
+      facts: [],
+      parentAreaId: "market",
+      focus: "万宝坊市",
+      premise: "修仙世界",
+      maxCount: 1,
     });
     expect(ids).toEqual(["market"]);
   });

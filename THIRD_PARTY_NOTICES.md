@@ -14,18 +14,17 @@ The demo cover in `assets/narralume-demo-cover.jpg` is derived from [Night Sky -
 
 The installed packages include their own license and notice files. Release archives must preserve those files inside `node_modules`; removing them is not supported. Some projects referenced in design/research documents are study-only. **Covel and WorldForge now have actual source modules copied into this fork**, fully attributed below.
 
-
 ## Actual copied upstream modules added by MMORPG-PVE
 
-The following sources were *ported* (not merely inspired), from their original MIT-licensed TypeScript files. The original algorithm bodies are preserved; the only modifications are provenance headers, NodeNext `.js` import spellings, and separate type adapters.
+The following sources were _ported_ (not merely inspired), from their original MIT-licensed TypeScript files. The original algorithm bodies are preserved; the only modifications are provenance headers, NodeNext `.js` import spellings, and separate type adapters.
 
-| Upstream project/source | In this fork | Upstream source blob |
-| --- | --- | --- |
-| [Covel](https://github.com/ackness/covel) `packages/create/src/lore-processor.ts` | `packages/narrative/src/vendor/covel/lore-processor.ts` | `dbfc129c7f3a197a20c604e8cd4c53547dc5f551` |
-| Covel `apps/server/src/world-data/source-order.ts` | `packages/narrative/src/vendor/covel/source-order.ts` | `2a67c97d5e8f06eaf8d2511a27892bbfc4547ce6` |
-| Covel `apps/server/src/world-data/revision-cache.ts` | `packages/narrative/src/vendor/covel/revision-cache.ts` | `64bab876da828774ac99454c93f4cb518404c37f` |
+| Upstream project/source                                                                  | In this fork                                            | Upstream source blob                       |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------ |
+| [Covel](https://github.com/ackness/covel) `packages/create/src/lore-processor.ts`        | `packages/narrative/src/vendor/covel/lore-processor.ts` | `dbfc129c7f3a197a20c604e8cd4c53547dc5f551` |
+| Covel `apps/server/src/world-data/source-order.ts`                                       | `packages/narrative/src/vendor/covel/source-order.ts`   | `2a67c97d5e8f06eaf8d2511a27892bbfc4547ce6` |
+| Covel `apps/server/src/world-data/revision-cache.ts`                                     | `packages/narrative/src/vendor/covel/revision-cache.ts` | `64bab876da828774ac99454c93f4cb518404c37f` |
 | [WorldForge](https://github.com/Fange12306/worldforge) `src/lib/simulation/causality.ts` | `packages/narrative/src/vendor/worldforge/causality.ts` | `afbe5ecf4a85c855cc00272e57fbc0cefe9585e7` |
-| WorldForge `src/lib/simulation/registry.ts` | `packages/narrative/src/vendor/worldforge/registry.ts` | `c15e31ddc0afbd2a7489fef5aa440367e57ccca3` |
+| WorldForge `src/lib/simulation/registry.ts`                                              | `packages/narrative/src/vendor/worldforge/registry.ts`  | `c15e31ddc0afbd2a7489fef5aa440367e57ccca3` |
 
 **Covel MIT notice**: Copyright (c) 2026 Covel Contributors.
 

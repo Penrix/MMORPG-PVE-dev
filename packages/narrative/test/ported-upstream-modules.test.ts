@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { parseWorldOutput, parseWorldSection } from "../src/vendor/covel/lore-processor.js";
+import {
+  parseWorldOutput,
+  parseWorldSection,
+} from "../src/vendor/covel/lore-processor.js";
 import { createRevisionCache } from "../src/vendor/covel/revision-cache.js";
 import { orderSources } from "../src/vendor/covel/source-order.js";
-import { backfillCausals, causalCandidates } from "../src/vendor/worldforge/causality.js";
-import { emptyRegistry, tryRegisterDimension } from "../src/vendor/worldforge/registry.js";
+import {
+  backfillCausals,
+  causalCandidates,
+} from "../src/vendor/worldforge/causality.js";
+import {
+  emptyRegistry,
+  tryRegisterDimension,
+} from "../src/vendor/worldforge/registry.js";
 import type { SimulationEvent } from "../src/vendor/worldforge/types.js";
 
 describe("ported Covel world authoring modules (actual upstream implementations)", () => {
@@ -37,13 +46,20 @@ describe("ported Covel world authoring modules (actual upstream implementations)
       { id: "covel", order: 1, descriptor: { after: "v07" } },
     ]);
     expect(valid.diagnostics).toEqual([]);
-    expect(valid.sources.map((s) => s.id)).toEqual(["v07", "covel", "canon", "author"]);
-    expect(orderSources([
-      { id: "a", order: 0, descriptor: { after: "b" } },
-      { id: "b", order: 1, descriptor: { after: "a" } },
-    ]).diagnostics).toEqual(expect.arrayContaining([
-      expect.objectContaining({ level: "error" }),
-    ]));
+    expect(valid.sources.map((s) => s.id)).toEqual([
+      "v07",
+      "covel",
+      "canon",
+      "author",
+    ]);
+    expect(
+      orderSources([
+        { id: "a", order: 0, descriptor: { after: "b" } },
+        { id: "b", order: 1, descriptor: { after: "a" } },
+      ]).diagnostics,
+    ).toEqual(
+      expect.arrayContaining([expect.objectContaining({ level: "error" })]),
+    );
   });
 
   it("reuses a revision-specific cache without sharing mutable copies", async () => {
@@ -62,11 +78,21 @@ describe("ported Covel world authoring modules (actual upstream implementations)
 });
 
 describe("ported WorldForge causality and emerging dimension registry", () => {
-  const ev = (id: string, tick: number, participants: string[], major = false): SimulationEvent => ({
-    id, tick, time_label: String(tick), type: "economic-event",
-    participants, region: "market",
+  const ev = (
+    id: string,
+    tick: number,
+    participants: string[],
+    major = false,
+  ): SimulationEvent => ({
+    id,
+    tick,
+    time_label: String(tick),
+    type: "economic-event",
+    participants,
+    region: "market",
     description: `商会 ${id} 已发生的经营变化`,
-    major, changes: [],
+    major,
+    changes: [],
   });
 
   it("only suggests older related events, preserving user-confirmed cause links", () => {
@@ -74,25 +100,48 @@ describe("ported WorldForge causality and emerging dimension registry", () => {
     const other = ev("unrelated", 2, ["soldier"]);
     const current = ev("negotiation", 3, ["merchant"]);
     const session = { events: [old, other] };
-    expect(causalCandidates(session, current, 2).map((x) => x.id)).toEqual(["deal", "unrelated"]);
+    expect(causalCandidates(session, current, 2).map((x) => x.id)).toEqual([
+      "deal",
+      "unrelated",
+    ]);
     backfillCausals(session, [current]);
     expect(current.causals).toEqual(["deal", "unrelated"]);
-    const fixed = { ...current, id: "fixed", causals: ["author-verified-cause"] };
+    const fixed = {
+      ...current,
+      id: "fixed",
+      causals: ["author-verified-cause"],
+    };
     backfillCausals(session, [fixed]);
     expect(fixed.causals).toEqual(["author-verified-cause"]);
   });
 
   it("registers dimensions only with enough observed consequences and does not invent power costs", () => {
     const registry = emptyRegistry();
-    const weak = tryRegisterDimension(registry, {
-      dim: "炼器工艺", kind: "tech", frequency: 0.1, consequence: 0.1,
-      lawConsistency: 0.8, potential: 100,
-    }, 1);
+    const weak = tryRegisterDimension(
+      registry,
+      {
+        dim: "炼器工艺",
+        kind: "tech",
+        frequency: 0.1,
+        consequence: 0.1,
+        lawConsistency: 0.8,
+        potential: 100,
+      },
+      1,
+    );
     expect(weak.registered).toBe(false);
-    const strong = tryRegisterDimension(registry, {
-      dim: "炼器工艺", kind: "tech", frequency: 0.9, consequence: 0.9,
-      lawConsistency: 1, potential: 100,
-    }, 2);
+    const strong = tryRegisterDimension(
+      registry,
+      {
+        dim: "炼器工艺",
+        kind: "tech",
+        frequency: 0.9,
+        consequence: 0.9,
+        lawConsistency: 1,
+        potential: 100,
+      },
+      2,
+    );
     expect(strong.registered).toBe(true);
     expect(registry.dims["炼器工艺"]?.potential).toBe(100);
   });
