@@ -221,7 +221,12 @@ export const migration047 = {
              (SELECT COUNT(*) FROM world_standings s
                WHERE s.subject_entity_id=e.id) AS standing_count,
              (SELECT COUNT(*) FROM world_value_appraisals v
-               WHERE v.subject_entity_id=e.id) AS value_count
+               WHERE v.subject_entity_id=e.id OR v.evaluator_entity_id=e.id
+             ) AS value_count,
+             (SELECT COUNT(*) FROM world_power_channels pc
+               WHERE pc.holder_entity_id=e.id OR pc.target_entity_id=e.id
+                  OR pc.intermediary_entity_id=e.id
+             ) AS power_channel_count
       FROM canon_entities e
       LEFT JOIN world_organization_profiles p ON p.organization_id=e.id
       WHERE e.type='organization';
@@ -259,30 +264,146 @@ export const migration047 = {
         OR (NEW.jurisdiction_entity_id IS NOT NULL AND
           (SELECT project_id FROM canon_entities WHERE id=NEW.jurisdiction_entity_id)<>NEW.project_id)
         OR (NEW.resource_entity_id IS NOT NULL AND
-          (SELECT project_id FROM canon_entities WHERE id=NEW.resource_entity_id)<>NEW.project_id);
+          (SELECT project_id FROM canon_entities WHERE id=NEW.resource_entity_id)<>NEW.project_id)
+        OR (NEW.valid_from_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.valid_from_event_id)<>NEW.project_id)
+        OR (NEW.valid_to_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.valid_to_event_id)<>NEW.project_id);
     END;
     CREATE TRIGGER world_stance_project_guard
     BEFORE INSERT ON world_stances BEGIN
       SELECT RAISE(ABORT,'world.project_mismatch') WHERE
         (SELECT project_id FROM canon_entities WHERE id=NEW.actor_entity_id)<>NEW.project_id
-        OR (SELECT project_id FROM canon_entities WHERE id=NEW.issue_entity_id)<>NEW.project_id;
+        OR (SELECT project_id FROM canon_entities WHERE id=NEW.issue_entity_id)<>NEW.project_id
+        OR (NEW.target_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.target_entity_id)<>NEW.project_id)
+        OR (NEW.valid_from_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.valid_from_event_id)<>NEW.project_id)
+        OR (NEW.valid_to_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.valid_to_event_id)<>NEW.project_id)
+        OR (NEW.evidence_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.evidence_event_id)<>NEW.project_id);
     END;
     CREATE TRIGGER world_standing_project_guard
     BEFORE INSERT ON world_standings BEGIN
       SELECT RAISE(ABORT,'world.project_mismatch') WHERE
         (SELECT project_id FROM canon_entities WHERE id=NEW.subject_entity_id)<>NEW.project_id
-        OR (SELECT project_id FROM canon_entities WHERE id=NEW.evaluator_entity_id)<>NEW.project_id;
+        OR (SELECT project_id FROM canon_entities WHERE id=NEW.evaluator_entity_id)<>NEW.project_id
+        OR (NEW.intermediary_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.intermediary_entity_id)<>NEW.project_id)
+        OR (NEW.actual_right_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.actual_right_entity_id)<>NEW.project_id)
+        OR (NEW.evidence_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.evidence_event_id)<>NEW.project_id);
     END;
     CREATE TRIGGER world_power_channel_project_guard
     BEFORE INSERT ON world_power_channels BEGIN
       SELECT RAISE(ABORT,'world.project_mismatch') WHERE
         (SELECT project_id FROM canon_entities WHERE id=NEW.holder_entity_id)<>NEW.project_id
-        OR (SELECT project_id FROM canon_entities WHERE id=NEW.target_entity_id)<>NEW.project_id;
+        OR (SELECT project_id FROM canon_entities WHERE id=NEW.target_entity_id)<>NEW.project_id
+        OR (NEW.intermediary_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.intermediary_entity_id)<>NEW.project_id)
+        OR (NEW.authority_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.authority_entity_id)<>NEW.project_id)
+        OR (NEW.jurisdiction_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.jurisdiction_entity_id)<>NEW.project_id)
+        OR (NEW.evidence_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.evidence_event_id)<>NEW.project_id);
     END;
     CREATE TRIGGER world_value_project_guard
     BEFORE INSERT ON world_value_appraisals BEGIN
       SELECT RAISE(ABORT,'world.project_mismatch') WHERE
-        (SELECT project_id FROM canon_entities WHERE id=NEW.subject_entity_id)<>NEW.project_id;
+        (SELECT project_id FROM canon_entities WHERE id=NEW.subject_entity_id)<>NEW.project_id
+        OR (NEW.evaluator_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.evaluator_entity_id)<>NEW.project_id)
+        OR (NEW.realization_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.realization_event_id)<>NEW.project_id);
+    END;
+    CREATE TRIGGER world_lore_binding_project_guard_update
+    BEFORE UPDATE ON world_lore_bindings BEGIN
+      SELECT RAISE(ABORT,'world.project_mismatch') WHERE
+        (SELECT project_id FROM canon_entities WHERE id=NEW.entity_id)<>NEW.project_id
+        OR (SELECT project_id FROM lorebooks WHERE id=
+          (SELECT lorebook_id FROM lore_entries WHERE id=NEW.lore_entry_id))<>NEW.project_id;
+    END;
+    CREATE TRIGGER world_chronicle_project_guard_update
+    BEFORE UPDATE ON world_chronicle_links BEGIN
+      SELECT RAISE(ABORT,'world.project_mismatch') WHERE
+        (SELECT project_id FROM canon_entities WHERE id=NEW.entity_id)<>NEW.project_id
+        OR (SELECT project_id FROM timeline_events WHERE id=NEW.timeline_event_id)<>NEW.project_id;
+    END;
+    CREATE TRIGGER world_profile_project_guard_update
+    BEFORE UPDATE ON world_organization_profiles BEGIN
+      SELECT RAISE(ABORT,'world.project_mismatch') WHERE
+        (SELECT project_id FROM canon_entities WHERE id=NEW.organization_id)<>NEW.project_id
+        OR (SELECT type FROM canon_entities WHERE id=NEW.organization_id)<>'organization';
+    END;
+    CREATE TRIGGER world_org_function_project_guard_update
+    BEFORE UPDATE ON world_organization_functions BEGIN
+      SELECT RAISE(ABORT,'world.project_mismatch') WHERE
+        (SELECT project_id FROM canon_entities WHERE id=NEW.organization_id)<>NEW.project_id
+        OR (SELECT type FROM canon_entities WHERE id=NEW.organization_id)<>'organization'
+        OR (NEW.officeholder_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.officeholder_entity_id)<>NEW.project_id)
+        OR (NEW.unit_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.unit_entity_id)<>NEW.project_id)
+        OR (NEW.jurisdiction_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.jurisdiction_entity_id)<>NEW.project_id)
+        OR (NEW.resource_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.resource_entity_id)<>NEW.project_id)
+        OR (NEW.valid_from_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.valid_from_event_id)<>NEW.project_id)
+        OR (NEW.valid_to_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.valid_to_event_id)<>NEW.project_id);
+    END;
+    CREATE TRIGGER world_stance_project_guard_update
+    BEFORE UPDATE ON world_stances BEGIN
+      SELECT RAISE(ABORT,'world.project_mismatch') WHERE
+        (SELECT project_id FROM canon_entities WHERE id=NEW.actor_entity_id)<>NEW.project_id
+        OR (SELECT project_id FROM canon_entities WHERE id=NEW.issue_entity_id)<>NEW.project_id
+        OR (NEW.target_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.target_entity_id)<>NEW.project_id)
+        OR (NEW.valid_from_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.valid_from_event_id)<>NEW.project_id)
+        OR (NEW.valid_to_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.valid_to_event_id)<>NEW.project_id)
+        OR (NEW.evidence_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.evidence_event_id)<>NEW.project_id);
+    END;
+    CREATE TRIGGER world_standing_project_guard_update
+    BEFORE UPDATE ON world_standings BEGIN
+      SELECT RAISE(ABORT,'world.project_mismatch') WHERE
+        (SELECT project_id FROM canon_entities WHERE id=NEW.subject_entity_id)<>NEW.project_id
+        OR (SELECT project_id FROM canon_entities WHERE id=NEW.evaluator_entity_id)<>NEW.project_id
+        OR (NEW.intermediary_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.intermediary_entity_id)<>NEW.project_id)
+        OR (NEW.actual_right_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.actual_right_entity_id)<>NEW.project_id)
+        OR (NEW.evidence_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.evidence_event_id)<>NEW.project_id);
+    END;
+    CREATE TRIGGER world_power_channel_project_guard_update
+    BEFORE UPDATE ON world_power_channels BEGIN
+      SELECT RAISE(ABORT,'world.project_mismatch') WHERE
+        (SELECT project_id FROM canon_entities WHERE id=NEW.holder_entity_id)<>NEW.project_id
+        OR (SELECT project_id FROM canon_entities WHERE id=NEW.target_entity_id)<>NEW.project_id
+        OR (NEW.intermediary_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.intermediary_entity_id)<>NEW.project_id)
+        OR (NEW.authority_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.authority_entity_id)<>NEW.project_id)
+        OR (NEW.jurisdiction_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.jurisdiction_entity_id)<>NEW.project_id)
+        OR (NEW.evidence_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.evidence_event_id)<>NEW.project_id);
+    END;
+    CREATE TRIGGER world_value_project_guard_update
+    BEFORE UPDATE ON world_value_appraisals BEGIN
+      SELECT RAISE(ABORT,'world.project_mismatch') WHERE
+        (SELECT project_id FROM canon_entities WHERE id=NEW.subject_entity_id)<>NEW.project_id
+        OR (NEW.evaluator_entity_id IS NOT NULL AND
+          (SELECT project_id FROM canon_entities WHERE id=NEW.evaluator_entity_id)<>NEW.project_id)
+        OR (NEW.realization_event_id IS NOT NULL AND
+          (SELECT project_id FROM timeline_events WHERE id=NEW.realization_event_id)<>NEW.project_id);
     END;
   `,
 } as const;
