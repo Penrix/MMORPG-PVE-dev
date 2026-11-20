@@ -76,3 +76,26 @@ The adapter code is identified separately and is not represented as verbatim ups
   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+## WorldForge complete simulation-core source port (additional)
+
+The complete **non-Tauri WorldForge simulation dependency chain** has now been copied as real upstream TypeScript code into:
+`packages/narrative/src/vendor/worldforge/full/`.
+
+Original upstream directory: https://github.com/Fange12306/worldforge/tree/main/src/lib/simulation  
+Original license: MIT, Copyright (c) 2025 WorldForge; full grant/warranty text appears in the WorldForge notice above.
+
+Copied original algorithm files:
+`types.ts`, `random.ts`, `measure.ts`, `scale.ts`, `space.ts`,
+`geography.ts`, `lore.ts`, `culture.ts`, `regime.ts`,
+`physics.ts`, `decree.ts`, `context.ts`, `black-swan.ts`,
+`entity-pool.ts`, `subdivision.ts`, `arbiter.ts`, `agent.ts`,
+`causality.ts`, `registry.ts`, `branch.ts`, `import-entries.ts`,
+`init-customizer.ts`, `engine.ts`, `llm.ts`, `index.ts`.
+
+Each file contains its own upstream GitHub source path and exact Git blob SHA. Core algorithms are not paraphrased or replaced; local `.ts` imports were rewritten as `.js` for NarraLume ESM.
+
+**Deliberate platform adaptation**: WorldForge `llm.ts` originally dynamically calls a Tauri store/API; only the default caller was replaced with an injected `LLMCaller` boundary, preserving its JSON parsing/safe-call methods. The upstream `persistence.ts` and `bridge.ts` were intentionally not copied because they target a separate Tauri file store and world timeline. NarraLume Canon/SQLite remain the sole accepted history. The upstream `index.ts` barrel omits those two Tauri integrations. Vendored TypeScript retains upstream compiler assumptions and uses `@ts-nocheck` pending a non-destructive strict-options migration; fully typed NarraLume adapters and integration tests check the externally consumed boundary.
+
+The first live bridge is `packages/narrative/src/worldforge-faction-bridge.ts`: it uses actual `runAllAgents` and `arbitrate`, treating the result as **unconfirmed proposals**, not as confirmed novel facts. `runTicks` and the physics/region/registry engine are included and exercised by tests, but **not allowed to rewrite protagonist powers, invention costs, regional geography or Canon without the author's explicit acceptance**.
