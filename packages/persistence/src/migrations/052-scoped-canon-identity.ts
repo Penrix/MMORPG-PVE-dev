@@ -11,6 +11,9 @@ export const migration052 = {
   name: "canon-entity-world-scoped-display-names",
   foreignKeysOff: true,
   sql: `
+    -- SQLite validates existing VIEW SQL during ALTER TABLE RENAME.
+    -- Temporarily remove the 047 projection while canon_entities is rebuilt.
+    DROP VIEW IF EXISTS world_organization_dossier_index;
     DROP TRIGGER IF EXISTS canon_entities_fts_insert;
     DROP TRIGGER IF EXISTS canon_entities_fts_delete;
     DROP TRIGGER IF EXISTS canon_entities_fts_update;
@@ -89,6 +92,30 @@ export const migration052 = {
         WHERE id=NEW.project_id AND deleted_at IS NOT NULL
       );
     END;
+
+    CREATE VIEW world_organization_dossier_index AS
+      SELECT e.project_id AS project_id, e.id AS entity_id, e.name AS name,
+             p.social_kind AS social_kind, p.governance AS governance,
+             (SELECT COUNT(*) FROM world_organization_functions f
+               WHERE f.organization_id=e.id) AS function_count,
+             (SELECT COUNT(*) FROM world_chronicle_links c
+               WHERE c.entity_id=e.id) AS chronicle_count,
+             (SELECT COUNT(*) FROM world_lore_bindings l
+               WHERE l.entity_id=e.id) AS lore_section_count,
+             (SELECT COUNT(*) FROM world_stances s
+               WHERE s.actor_entity_id=e.id) AS stance_count,
+             (SELECT COUNT(*) FROM world_standings s
+               WHERE s.subject_entity_id=e.id) AS standing_count,
+             (SELECT COUNT(*) FROM world_value_appraisals v
+               WHERE v.subject_entity_id=e.id OR v.evaluator_entity_id=e.id
+             ) AS value_count,
+             (SELECT COUNT(*) FROM world_power_channels pc
+               WHERE pc.holder_entity_id=e.id OR pc.target_entity_id=e.id
+                  OR pc.intermediary_entity_id=e.id
+             ) AS power_channel_count
+      FROM canon_entities e
+      LEFT JOIN world_organization_profiles p ON p.organization_id=e.id
+      WHERE e.type='organization';
 
     CREATE TRIGGER canon_entities_world_scope_insert
     BEFORE INSERT ON canon_entities BEGIN
