@@ -118,9 +118,9 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
     },
   });
 
-  const update = <K extends keyof FormValues>(field: K, value: FormValues[K]) => {
+  function update<K extends keyof FormValues>(field: K, value: FormValues[K]) {
     setForm((existing) => ({ ...existing, [field]: value }));
-  };
+  }
   const valid = form.premise.trim() && form.worldTime.trim() &&
     (form.scale === "W0" || (form.focus.trim() && form.genre.trim()));
   const start = () => {
