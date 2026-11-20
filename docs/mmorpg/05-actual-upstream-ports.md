@@ -19,7 +19,7 @@
 
 NarraLume 本身已负责作者项目、正式Canon、卷弧章节、大纲、正文提交、上下文、模型Provider、运行器及SQLite。如果把 Covel 的跑团服务器、插件体系与 WorldForge 的 Tauri/Rust 国家物理模拟器整体塞进项目，会造成多个数据库、两套 API 和相互冲突的“世界真相”。
 
-**但不能把这一点当成不移植真正引擎的借口**：现在移植的只是低依赖而确有价值的组件。用户指定“先移植成熟项目代码打底”，所以下一步更昂贵但必须做的是 Covel 世界生成/修订的主体机制、WorldForge 的独立EntityAgent与Arbiter（按其真实依赖图迁移、保留行为），再接 GM、NPC GOAP/Storylets 的项目特殊规则。**不能再声称参考了它们就已做完。**
+**但不能把这一点当成不移植真正引擎的借口**：现在移植的只是低依赖而确有价值的组件。用户指定“先移植成熟项目代码打底”，所以下一步更昂贵但必须做的是 Covel 世界生成/修订的主体机制、WorldForge 的独立EntityAgent与Arbiter（**本轮已按真实依赖移植并投入势力层调用**），再接 GM、NPC GOAP/Storylets 的项目特殊规则。**不能再声称参考了它们就已做完。**
 
 ## v0.1～v0.7 七版研究怎样进入运行
 
@@ -38,7 +38,7 @@ NarraLume 本身已负责作者项目、正式Canon、卷弧章节、大纲、�
 ## 未完成，必须继续
 
 - Covel 原主体 `packages/create/src/create-world.ts` 的多阶段生成、分区、修改、校验与修复及它的配套依赖。
-- WorldForge 原 `src/lib/simulation/agent.ts`、`arbiter.ts`、`engine.ts` 的运行主体及边界适配；目前运行的只是因果与维度算法。
+- WorldForge 原 `agent.ts`、`arbiter.ts`、`engine.ts` 和全部纯 TypeScript 依赖 **现已直接移植并由 `world.advance` 使用势力Agent**。但其个人GOAP和完整世界时间同步尚未实现，见 [06](06-worldforge-full-engine-port.md)。
 - CampaignRepo 图形关系 UI及其更多 Wiki / 地图交互；SNEQ 已移植纯 belief/salience 推导，但跨区域Carriage传播/官方记录/传言延误的Canon集成仍待实施；Spindle补强能力。
 - 世界生成完整开放状态机，NPC按个人知识/目标/行动前提独立行动，GM对男主任意主动动作的世界裁定，长期世界游玩及创作回环的实际模型验收。
 
