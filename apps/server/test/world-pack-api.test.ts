@@ -452,14 +452,30 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
     expect(pack.document.activities).toHaveLength(2);
     expect(pack.document.interactions).toHaveLength(3);
     expect(pack.document.production?.engine).toBe("mmorpg-world-workshop-v1");
-    expect(pack.document.production?.executed.map((s: {workshop:string})=>s.workshop))
-      .toEqual(["geography","factions","people","economy","power","events","social","playability"]);
-    expect(pack.document.production?.playtestedPaths).toContainEqual([
-      "public_arrival","buy_resource","invest_resource",
+    expect(
+      pack.document.production?.executed.map(
+        (s: { workshop: string }) => s.workshop,
+      ),
+    ).toEqual([
+      "geography",
+      "factions",
+      "people",
+      "economy",
+      "power",
+      "events",
+      "social",
+      "playability",
     ]);
-    const checkpointCount = db.raw.prepare(
-      "SELECT COUNT(*) AS n FROM checkpoints WHERE run_id=? AND kind='world.production'"
-    ).get(runId) as {n:number};
+    expect(pack.document.production?.playtestedPaths).toContainEqual([
+      "public_arrival",
+      "buy_resource",
+      "invest_resource",
+    ]);
+    const checkpointCount = db.raw
+      .prepare(
+        "SELECT COUNT(*) AS n FROM checkpoints WHERE run_id=? AND kind='world.production'",
+      )
+      .get(runId) as { n: number };
     expect(checkpointCount.n).toBeGreaterThanOrEqual(8);
     const before = await app.inject({
       method: "GET",
@@ -491,8 +507,14 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
         ),
     ).toBe(true);
     expect(after.json().timeline).toHaveLength(0);
-    expect(after.json().facts.filter((fact:{predicate:string})=>
-      fact.predicate === "world.affordance")).toHaveLength(3);
+    expect(
+      after
+        .json()
+        .facts.filter(
+          (fact: { predicate: string }) =>
+            fact.predicate === "world.affordance",
+        ),
+    ).toHaveLength(3);
     // This is the actual bridge into NarraLume's writing context:
     // all important world objects carry an adopted world.content fact.
     const canonRepo = new SqliteCanonRepository(db);
