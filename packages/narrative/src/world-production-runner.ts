@@ -332,6 +332,12 @@ export async function runWorldWorkshops(args: {
   const existingWorld = args.existingWorld ?? emptyWorldDocument();
   const view = () => previewProductionReality(existingWorld, state);
   const workshops = requiredWorkshops(args.request);
+  // A W1 request can open an already-known rule or unusual resource directly.
+  // Do not suppress that branch merely because the shared W0 already
+  // produced its foundational power system.
+  const requestedSubject = resolveWorldDesignEntry(args.request,view());
+  if (requestedSubject && !workshops.includes(requestedSubject.workshop))
+    workshops.unshift(requestedSubject.workshop);
   // Additional focused iterations are chosen from actual shortcomings of
   // the world graph, not a model-authored generic TODO or number of cards.
   const maxExtra = 6;
