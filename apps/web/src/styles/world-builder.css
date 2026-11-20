@@ -73,3 +73,28 @@
   .world-builder__form, .world-builder__status, .world-builder__results { padding: 16px; }
   .world-builder__stage-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Whole WorldPack review, graph and editor */
+.world-builder__form select { box-sizing: border-box; width:100%; padding:11px 12px; border:1px solid var(--hairline); font:inherit; background:var(--paper); color:var(--ink); }
+.world-builder__results header h2 { display:flex; align-items:center; gap:9px; }
+.world-builder__pack { border:1px solid var(--hairline); padding:20px; background:var(--paper); margin:16px 0; }
+.world-builder__pack-head { display:flex; align-items:start; justify-content:space-between; gap:18px; }
+.world-builder__pack-head h3 { margin:5px 0 8px; font-size:20px; font-family:var(--font-serif); }
+.world-builder__pack-head small, .world-builder__node small { color:var(--ink-faint); font-family:var(--font-mono); font-size:11px; overflow-wrap:anywhere; }
+.world-builder__pack-head p { line-height:1.85; margin:0; color:var(--ink-soft); }
+.world-builder__pack-head > strong { font-family:var(--font-mono); font-size:12px; }
+.world-builder__numbers { display:flex; flex-wrap:wrap; gap:12px; padding:12px 0; color:var(--ink-soft); font-size:12px; }
+.world-builder__pack details { border-top:1px solid var(--hairline); padding:12px 0; }
+.world-builder__pack summary { cursor:pointer; font-weight:700; }
+.world-builder__nodes { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; padding-top:14px; }
+.world-builder__node { border:1px solid var(--hairline-soft); padding:15px; min-width:0; background:var(--paper-raised); }
+.world-builder__node h4 { font-size:17px; margin:6px 0 10px; }
+.world-builder__node p { margin:6px 0; line-height:1.75; overflow-wrap:anywhere; }
+.world-builder__relations { padding-left:22px; line-height:1.85; }
+.world-builder__relations li { margin:8px 0; }
+.world-builder__pack-controls { padding-top:16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.world-builder__confirm { flex-basis:100%; display:flex; align-items:center; gap:8px; line-height:1.75; }
+.world-builder__json { width:100%; display:grid; gap:10px; }
+.world-builder__json textarea { padding:13px; border:1px solid var(--hairline); background:var(--paper-raised); color:var(--ink); font-family:var(--font-mono); font-size:12px; line-height:1.6; max-width:100%; }
+.world-builder__json .btn { justify-self:start; }
+.world-builder__pack[data-status="adopted"] { opacity:0.92; }
