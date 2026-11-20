@@ -1,4 +1,4 @@
-<p align="center">
+> **MMORPG-PVE development fork (Penrix):** Architecture, open-source source mapping and current prototype audit: [docs/mmorpg/README.md](docs/mmorpg/README.md). The W0/W1 World Builder currently is a **prompt/UI adapter**, not an implemented Covel/WorldForge port or validated full world-content engine. The original NarraLume documentation continues below.\n\n---\n\n<p align="center">
   <img src="assets/narralume-logo-wide.svg" alt="NarraLume · 叙灯" width="960">
 </p>
 
