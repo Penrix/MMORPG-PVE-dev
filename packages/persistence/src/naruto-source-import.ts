@@ -361,6 +361,9 @@ export function importNarutoDattebayo(
           );
       }
     }
+    // A person may appear in main and specialty lists. Count stored distinct
+    // source edges, not the number of repeated UPSERT attempts.
+    stats.relations = repo.getCorpus(corpusId)?.relationCount ?? stats.relations;
     return stats;
   });
 }
