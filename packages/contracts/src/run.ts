@@ -70,6 +70,9 @@ export const RunStepKindSchema = z.enum([
   "canon.context",
   "canon.candidate",
   "canon.stage",
+  "world.context",
+  "world.generate",
+  "world.stage",
 ]);
 
 export const ChapterStepKindSchema = RunStepKindSchema.extract([
