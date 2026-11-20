@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   SqliteProjectRepository,
   SqliteProjectWorldRepository,
+  SqliteProjectForkRepository,
   type NarrativeDatabase,
 } from "@narralume/persistence";
 import type { RouteApp } from "./route-app.js";
@@ -57,6 +58,20 @@ const BranchBody = z.object({
   divergenceEventId: z.string().min(1).nullable().default(null),
   causalRule: z.string().default(""),
 });
+const CharacterCoreBody = z.object({
+  sourceCorpusId: z.string().min(1).nullable().default(null),
+  sourceKey: z.string().min(1).nullable().default(null),
+  tags: z.array(z.string().trim().min(1)).min(1),
+  decisionPattern: z.string().trim().min(1),
+  sourceNote: z.string().trim().min(1),
+});
+const ForkFieldBody = z.object({
+  sourceCorpusId: z.string().min(1),
+  sourceKey: z.string().min(1),
+  sourceJsonPath: z.string().startsWith("$").min(2),
+  projectPredicate: z.string().trim().min(1),
+  sourceNote: z.string().default(""),
+});
 const InstanceBody = z.object({
   entityId: z.string().min(1),
   spaceId: z.string().min(1).nullable().default(null),
@@ -81,6 +96,7 @@ export function registerProjectWorldRoutes(
   db: NarrativeDatabase,
 ): void {
   const worlds = new SqliteProjectWorldRepository(db);
+  const forks = new SqliteProjectForkRepository(db);
   const projects = new SqliteProjectRepository(db);
   const requireProject = (id: string): void => {
     if (!projects.get(id))
@@ -109,6 +125,31 @@ export function registerProjectWorldRoutes(
       );
   };
   const now = () => new Date().toISOString();
+
+  // Fork is a read-time comparison against native Project Canon.
+  // Source baselines and character cores are explicit author inputs, never
+  // extracted from novel outcomes or rewritten by a model's chapter draft.
+  app.route("GET", "/api/projects/:projectId/world-fork/:entityId", async request => {
+    const {projectId,entityId}=SubjectParams.parse(request.params);
+    requireProject(projectId);requireEntity(projectId,entityId);
+    return forks.diffEntity(projectId,entityId);
+  });
+  app.route("POST", "/api/projects/:projectId/world-fork/:entityId/core", async request => {
+    const {projectId,entityId}=SubjectParams.parse(request.params);
+    requireProject(projectId);requireEntity(projectId,entityId);
+    const body=CharacterCoreBody.parse(request.body);
+    const anchor={projectId,entityId,...body,createdAt:now()};
+    forks.createCharacterCore(anchor);
+    return {status:201,body:anchor};
+  });
+  app.route("POST", "/api/projects/:projectId/world-fork/:entityId/source-fields", async request => {
+    const {projectId,entityId}=SubjectParams.parse(request.params);
+    requireProject(projectId);requireEntity(projectId,entityId);
+    const body=ForkFieldBody.parse(request.body);
+    const binding={id:randomUuid(),projectId,entityId,...body,createdAt:now()};
+    forks.bindSourceField(binding);
+    return {status:201,body:binding};
+  });
 
   app.route("GET", "/api/projects/:projectId/world-spaces", async (request) => {
     const { projectId } = Params.parse(request.params);
