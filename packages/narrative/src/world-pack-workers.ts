@@ -27,6 +27,7 @@ import {
 import type { NarrativeModelClient } from "./model-client.js";
 import { selectWorldMethodExcerpts } from "./mmorpg-method-catalog.js";
 import { selectWorldContextIds } from "./world-pack-context.js";
+import { projectNpcWitnessedEvents } from "./world-pack-knowledge.js";
 import { parseWorldOutput } from "./vendor/covel/lore-processor.js";
 import { createRevisionCache } from "./vendor/covel/revision-cache.js";
 import { orderSources } from "./vendor/covel/source-order.js";
@@ -345,6 +346,7 @@ function makePrompt(
       "给出足够丰富且具体的对象描述、人物实际动作和跨系统连接。输出所有 nodes/links/activities 是同一个互相引用的世界包，不是分七轮的泛用Canon修改候选。",
       "发展轴 dimensionSignals 要来自具体行为反复产生的真实影响，频率和后果权重是观察依据，不是新创造修炼限制/天赋代价的许可；WorldForge引擎会按阈值追踪它们。",
       "possibleHistoricalCauses 是 WorldForge 从旧已确认事件中推荐的前因候选，不等于已确立的因果事实；须依据对象和行动判断，不能直接强行连接。",
+      "witnessedHistory 是SNEQ按每个NPC实际参与的事件独立计算的知情范围，不等于所有人都知道作者视角的Timeline。NPC后续行动以本人当前真实所知为起点；没有传播记录的秘密不能凭模型全知直接传播。",
     ],
     // Full content is in sourceOrder; avoid transmitting it twice.
     worldSourceFormat: "Covel WORLD_YAML/WORLD_MD/WORLD_PACKAGE_YAML",
@@ -500,7 +502,18 @@ export class WorldPackWorkerSuite {
       },
       6,
     );
+    // SNEQ original deriveBeliefs identifies which previously recorded
+    // events a character witnessed. The generated actor must not know all
+    // canonical history simply because the author does.
+    const witnessedHistory = projectNpcWitnessedEvents({
+      projectId: project.id,
+      characters: nodes.filter((entity) => entity.type === "character"),
+      timeline: this.state.listTimeline(project.id),
+      maxCharacters: 20,
+      maxEventsPerCharacter: 12,
+    });
     const packet = {
+      witnessedHistory,
       authorIntent: this.story.getAuthorIntent(project.id),
       entities: nodes.map((node) => ({
         id: node.id,
