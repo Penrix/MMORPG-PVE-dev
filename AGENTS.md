@@ -2,6 +2,18 @@
 
 **For any coding or architecture task in this fork, read [docs/mmorpg/README.md](docs/mmorpg/README.md) and its linked architecture / reuse / audit / implementation files first.** This repository is a NarraLume-based development fork, not a from-scratch rewrite.
 
+## ACTIVE SCOPE AND MANDATORY SEMANTIC GUARDRAIL (2026-11-20)
+
+**Read [docs/mmorpg/10-module2-cognition-and-error-guardrails.md](docs/mmorpg/10-module2-cognition-and-error-guardrails.md) before any change to a world model, database, chronology, cross-IP link or source import.** It records explicit user corrections and previous false assumptions, including WHY those assumptions failed. The user's most recent correction overrides historical design documents.
+
+**Current task: Module 2 database. Module 1 world generation is PAUSED.** Never spend the current task on changing W0/W1 production, and never treat the completed v0.1–v0.7 original research as prompt excerpts or a set of mandatory one-shot forms. Those seven versions describe the full world content the database must preserve and connect.
+
+**NarraLume already had a pre-writing Story Bible** (author intent, outline, entities, confirmed facts, relationships, timeline, foreshadows), Lorebook, bidirectional post-writing settlement and author review. Do not invent a parallel world database or claim it records only what manuscripts have mentioned.
+
+**Source mother-world reference is not Project Reality**: existing Migration 049 supports multiple corpora per one novel. A protagonist can travel Naruto → Loulan past → One Piece → Naruto inside ONE project with stable identity, a project event sequence and distinct local clocks. Preserve all source history, including late/future material. Source lookup, Character knowledge, Reader knowledge and project-accepted events are separate. Time travel does NOT automatically impose a branch, reset world state, overwrite native source canon or create a new Project.
+
+**Do not reimplement existing Migration 049 or claim new SQL tables prove a world has been fully populated or validated.** Report verified status and outstanding schema/API/test gaps separately.
+
 ## Working agreements, current as of 2026-11-20
 
 1. **Task and scope first.** Read the most recent user correction and the code you are changing. This fork uses NarraLume as the complete novel-authoring substrate; World Builder is the main missing business module. Do not reopen the S01–S08 implementation unless specifically requested.
