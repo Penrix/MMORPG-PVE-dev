@@ -10,6 +10,7 @@
 | [01 对标源码复用 Crosswalk](01-reuse-crosswalk.md) | 除 NarraLume 外，Covel、WorldForge、CampaignRepo、SNEQ、Spindle、OnlyWorlds 和私有旧 Atlas 分别借什么，源码在哪里 |
 | [02 第一模块代码审查和目标结构](02-world-builder-audit-and-design.md) | “第一模块是自己编的还是按对标项目开发的？”；清楚列出已有源码、没有移植的能力、WorldPack和世界运行的正确方向 |
 | [03 实施顺序与实际验收](03-build-order-and-acceptance.md) | 从世界包、复杂内容生产、Canon 采用、世界关系图、NPC 动态到正文世界缺口往返 |
+| [04 WorldPack 当前实际代码](04-world-pack-implementation.md) | 世界包生成/修订/原子采纳、图查询、NPC活动推进、正文实际上下文与待验收部分 |
 
 另见原型说明：[当前 World Builder 技术入口](../mmorpg-world-builder.md)。
 
@@ -21,7 +22,7 @@
 
 - GitHub Fork：[`Penrix/MMORPG-PVE-dev`](https://github.com/Penrix/MMORPG-PVE-dev)，**当前公开**。
 - 原 NarraLume 正文生成、版本、审阅、知识、Canon 和状态管理保持不变。
-- 第一轮实现：[Draft PR #1](https://github.com/Penrix/MMORPG-PVE-dev/pull/1) 仅是 W0/W1 页面与现有 Canon 候选任务的接线原型；真实开源世界生产架构**尚未移植**。
+- 旧版只是提示词/Canonical候选接线原型；现在已经新增**独立WorldPack生成链、SQLite包级候选、引用校验、原子采纳和世界图查询代码**，但尚未完成CI或真实模型验收。第三方机制是参照后再实现，非直接源码移植。
 - 本目录文档属于设计与实现指导，**不是**已通过模型/CI 验收的功能声明。
 - 私有 `Penrix/MMORPG-PVE` 的 v0.1/v0.7 全文研究与旧 Atlas 是本项目原始资产；不要以本目录的提炼替换原文，也不要未经授权复制到本公开 Fork。
 
