@@ -1,4 +1,4 @@
-import { createProject } from "@narralume/domain";
+import { createCanonEntity, createCanonFact, createProject } from "@narralume/domain";
 import { NodeNarrativeDatabase } from "@narralume/persistence/node";
 import {
   SqliteSourceCorpusRepository,
@@ -168,7 +168,39 @@ describe("one curated original world wiki over several upstream corpora", () => 
       "/api/projects/other/source-worlds/naruto/character:madara",
     );
     expect(unbound.status).toBe(404);
-    expect(new SqliteCanonRepository(db).listEntities("novel")).toHaveLength(0);
+    const projectCanon=new SqliteCanonRepository(db);
+    projectCanon.insertEntity(createCanonEntity({
+      id:"madara-in-novel",projectId:"novel",
+      name:"项目世界的宇智波斑",type:"character",now,
+    }));
+    const matched=await json("POST","/api/projects/novel/world-source-links",{
+      entityId:"madara-in-novel",corpusId:"wiki:naruto",
+      sourceKey:"character:madara",linkKind:"counterpart",
+      confidence:1,sourceNote:"同一份原著百科的本书对应人物",
+    });
+    expect(matched.status).toBe(201);
+    projectCanon.insertFact(createCanonFact({
+      id:"new-history",projectId:"novel",subjectId:"madara-in-novel",
+      predicate:"new_story_experience",value:"男主在新世界改变了其人生",
+      authority:"confirmed",sourceType:"project-story",now,
+    }));
+    const projectDossier=await json("GET",
+      "/api/projects/novel/world-encyclopedia/madara-in-novel");
+    expect(projectDossier.status).toBe(200);
+    expect(projectDossier.body.dossier.sourceIdentities[0]).toEqual(
+      expect.objectContaining({
+        corpusId:"wiki:naruto",sourceKey:"character:madara",
+      }),
+    );
+    expect(projectDossier.body.dossier.facts.some(
+      (fact:{predicate:string})=>fact.predicate==="new_story_experience",
+    )).toBe(true);
+    // Project changes do not rewrite the independently held original wiki.
+    const unchanged=await json("GET",
+      "/api/source-worlds/naruto/entities/character:madara");
+    expect(unchanged.body.dossier.claims).toHaveLength(0);
+    expect(unchanged.body.dossier.lore[0].title).toBe("宇智波斑的完整编年史");
+    expect(projectCanon.listEntities("novel")).toHaveLength(1);
     expect(new SqliteCanonRepository(db).listEntities("other")).toHaveLength(0);
     expect(db.raw.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
   });
