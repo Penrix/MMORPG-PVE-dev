@@ -144,7 +144,7 @@ export const WORLD_PACK_MODEL_CONTRACT: JsonSchemaContract = {
             description: txt(
               "A concrete social, ownership or geographic connection",
             ),
-            status: { type: "string", enum: ["current", "possible"] },
+            status: { type: "string", enum: ["current", "possible", "ended"] },
           },
         },
       },
