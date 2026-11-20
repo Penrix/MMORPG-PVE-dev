@@ -25,6 +25,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Verify Naruto source importer invariants
+        run: npm test -- naruto-source-import
       - name: Download pinned Naruto data and import into real NarraLume SQLite
         run: npm run import:naruto -- --db /tmp/narralume-naruto-smoke.sqlite
       - name: Check full records and original-source isolation
