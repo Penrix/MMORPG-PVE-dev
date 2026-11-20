@@ -12,7 +12,7 @@ import type {
 
 /**
  * The *read-only* existing game world, projected from adopted Canon Reality.
- * References in this inspection graph use canon:<stable ID>, not invented
+ * All references here use canon:<stable ID>, not fabricated
  * names or copied local IDs. Nothing from this graph is staged for re-adoption.
  */
 export function projectExistingWorldForProduction(input: {
