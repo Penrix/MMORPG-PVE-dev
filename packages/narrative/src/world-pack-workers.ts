@@ -79,7 +79,7 @@ export const WORLD_PACK_MODEL_CONTRACT: JsonSchemaContract = {
             description: txt("What a real character or organization is doing even without the protagonist"),
             reason: txt("Their own motive and why they started it"),
             resourceRefs: { type: "array", items: txt("Local or Canon reference of an actual resource") },
-            stage: { type: "string", enum: ["ongoing", "potential"] },
+            stage: { type: "string", enum: ["ongoing", "potential", "ended"] },
             worldTime: txt("Time in the world's current calendar or relative to current reality"),
           },
         },
@@ -108,6 +108,9 @@ function makePrompt(input: WorldPackRequest, project: { title: string; premise: 
     role: "单主角开放世界PVE的世界设计师 + 游戏内容制作人",
     project,
     input,
+    productionIntent: input.intent === "advance"
+      ? "本轮是世界自主推进。基于现存人物/组织/关系/活动继续做决定，不为换地图重置现实。既有人物要用 existingCanonId 复用，不重新发明同名角色；可以生成新的关系变化、未完成事务、结束的旧事务与新进入世界的人。注意以现在世界时间推进 NPC 的独立生活，而不是写男主章纲。"
+      : "本轮是世界内容生产。创作完整的地图和社会生活，留足不同人物自己行动和男主未来进入的空间。",
     worldMethod: [
       "不是章节编剧：先制造男主不存在时就能自行运作的现实。写具体有价值的人、地、物、机构、力量和当前正在做的事。",
       "W0 从世界大局生成区域、不同社会系统、真实权力机构、价格与流通路径，不能整个世界只围绕男主职业；W1 在已确认W0之下根据类型文×时间地点×稀缺性打开一个区域、行业或圈层。",
@@ -115,7 +118,7 @@ function makePrompt(input: WorldPackRequest, project: { title: string; premise: 
       "每个人和组织都有自己的目标和当前行动；Resource要有实际持有人、争取者、使用价值与取得路径；关系边具体说明谁控制/引荐/竞争/交易，而不是单一好感条。",
       "对于玄幻，考虑功法、境界、丹药、法器、宗门、家族、坊市、朝廷的力量与高价资源。对于历史/现代，力量表现为真实授权、资本、产业、身份、名望与社会关系，仍要形成真正昂贵的男性人生可能性。",
       "以当前已确认世界为Reality。使用给出的已存在实体ID请写 existingCanonId 或 canon:ID；新增节点使用唯一 localId。全部图引用必须能由本包或现有Canon解析；不要捏造数据库ID。",
-      "不同身份要分开：当前正在行动 ongoing 与可能发生 potential；可能发生的事务不是已发生的事实。历史/原著仅凭模型记忆不能冒称已核实，历史未来不能当当前现实。",
+      "不同身份要分开：当前正在行动 ongoing、尚有可能的 potential、已经结束的 ended。ended 要沿用先前事实记录的 activityLocalId；不能把未来可能发生的事冒充历史事件。历史/原著仅凭模型记忆不能冒称已核实，历史未来不能当当前现实。",
       "用户如果给了已确定的高价目标，应帮助它获得社会共识、稀缺条件和真实人物的争取行为，而不是偷偷改选更普通目标。取得资源后应有真实资产、身份、关系或能力权益并能进一步利用。",
       "给出足够丰富且具体的对象描述、人物实际动作和跨系统连接。输出所有 nodes/links/activities 是同一个互相引用的世界包，不是分七轮的泛用Canon修改候选。",
     ],
