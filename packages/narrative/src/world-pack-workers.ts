@@ -161,6 +161,10 @@ export class WorldPackWorkerSuite {
     const query = [request.focus, request.premise].join(" ").toLowerCase();
     const prioritized = [...allEntities].sort((a,b) => Number(query.includes(b.name.toLowerCase())) - Number(query.includes(a.name.toLowerCase())));
     const nodes = prioritized.slice(0, 110);
+    if (request.parentAreaId && !nodes.some((item) => item.id === request.parentAreaId)) {
+      const parent = allEntities.find((item) => item.id === request.parentAreaId);
+      if (parent) nodes.unshift(parent);
+    }
     const facts = this.canon.listEffectiveFacts(project.id).slice(-140);
     const relationships = this.state.listCurrentRelationships(project.id).slice(-130);
     const timeline = this.state.listTimeline(project.id).slice(-65);
