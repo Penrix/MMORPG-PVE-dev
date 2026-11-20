@@ -3791,3 +3791,24 @@ export async function adoptWorldPack(
     jsonRequest("POST", { expectedVersion }),
   );
 }
+
+export async function getWorldGraph(
+  projectId: string,
+  centerId?: string,
+  signal?: AbortSignal,
+): Promise<{
+  nodes: CanonEntity[];
+  edges: Array<{
+    id: string; from: string; to: string;
+    relation: string; description: string; source: "relationship" | "fact";
+  }>;
+  ongoingActivities: Array<{
+    id: string; actorId: string; detail: unknown; sourceId: string | null;
+  }>;
+}> {
+  const query = centerId ? `?centerId=${encodeURIComponent(centerId)}&hops=2` : "";
+  return requestJson(
+    `/api/projects/${encodeURIComponent(projectId)}/world-graph${query}`,
+    signal ? { signal } : {},
+  );
+}
