@@ -229,12 +229,17 @@ export async function runWorldWorkshops(args: {
   const workshops = requiredWorkshops(args.request);
   // Additional focused iterations are chosen from actual shortcomings of
   // the world graph, not a model-authored generic TODO or number of cards.
-  const maxExtra = 4;
+  const maxExtra = 6;
+  const completedWorkshops = new Set<WorldWorkshop>();
   for (let index = 0; index < workshops.length + maxExtra; index++) {
     const gap = playtestWorld(state, args.request).next;
-    if (index >= workshops.length && !gap) break;
-    const op =
-      index < workshops.length ? workOrder(workshops[index]!, state) : gap!;
+    const unfinished = workshops.find((w) => !completedWorkshops.has(w));
+    // An actual newly exposed deficit may move ahead of the old work queue.
+    // Every core workshop still runs; no model may declare one unnecessary.
+    const op = gap && !completedWorkshops.has(gap.workshop)
+      ? gap
+      : unfinished ? workOrder(unfinished, state) : gap;
+    if (!op) break;
     const instruction = {
       ...worldWorkOrderInput(op, state),
       authorRequest: args.request,
@@ -309,6 +314,7 @@ export async function runWorldWorkshops(args: {
     );
     state = merged.document;
     steps.push(merged.step);
+    completedWorkshops.add(op.workshop);
     usage = addUsage(usage, result.usage);
   }
   const remaining = playtestWorld(state, args.request).next;
