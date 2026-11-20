@@ -65,15 +65,17 @@ export class SqliteRunRepository {
   ): void {
     this.database.transaction(() => {
       this.requireRun(runId);
-      this.createCheckpoint(runId,stepId,"world.production",state,now);
+      this.createCheckpoint(runId, stepId, "world.production", state, now);
     });
   }
 
   getWorldProductionCheckpoint(runId: string): Record<string, unknown> | null {
-    const row = this.database.raw.prepare(
-      "SELECT state_json FROM checkpoints WHERE run_id=? AND kind='world.production' ORDER BY rowid DESC LIMIT 1"
-    ).get(runId) as { state_json: string } | undefined;
-    return row ? JSON.parse(row.state_json) as Record<string, unknown> : null;
+    const row = this.database.raw
+      .prepare(
+        "SELECT state_json FROM checkpoints WHERE run_id=? AND kind='world.production' ORDER BY rowid DESC LIMIT 1",
+      )
+      .get(runId) as { state_json: string } | undefined;
+    return row ? (JSON.parse(row.state_json) as Record<string, unknown>) : null;
   }
 
   /**
