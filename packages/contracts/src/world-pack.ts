@@ -78,21 +78,32 @@ export type WorldPackActivity = z.infer<typeof WorldPackActivitySchema>;
 /** Actual MMORPG interactions. These are playable rules, not a list of
  * proposed plot beats. No cost is invented by the engine: the authoring
  * workshop must state real prerequisites and concrete possible results. */
-export const WorldActionTermSchema = z.object({
-  kind: z.enum(["asset", "permission", "relationship", "knowledge", "ability", "access"]),
-  ref: z.string().trim().min(1),
-}).strict();
+export const WorldActionTermSchema = z
+  .object({
+    kind: z.enum([
+      "asset",
+      "permission",
+      "relationship",
+      "knowledge",
+      "ability",
+      "access",
+    ]),
+    ref: z.string().trim().min(1),
+  })
+  .strict();
 
-export const WorldActionSchema = z.object({
-  localId: z.string().regex(/^[a-z][a-z0-9_-]{1,79}$/),
-  name: z.string().trim().min(1).max(300),
-  offeredByRef: z.string().trim().min(1),
-  locationRef: z.string().trim().min(1).nullable(),
-  action: z.string().trim().min(1).max(5000),
-  requires: z.array(WorldActionTermSchema).max(20),
-  yields: z.array(WorldActionTermSchema).min(1).max(20),
-  state: z.enum(["available", "potential"]),
-}).strict();
+export const WorldActionSchema = z
+  .object({
+    localId: z.string().regex(/^[a-z][a-z0-9_-]{1,79}$/),
+    name: z.string().trim().min(1).max(300),
+    offeredByRef: z.string().trim().min(1),
+    locationRef: z.string().trim().min(1).nullable(),
+    action: z.string().trim().min(1).max(5000),
+    requires: z.array(WorldActionTermSchema).max(20),
+    yields: z.array(WorldActionTermSchema).min(1).max(20),
+    state: z.enum(["available", "potential"]),
+  })
+  .strict();
 export type WorldAction = z.infer<typeof WorldActionSchema>;
 
 export const WorldPackDocumentSchema = z
@@ -226,7 +237,8 @@ export function worldPackReferenceProblems(
       if (at && at.type !== "location")
         problems.push("non-location action: " + action.localId);
     }
-    for (const term of [...action.requires, ...action.yields]) resolve(term.ref);
+    for (const term of [...action.requires, ...action.yields])
+      resolve(term.ref);
   }
   return [...new Set(problems)];
 }
