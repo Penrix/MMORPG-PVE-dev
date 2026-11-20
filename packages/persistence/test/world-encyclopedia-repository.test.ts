@@ -100,7 +100,7 @@ function addRelation(
 describe("v0.1-v0.7 world encyclopedia database over the ONE NarraLume Canon", () => {
   it("assembles a real clan dossier with history, founding members, duties, stances, evaluators and influential people", () => {
     database = new NodeNarrativeDatabase();
-    expect(database.migrate()).toBe(50);
+    expect(database.migrate()).toBe(51);
     const projects = new SqliteProjectRepository(database);
     projects.insert(
       createProject({ id: "naruto", title: "火影同人世界资料工程", now }),
