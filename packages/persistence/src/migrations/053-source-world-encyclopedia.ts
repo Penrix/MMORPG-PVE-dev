@@ -183,7 +183,7 @@ export const migration053 = {
       FOREIGN KEY(corpus_id,evaluator_key)
         REFERENCES source_records(corpus_id,source_key) ON DELETE CASCADE,
       FOREIGN KEY(corpus_id,evidence_event_key)
-        REFERENCES source_world_chronicle(corpus_id,event_key) ON DELETE SET NULL
+        REFERENCES source_world_chronicle(corpus_id,event_key)
     ) STRICT;
     CREATE INDEX source_world_standing_subject_idx
       ON source_world_social_standings(corpus_id,subject_key,dimension);
