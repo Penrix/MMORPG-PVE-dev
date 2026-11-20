@@ -11,9 +11,9 @@
 | `packages/persistence/src/migrations/046-world-pack-drafts.ts`   | `world_pack_drafts` 表、项目外键、版本、请求与完整内容JSON、采纳后 Canon ID 映射                         | 新建 NarraLume SQLite 候选存储，正式世界 Reality 不存第二份                              |
 | `packages/persistence/src/world-pack-repository.ts`              | 新包写入、列出、按run查找、乐观版本编辑、状态变更和映射                                                  | 复用 NarraLume 存储层与事务约束                                                          |
 | `packages/harness/src/world-pack-recipe.ts`                      | `world.context → world.generate → world.stage` 三步任务                                                  | 复用 NarraLume Harness 的运行/暂停/失败恢复；**区别于旧 `canon-spread-candidate`**       |
-| `packages/narrative/src/mmorpg-world-method.ts`                  | 直接选用完整研究中的 v0.7 原文章节供模型参考                                                             | **实际来自用户原稿**，不再只调用模型自写简化摘要                                         |
+| `packages/narrative/src/mmorpg-world-method.ts`                  | 保留旧版 v0.7 摘录作历史；当前使用 v0.1～v0.7 独立文档的版本化方法目录按对象选择原文                                                             | **实际来自用户原稿**，不再只调用模型自写简化摘要                                         |
 | `packages/narrative/src/world-pack-context.ts`                   | 按当前区域、人物关系、区域隶属和社会邻接关系选择 W1 的上下文                                             | 借 WorldForge 多跳图检索思路做 TS/Canon 适配，无独立图库                                 |
-| `packages/narrative/src/world-pack-workers.ts`                   | 从当前 Reality 与 v0.7 原文构造 AI 世界生成上下文；严格输出完整连通世界包；可按需推进已存在NPC/组织      | ModelClient + Typed Graph + WorldPack；不要求先写章纲或机械重复七轮                      |
+| `packages/narrative/src/world-pack-workers.ts`                   | 从当前 Reality、按范围选取的 v0.1～v0.7 原文和实际 Covel 世界包构造上下文；严格输出完整连通世界包；可按需推进已存在NPC/组织      | ModelClient + Typed Graph + WorldPack；不要求先写章纲或机械重复七轮                      |
 | `packages/services/src/world-pack-routes.ts`                     | 创建生成任务、列出世界包、读取、版本编辑、**整体原子性采纳**                                             | 复用 Canon 实体/事实/关系写入与锁定、事务；不新造 Canon 事实层                           |
 | `packages/services/src/world-graph-routes.ts`                    | 从 Canon 事实/关系**实时投影**图，按中心实体两跳查询邻居及当前行动                                       | WorldForge graph 思路 + NarraLume 单一 Reality                                           |
 | `apps/web/src/workspaces/world-builder.tsx`                      | World Builder 页面：W0/W1、生产/推进、旧区域导航、世界包内容/关系/活动审阅、JSON修订、作者确认后整体采纳 | 复用原 NarraLume React/Query/App Shell，不另接 Next.js/Tauri                             |
@@ -94,7 +94,7 @@ NarraLume唯一Canon Reality
 - **NPC GOAP多智能体**：已能基于既有世界提出跨时间的活动候选，但不是 WorldForge 原来的实体 per-agent 调度/仲裁、物理模拟。
 - **世界内容缺口自动路由**：第③模块尚未按“进入尚不存在地图”自动向①提交请求并恢复原章节位置。作者目前可自己打开 World Builder。
 - **广域长篇演化**：尚未做多世界时间分支与大量事件的成本控制；不能声称已经以百万字持续运行验收。
-- **真实第三方源码移植**：此轮实现由当前工程重新编写，**参考了 Covel WorldPack / WorldForge graph 及 OnlyWorlds schema 思路，并复用了 NarraLume 的已有基础设施**；没有声称逐行复制那些项目代码。
+- **真实第三方源码移植（新进度）**：最初这部分确实是自行写的。随后已直接移植 Covel 的世界分段解析/依赖排序/缓存，WorldForge 的因果候选和维度注册，以及 CampaignRepo 的关系双向分类。已在世界生成工作流和 Canon 图中调用。**还未完整移植 Covel 世界生成主程序、WorldForge agent/arbiter/engine**。见 [移植记录](05-actual-upstream-ports.md)。
 
 ## 变更对标依据
 
