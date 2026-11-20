@@ -5,8 +5,10 @@
  * A round only edits ONE Canon spread; accepted objects become available to all
  * future world rounds and to the original novel-writing context.
  *
- * The comprehensive research master remains in Penrix/MMORPG-PVE (private).
- * Do not copy its full v0.1/v0.7 text into this public fork.
+ * Historical legacy implementation: the active production flow is now
+ * packages/narrative/src/world-pack-workers.ts, which invokes actual ported
+ * Covel/WorldForge code and the seven independent v0.1-v0.7 research editions.
+ * The author has explicitly approved publishing the complete world research.
  */
 export type WorldScale = "W0" | "W1";
 export type WorldStage =
