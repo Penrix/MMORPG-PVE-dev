@@ -1,4 +1,4 @@
-<p align="center">
+> **MMORPG-PVE 开发 Fork（Penrix）**：本仓库在 NarraLume 完整源码上增加单主角 PVE 小说世界生成。当前架构与对标源码见 **[docs/mmorpg/README.md](docs/mmorpg/README.md)**；[对标复用 Crosswalk](docs/mmorpg/01-reuse-crosswalk.md)、[首轮第一模块审查](docs/mmorpg/02-world-builder-audit-and-design.md)。**本 Fork 的 World Builder 还只是尚未完成CI/真实创作验收的接口原型，并未移植 Covel/WorldForge 源码。** 以下保留原 NarraLume 使用说明。\n\n---\n\n<p align="center">
   <img src="assets/narralume-logo-wide.svg" alt="NarraLume · 叙灯" width="960">
 </p>
 
