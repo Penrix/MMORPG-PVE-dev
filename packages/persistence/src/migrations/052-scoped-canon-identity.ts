@@ -11,6 +11,12 @@ export const migration052 = {
   name: "canon-entity-world-scoped-display-names",
   foreignKeysOff: true,
   sql: `
+    -- This is a rebuild of one heavily referenced table. SQLite's normal
+    -- ALTER TABLE rename validator rejects OTHER tables' existing triggers
+    -- while the old table name is briefly absent. Legacy mode keeps their
+    -- textual SQL untouched; the new table is restored under the same name.
+    -- The FK checker still runs before committing this migration.
+    PRAGMA legacy_alter_table = ON;
     -- SQLite validates existing VIEW SQL during ALTER TABLE RENAME.
     -- Temporarily remove the 047 projection while canon_entities is rebuilt.
     DROP VIEW IF EXISTS world_organization_dossier_index;
@@ -135,5 +141,6 @@ export const migration052 = {
             AND scope.project_id=NEW.project_id
         );
     END;
+    PRAGMA legacy_alter_table = OFF;
   `,
 } as const;
