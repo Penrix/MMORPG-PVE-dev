@@ -13,7 +13,7 @@ import type {
 /**
  * The *read-only* existing game world, projected from adopted Canon Reality.
  * All references here use canon:<stable ID>, not fabricated
- * names or copied local IDs. Nothing from this graph is staged for re-adoption.
+ * names or copied local IDs. Only actual new deltas are adopted.
  */
 export function projectExistingWorldForProduction(input: {
   entities: readonly CanonEntity[];
