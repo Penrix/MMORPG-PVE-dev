@@ -9,9 +9,7 @@ import {
   deriveRegionResources,
   EARTH_LAWS,
 } from "./vendor/worldforge/full/physics.js";
-import type {
-  LLMBindings,
-} from "./vendor/worldforge/full/llm.js";
+import type { LLMBindings } from "./vendor/worldforge/full/llm.js";
 import type {
   EntityCard,
   SimulationEvent,
@@ -105,7 +103,8 @@ export async function previewWorldForgeFactions(
     neighbors: [],
     layer: 0,
     refined: false,
-    character: "Temporary logical agent context; terrain, area, population and resources are NOT Canon facts",
+    character:
+      "Temporary logical agent context; terrain, area, population and resources are NOT Canon facts",
   };
 
   const actorIds = new Set(actors.map((a) => a.id));
@@ -116,7 +115,14 @@ export async function previewWorldForgeFactions(
       areaId,
       "未指定",
       "非领土模拟组织",
-      { population: 1, food: 0, economy: 0, military: 0, legitimacy: 50, stability: 50 },
+      {
+        population: 1,
+        food: 0,
+        economy: 0,
+        military: 0,
+        legitimacy: 50,
+        stability: 50,
+      },
       {},
       {},
     );
@@ -125,12 +131,24 @@ export async function previewWorldForgeFactions(
       "Only accepted Canon provides facts. The numeric fields and this regional map are technical placeholders; do not infer money, military, power rules or population from them.",
     ];
     item.geography.neighbors = seed.relationships
-      .filter((link) => link.fromEntityId === actor.id || link.toEntityId === actor.id)
-      .map((link) => link.fromEntityId === actor.id ? link.toEntityId : link.fromEntityId)
+      .filter(
+        (link) =>
+          link.fromEntityId === actor.id || link.toEntityId === actor.id,
+      )
+      .map((link) =>
+        link.fromEntityId === actor.id ? link.toEntityId : link.fromEntityId,
+      )
       .filter((id) => actorIds.has(id));
     item.relations = seed.relationships
-      .filter((link) => link.fromEntityId === actor.id && actorIds.has(link.toEntityId))
-      .map((link) => ({ target: link.toEntityId, stance: link.relation, note: "Known relationship from accepted Canon" }));
+      .filter(
+        (link) =>
+          link.fromEntityId === actor.id && actorIds.has(link.toEntityId),
+      )
+      .map((link) => ({
+        target: link.toEntityId,
+        stance: link.relation,
+        note: "Known relationship from accepted Canon",
+      }));
     return item;
   });
 
@@ -161,13 +179,16 @@ export async function previewWorldForgeFactions(
   // runAllAgents is the unchanged upstream parallel agent scheduler.
   // arbitrate is its unchanged conflict / rule / history arbiter.
   const proposed = await runAllAgents(session, { llm, maxTokens: 1400 });
-  const ruling = await arbitrate({
-    laws: session.laws,
-    config: session.config,
-    entities: session.entities,
-    lore: session.lore,
-    currentTick: session.current_tick,
-  }, proposed.events);
+  const ruling = await arbitrate(
+    {
+      laws: session.laws,
+      config: session.config,
+      entities: session.entities,
+      lore: session.lore,
+      currentTick: session.current_tick,
+    },
+    proposed.events,
+  );
 
   return {
     engine: "worldforge",
