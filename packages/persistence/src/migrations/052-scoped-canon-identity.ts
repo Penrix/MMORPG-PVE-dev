@@ -63,7 +63,12 @@ export const migration052 = {
       name,aliases,description,
       content='canon_entities',content_rowid='rowid',tokenize='trigram'
     );
-    INSERT INTO canon_entities_fts(canon_entities_fts) VALUES('rebuild');
+    -- Legacy FTS exposes an 'aliases' search column while the actual Canon
+    -- table stores aliases_json. FTS5's built-in REBUILD tries to read
+    -- canon_entities.aliases and therefore fails. Reindex by explicit rows.
+    INSERT INTO canon_entities_fts(rowid,name,aliases,description)
+      SELECT rowid,name,aliases_json,COALESCE(description,'')
+      FROM canon_entities;
     CREATE TRIGGER canon_entities_fts_insert AFTER INSERT ON canon_entities BEGIN
       INSERT INTO canon_entities_fts(rowid,name,aliases,description)
       VALUES(new.rowid,new.name,new.aliases_json,COALESCE(new.description,''));
