@@ -32,7 +32,7 @@ describe("MMORPG World Builder", () => {
   it("builds W0 content production rather than a prewritten protagonist outline", () => {
     const result = buildWorldBuilderInstruction(base);
     expect(result).toContain("【WORLD_BUILDER/W0/world】");
-    expect(result).toContain("男主到来之前");
+    expect(result).toContain("男主进入之前");
     expect(result).toContain("1392年大明");
     expect(result).toContain("不同社会系统");
     expect(result).toContain("Canon");
