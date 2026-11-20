@@ -6,6 +6,8 @@ export const shell: typeof shellZh = {
     shelfBlurb: "Catalog, search, and create books",
     overview: "Overview",
     overviewBlurb: "Current progress, active tasks, and next steps",
+    world: "World Builder",
+    worldBlurb: "W0 world atlas, W1 zones, people and resources",
     bible: "Story",
     bibleBlurb: "Intent, characters, outline, and story facts",
     studio: "Writing",
