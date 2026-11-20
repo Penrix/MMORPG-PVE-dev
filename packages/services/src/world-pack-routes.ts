@@ -72,6 +72,12 @@ export function adoptWorldPack(
         const reused = canon.requireEntity(projectId, node.existingCanonId);
         if (reused.type !== node.type)
           throw new WorldPackRouteError("world.pack.type_mismatch", `Type mismatch for ${node.name}`);
+        if (reused.name !== node.name && !reused.aliases.includes(node.name))
+          throw new WorldPackRouteError(
+            "world.pack.name_mismatch",
+            `Canon ID ${node.existingCanonId} belongs to ${reused.name}, not ${node.name}; use the existing name or an accepted alias`,
+            409,
+          );
         ids[node.localId] = reused.id;
       } else {
         const duplicate = names.get(`${node.type}:${node.name}`);
@@ -247,6 +253,13 @@ export function adoptWorldPack(
           "activityLocalId" in fact.value &&
           fact.value.activityLocalId === activity.localId
         );
+        if (previous?.authority === "locked") {
+          throw new WorldPackRouteError(
+            "world.pack.locked_activity",
+            `Activity ${activity.localId} is locked and cannot be overwritten through world generation`,
+            409,
+          );
+        }
         if (activity.stage === "ended" && !previous) {
           throw new WorldPackRouteError(
             "world.pack.activity_not_found",
