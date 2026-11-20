@@ -8,3 +8,5 @@ apps/web
 # Preserve original author research and exact upstream MIT code, never silently rewrite them.
 docs/mmorpg/research/
 packages/narrative/src/vendor/
+
+packages/services/src/vendor/
