@@ -315,6 +315,7 @@ export const CanonEntitySchema = z.object({
   projectId: IdSchema,
   type: CanonEntityTypeSchema,
   name: z.string(),
+  worldScopeId: IdSchema.optional(),
   aliases: z.array(z.string()),
   description: z.string().nullable(),
   attributes: JsonObjectSchema,
@@ -327,6 +328,7 @@ export type CanonEntityDto = z.infer<typeof CanonEntitySchema>;
 export const CreateCanonEntityRequestSchema = z.object({
   type: CanonEntityTypeSchema,
   name: z.string().trim().min(1).max(300),
+  worldScopeId: IdSchema.optional(),
   aliases: z.array(z.string().trim().min(1).max(300)).max(100).default([]),
   description: z.string().trim().max(30_000).nullable().optional(),
   attributes: JsonObjectSchema.default({}),
