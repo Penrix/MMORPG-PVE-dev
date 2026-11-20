@@ -1,3 +1,4 @@
+import { playWorldActionPaths } from "./world-action-runtime.js";
 import type {
   WorldPackDocument,
   WorldPackLink,
@@ -39,6 +40,7 @@ export interface WorldPlaytest {
   independentActivities: string[];
   actionableRoutes: string[];
   feedbackPaths: string[];
+  interactionPaths: string[][];
   next: WorldWorkOrder | null;
 }
 
@@ -57,6 +59,7 @@ export function emptyWorldDocument(): WorldPackDocument {
     links: [],
     activities: [],
     openThreads: [],
+    interactions: [],
     dimensionSignals: [],
   };
 }
@@ -192,6 +195,12 @@ export function playtestWorld(
     )
     .map((a) => a.localId);
 
+  const interactionPreview = playWorldActionPaths(doc);
+  const interactionPaths = interactionPreview.paths.map(path=>path.actionIds);
+  const hasAssetChain = interactionPreview.paths.some(path=>
+    path.actionIds.length >= 2 && path.gained.some(item=>
+      item.kind === "asset" || item.kind === "permission" ||
+      item.kind === "ability" || item.kind === "relationship"));
   let next: WorldWorkOrder | null = null;
   if (places.length === 0) {
     next = order("geography", null, doc, "当前世界没有可定位的生活区域", [
@@ -280,6 +289,15 @@ export function playtestWorld(
     );
   }
 
+  if (!next && !hasAssetChain) {
+    const resource = resources.find(r=>controlledResources.includes(r.localId));
+    next = order("playability",resource?.localId ?? places[0]?.localId ?? null,doc,
+      "目前的地图无法从真实入口完成两段连续行动，获得可复用的新资产或权限",
+      ["制作具体可执行的互动动作：谁提供、在哪里、需要什么已有资格",
+       "明确行动后可能得到的资产、权限、人物关系或下一片社会入口",
+       "使至少两种行动能通过同一资产/关系状态接续，不预设男主已赢"]);
+  }
+
   // Do not turn fantasy into generic social simulation: the world itself
   // needs usable power facts and actual actions; no protagonist costs invented.
   if (
@@ -320,6 +338,7 @@ export function playtestWorld(
     independentActivities,
     actionableRoutes,
     feedbackPaths,
+    interactionPaths,
     next,
   };
 }
@@ -375,6 +394,14 @@ export function applyWorldProductionDelta(
       changes.add(action.localId);
     }
   }
+  const interactionMap=new Map((current.interactions??[]).map(a=>[a.localId,a]));
+  for(const action of patch.interactions??[]){
+    const prior=interactionMap.get(action.localId);
+    if(!prior||JSON.stringify(prior)!==JSON.stringify(action)){
+      interactionMap.set(action.localId,action);
+      changes.add("action:"+action.localId);
+    }
+  }
   const dimensions = new Map(
     (current.dimensionSignals ?? []).map((s) => [s.kind + ":" + s.dim, s]),
   );
@@ -385,6 +412,7 @@ export function applyWorldProductionDelta(
     nodes: [...nodeMap.values()],
     links: [...linkMap.values()],
     activities: [...activityMap.values()],
+    interactions: [...interactionMap.values()],
     openThreads: [
       ...new Set([...current.openThreads, ...patch.openThreads]),
     ].slice(0, 70),
@@ -396,7 +424,8 @@ export function applyWorldProductionDelta(
   if (
     document.nodes.length > 80 ||
     document.links.length > 180 ||
-    document.activities.length > 80
+    document.activities.length > 80 ||
+    (document.interactions?.length??0) > 90
   )
     throw new Error(
       "world.production.graph_limit: deepen existing nodes or save a second W1 package",
