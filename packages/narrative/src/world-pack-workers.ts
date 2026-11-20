@@ -18,6 +18,7 @@ import {
 } from "@narralume/persistence";
 import type { NarrativeModelClient } from "./model-client.js";
 import { MMORPG_WORLD_METHOD_EXCERPTS } from "./mmorpg-world-method.js";
+import { selectWorldContextIds } from "./world-pack-context.js";
 
 const txt = (description: string) => ({ type: "string", description });
 const nullable = (description: string) => ({
@@ -161,16 +162,31 @@ export class WorldPackWorkerSuite {
     if (!project) throw error("project.not_found", "Project is missing");
     const request = WorldPackRequestSchema.parse(snapshot.run.policy.worldPackRequest);
     const allEntities = this.canon.listEntities(project.id);
-    const query = [request.focus, request.premise].join(" ").toLowerCase();
-    const prioritized = [...allEntities].sort((a,b) => Number(query.includes(b.name.toLowerCase())) - Number(query.includes(a.name.toLowerCase())));
-    const nodes = prioritized.slice(0, 110);
-    if (request.parentAreaId && !nodes.some((item) => item.id === request.parentAreaId)) {
-      const parent = allEntities.find((item) => item.id === request.parentAreaId);
-      if (parent) nodes.unshift(parent);
-    }
-    const facts = this.canon.listEffectiveFacts(project.id).slice(-140);
-    const relationships = this.state.listCurrentRelationships(project.id).slice(-130);
-    const timeline = this.state.listTimeline(project.id).slice(-65);
+    const allFacts = this.canon.listEffectiveFacts(project.id);
+    const allRelationships = this.state.listCurrentRelationships(project.id);
+    const contextIds = selectWorldContextIds({
+      entities: allEntities,
+      facts: allFacts,
+      relationships: allRelationships,
+      parentAreaId: request.parentAreaId,
+      focus: request.focus,
+      premise: request.premise,
+      maxCount: 110,
+    });
+    const byId = new Map(allEntities.map((entity) => [entity.id, entity]));
+    const nodes = contextIds.map((id) => byId.get(id)!).filter(Boolean);
+    const nearby = new Set(contextIds);
+    const prioritizedFacts = allFacts.filter((fact) =>
+      nearby.has(fact.subjectId) || (fact.objectEntityId !== null && nearby.has(fact.objectEntityId))
+    );
+    const facts = prioritizedFacts.slice(0, 140);
+    const relationships = allRelationships
+      .filter((event) => nearby.has(event.fromEntityId) || nearby.has(event.toEntityId))
+      .slice(0, 130);
+    const timeline = this.state.listTimeline(project.id)
+      .filter((event) => event.participants.some((id) => nearby.has(id)) ||
+        event.title.toLocaleLowerCase().includes(request.focus.toLocaleLowerCase()))
+      .slice(-65);
     const packet = {
       authorIntent: this.story.getAuthorIntent(project.id),
       entities: nodes.map((node) => ({
