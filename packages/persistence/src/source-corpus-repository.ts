@@ -138,7 +138,10 @@ export class SqliteSourceCorpusRepository {
     const row = this.db.raw
       .prepare(
         `
-      SELECT c.*, (SELECT COUNT(*) FROM source_records r WHERE r.corpus_id=c.id) AS record_count,
+      SELECT c.*, (SELECT COUNT(*) FROM source_records r
+        LEFT JOIN source_record_presence presence ON
+          presence.corpus_id=r.corpus_id AND presence.source_key=r.source_key
+        WHERE r.corpus_id=c.id AND COALESCE(presence.active,1)=1) AS record_count,
         (SELECT COUNT(*) FROM source_relations e WHERE e.corpus_id=c.id) AS relation_count
       FROM source_corpora c WHERE id=?
     `,
@@ -151,7 +154,10 @@ export class SqliteSourceCorpusRepository {
     const rows = this.db.raw
       .prepare(
         `
-      SELECT c.*, (SELECT COUNT(*) FROM source_records r WHERE r.corpus_id=c.id) AS record_count,
+      SELECT c.*, (SELECT COUNT(*) FROM source_records r
+        LEFT JOIN source_record_presence presence ON
+          presence.corpus_id=r.corpus_id AND presence.source_key=r.source_key
+        WHERE r.corpus_id=c.id AND COALESCE(presence.active,1)=1) AS record_count,
         (SELECT COUNT(*) FROM source_relations e WHERE e.corpus_id=c.id) AS relation_count
       FROM source_corpora c ORDER BY title
     `,
@@ -187,6 +193,22 @@ export class SqliteSourceCorpusRepository {
         record.originCollection,
         record.importedAt,
       );
+    this.db.raw.prepare(`
+      INSERT INTO source_record_presence(corpus_id,source_key,active,last_seen_at)
+      VALUES (?,?,1,?)
+      ON CONFLICT(corpus_id,source_key)
+        DO UPDATE SET active=1,last_seen_at=excluded.last_seen_at
+    `).run(record.corpusId,record.sourceKey,record.importedAt);
+  }
+
+  /** Called inside an importer transaction. Historic source IDs and expert
+   * curated encyclopedia content survive reimports. Absentees are archived
+   * and hidden from search, never deleted from referenced project records. */
+  beginCorpusSnapshot(corpusId:string):void {
+    this.db.raw.prepare(`
+      UPDATE source_record_presence SET active=0 WHERE corpus_id=?
+    `).run(corpusId);
+    this.clearRelations(corpusId);
   }
 
   getRecord(corpusId: string, sourceKey: string): SourceRecord | null {
@@ -273,7 +295,10 @@ export class SqliteSourceCorpusRepository {
     const rows = this.db.raw
       .prepare(
         `
-      SELECT c.*, (SELECT COUNT(*) FROM source_records r WHERE r.corpus_id=c.id) AS record_count,
+      SELECT c.*, (SELECT COUNT(*) FROM source_records r
+        LEFT JOIN source_record_presence presence ON
+          presence.corpus_id=r.corpus_id AND presence.source_key=r.source_key
+        WHERE r.corpus_id=c.id AND COALESCE(presence.active,1)=1) AS record_count,
         (SELECT COUNT(*) FROM source_relations e WHERE e.corpus_id=c.id) AS relation_count
       FROM source_corpora c JOIN project_source_bindings b ON b.corpus_id=c.id
       WHERE b.project_id=? AND b.enabled=1 ORDER BY c.title
@@ -306,6 +331,11 @@ export class SqliteSourceCorpusRepository {
       )`);
       args.push(options.projectId);
     }
+    clauses.push(`NOT EXISTS (
+      SELECT 1 FROM source_record_presence presence
+      WHERE presence.corpus_id=r.corpus_id AND presence.source_key=r.source_key
+        AND presence.active=0
+    )`);
     if (options.kind) {
       clauses.push("r.kind=?");
       args.push(options.kind);
