@@ -165,7 +165,10 @@ function workshopPatch(request: unknown): WorldPackDocument {
   const op = command.operation;
   const scale = command.authorRequest.scale;
   const advance = command.authorRequest.intent === "advance";
-  const later = (command.authorRequest as {worldTime?:string}).worldTime?.includes("翌日")??false;
+  const later =
+    (command.authorRequest as { worldTime?: string }).worldTime?.includes(
+      "翌日",
+    ) ?? false;
   const market =
     mockDocument.nodes.find((n) => n.type === "location") ??
     baseDocument.nodes[0]!;
@@ -252,13 +255,18 @@ function workshopPatch(request: unknown): WorldPackDocument {
     if (op === "living") {
       patch.nodes = [...mockDocument.nodes];
       patch.links = [...mockDocument.links];
-      patch.activities = [...mockDocument.activities, {
-        localId:later?"living_followup_2":"living_followup_1",
-        actorRefs:["guild_master"],resourceRefs:["moon_pill"],
-        stage:"ongoing",worldTime:later?"宗门大比翌日":"宗门大比当日",
-        description:"掌柜已开始重新接触丹药买家并调整利益格局",
-        reason:"应对既有商会竞争和已发生的权利变化",
-      }];
+      patch.activities = [
+        ...mockDocument.activities,
+        {
+          localId: later ? "living_followup_2" : "living_followup_1",
+          actorRefs: ["guild_master"],
+          resourceRefs: ["moon_pill"],
+          stage: "ongoing",
+          worldTime: later ? "宗门大比翌日" : "宗门大比当日",
+          description: "掌柜已开始重新接触丹药买家并调整利益格局",
+          reason: "应对既有商会竞争和已发生的权利变化",
+        },
+      ];
     } else if (op === "events") {
       patch.activities = [
         {
