@@ -219,8 +219,13 @@ function workshopPatch(request: unknown): WorldPackDocument {
     interactions: [],
     dimensionSignals: [],
   };
-  const actionPrefix = advance ? (later ? "next_day_" : "today_") :
-    scale === "W1" ? "river_" : "";
+  const actionPrefix = advance
+    ? later
+      ? "next_day_"
+      : "today_"
+    : scale === "W1"
+      ? "river_"
+      : "";
   const gameActions = () => [
     {
       localId: actionPrefix + "public_arrival",
