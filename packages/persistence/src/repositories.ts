@@ -33,6 +33,7 @@ export * from "./world-encyclopedia-repository.js";
 export * from "./world-structures-repository.js";
 export * from "./source-corpus-repository.js";
 export * from "./source-world-encyclopedia-repository.js";
+export * from "./unified-source-world-repository.js";
 export * from "./project-world-repository.js";
 export * from "./project-fork-repository.js";
 export * from "./naruto-source-import.js";
