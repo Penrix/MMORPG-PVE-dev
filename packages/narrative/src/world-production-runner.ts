@@ -20,7 +20,10 @@ import {
   type WorldProductionStep,
 } from "./world-production-engine.js";
 import { previewProductionReality } from "./world-production-reality.js";
-import { initialWorldWorkshopOrder, powerDesignProducts } from "./world-design-policy.js";
+import {
+  initialWorldWorkshopOrder,
+  powerDesignProducts,
+} from "./world-design-policy.js";
 
 const ZERO: RunBudgetUsage = {
   inputTokens: 0,
@@ -155,7 +158,8 @@ function workOrder(
     subjectRef: ref,
     subjectName: node?.name ?? "当前世界",
     reason: spec.reason,
-    deliverables: workshop === "power" ? powerDesignProducts(request) : spec.products,
+    deliverables:
+      workshop === "power" ? powerDesignProducts(request) : spec.products,
   };
 }
 
