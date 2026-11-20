@@ -162,17 +162,27 @@ async function setup() {
   const model: NarrativeModelClient = {
     async text(_run, _step, purpose) {
       if (purpose !== "world-pack")
-        throw new Error("WorldForge faction agents must share the world-pack model assignment");
+        throw new Error(
+          "WorldForge faction agents must share the world-pack model assignment",
+        );
       independentFactionAgentCalls += 1;
       return {
         text: JSON.stringify({
           decisions: ["商会准备继续交涉丹药流通"],
-          events: [{
-            type: "commercial",
-            description: "玉澜商会已提出与宗门药堂谈判，但授权尚未成交",
-          }],
+          events: [
+            {
+              type: "commercial",
+              description: "玉澜商会已提出与宗门药堂谈判，但授权尚未成交",
+            },
+          ],
         }),
-        usage: { inputTokens: 30, outputTokens: 80, calls: 1, costUsd: 0, wallTimeMs: 1 },
+        usage: {
+          inputTokens: 30,
+          outputTokens: 80,
+          calls: 1,
+          costUsd: 0,
+          wallTimeMs: 1,
+        },
       };
     },
     async structured(_run, _step, purpose, _request, _contract, validate) {
