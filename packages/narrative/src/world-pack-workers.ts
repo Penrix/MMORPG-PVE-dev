@@ -278,9 +278,9 @@ export class WorldPackWorkerSuite {
     const knownTimeline = this.state.listTimeline(project.id);
     const history: SimulationEvent[] = knownTimeline.map((event, index) => ({
       id: event.id, tick: index + 1, time_label: event.storyTimeStart ?? "",
-      type: "historical-event", participants: event.participants,
+      type: "historical-event", participants: [...event.participants],
       region: "", description: event.description ?? event.title,
-      major: Boolean(event.isMajor), changes: [],
+      major: Boolean(event.causes.length > 0), changes: [],
     }));
     const causalHints = causalCandidates(
       { events: history },
