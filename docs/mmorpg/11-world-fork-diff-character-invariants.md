@@ -63,8 +63,14 @@ Project P：一本小说唯一的项目 Reality
 
 ## 已发现但尚未解决的两个重要问题
 
-1. **同名人物**：`canon_entities` 原生仍有 `UNIQUE(project_id,type,name)`；虽然 050 的身份已用 source ID 和 project entity ID、空间关联，不按名字判断，但这个旧约束仍阻止一个项目把不同世界同名者直接以同样 display-name 保存。这需要安全的数据库升级与界面消歧，**051 没有声称已修复**。
+1. **同名人物（052 第一版已实装，兼容性验收仍须看最新 CI）**：原版确有 `UNIQUE(project_id,type,name)`。新增 Migration 052 在保留旧数据库 rowid、外键、全文检索和单世界默认唯一行为的前提下，新增 `world_scope_id`，将唯一范围改为 `(project_id,world_scope_id,type,name)`。同一项目的火影/海贼世界可以各自存在真实名字完全相同、Canon ID 独立的人物；对外 Story Bible 实体创建接口也接受可选 `worldScopeId`。**这只是正确的身份消歧和持久化基础**，并不替代人物来源映射或自动辨认同名者是谁。
 2. **真正的历史 Checkout**：原生 `listEffectiveFacts` 是全项目当前有效事实，没有实现按 `world_space + local_time + branch + event_sequence` 的版本查询；051 的 Diff 默认与**当前已采纳事实**比较。不能把它说成已经能恢复任意时间、任意分支的全部 Reality。下一步应从事实与关系的时间生效域及事件写回接口入手，而不是简单加一份世界快照 JSON。
+
+### 052 兼容性迁移的技术风险与验收
+
+该迁移重建 NarraLume 原版 Canon 核心表，故设置 `foreignKeysOff` 并必须在事务内跑 `PRAGMA foreign_key_check`。重建时还要兼容 047 的组织档案 View、各业务表中旧版 Canon 触发器，以及原版使用 `aliases_json` 的 FTS5 trigram 索引。原有默认世界的同名人物冲突应保持原行为，只有明确的不同世界范围才允许同名。
+
+**以迁移旧数据、原生母体实际导入测试、Story API 和 FTS/外键全通过为验收标准，不能仅凭 SQL 已提交宣布合格。**
 
 ## 最小验收
 
