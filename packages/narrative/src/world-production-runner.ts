@@ -46,7 +46,9 @@ function addUsage(a: RunBudgetUsage, b: RunBudgetUsage): RunBudgetUsage {
  */
 function requiredWorkshops(request: WorldPackRequest): WorldWorkshop[] {
   if (request.intent === "advance")
-    return ["living", "events", "social", "playability"];
+    // Existing social networks, resources and affordances persist in Canon.
+    // Only run their workshops when a *real* world-playtest gap is found.
+    return ["living","events"];
   const supernatural =
     request.scale === "W0" &&
     /玄幻|修仙|武侠|忍术|火影|斗气|魔法|奇幻|超凡/.test(
@@ -273,7 +275,8 @@ function hasWorkshopOutput(
         a.resourceRefs.some((id) => resources.has(id)),
     );
   if (workshop === "living")
-    return newActions.some((a) => a.actorRefs.some((id) => actors.has(id)));
+    return newActions.some(a=>a.stage==="ongoing" &&
+      a.actorRefs.some(id=>actors.has(id)) && a.resourceRefs.some(id=>resources.has(id)));
   if (workshop === "social")
     return edges.some(
       (e) =>
