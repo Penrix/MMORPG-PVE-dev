@@ -46,9 +46,11 @@ function addUsage(a: RunBudgetUsage, b: RunBudgetUsage): RunBudgetUsage {
 function requiredWorkshops(request: WorldPackRequest): WorldWorkshop[] {
   if (request.intent === "advance")
     return ["living", "events", "social", "playability"];
-  const supernatural = request.scale === "W0" && /玄幻|修仙|武侠|忍术|火影|斗气|魔法|奇幻|超凡/.test(
-    request.genre + request.premise,
-  );
+  const supernatural =
+    request.scale === "W0" &&
+    /玄幻|修仙|武侠|忍术|火影|斗气|魔法|奇幻|超凡/.test(
+      request.genre + request.premise,
+    );
   return [
     "geography",
     "factions",

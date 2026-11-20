@@ -282,7 +282,11 @@ export function playtestWorld(
 
   // Do not turn fantasy into generic social simulation: the world itself
   // needs usable power facts and actual actions; no protagonist costs invented.
-  if (!next && request.scale === "W0" && request.intent !== "advance" && /玄幻|修仙|武侠|忍术|火影|斗气|魔法|奇幻|超凡/.test(
+  if (
+    !next &&
+    request.scale === "W0" &&
+    request.intent !== "advance" &&
+    /玄幻|修仙|武侠|忍术|火影|斗气|魔法|奇幻|超凡/.test(
       request.genre + request.premise,
     )
   ) {
