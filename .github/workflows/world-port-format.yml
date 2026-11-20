@@ -37,5 +37,17 @@ jobs:
             echo "Nothing needs formatting"
           else
             git commit -m "style(world): format port integration without touching upstream research"
-            git push origin HEAD:refs/heads/feat/world-builder-w0-w1-mvp
+            # A code-writing session may push while Prettier is working.
+            # Rebase the purely stylistic commit against the latest remote
+            # instead of failing on a routine non-fast-forward push.
+            for attempt in 1 2 3 4; do
+              git fetch origin feat/world-builder-w0-w1-mvp
+              git rebase origin/feat/world-builder-w0-w1-mvp
+              if git push origin HEAD:refs/heads/feat/world-builder-w0-w1-mvp; then
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "Unable to push formatted files after four attempts" >&2
+            exit 1
           fi
