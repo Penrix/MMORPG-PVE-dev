@@ -802,7 +802,10 @@ export type RunStepKind =
   | "assistant.stage"
   | "canon.context"
   | "canon.candidate"
-  | "canon.stage";
+  | "canon.stage"
+  | "world.context"
+  | "world.generate"
+  | "world.stage";
 
 export interface NarrativeRun {
   id: string;
