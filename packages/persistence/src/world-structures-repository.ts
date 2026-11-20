@@ -39,8 +39,15 @@ export interface WorldCapabilityLink {
   id: string;
   source_entity_id: string;
   target_entity_id: string;
-  relation: "prerequisite" | "combines_with" | "counters" | "improves" |
-    "transforms_to" | "transmitted_by" | "licensed_by" | "used_by";
+  relation:
+    | "prerequisite"
+    | "combines_with"
+    | "counters"
+    | "improves"
+    | "transforms_to"
+    | "transmitted_by"
+    | "licensed_by"
+    | "used_by";
   mechanism: string;
   evidence_event_id: string | null;
   source_type: string;
@@ -54,8 +61,17 @@ export interface WorldProductionLink {
   operator_entity_id: string | null;
   site_entity_id: string | null;
   intermediary_entity_id: string | null;
-  process_kind: "extract"|"train"|"produce"|"transform"|"transport"|
-    "trade"|"consume"|"repair"|"distribute"|"other";
+  process_kind:
+    | "extract"
+    | "train"
+    | "produce"
+    | "transform"
+    | "transport"
+    | "trade"
+    | "consume"
+    | "repair"
+    | "distribute"
+    | "other";
   concrete_process: string;
   prerequisites: string;
   resource_value: string;
@@ -72,7 +88,13 @@ export interface WorldInformationFlow {
   carrier_entity_id: string | null;
   event_id: string | null;
   world_time: string;
-  belief: "known"|"believed"|"suspected"|"false_belief"|"rejected"|"withheld";
+  belief:
+    | "known"
+    | "believed"
+    | "suspected"
+    | "false_belief"
+    | "rejected"
+    | "withheld";
   transmission: string;
   source_type: string;
   source_id: string | null;
@@ -82,8 +104,10 @@ export interface WorldInformationFlow {
 export class SqliteWorldStructuresRepository {
   constructor(private readonly database: NarrativeDatabase) {}
 
-  listMapEdges(projectId:string,entityId:string): WorldMapEdge[] {
-    return this.database.raw.prepare(`
+  listMapEdges(projectId: string, entityId: string): WorldMapEdge[] {
+    return this.database.raw
+      .prepare(
+        `
       SELECT id,from_entity_id,to_entity_id,layer,edge_kind,intermediary_entity_id,
              description,access_conditions,time_conditions,valid_from_event_id,
              valid_to_event_id,source_type,source_id,source_note
@@ -91,32 +115,53 @@ export class SqliteWorldStructuresRepository {
         from_entity_id=? OR to_entity_id=? OR intermediary_entity_id=?
       )
       ORDER BY layer,edge_kind,id
-    `).all(projectId,entityId,entityId,entityId) as WorldMapEdge[];
+    `,
+      )
+      .all(projectId, entityId, entityId, entityId) as WorldMapEdge[];
   }
 
-  getCapability(projectId:string,entityId:string): WorldCapabilityProfile|null {
-    const row=this.database.raw.prepare(`
+  getCapability(
+    projectId: string,
+    entityId: string,
+  ): WorldCapabilityProfile | null {
+    const row = this.database.raw
+      .prepare(
+        `
       SELECT entity_id,power_mode,mechanism,actual_actions,effective_scope,
              activation_conditions,countermeasures,knowledge_or_training,
              social_effects,source_type,source_id,source_note
       FROM world_capability_profiles WHERE project_id=? AND entity_id=?
-    `).get(projectId,entityId) as WorldCapabilityProfile|undefined;
-    return row??null;
+    `,
+      )
+      .get(projectId, entityId) as WorldCapabilityProfile | undefined;
+    return row ?? null;
   }
 
-  listCapabilityLinks(projectId:string,entityId:string): WorldCapabilityLink[] {
-    return this.database.raw.prepare(`
+  listCapabilityLinks(
+    projectId: string,
+    entityId: string,
+  ): WorldCapabilityLink[] {
+    return this.database.raw
+      .prepare(
+        `
       SELECT id,source_entity_id,target_entity_id,relation,mechanism,
              evidence_event_id,source_type,source_id,source_note
       FROM world_capability_links WHERE project_id=? AND (
         source_entity_id=? OR target_entity_id=?
       )
       ORDER BY relation,id
-    `).all(projectId,entityId,entityId) as WorldCapabilityLink[];
+    `,
+      )
+      .all(projectId, entityId, entityId) as WorldCapabilityLink[];
   }
 
-  listProductionLinks(projectId:string,entityId:string): WorldProductionLink[] {
-    return this.database.raw.prepare(`
+  listProductionLinks(
+    projectId: string,
+    entityId: string,
+  ): WorldProductionLink[] {
+    return this.database.raw
+      .prepare(
+        `
       SELECT id,input_entity_id,output_entity_id,operator_entity_id,site_entity_id,
              intermediary_entity_id,process_kind,concrete_process,prerequisites,
              resource_value,realization_event_id,source_type,source_id,source_note
@@ -125,11 +170,25 @@ export class SqliteWorldStructuresRepository {
         OR site_entity_id=? OR intermediary_entity_id=?
       )
       ORDER BY process_kind,id
-    `).all(projectId,entityId,entityId,entityId,entityId,entityId) as WorldProductionLink[];
+    `,
+      )
+      .all(
+        projectId,
+        entityId,
+        entityId,
+        entityId,
+        entityId,
+        entityId,
+      ) as WorldProductionLink[];
   }
 
-  listInformationFlows(projectId:string,entityId:string): WorldInformationFlow[] {
-    return this.database.raw.prepare(`
+  listInformationFlows(
+    projectId: string,
+    entityId: string,
+  ): WorldInformationFlow[] {
+    return this.database.raw
+      .prepare(
+        `
       SELECT flow.id,flow.fact_id,flow.sender_entity_id,flow.receiver_entity_id,
              flow.carrier_entity_id,flow.event_id,flow.world_time,
              flow.belief,flow.transmission,flow.source_type,flow.source_id,flow.source_note
@@ -140,6 +199,14 @@ export class SqliteWorldStructuresRepository {
         OR flow.carrier_entity_id=?
       )
       ORDER BY flow.world_time,flow.id
-    `).all(projectId,entityId,entityId,entityId,entityId) as WorldInformationFlow[];
+    `,
+      )
+      .all(
+        projectId,
+        entityId,
+        entityId,
+        entityId,
+        entityId,
+      ) as WorldInformationFlow[];
   }
 }
