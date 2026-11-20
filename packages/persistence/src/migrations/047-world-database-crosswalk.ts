@@ -21,6 +21,10 @@ export const migration047 = {
       entity_id TEXT NOT NULL REFERENCES canon_entities(id) ON DELETE CASCADE,
       lore_entry_id TEXT NOT NULL REFERENCES lore_entries(id) ON DELETE CASCADE,
       facet TEXT NOT NULL CHECK(length(trim(facet)) > 0),
+      source_type TEXT NOT NULL DEFAULT 'unknown' CHECK(source_type IN (
+        'original_work','historical_record','author_design','inferred','simulation','unknown'
+      )),
+      source_id TEXT,
       source_note TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL,
       UNIQUE(project_id, entity_id, lore_entry_id, facet)
@@ -37,6 +41,10 @@ export const migration047 = {
       timeline_event_id TEXT NOT NULL REFERENCES timeline_events(id) ON DELETE CASCADE,
       relevance TEXT NOT NULL CHECK(length(trim(relevance)) > 0),
       consequence TEXT NOT NULL DEFAULT '',
+      source_type TEXT NOT NULL DEFAULT 'unknown' CHECK(source_type IN (
+        'original_work','historical_record','author_design','inferred','simulation','unknown'
+      )),
+      source_id TEXT,
       source_note TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL,
       UNIQUE(project_id, entity_id, timeline_event_id, relevance)
@@ -58,6 +66,10 @@ export const migration047 = {
       funding TEXT NOT NULL DEFAULT '',
       purpose TEXT NOT NULL DEFAULT '',
       current_agenda TEXT NOT NULL DEFAULT '',
+      source_type TEXT NOT NULL DEFAULT 'unknown' CHECK(source_type IN (
+        'original_work','historical_record','author_design','inferred','simulation','unknown'
+      )),
+      source_id TEXT,
       source_note TEXT NOT NULL DEFAULT '',
       updated_at TEXT NOT NULL
     ) STRICT;
@@ -80,6 +92,10 @@ export const migration047 = {
       real_process TEXT NOT NULL DEFAULT '',
       valid_from_event_id TEXT REFERENCES timeline_events(id) ON DELETE SET NULL,
       valid_to_event_id TEXT REFERENCES timeline_events(id) ON DELETE SET NULL,
+      source_type TEXT NOT NULL DEFAULT 'unknown' CHECK(source_type IN (
+        'original_work','historical_record','author_design','inferred','simulation','unknown'
+      )),
+      source_id TEXT,
       source_note TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL
     ) STRICT;
@@ -102,6 +118,10 @@ export const migration047 = {
       valid_from_event_id TEXT REFERENCES timeline_events(id) ON DELETE SET NULL,
       valid_to_event_id TEXT REFERENCES timeline_events(id) ON DELETE SET NULL,
       evidence_event_id TEXT REFERENCES timeline_events(id) ON DELETE SET NULL,
+      source_type TEXT NOT NULL DEFAULT 'unknown' CHECK(source_type IN (
+        'original_work','historical_record','author_design','inferred','simulation','unknown'
+      )),
+      source_id TEXT,
       source_note TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL
     ) STRICT;
@@ -122,6 +142,10 @@ export const migration047 = {
       actual_response TEXT NOT NULL DEFAULT '',
       actual_right_entity_id TEXT REFERENCES canon_entities(id) ON DELETE SET NULL,
       world_time TEXT,
+      source_type TEXT NOT NULL DEFAULT 'unknown' CHECK(source_type IN (
+        'original_work','historical_record','author_design','inferred','simulation','unknown'
+      )),
+      source_id TEXT,
       source_note TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL
     ) STRICT;
@@ -142,6 +166,10 @@ export const migration047 = {
       prerequisites TEXT NOT NULL DEFAULT '',
       cannot_grant TEXT NOT NULL DEFAULT '',
       evidence_event_id TEXT REFERENCES timeline_events(id) ON DELETE SET NULL,
+      source_type TEXT NOT NULL DEFAULT 'unknown' CHECK(source_type IN (
+        'original_work','historical_record','author_design','inferred','simulation','unknown'
+      )),
+      source_id TEXT,
       source_note TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL
     ) STRICT;
@@ -166,6 +194,10 @@ export const migration047 = {
       status TEXT NOT NULL DEFAULT 'potential'
         CHECK(status IN ('potential','contested','available','realized','retired')),
       realization_event_id TEXT REFERENCES timeline_events(id) ON DELETE SET NULL,
+      source_type TEXT NOT NULL DEFAULT 'unknown' CHECK(source_type IN (
+        'original_work','historical_record','author_design','inferred','simulation','unknown'
+      )),
+      source_id TEXT,
       source_note TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL,
       CHECK(status != 'realized' OR realization_event_id IS NOT NULL)
