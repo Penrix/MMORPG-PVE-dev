@@ -1,42 +1,44 @@
-# MMORPG-PVE · World Builder（第一轮接口原型 / 尚未完成）
+# MMORPG-PVE｜世界生成工作台（WorldPack）
 
-**Status correction (2026-11-20):** The code described here is a **self-authored prompt/UI adapter to NarraLume's existing Canon candidate mechanism**, inspired by the private MMORPG v0.1/v0.7 ideas. It has **not** ported Covel world-package or WorldForge graph/agent architecture. No complete W0/W1 creative-model or CI acceptance is evidenced yet. Read [architecture](mmorpg/00-architecture-decisions.md), [source Crosswalk](mmorpg/01-reuse-crosswalk.md), [full audit](mmorpg/02-world-builder-audit-and-design.md), and [next implementation order](mmorpg/03-build-order-and-acceptance.md).
+> **状态（2026-11-20）**：已实现独立 WorldPack Schema、运行任务、SQLite 包级草稿、编辑、世界关系、活动候选和原子 Canon 采用。未在本轮完成 CI/Node24 运行及真实模型内容验收。详细源码见 [04 WorldPack实际实现](mmorpg/04-world-pack-implementation.md)。
 
-This development fork keeps NarraLume's original manuscript editor, Story Compass, rolling outline, Canon repositories, revision history, and candidate/approval machinery intact.
+## 实际功能
 
-## Currently implemented
+1. 在 NarraLume 书架创建作品，进入“**世界生成**”。
+2. 输入世界构想、当前世界时间，选择 **W0 整书世界底图**或 **W1 已有区域的深化**。W1 可指定已经采用的地点/社会区域ID，并提供类型文/Reader情绪/高价目标与稀缺性。
+3. 选择“**制作新区域与内容**”或“**推进已有NPC / 组织的生活**”（世界 advance 模式）。
+4. 模型使用原项目已采用的世界事实、关系、历史，连同[完整 v0.7 方法](mmorpg/research/world-v07-complete.md)选出的原文材料，产出一个带 **nodes/links/activities/openThreads** 的世界包。
+5. 世界包里同时具有具体人物、组织、地点、物品、高价资源与进入路径；对象之间的关系以局部ID相连，历史已有角色引用既有Canon ID。结构/关系问题会阻止生成落库。
+6. 包先保存在 `world_pack_drafts`，不修改已确认世界。作者可以看完整文字、关系、正在发生的事务，使用JSON修订并保存新版本。
+7. 作者确认后“**整体采用世界包**”：程序分配真正的实体ID并在SQLite一次事务中建立对象、世界内容事实、位置、关系和持续活动，保留来源、锁定和原有版本。
+8. 已采用的世界在工作台图谱中可按地点向外查看关联对象；后续 W1 或 world advance 可以继续使用同样的人、组织、资产和当前状态。
+9. 每个采用对象都添加带来源的 `world.content` 事实，使原 NarraLume 正文编译器能够实际读到这批世界内容，而不是只能在世界生成界面查看。
 
-1. Open a project, then select **世界生成 / World Builder** from the main navigation.
-2. Choose **W0** (strategic world map) or **W1** (deepen an existing zone or social circle). W1 asks for the local scope and story genre/Reader experience; a high-price target may remain open.
-3. Run any independent production round:
-   - **01 World Map**: real regions, entry points, social systems and rules.
-   - **02 Factions**: concrete organizations, rights holders, internal business and access.
-   - **03 People**: independently acting NPCs, high-price people, daily life and relationships.
-   - **04 Resources**: ownership, rights, opportunities and valuable assets.
-   - **05 Living World**: actual ongoing affairs, never unwritten chapter plots.
-   - **Supplement: Claims**: ownership, permissions, prices and access rules (existing entity IDs).
-   - **Supplement: Relations**: concrete active relationships (existing entity IDs).
-4. The workbench submits an AI request through NarraLume's existing `canon-spread-candidate` run system. Its model-provider settings, task history, conflicts, candidate display and author-approval mechanism are reused unchanged.
-5. Review the returned world-content candidates in the same workbench. **Nothing enters Canon until explicitly applied.** Applied entities, facts, relations and timeline events become available to the original Story Bible and later long-form writing context.
-6. Re-open W1 on any map later. The original Canon and committed manuscript context are consulted again; already written facts and characters must not be reset.
+## 直接可查的核心文件
 
-The UI draft survives refresh in the **current browser's local storage** only. The accepted world entities, candidate sets and AI tasks are stored in NarraLume's existing project database. This stage creates no second canonical fact store.
+- [世界包Schema和引用校验](../packages/contracts/src/world-pack.ts)
+- [三步 AI WorldPack 生产器](../packages/narrative/src/world-pack-workers.ts)
+- [W1 地理与社会关系上下文](../packages/narrative/src/world-pack-context.ts)
+- [SQLite 世界包草稿仓储](../packages/persistence/src/world-pack-repository.ts)
+- [世界包生成、修订、采用接口](../packages/services/src/world-pack-routes.ts)
+- [唯一 Canon 的关系图投影](../packages/services/src/world-graph-routes.ts)
+- [世界生成 React 工作台](../apps/web/src/workspaces/world-builder.tsx)
+- [包级 API 集成测试](../apps/server/test/world-pack-api.test.ts)
 
-## How W0 and W1 differ
+## 设计来源
 
-- **W0** must create an actual macro world with different live domains, high-price people, organizational power, resources, real entry paths and actions that happen without the protagonist. It is not an outline.
-- **W1** increases local content resolution where `genre × current time/place × scarcity` makes it valuable. It follows current Canon and adopted manuscript results, not a fixed global generation pipeline.
-- World knowledge generation and story writing are peer activities that reuse one authoritative Canon. A chapter's new factual changes are still reconciled through NarraLume's existing settlement path.
+- **已接入真实原文**：[v0.1 母本](mmorpg/research/world-v01-original.md)、[v0.7 完整手册](mmorpg/research/world-v07-complete.md)、[世界生成章程](mmorpg/research/world-generation-charter.md)。
+- **开源底座**：NarraLume 原有 React、Harness、Provider、SQLite、Canon、Story State/章节结算。
+- **世界包和对象结构对标**：Covel / OnlyWorlds。
+- **世界关系与活动对标**：WorldForge / SNEQ；当前写的是适配本项目的新TypeScript源码，不是直接复制这些仓库的实现。
+- 详细 [Crosswalk](mmorpg/01-reuse-crosswalk.md)。
 
-## Known limitations (not falsely claimed as completed)
+## 还不能宣称完成的事项
 
-- This version uses NarraLume's existing **one Canon spread per AI run** contract, so W0/W1 are built in reviewable rounds instead of one huge all-at-once prompt. Relations and ownership must be revisited **after** entities are accepted.
-- This is not yet a full hierarchical W0/W1 world-map database, GIS canvas, source-verification system, autonomous NPC GOAP/simulation engine, or per-region complete world pack.
-- It does not auto-detect world-content gaps during chapter generation, auto-launch a new world production run, or manage campaign-wide multiple world branches. These can be added after the first end-to-end generation+approval flow works.
-- The v0.1 and v0.7 original MMORPG design research lives in the separately maintained `Penrix/MMORPG-PVE` repository. **Do not copy those complete private research files into this public fork without an explicit publication decision.** The prompt instructions here are a narrow functional interface, not a replacement for the research.
+- 真正运行 Node >=24、npm >=11 的 `npm ci && npm run verify:ci`，以及带真实AI Provider的玄幻、历史世界包质量实演。
+- 完整的NPC per-agent GOAP、自治世界多角色调度与物理仲裁、社会模拟。
+- 更好的可视化地图/所见即所得世界包编辑器、原著史实材料自动核对。
+- 第三模块进入尚不存在地图时自动生成 WorldContentGap 并暂停/恢复原章节；目前作者可主动打开世界生成。
+- 已有长篇百万字连续运行和多世界分支的充分验证。
 
-## Reproduce
-
-Start the NarraLume development environment per its original README, assign a generation model, create a project, then visit `/projects/<projectId>/world`. Generate a W0 world-map candidate, approve one entity, run a faction or NPC round, approve further items, then confirm those records in the original Story Bible. Optionally write and settle a chapter, then re-enter W1 to expand from that updated Reality.
-
-For routine checks, run `npm run typecheck`, `npm test`, and `npm run build` with the repository's Node.js 24+ requirement. The fork's PR CI runs stronger checks. These checks are not substitutes for a real model-output quality trial.
+**交付边界**：这是可审阅的世界内容生产链源码，不是已证明能自动产出高质量商业男频长篇世界的最终产品。
