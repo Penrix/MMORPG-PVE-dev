@@ -780,7 +780,9 @@ export class WorldPackWorkerSuite {
       basePrompt: String(data.prompt),
       extraContext: factionReviewPrompt,
       knownCanonIds: ids,
-      existingWorld: data.existingWorld as WorldPackDocument | undefined,
+      ...(data.existingWorld
+        ? {existingWorld: data.existingWorld as WorldPackDocument}
+        : {}),
       contract: WORLD_PACK_MODEL_CONTRACT,
       signal,
       initialCheckpoint,
