@@ -1,4 +1,5 @@
 import { playWorldActionPaths } from "./world-action-runtime.js";
+import { powerDesignProducts } from "./world-design-policy.js";
 import type {
   WorldPackDocument,
   WorldPackLink,
@@ -199,17 +200,6 @@ export function playtestWorld(
   const interactionPaths = interactionPreview.paths.map(
     (path) => path.actionIds,
   );
-  const hasAssetChain = interactionPreview.paths.some(
-    (path) =>
-      path.actionIds.length >= 2 &&
-      path.gained.some(
-        (item) =>
-          item.kind === "asset" ||
-          item.kind === "permission" ||
-          item.kind === "ability" ||
-          item.kind === "relationship",
-      ),
-  );
   let next: WorldWorkOrder | null = null;
   if (places.length === 0) {
     next = order("geography", null, doc, "当前世界没有可定位的生活区域", [
@@ -298,52 +288,24 @@ export function playtestWorld(
     );
   }
 
-  if (!next && !hasAssetChain) {
-    const resource = resources.find((r) =>
-      controlledResources.includes(r.localId),
-    );
-    next = order(
-      "playability",
-      resource?.localId ?? places[0]?.localId ?? null,
-      doc,
-      "目前的地图无法从真实入口完成两段连续行动，获得可复用的新资产或权限",
-      [
-        "制作具体可执行的互动动作：谁提供、在哪里、需要什么已有资格",
-        "明确行动后可能得到的资产、权限、人物关系或下一片社会入口",
-        "使至少两种行动能通过同一资产/关系状态接续，不预设男主已赢",
-      ],
-    );
-  }
-
-  // Do not turn fantasy into generic social simulation: the world itself
-  // needs usable power facts and actual actions; no protagonist costs invented.
-  if (
-    !next &&
-    request.scale === "W0" &&
-    request.intent !== "advance" &&
-    /玄幻|修仙|武侠|忍术|火影|斗气|魔法|奇幻|超凡/.test(
-      request.genre + request.premise,
-    )
-  ) {
+  // v0.2 §9: a short sandbox action chain is an optional *diagnostic*, not
+  // a condition for producing or accepting a rich textual world bible.
+  // v0.2 §3.04: an ordinary historical/social world has real power systems,
+  // just as a supernatural world does (office, law, capital, reputation).
+  if (!next && request.scale === "W0" && request.intent !== "advance") {
     const hasPower = resources.some(
       (n) =>
         n.type === "rule" &&
         n.value.trim().length > 0 &&
-        live.some(
-          (edge) => edge.fromRef === n.localId || edge.toRef === n.localId,
-        ),
+        live.some((edge) => edge.fromRef === n.localId || edge.toRef === n.localId),
     );
     if (!hasPower)
       next = order(
         "power",
         null,
         doc,
-        "超凡世界还没有可执行的公共力量与社会作用",
-        [
-          "这个世界至少一种实际可运作的公共能力/修炼规则",
-          "持有人、施展动作、能够做什么及其社会价格",
-          "不得擅自给男主金手指增加代价或削弱效果",
-        ],
+        "当前世界缺少能实际改变人物、组织与资源的公共力量体系",
+        [...powerDesignProducts(request)],
       );
   }
 
