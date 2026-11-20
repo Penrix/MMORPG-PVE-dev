@@ -424,10 +424,10 @@ describe("v0.1-v0.7 world encyclopedia database over the ONE NarraLume Canon", (
       dossier.standings[1]!.evaluator_entity_id,
     );
     expect(dossier.powerChannels).toHaveLength(1);
-    expect(dossier.mapEdges.map(x=>x.layer).sort()).toEqual(["control"]);
+    expect(dossier.mapEdges.map(x=>x.layer).sort()).toEqual(["control","social"]);
     expect(dossier.capability).toBeNull(); // a clan is not itself a jutsu
     expect(dossier.productionLinks).toHaveLength(1);
-    expect(dossier.informationFlows).toHaveLength(0);
+    expect(dossier.informationFlows).toHaveLength(1);
     const eye = encyclopedia.getDossier("naruto","sharingan");
     expect(eye.capability?.power_mode).toBe("supernatural");
     expect(eye.capabilityLinks[0]?.target_entity_id).toBe("madara");
