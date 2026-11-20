@@ -4,6 +4,7 @@ import {
   WORLD_DESIGN_SYSTEMS,
   initialWorldWorkshopOrder,
   powerDesignProducts,
+  resolveWorldDesignEntry,
   worldPowerMode,
 } from "../src/world-design-policy.js";
 import {
@@ -74,6 +75,30 @@ describe("v0.1-v0.7 is ONE textual world-production framework", () => {
       initialWorldWorkshopOrder(base),
     );
     expect(worldPowerMode(basedOnText)).toBe(worldPowerMode(base));
+  });
+
+  it("begins from the actual named organization, person, resource or rule, not an obligatory map", () => {
+    const empty=emptyWorldDocument();
+    const doc={
+      ...empty,
+      nodes:[
+        {localId:"paris",existingCanonId:null,type:"location" as const,name:"巴黎"},
+        {localId:"press",existingCanonId:null,type:"organization" as const,name:"费加罗报社"},
+        {localId:"editor",existingCanonId:null,type:"character" as const,name:"编辑先生"},
+        {localId:"rights",existingCanonId:null,type:"item" as const,name:"报纸出版权益"},
+        {localId:"press_law",existingCanonId:null,type:"rule" as const,name:"出版许可制度"},
+      ],
+    } as unknown as typeof empty;
+    expect(resolveWorldDesignEntry({...base,focus:"编辑先生"},doc))
+      .toEqual({workshop:"people",subjectRef:"editor"});
+    expect(resolveWorldDesignEntry({...base,focus:"费加罗报社"},doc))
+      .toEqual({workshop:"factions",subjectRef:"press"});
+    expect(resolveWorldDesignEntry({...base,focus:"报纸出版权益"},doc))
+      .toEqual({workshop:"economy",subjectRef:"rights"});
+    expect(resolveWorldDesignEntry({...base,focus:"出版许可制度"},doc))
+      .toEqual({workshop:"power",subjectRef:"press_law"});
+    expect(resolveWorldDesignEntry({...base,focus:"完全不存在的宗门"},doc))
+      .toBeNull();
   });
 
   it("does not reject a world bible for lacking a two-action game rewards sequence", () => {
