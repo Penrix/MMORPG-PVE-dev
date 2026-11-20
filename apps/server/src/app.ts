@@ -36,6 +36,7 @@ import {
   registerWorldPackRoutes,
   registerWorldGraphRoutes,
   registerSourceCorpusRoutes,
+  registerProjectWorldRoutes,
   registerDeliveryRoutes,
   registerLongNovelRoutes,
   registerProjectCoverRoutes,
@@ -361,6 +362,7 @@ export async function buildApp(
   });
   registerWorldGraphRoutes(routes, database);
   registerSourceCorpusRoutes(routes, database);
+  registerProjectWorldRoutes(routes, database);
   registerWorldPackRoutes(routes, database, {
     runCoordinator: coordinator,
     enableBackgroundWorker,
