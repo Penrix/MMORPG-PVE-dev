@@ -161,19 +161,24 @@ describe("Naruto mother-world import into the ONE NarraLume SQLite", () => {
   it("deduplicates byte-identical wiki rows but never drops differing same-name biographies", () => {
     db = new NodeNarrativeDatabase();
     db.migrate();
-    const report = importNarutoWikiScraper(db,[
-      {name:"Rahyō",summary:"First source record"},
-      {name:"Rahyō",summary:"First source record"},
-      {name:"Rahyō",summary:"Different source record"},
-    ],now);
+    const report = importNarutoWikiScraper(
+      db,
+      [
+        { name: "Rahyō", summary: "First source record" },
+        { name: "Rahyō", summary: "First source record" },
+        { name: "Rahyō", summary: "Different source record" },
+      ],
+      now,
+    );
     expect(report.records).toBe(2);
     expect(report.exactDuplicates).toBe(1);
     expect(report.duplicateNameVariants).toBe(1);
     const refs = new SqliteSourceCorpusRepository(db);
-    expect(refs.getRecord(NARUTO_WIKI_CORPUS,"wiki:Rahyō")?.raw.summary)
-      .toBe("First source record");
-    expect(refs.getRecord(NARUTO_WIKI_CORPUS,"wiki:Rahyō#2")?.raw.summary)
-      .toBe("Different source record");
+    expect(refs.getRecord(NARUTO_WIKI_CORPUS, "wiki:Rahyō")?.raw.summary).toBe(
+      "First source record",
+    );
+    expect(
+      refs.getRecord(NARUTO_WIKI_CORPUS, "wiki:Rahyō#2")?.raw.summary,
+    ).toBe("Different source record");
   });
-
 });

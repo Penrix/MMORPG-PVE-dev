@@ -363,7 +363,8 @@ export function importNarutoDattebayo(
     }
     // A person may appear in main and specialty lists. Count stored distinct
     // source edges, not the number of repeated UPSERT attempts.
-    stats.relations = repo.getCorpus(corpusId)?.relationCount ?? stats.relations;
+    stats.relations =
+      repo.getCorpus(corpusId)?.relationCount ?? stats.relations;
     return stats;
   });
 }
@@ -430,7 +431,10 @@ export function importNarutoWikiScraper(
       }
       repo.upsertRecord({
         corpusId: NARUTO_WIKI_CORPUS,
-        sourceKey: variants.length === 1 ? `wiki:${name}` : `wiki:${name}#${variants.length}`,
+        sourceKey:
+          variants.length === 1
+            ? `wiki:${name}`
+            : `wiki:${name}#${variants.length}`,
         kind: "character",
         name,
         aliases: [],
