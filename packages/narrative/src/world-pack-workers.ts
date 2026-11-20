@@ -1,8 +1,6 @@
 import {
   WorldPackDocumentSchema,
   WorldPackRequestSchema,
-  worldPackReferenceProblems,
-  type WorldPackDocument,
   type WorldPackRequest,
 } from "@narralume/contracts";
 import type {
@@ -33,6 +31,7 @@ import {
   type WorldForgeFactionSeed,
 } from "./worldforge-faction-bridge.js";
 import { parseWorldOutput } from "./vendor/covel/lore-processor.js";
+import { runWorldWorkshops } from "./world-production-runner.js";
 import { createRevisionCache } from "./vendor/covel/revision-cache.js";
 import { orderSources } from "./vendor/covel/source-order.js";
 import { causalCandidates } from "./vendor/worldforge/causality.js";
@@ -662,44 +661,26 @@ export class WorldPackWorkerSuite {
         JSON.stringify(preview) +
         "\\n这些内容只提供已有组织的自行行动线索。不得把尚未发生的交涉、能力代价、经济数字或资源转移自动写成已确认 Reality。";
     }
-    const result = await this.model.structured<WorldPackDocument>(
-      snapshot.run,
+    const produced = await runWorldWorkshops({
+      run: snapshot.run,
       step,
-      "world-pack",
-      {
-        instructions:
-          "根据用户给定的当前世界与真实实体ID，一次生成互有关联的完整世界包。具体丰富，使用中文。候选世界不得自动变成已发生的历史。严格遵循Schema。",
-        messages: [
-          { role: "user", content: String(data.prompt) + factionReviewPrompt },
-        ],
-        reasoningEffort: "medium",
-      },
-      WORLD_PACK_MODEL_CONTRACT,
-      (value) => {
-        const parsed = WorldPackDocumentSchema.safeParse(value);
-        if (!parsed.success)
-          return {
-            success: false,
-            issues: parsed.error.issues.map(
-              (issue) => `${issue.path.join(".")}: ${issue.message}`,
-            ),
-          };
-        const issues = worldPackReferenceProblems(parsed.data, ids);
-        return issues.length
-          ? { success: false, issues }
-          : { success: true, data: parsed.data };
-      },
+      model: this.model,
+      request,
+      basePrompt: String(data.prompt),
+      extraContext: factionReviewPrompt,
+      knownCanonIds: ids,
+      contract: WORLD_PACK_MODEL_CONTRACT,
       signal,
-    );
+    });
     return {
       artifactKind: "world-pack-generation",
-      output: result.value,
+      output: produced.document,
       usage: {
-        inputTokens: result.usage.inputTokens + factionUsage.inputTokens,
-        outputTokens: result.usage.outputTokens + factionUsage.outputTokens,
-        calls: result.usage.calls + factionUsage.calls,
-        costUsd: result.usage.costUsd + factionUsage.costUsd,
-        wallTimeMs: result.usage.wallTimeMs + factionUsage.wallTimeMs,
+        inputTokens: produced.usage.inputTokens + factionUsage.inputTokens,
+        outputTokens: produced.usage.outputTokens + factionUsage.outputTokens,
+        calls: produced.usage.calls + factionUsage.calls,
+        costUsd: produced.usage.costUsd + factionUsage.costUsd,
+        wallTimeMs: produced.usage.wallTimeMs + factionUsage.wallTimeMs,
       },
     };
   }
