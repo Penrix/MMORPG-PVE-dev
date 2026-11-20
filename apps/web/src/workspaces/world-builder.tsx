@@ -58,6 +58,8 @@ function loadForm(projectId: string): FormValues {
       worldTime: typeof saved.worldTime === "string" ? saved.worldTime : "",
       focus: typeof saved.focus === "string" ? saved.focus : "",
       genre: typeof saved.genre === "string" ? saved.genre : "",
+      ...(saved.worldPower === "ordinary" || saved.worldPower === "supernatural"
+        ? { worldPower: saved.worldPower } : {}),
       scarcity: typeof saved.scarcity === "string" ? saved.scarcity : "",
       instruction: typeof saved.instruction === "string" ? saved.instruction : "",
       parentAreaId: typeof saved.parentAreaId === "string" ? saved.parentAreaId : null,
@@ -162,8 +164,8 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
       <div className="world-builder__intro">
         <h2>先把世界制作出来，再让故事进入其中</h2>
         <p>
-          一次 AI 运行成套生产地图、组织、人物、宝物、权利通道及其关系和独立行动。
-          作者能审阅和修订整个包，再用一个数据库事务写入 NarraLume Canon。
+          程序按 v0.1～v0.7 的共同世界设计框架分工序制作文字设定，
+          逐步生产真实地点、人物、势力、资源及其关系；作者审阅后写入同一份 NarraLume Canon。
           未采用的世界包不会改变小说的Reality。
         </p>
       </div>
@@ -190,6 +192,19 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
             {form.scale === "W0"
               ? "涵盖真实地区、各类势力、不同生活与产业、社会力量和可争取的高价对象。不是只为男主修一条任务路线。"
               : "在已有世界上打开新地图：保留既有人物、历史和资产，让局部生活和权利网络更加具体。"}
+          </p>
+
+          <div className="world-builder__scale" role="group" aria-label="世界力量规律">
+            <button className="btn" type="button"
+              aria-pressed={form.worldPower === "ordinary"}
+              onClick={() => update("worldPower", "ordinary")}>现实力量 · 无超凡</button>
+            <button className="btn" type="button"
+              aria-pressed={form.worldPower === "supernatural"}
+              onClick={() => update("worldPower", "supernatural")}>超凡力量 · 魔法 / 修炼等</button>
+          </div>
+          <p className="world-builder__hint">
+            历史、同人、原创都走同一套世界内容生产程序。此处仅决定世界是否存在超凡规律；
+            不选择时沿用已有题材推断，世界事实始终按各自来源校验。
           </p>
 
           <label htmlFor="wp-premise">世界根设想</label>
