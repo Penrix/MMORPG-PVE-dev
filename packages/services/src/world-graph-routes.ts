@@ -11,6 +11,7 @@ import {
   type NarrativeDatabase,
 } from "@narralume/persistence";
 import { z } from "zod";
+import { getRelLabel, getInverseLabel } from "./vendor/campaignrepo/relationships.js";
 import type { RouteApp } from "./route-app.js";
 import { ServiceError } from "./service-error.js";
 
@@ -19,6 +20,8 @@ export interface WorldGraphEdge {
   from: string;
   to: string;
   relation: string;
+  relationLabel: string;
+  inverseLabel: string;
   description: string;
   source: "relationship" | "fact";
 }
@@ -57,6 +60,8 @@ export function projectWorldGraph(
       from: relationship.fromEntityId,
       to: relationship.toEntityId,
       relation: relationship.relation,
+      relationLabel: getRelLabel(relationship.relation),
+      inverseLabel: getInverseLabel(relationship.relation),
       description:
         typeof relationship.state.description === "string"
           ? relationship.state.description
@@ -77,6 +82,8 @@ export function projectWorldGraph(
       from: fact.subjectId,
       to: fact.objectEntityId,
       relation: fact.predicate,
+      relationLabel: getRelLabel(fact.predicate),
+      inverseLabel: getInverseLabel(fact.predicate),
       description: typeof fact.value === "string" ? fact.value : "",
       source: "fact",
     });
