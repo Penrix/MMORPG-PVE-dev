@@ -109,7 +109,7 @@ export type WorldAction = z.infer<typeof WorldActionSchema>;
 export const WorldPackDocumentSchema = z
   .object({
     summary: z.string().trim().min(1).max(16_000),
-    nodes: z.array(WorldPackNodeSchema).min(1).max(80),
+    nodes: z.array(WorldPackNodeSchema).max(80),
     links: z.array(WorldPackLinkSchema).max(180),
     activities: z.array(WorldPackActivitySchema).max(80),
     openThreads: z.array(z.string().trim().min(1).max(3_000)).max(70),
@@ -193,6 +193,10 @@ export function worldPackReferenceProblems(
   knownCanonIds: ReadonlySet<string>,
 ): string[] {
   const problems: string[] = [];
+  if (!document.nodes.length && !document.links.length &&
+      !document.activities.length && !(document.interactions?.length??0)) {
+    problems.push("empty world production: no objects, relationships, activities or playable actions");
+  }
   const nodes = new Map<string, WorldPackNode>();
   const names = new Set<string>();
   for (const node of document.nodes) {
