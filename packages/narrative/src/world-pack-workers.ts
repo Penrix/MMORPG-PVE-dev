@@ -1,5 +1,6 @@
 import {
   WorldPackDocumentSchema,
+  type WorldPackDocument,
   WorldPackRequestSchema,
   type WorldPackRequest,
 } from "@narralume/contracts";
@@ -36,6 +37,7 @@ import {
   runWorldWorkshops,
   type WorldWorkshopCheckpoint,
 } from "./world-production-runner.js";
+import { projectExistingWorldForProduction } from "./world-production-reality.js";
 import { createRevisionCache } from "./vendor/covel/revision-cache.js";
 import { orderSources } from "./vendor/covel/source-order.js";
 import { causalCandidates } from "./vendor/worldforge/causality.js";
@@ -655,6 +657,12 @@ export class WorldPackWorkerSuite {
       output: {
         request,
         knownCanonIds: allEntities.map((node) => node.id),
+        // The program sees the real adopted world; prompt context alone is
+        // not enough to control NPC continuity and gameplay conditions.
+        existingWorld: projectExistingWorldForProduction({
+          entities: nodes.slice(0, 70),
+          facts, relationships,
+        }),
         // Data for the actual WorldForge independent-agent dispatcher.
         // This projection uses accepted Canon identities, not generated IDs.
         worldForgeSeed: {
@@ -771,6 +779,7 @@ export class WorldPackWorkerSuite {
       basePrompt: String(data.prompt),
       extraContext: factionReviewPrompt,
       knownCanonIds: ids,
+      existingWorld: data.existingWorld as WorldPackDocument | undefined,
       contract: WORLD_PACK_MODEL_CONTRACT,
       signal,
       initialCheckpoint,
