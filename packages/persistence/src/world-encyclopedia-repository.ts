@@ -246,11 +246,14 @@ export class SqliteWorldEncyclopediaRepository {
              target_entity_id, jurisdiction_entity_id, real_action,
              prerequisites, cannot_grant, evidence_event_id, source_note
       FROM world_power_channels
-      WHERE project_id=? AND (holder_entity_id=? OR target_entity_id=?)
+      WHERE project_id=? AND (
+        holder_entity_id=? OR target_entity_id=? OR
+        intermediary_entity_id=? OR authority_entity_id=?
+      )
       ORDER BY id
     `,
       )
-      .all(projectId, entityId, entityId) as WorldPowerChannel[];
+      .all(projectId, entityId, entityId, entityId, entityId) as WorldPowerChannel[];
     const valueAppraisals = this.db.raw
       .prepare(
         `
@@ -288,10 +291,31 @@ export class SqliteWorldEncyclopediaRepository {
           ? link.to_entity_id
           : link.from_entity_id,
       );
-    for (const fact of this.canon.listEffectiveFacts(projectId, {
-      subjectId: entityId,
-    }))
+    const dossier = this.getDossier(projectId, entityId);
+    for (const fact of dossier.facts)
       if (fact.objectEntityId) ids.add(fact.objectEntityId);
+    // World sections extend the canonical relationship graph. These IDs are
+    // links to real Canon entities, never copies of their biographies.
+    for (const fn of dossier.functions)
+      for (const id of [fn.unit_entity_id,fn.officeholder_entity_id,
+        fn.jurisdiction_entity_id,fn.resource_entity_id])
+        if (id) ids.add(id);
+    for (const stance of dossier.stances)
+      for (const id of [stance.issue_entity_id,stance.target_entity_id])
+        if (id) ids.add(id);
+    for (const standing of dossier.standings)
+      for (const id of [standing.evaluator_entity_id,
+        standing.intermediary_entity_id,standing.actual_right_entity_id])
+        if (id) ids.add(id);
+    for (const channel of dossier.powerChannels)
+      for (const id of [channel.holder_entity_id,
+        channel.intermediary_entity_id,channel.authority_entity_id,
+        channel.target_entity_id,channel.jurisdiction_entity_id])
+        if (id) ids.add(id);
+    for (const value of dossier.valueAppraisals)
+      for (const id of [value.subject_entity_id,value.evaluator_entity_id])
+        if (id) ids.add(id);
+    ids.delete(entityId);
     return [...ids].sort().flatMap((id) => {
       const found = this.canon.getEntity(projectId, id);
       return found ? [found] : [];
