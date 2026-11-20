@@ -31,6 +31,7 @@ export interface SourceWorldEvidence {
   sourceNote: string;
   createdAt: string;
   record: SourceRecord;
+  sourceDossier: MotherWorldDossier | null;
 }
 export interface UnifiedSourceWorldDossier {
   world: SourceWorld;
@@ -225,13 +226,16 @@ export class SqliteUnifiedSourceWorldRepository {
       ORDER BY link.evidence_corpus_id,link.evidence_key
     `,
       )
-      .all(worldId, canonicalKey) as Array<Omit<SourceWorldEvidence, "record">>;
+      .all(worldId, canonicalKey) as Array<Omit<SourceWorldEvidence, "record" | "sourceDossier">>;
     return rows.flatMap((row) => {
       const record = this.sources.getRecord(
         row.evidenceCorpusId,
         row.evidenceKey,
       );
-      return record ? [{ ...row, record }] : [];
+      return record ? [{
+        ...row,record,
+        sourceDossier:this.wiki.getDossier(row.evidenceCorpusId,row.evidenceKey),
+      }] : [];
     });
   }
 
