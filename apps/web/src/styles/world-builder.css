@@ -1,0 +1,75 @@
+/* MMORPG-PVE World Builder. Uses the NarraLume paper/ink token system. */
+.world-builder {
+  max-width: 1420px;
+  margin: 0 auto;
+  padding: 0 22px 68px;
+  color: var(--ink);
+}
+.world-builder__intro { max-width: 900px; padding: 28px 4px 22px; }
+.world-builder__intro h2 { font-family: var(--font-serif); font-size: clamp(21px, 2.3vw, 31px); margin: 0 0 10px; }
+.world-builder__intro p, .world-builder__results header p { color: var(--ink-soft); line-height: 1.9; margin: 0; }
+.world-builder__layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(265px, 0.85fr); gap: 18px; align-items: start; }
+.world-builder__form, .world-builder__status, .world-builder__results {
+  padding: 22px; border: 1px solid var(--hairline); background: var(--paper-raised);
+  min-width: 0;
+}
+.world-builder__form { display: flex; flex-direction: column; gap: 12px; }
+.world-builder__form label, .world-builder__stages legend { font-weight: 700; font-size: 13px; }
+.world-builder__form textarea, .world-builder__form input {
+  font: inherit; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--hairline); padding: 11px 12px;
+  border-radius: var(--radius-card); width: 100%; min-width: 0; box-sizing: border-box;
+}
+.world-builder__form textarea { resize: vertical; line-height: 1.65; }
+.world-builder__form input:focus-visible, .world-builder__form textarea:focus-visible,
+.world-builder__stage:focus-visible {
+  outline: 2px solid var(--vera); outline-offset: 2px;
+}
+.world-builder__scale, .world-builder__actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.world-builder__scale .btn[aria-pressed="true"] {
+  border-color: var(--vera); color: var(--vera); background: var(--vera-soft);
+}
+.world-builder__w1 { display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--paper-sunk); border: 1px solid var(--hairline-soft); }
+.world-builder__stages { border: 0; border-top: 1px solid var(--hairline); padding: 15px 0 0; margin: 3px 0 0; min-width: 0; }
+.world-builder__stages legend { padding: 0 8px 0 0; }
+.world-builder__stage-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.world-builder__stage {
+  font: inherit; text-align: left; cursor: pointer;
+  border: 1px solid var(--hairline); background: var(--paper); color: var(--ink);
+  padding: 12px; min-width: 0; border-radius: var(--radius-card);
+}
+.world-builder__stage strong { display: block; font-size: 13px; }
+.world-builder__stage small { display: block; color: var(--ink-soft); font-size: 11px; line-height: 1.6; padding-top: 5px; }
+.world-builder__stage[aria-pressed="true"] { border-color: var(--vera); background: var(--vera-soft); }
+.world-builder__hint { color: var(--ink-faint); font-size: 12px; line-height: 1.8; margin: 0; }
+.world-builder__validation { color: var(--conflict); line-height: 1.7; margin: 0; }
+.world-builder__actions { margin-top: 5px; }
+.world-builder__actions .btn { display: inline-flex; gap: 7px; align-items: center; }
+.world-builder__preview {
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 430px; overflow: auto;
+  background: var(--paper-sunk); border: 1px solid var(--hairline); padding: 14px;
+  font-family: var(--font-sans); font-size: 12px; line-height: 1.75;
+}
+.world-builder__status { display: grid; gap: 16px; }
+.world-builder__status-head { display: flex; align-items: center; gap: 9px; }
+.world-builder__status-head h3 { font-size: 17px; margin: 0; }
+.world-builder__status p { margin: 0; line-height: 1.75; }
+.world-builder__entity-list { padding: 0; margin: 0; list-style: none; }
+.world-builder__entity-list li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--hairline-soft); padding: 8px 0; }
+.world-builder__entity-list small { color: var(--ink-faint); font-size: 11px; }
+.world-builder__link, .world-builder__running a {
+  display: inline-flex; align-items: center; gap: 5px; color: var(--vera); text-decoration: none;
+}
+.world-builder__results { margin-top: 22px; }
+.world-builder__results h2 { font-size: 20px; margin: 0 0 8px; }
+.world-builder__results header { margin-bottom: 18px; }
+.world-builder__running { padding: 13px; background: var(--paper-sunk); line-height: 1.8; }
+.world-builder__results .bible-ai__sets { display: grid; gap: 15px; }
+@media (max-width: 980px) {
+  .world-builder__layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .world-builder { padding: 0 12px 50px; }
+  .world-builder__form, .world-builder__status, .world-builder__results { padding: 16px; }
+  .world-builder__stage-grid { grid-template-columns: minmax(0, 1fr); }
+}
