@@ -97,7 +97,7 @@ export function selectWorldMethodExcerpts(request: {
   genre: string;
   instruction: string;
   scale: "W0" | "W1";
-  intent?: "create" | "advance";
+  intent?: "create" | "advance" | undefined;
 }): readonly WorldMethodExcerpt[] {
   const query = [
     request.premise,
