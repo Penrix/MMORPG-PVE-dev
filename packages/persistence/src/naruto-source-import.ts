@@ -411,6 +411,22 @@ export function importNarutoWikiScraper(
       },
       importedAt,
     });
+    // Reimports must not reassign ordinal wiki:name#N identities merely
+    // because upstream row order changes. Reuse an exact prior record match,
+    // otherwise allocate a new source ID and archive the old assertion.
+    const previousRows=db.raw.prepare(`
+      SELECT source_key AS sourceKey,name,raw_json AS rawJson
+      FROM source_records WHERE corpus_id=?
+    `).all(NARUTO_WIKI_CORPUS) as Array<{
+      sourceKey:string;name:string;rawJson:string;
+    }>;
+    const previousByName=new Map<string,Array<{sourceKey:string;rawJson:string}>>();
+    for(const item of previousRows){
+      const values=previousByName.get(item.name)??[];
+      values.push({sourceKey:item.sourceKey,rawJson:item.rawJson});
+      previousByName.set(item.name,values);
+    }
+    const reused=new Set<string>();
     repo.beginCorpusSnapshot(NARUTO_WIKI_CORPUS);
     const knownByName = new Map<string, string[]>();
     stats.exactDuplicates = 0;
@@ -437,12 +453,20 @@ export function importNarutoWikiScraper(
       if (variants.length > 1) {
         stats.duplicateNameVariants = (stats.duplicateNameVariants ?? 0) + 1;
       }
+      const previous=previousByName.get(name)??[];
+      const exact=previous.find(p=>p.rawJson===serialized && !reused.has(p.sourceKey));
+      let key=exact?.sourceKey;
+      if(!key){
+        let ordinal=1;
+        do{
+          key=ordinal===1?`wiki:${name}`:`wiki:${name}#${ordinal}`;
+          ordinal++;
+        }while(previous.some(p=>p.sourceKey===key)||reused.has(key));
+      }
+      reused.add(key);
       repo.upsertRecord({
         corpusId: NARUTO_WIKI_CORPUS,
-        sourceKey:
-          variants.length === 1
-            ? `wiki:${name}`
-            : `wiki:${name}#${variants.length}`,
+        sourceKey:key,
         kind: "character",
         name,
         aliases: [],
@@ -455,10 +479,6 @@ export function importNarutoWikiScraper(
       stats.records++;
       // Scraped source prose can populate source wiki sections directly.
       // Never invent missing biography chapters or mark them Project Canon.
-      const key =
-        variants.length === 1
-          ? `wiki:${name}`
-          : `wiki:${name}#${variants.length}`;
       for (const field of [
         "summary",
         "history",
