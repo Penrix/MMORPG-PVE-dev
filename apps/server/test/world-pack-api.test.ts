@@ -311,4 +311,123 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
     })).json();
     expect(bible.entities).toHaveLength(5);
   });
+  it("advances existing NPCs, closes old activities, and never silently revokes ownership", async () => {
+    const { app, projectId } = await setup();
+    const initial = await generate(app, projectId);
+    await completeRun(app, projectId, initial.json().runId);
+    const initialPack = (await app.inject({
+      method: "GET", url: `/api/projects/${projectId}/world-packs`,
+    })).json()[0];
+    const adopted0 = await app.inject({
+      method: "POST",
+      url: `/api/projects/${projectId}/world-packs/${encodeURIComponent(initialPack.id)}/adopt`,
+      payload: { expectedVersion: initialPack.version },
+    });
+    expect(adopted0.statusCode, adopted0.body).toBe(200);
+    const ids = adopted0.json().canonIds as Record<string, string>;
+
+    mockDocument = structuredClone(baseDocument);
+    mockDocument.nodes = mockDocument.nodes.map((node) => ({
+      ...node,
+      existingCanonId: ids[node.localId]!,
+      currentActivity: "世界时间推进七日，旧商会正发生产权争议。",
+    }));
+    mockDocument.links = [
+      {
+        fromRef: "guild_master", toRef: "moon_pill", relation: "owns",
+        description: "沈绮罗主张丹药已经由她个人收购，商会的共有权尚待清算",
+        status: "current",
+      },
+    ];
+    mockDocument.activities = [
+      {
+        ...baseDocument.activities[0]!,
+        stage: "ended",
+        description: "商会原定闭门竞拍已经取消",
+      },
+    ];
+    const advancing = await generate(app, projectId, {
+      intent: "advance", scale: "W1",
+      worldTime: "宗门大比当日",
+      focus: "玉澜商会丹药产权争议", genre: "男频玄幻",
+      parentAreaId: ids.jade_market,
+    });
+    expect(advancing.statusCode, advancing.body).toBe(202);
+    await completeRun(app, projectId, advancing.json().runId);
+    const advancedPack = (await app.inject({
+      method: "GET", url: `/api/projects/${projectId}/world-packs`,
+    })).json()[0];
+    const adopted1 = await app.inject({
+      method: "POST",
+      url: `/api/projects/${projectId}/world-packs/${encodeURIComponent(advancedPack.id)}/adopt`,
+      payload: { expectedVersion: advancedPack.version },
+    });
+    expect(adopted1.statusCode, adopted1.body).toBe(200);
+
+    const graph = (await app.inject({
+      method: "GET",
+      url: `/api/projects/${projectId}/world-graph?centerId=${ids.moon_pill}&hops=2`,
+    })).json() as {
+      nodes: { id: string; name: string }[];
+      edges: { from: string; to: string; relation: string }[];
+      ongoingActivities: unknown[];
+    };
+    expect(graph.nodes.some((node) => node.name === "玉澜商会")).toBe(true);
+    expect(graph.edges.filter((edge) =>
+      edge.to === ids.moon_pill && edge.relation === "owns",
+    )).toHaveLength(2); // New claim never silently confiscates the old claim.
+
+    const actorActivities = (await app.inject({
+      method: "GET",
+      url: `/api/projects/${projectId}/world-graph?centerId=${ids.guild_master}&hops=2`,
+    })).json().ongoingActivities as Array<{ detail: { activityLocalId: string } }>;
+    expect(actorActivities.filter((act) =>
+      act.detail.activityLocalId === "bidding",
+    )).toHaveLength(0); // "ended" supersedes the prior ongoing activity.
+
+    // An explicit "ended" relationship can now revoke the old claim with provenance.
+    mockDocument.links = [{
+      fromRef: "jade_guild", toRef: "moon_pill", relation: "owns",
+      description: "商会与掌柜完成产权交割，商会对丹药旧权利终止",
+      status: "ended",
+    }];
+    mockDocument.activities = [{
+      ...baseDocument.activities[0]!,
+      stage: "ended",
+      description: "竞拍取消的事实保持不变",
+    }];
+    // An already ended activity cannot be updated into a different event
+    // without a new action. We use a new ongoing organization action.
+    mockDocument.activities = [{
+      ...baseDocument.activities[0]!,
+      localId: "guild_reorganization",
+      stage: "ongoing",
+      description: "商会财务正在核对交易后新的股份分配。",
+    }];
+    const finishing = await generate(app, projectId, {
+      intent: "advance", scale: "W1", worldTime: "宗门大比翌日",
+      focus: "商会产权交割", genre: "男频玄幻",
+      parentAreaId: ids.jade_market,
+    });
+    await completeRun(app, projectId, finishing.json().runId);
+    const finalPack = (await app.inject({
+      method: "GET", url: `/api/projects/${projectId}/world-packs`,
+    })).json()[0];
+    const adopted2 = await app.inject({
+      method: "POST",
+      url: `/api/projects/${projectId}/world-packs/${encodeURIComponent(finalPack.id)}/adopt`,
+      payload: { expectedVersion: finalPack.version },
+    });
+    expect(adopted2.statusCode, adopted2.body).toBe(200);
+    const after = (await app.inject({
+      method: "GET",
+      url: `/api/projects/${projectId}/world-graph?centerId=${ids.moon_pill}&hops=2`,
+    })).json() as { edges: { from: string; to: string; relation: string }[] };
+    expect(after.edges.filter((edge) =>
+      edge.to === ids.moon_pill && edge.relation === "owns",
+    )).toEqual([
+      expect.objectContaining({ from: ids.guild_master }),
+    ]);
+  });
+
 });
