@@ -153,14 +153,27 @@ const baseDocument: WorldPackDocument = {
 
 let mockDocument: WorldPackDocument = structuredClone(baseDocument);
 
+let independentFactionAgentCalls = 0;
+
 async function setup() {
+  independentFactionAgentCalls = 0;
   mockDocument = structuredClone(baseDocument);
   const db = new NodeNarrativeDatabase();
   const model: NarrativeModelClient = {
-    async text() {
-      throw new Error(
-        "WorldPack must request a structured whole-world document",
-      );
+    async text(_run, _step, purpose) {
+      if (purpose !== "world-pack")
+        throw new Error("WorldForge faction agents must share the world-pack model assignment");
+      independentFactionAgentCalls += 1;
+      return {
+        text: JSON.stringify({
+          decisions: ["商会准备继续交涉丹药流通"],
+          events: [{
+            type: "commercial",
+            description: "玉澜商会已提出与宗门药堂谈判，但授权尚未成交",
+          }],
+        }),
+        usage: { inputTokens: 30, outputTokens: 80, calls: 1, costUsd: 0, wallTimeMs: 1 },
+      };
     },
     async structured(_run, _step, purpose, _request, _contract, validate) {
       if (purpose !== "world-pack")
@@ -494,6 +507,9 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
     });
     expect(advancing.statusCode, advancing.body).toBe(202);
     await completeRun(app, projectId, advancing.json().runId);
+    // This now exercises the actual upstream WorldForge runAllAgents
+    // and arbiter path, not only the WorldPack structured-document model.
+    expect(independentFactionAgentCalls).toBeGreaterThan(0);
     const advancedPack = (
       await app.inject({
         method: "GET",
