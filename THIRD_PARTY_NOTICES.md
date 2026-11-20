@@ -77,7 +77,6 @@ The adapter code is identified separately and is not represented as verbatim ups
   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
 ## WorldForge complete simulation-core source port (additional)
 
 The complete **non-Tauri WorldForge simulation dependency chain** has now been copied as real upstream TypeScript code into:
