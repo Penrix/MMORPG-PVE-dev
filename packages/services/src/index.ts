@@ -142,3 +142,4 @@ export * from "./studio-routes.js";
 export * from "./template-routes.js";
 export { mapRouteError, type ApiErrorPayload } from "./route-error-mapper.js";
 export { RouteTable } from "./route-dispatch.js";
+export * from "./world-pack-routes.js";
