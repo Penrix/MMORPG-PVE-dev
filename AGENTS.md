@@ -14,6 +14,8 @@
 
 **Character Fork/Diff rule (2026-11-20):** read [11-world-fork-diff-character-invariants.md](docs/mmorpg/11-world-fork-diff-character-invariants.md). Source mother worlds are immutable reference baselines; Project Reality is a copy-on-write branch and accepted Canon changes are its actual Diff. Original characters retain their evidence-backed core tags and decision patterns; altered events, goals, social relationships and choices are not OOC by definition, while silent persona-core replacement is. Names are not entity IDs. This does NOT yet mean as-of time/branch checkout or same-name storage are fully implemented.
 
+**Original-world wiki priority (2026-11-20):** read [12-original-world-encyclopedia.md](docs/mmorpg/12-original-world-encyclopedia.md). The original Naruto/historical/era encyclopedia must be a detailed, reusable world asset BEFORE any novel. Raw Dattebayo/Wiki datasets are different *evidence*, not different Madara characters. Migration 053 adds source-world professional world content; Migration 054 links multiple raw corpora to one deliberately curated original-world identity. A novel links the curated mother reference; Story writes only to that novel's project Canon. Never auto-merge same-name source records or delete curated source work on upstream reimport.
+
 **Do not reimplement existing Migration 049 or claim new SQL tables prove a world has been fully populated or validated.** Report verified status and outstanding schema/API/test gaps separately.
 
 ## Working agreements, current as of 2026-11-20
