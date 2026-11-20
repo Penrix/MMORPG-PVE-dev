@@ -237,12 +237,16 @@ export async function runWorldWorkshops(args: {
 }): Promise<WorldWorkshopRun> {
   let state = args.initialCheckpoint?.document ?? emptyWorldDocument();
   let usage = args.initialCheckpoint?.usage ?? { ...ZERO };
-  const steps: WorldProductionStep[] = [...(args.initialCheckpoint?.steps ?? [])];
+  const steps: WorldProductionStep[] = [
+    ...(args.initialCheckpoint?.steps ?? []),
+  ];
   const workshops = requiredWorkshops(args.request);
   // Additional focused iterations are chosen from actual shortcomings of
   // the world graph, not a model-authored generic TODO or number of cards.
   const maxExtra = 6;
-  const completedWorkshops = new Set<WorldWorkshop>(steps.map(s=>s.workshop));
+  const completedWorkshops = new Set<WorldWorkshop>(
+    steps.map((s) => s.workshop),
+  );
   for (let index = steps.length; index < workshops.length + maxExtra; index++) {
     const gap = playtestWorld(state, args.request).next;
     const unfinished = workshops.find((w) => !completedWorkshops.has(w));
@@ -333,7 +337,7 @@ export async function runWorldWorkshops(args: {
     steps.push(merged.step);
     completedWorkshops.add(op.workshop);
     usage = addUsage(usage, result.usage);
-    await args.onCheckpoint?.({document:state,usage,steps:[...steps]});
+    await args.onCheckpoint?.({ document: state, usage, steps: [...steps] });
   }
   const remaining = playtestWorld(state, args.request).next;
   if (remaining) {
