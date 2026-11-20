@@ -65,6 +65,27 @@ describe("WorldPack referential world-content schema", () => {
     expect(worldPackReferenceProblems(document, new Set())).toEqual([]);
   });
 
+  it("allows a living-world increment to change an existing actor without generating a fake replacement character", () => {
+    const actorId="known-master",assetId="known-pill";
+    const document=WorldPackDocumentSchema.parse({
+      summary:"旧商会与掌柜仍然存在，只增加现在正在发生的交易行动",
+      nodes:[],links:[],activities:[{
+        localId:"trade_today",actorRefs:["canon:"+actorId],
+        resourceRefs:["canon:"+assetId],
+        description:"掌柜在市场为新买家核查丹药归属",
+        reason:"商会原有产权发生变化",stage:"ongoing",worldTime:"大比当天",
+      }],openThreads:[],
+    });
+    expect(worldPackReferenceProblems(document,new Set([actorId,assetId]))).toEqual([]);
+    expect(worldPackReferenceProblems(document,new Set())).toContain(
+      "unknown Canon ref: canon:known-master"
+    );
+    const empty=WorldPackDocumentSchema.parse({
+      summary:"空包",nodes:[],links:[],activities:[],openThreads:[],
+    });
+    expect(worldPackReferenceProblems(empty,new Set()).some(x=>x.includes("empty world production"))).toBe(true);
+  });
+
   it("rejects phantom links, duplicate local identities and invalid area types", () => {
     const document = WorldPackDocumentSchema.parse({
       ...fixture,
