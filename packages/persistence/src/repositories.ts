@@ -31,3 +31,5 @@ export * from "./template-repository.js";
 export * from "./world-pack-repository.js";
 export * from "./world-encyclopedia-repository.js";
 export * from "./world-structures-repository.js";
+export * from "./source-corpus-repository.js";
+export * from "./naruto-source-import.js";

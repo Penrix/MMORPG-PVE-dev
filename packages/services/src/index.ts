@@ -144,3 +144,4 @@ export { mapRouteError, type ApiErrorPayload } from "./route-error-mapper.js";
 export { RouteTable } from "./route-dispatch.js";
 export * from "./world-pack-routes.js";
 export * from "./world-graph-routes.js";
+export * from "./source-corpus-routes.js";
