@@ -5,3 +5,6 @@ data
 package-lock.json
 apps/web
 *.sqlite*
+# Preserve original author research and exact upstream MIT code, never silently rewrite them.
+docs/mmorpg/research/
+packages/narrative/src/vendor/
