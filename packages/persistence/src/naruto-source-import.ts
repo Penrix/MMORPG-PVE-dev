@@ -1,4 +1,5 @@
 import type { NarrativeDatabase } from "./database.js";
+import { SqliteMotherWorldEncyclopediaRepository } from "./source-world-encyclopedia-repository.js";
 import {
   SqliteSourceCorpusRepository,
   type SourceKind,
@@ -70,6 +71,7 @@ export function importNarutoDattebayo(
     );
 
   const repo = new SqliteSourceCorpusRepository(db);
+  const wiki = new SqliteMotherWorldEncyclopediaRepository(db);
   const stats: NarutoImportReport = {
     corpusId: NARUTO_DATTEBAYO_CORPUS,
     records: 0,
@@ -239,6 +241,14 @@ export function importNarutoDattebayo(
           row,
           group.collection,
         );
+        if(group.collection==="clans" || group.collection==="teams"){
+          wiki.upsertOrganization({
+            corpusId,sourceKey:sourceKey(group.prefix,id),
+            organizationForm:group.collection==="clans"?"clan":"team",
+            sourceNote:`Upstream ${group.collection}.json classified this record; governance, powers and history remain unverified`,
+            updatedAt:importedAt,
+          });
+        }
       }
     }
 
@@ -377,6 +387,7 @@ export function importNarutoWikiScraper(
   if (!rows.length)
     throw new Error("Refusing to import an empty Naruto Wiki snapshot");
   const repo = new SqliteSourceCorpusRepository(db);
+  const wiki = new SqliteMotherWorldEncyclopediaRepository(db);
   const stats: NarutoImportReport = {
     corpusId: NARUTO_WIKI_CORPUS,
     records: 0,
@@ -441,6 +452,22 @@ export function importNarutoWikiScraper(
         importedAt,
       });
       stats.records++;
+      // Scraped source prose can populate source wiki sections directly.
+      // Never invent missing biography chapters or mark them Project Canon.
+      const key=variants.length===1
+        ? `wiki:${name}` : `wiki:${name}#${variants.length}`;
+      for(const field of ["summary","history","personality","abilities","background"]){
+        const value=asText(row[field]);
+        if(!value)continue;
+        wiki.upsertLore({
+          corpusId:NARUTO_WIKI_CORPUS,sourceKey:key,
+          sectionKey:`imported:${field}`,title:field,content:value,
+          sourceUrl:WIKI_ROOT+"/blob/master/cleanCharacters.json",
+          sourcePointer:`.${field}`,
+          sourceNote:"Direct imported Wiki text. Source media/period not independently verified; not a Project Canon fact.",
+          updatedAt:importedAt,
+        });
+      }
     }
     return stats;
   });
