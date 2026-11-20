@@ -297,7 +297,9 @@ export function playtestWorld(
       (n) =>
         n.type === "rule" &&
         n.value.trim().length > 0 &&
-        live.some((edge) => edge.fromRef === n.localId || edge.toRef === n.localId),
+        live.some(
+          (edge) => edge.fromRef === n.localId || edge.toRef === n.localId,
+        ),
     );
     if (!hasPower)
       next = order(
