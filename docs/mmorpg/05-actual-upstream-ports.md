@@ -4,14 +4,14 @@
 
 ## 已经复制原项目代码，而不是重新发明
 
-| 上游项目的真实源文件 | GitHub 原始 blob | 移植到本项目 | 实际功能及调用 |
-|---|---|---|---|
-| Covel `packages/create/src/lore-processor.ts` | `dbfc129c7f3a197a20c604e8cd4c53547dc5f551` | `packages/narrative/src/vendor/covel/lore-processor.ts` | `world-pack-workers.ts` 使用 `parseWorldOutput()` 正式解析 `WORLD_YAML` / `WORLD_MD` / `WORLD_PACKAGE_YAML` |
-| Covel `apps/server/src/world-data/source-order.ts` | `2a67c97d5e8f06eaf8d2511a27892bbfc4547ce6` | `packages/narrative/src/vendor/covel/source-order.ts` | 真实调用 `orderSources()`，把按当前对象选中的研究方法、原世界包、已确认Canon、作者请求按声明依赖排序 |
-| Covel `apps/server/src/world-data/revision-cache.ts` | `64bab876da828774ac99454c93f4cb518404c37f` | `packages/narrative/src/vendor/covel/revision-cache.ts` | 真实调用 `createRevisionCache()` 缓存来源文件解析，避免重复计算，返回独立副本 |
-| WorldForge `src/lib/simulation/causality.ts` | `afbe5ecf4a85c855cc00272e57fbc0cefe9585e7` | `packages/narrative/src/vendor/worldforge/causality.ts` | `world-pack-workers.ts` 调用 `causalCandidates()`，从旧Canonical时间事件找出新活动的前因候选；**候选不等于事实，未自动写入Canon** |
-| WorldForge `src/lib/simulation/registry.ts` | `c15e31ddc0afbd2a7489fef5aa440367e57ccca3` | `packages/narrative/src/vendor/worldforge/registry.ts` | 真实调用 `emptyRegistry()`、`tryRegisterDimension()`，由先前已采用世界包中的维度观察信号追踪工艺/力量/社会观念发展轴 |
-| CampaignRepo `lib/relationships.ts` | `acbeeaa995e789e593723d5893ac833e846e7eca` | `packages/services/src/vendor/campaignrepo/relationships.ts` | `world-graph-routes.ts` 直接调用原 `getRelLabel()/getInverseLabel()`，世界关系图可取得主人/所属、领导/下属等正反向标签 |
+| 上游项目的真实源文件                                 | GitHub 原始 blob                           | 移植到本项目                                                 | 实际功能及调用                                                                                                                    |
+| ---------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| Covel `packages/create/src/lore-processor.ts`        | `dbfc129c7f3a197a20c604e8cd4c53547dc5f551` | `packages/narrative/src/vendor/covel/lore-processor.ts`      | `world-pack-workers.ts` 使用 `parseWorldOutput()` 正式解析 `WORLD_YAML` / `WORLD_MD` / `WORLD_PACKAGE_YAML`                       |
+| Covel `apps/server/src/world-data/source-order.ts`   | `2a67c97d5e8f06eaf8d2511a27892bbfc4547ce6` | `packages/narrative/src/vendor/covel/source-order.ts`        | 真实调用 `orderSources()`，把按当前对象选中的研究方法、原世界包、已确认Canon、作者请求按声明依赖排序                              |
+| Covel `apps/server/src/world-data/revision-cache.ts` | `64bab876da828774ac99454c93f4cb518404c37f` | `packages/narrative/src/vendor/covel/revision-cache.ts`      | 真实调用 `createRevisionCache()` 缓存来源文件解析，避免重复计算，返回独立副本                                                     |
+| WorldForge `src/lib/simulation/causality.ts`         | `afbe5ecf4a85c855cc00272e57fbc0cefe9585e7` | `packages/narrative/src/vendor/worldforge/causality.ts`      | `world-pack-workers.ts` 调用 `causalCandidates()`，从旧Canonical时间事件找出新活动的前因候选；**候选不等于事实，未自动写入Canon** |
+| WorldForge `src/lib/simulation/registry.ts`          | `c15e31ddc0afbd2a7489fef5aa440367e57ccca3` | `packages/narrative/src/vendor/worldforge/registry.ts`       | 真实调用 `emptyRegistry()`、`tryRegisterDimension()`，由先前已采用世界包中的维度观察信号追踪工艺/力量/社会观念发展轴              |
+| CampaignRepo `lib/relationships.ts`                  | `acbeeaa995e789e593723d5893ac833e846e7eca` | `packages/services/src/vendor/campaignrepo/relationships.ts` | `world-graph-routes.ts` 直接调用原 `getRelLabel()/getInverseLabel()`，世界关系图可取得主人/所属、领导/下属等正反向标签            |
 
 实际移植的源代码放在 `vendor` 子目录，保留原版算法正文，额外添加具体上游路径、blob SHA 和 MIT 来源头；模块导入的 `.ts` 适配成 NarraLume ESM 使用的 `.js`；非常窄的 `types.ts` 负责类型适配，**不将 WorldForge 自有的国家模拟数据库误设成第二套 Canon**。
 
