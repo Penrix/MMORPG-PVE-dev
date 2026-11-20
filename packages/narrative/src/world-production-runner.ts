@@ -23,6 +23,7 @@ import { previewProductionReality } from "./world-production-reality.js";
 import {
   initialWorldWorkshopOrder,
   powerDesignProducts,
+  resolveWorldDesignEntry,
 } from "./world-design-policy.js";
 
 const ZERO: RunBudgetUsage = {
@@ -57,7 +58,10 @@ function requiredWorkshops(request: WorldPackRequest): WorldWorkshop[] {
 function subjectFor(
   workshop: WorldWorkshop,
   doc: WorldPackDocument,
+  request: WorldPackRequest,
 ): string | null {
+  const entry=resolveWorldDesignEntry(request,doc);
+  if(entry?.workshop===workshop)return entry.subjectRef;
   const org = doc.nodes.find((n) => n.type === "organization");
   const npc = doc.nodes.find((n) => n.type === "character");
   const zone = doc.nodes.find((n) => n.type === "location");
@@ -79,7 +83,7 @@ function workOrder(
   doc: WorldPackDocument,
   request: WorldPackRequest,
 ): WorldWorkOrder {
-  const ref = subjectFor(workshop, doc);
+  const ref = subjectFor(workshop, doc, request);
   const node = doc.nodes.find((n) => n.localId === ref);
   const workshops: Record<
     WorldWorkshop,
@@ -337,12 +341,13 @@ export async function runWorldWorkshops(args: {
   for (let index = steps.length; index < workshops.length + maxExtra; index++) {
     const gap = playtestWorld(view(), args.request).next;
     const unfinished = workshops.find((w) => !completedWorkshops.has(w));
+    const requestedEntry = index === 0 ? resolveWorldDesignEntry(args.request,view()) : null;
     // An actual newly exposed deficit may move ahead of the old work queue.
     // Every core workshop still runs; no model may declare one unnecessary.
-    const op =
-      gap &&
-      workshops.includes(gap.workshop) &&
-      !completedWorkshops.has(gap.workshop)
+    const op = requestedEntry && workshops.includes(requestedEntry.workshop)
+      ? workOrder(requestedEntry.workshop,view(),args.request)
+      : gap && workshops.includes(gap.workshop) &&
+          !completedWorkshops.has(gap.workshop)
         ? gap
         : unfinished
           ? workOrder(unfinished, view(), args.request)
