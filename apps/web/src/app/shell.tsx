@@ -47,7 +47,7 @@ import {
 const RAIL_COLLAPSED_KEY = "narralume:rail-collapsed";
 const AUTO_COLLAPSE_QUERY = "(max-width: 1100px)";
 const ASSISTANT_OPEN_KEY = "narralume:assistant-open";
-const REPOSITORY_URL = "https://github.com/abligail/narralume";
+const REPOSITORY_URL = "https://github.com/Penrix/MMORPG-PVE-dev";
 
 function GitHubMark({ size = 17 }: { size?: number }) {
   return (
@@ -65,6 +65,7 @@ function GitHubMark({ size = 17 }: { size?: number }) {
 
 const ShelfWorkspace = lazy(() => import("../workspaces/shelf").then((module) => ({ default: module.ShelfWorkspace })));
 const OverviewWorkspace = lazy(() => import("../workspaces/overview").then((module) => ({ default: module.OverviewWorkspace })));
+const WorldBuilderWorkspace = lazy(() => import("../workspaces/world-builder").then((module) => ({ default: module.WorldBuilderWorkspace })));
 const BibleWorkspace = lazy(() => import("../workspaces/bible").then((module) => ({ default: module.BibleWorkspace })));
 const StudioWorkspace = lazy(() => import("../workspaces/studio").then((module) => ({ default: module.StudioWorkspace })));
 const DeliveryWorkspace = lazy(() => import("../workspaces/delivery").then((module) => ({ default: module.DeliveryWorkspace })));
@@ -384,6 +385,8 @@ function ShellFrame() {
             <Route path="/shelf" element={<ShelfWorkspace />} />
             <Route path="/overview" element={<OverviewWorkspace />} />
             <Route path="/projects/:projectId/overview" element={<OverviewWorkspace />} />
+            <Route path="/world" element={<WorldBuilderWorkspace />} />
+            <Route path="/projects/:projectId/world" element={<WorldBuilderWorkspace />} />
             <Route path="/bible" element={<BibleWorkspace />} />
             <Route path="/projects/:projectId/bible" element={<BibleWorkspace />} />
             <Route path="/studio" element={<StudioWorkspace />} />
