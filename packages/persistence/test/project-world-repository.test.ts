@@ -20,7 +20,7 @@ afterEach(() => {
 
 function setup() {
   db = new NodeNarrativeDatabase();
-  expect(db.migrate()).toBe(53);
+  expect(db.migrate()).toBe(54);
   const projects = new SqliteProjectRepository(db);
   projects.insert(
     createProject({ id: "novel", title: "火影海贼同一个男主", now }),
