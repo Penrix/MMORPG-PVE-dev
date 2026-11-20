@@ -193,21 +193,29 @@ export class SqliteSourceCorpusRepository {
         record.originCollection,
         record.importedAt,
       );
-    this.db.raw.prepare(`
+    this.db.raw
+      .prepare(
+        `
       INSERT INTO source_record_presence(corpus_id,source_key,active,last_seen_at)
       VALUES (?,?,1,?)
       ON CONFLICT(corpus_id,source_key)
         DO UPDATE SET active=1,last_seen_at=excluded.last_seen_at
-    `).run(record.corpusId,record.sourceKey,record.importedAt);
+    `,
+      )
+      .run(record.corpusId, record.sourceKey, record.importedAt);
   }
 
   /** Called inside an importer transaction. Historic source IDs and expert
    * curated encyclopedia content survive reimports. Absentees are archived
    * and hidden from search, never deleted from referenced project records. */
-  beginCorpusSnapshot(corpusId:string):void {
-    this.db.raw.prepare(`
+  beginCorpusSnapshot(corpusId: string): void {
+    this.db.raw
+      .prepare(
+        `
       UPDATE source_record_presence SET active=0 WHERE corpus_id=?
-    `).run(corpusId);
+    `,
+      )
+      .run(corpusId);
     this.clearRelations(corpusId);
   }
 
