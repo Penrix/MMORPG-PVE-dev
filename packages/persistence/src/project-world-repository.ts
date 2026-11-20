@@ -253,17 +253,26 @@ export class SqliteProjectWorldRepository {
       );
   }
 
-  listEntitySpaces(projectId:string,entityId:string):ProjectEntitySpaceLink[] {
-    const rows=this.db.raw.prepare(`
+  listEntitySpaces(
+    projectId: string,
+    entityId: string,
+  ): ProjectEntitySpaceLink[] {
+    const rows = this.db.raw
+      .prepare(
+        `
       SELECT project_id,entity_id,space_id,link_kind,source_note,created_at
       FROM project_entity_space_links
       WHERE project_id=? AND entity_id=? ORDER BY space_id,link_kind
-    `).all(projectId,entityId) as Array<Record<string,unknown>>;
-    return rows.map(r=>({
-      projectId:r.project_id as string,entityId:r.entity_id as string,
-      spaceId:r.space_id as string,
-      linkKind:r.link_kind as ProjectEntitySpaceLink["linkKind"],
-      sourceNote:r.source_note as string,createdAt:r.created_at as string,
+    `,
+      )
+      .all(projectId, entityId) as Array<Record<string, unknown>>;
+    return rows.map((r) => ({
+      projectId: r.project_id as string,
+      entityId: r.entity_id as string,
+      spaceId: r.space_id as string,
+      linkKind: r.link_kind as ProjectEntitySpaceLink["linkKind"],
+      sourceNote: r.source_note as string,
+      createdAt: r.created_at as string,
     }));
   }
 
