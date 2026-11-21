@@ -21,7 +21,7 @@ afterEach(() => {
 describe("Canon names do not identify people across different project world spaces", () => {
   it("keeps two literally same-name people separate while preserving ordinary legacy name conflicts and FTS", () => {
     db = new NodeNarrativeDatabase();
-    expect(db.migrate()).toBe(54);
+    expect(db.migrate()).toBe(55);
     const projects = new SqliteProjectRepository(db);
     projects.insert(
       createProject({ id: "novel", title: "火影与海贼同一本书", now }),
