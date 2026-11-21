@@ -113,6 +113,25 @@ export class SqliteUnifiedSourceWorldRepository {
       .all() as SourceWorld[];
   }
 
+  getWorldByCanonicalCorpus(corpusId: string): SourceWorld | null {
+    const row = this.db.raw
+      .prepare(
+        `
+      SELECT id,name,kind,canonical_corpus_id AS canonicalCorpusId,
+        description,created_at AS createdAt
+      FROM source_worlds WHERE canonical_corpus_id=?
+    `,
+      )
+      .get(corpusId) as SourceWorld | undefined;
+    return row ?? null;
+  }
+
+  getCardByCorpus(corpusId: string, entityKey: string): SourceWorldCard | null {
+    const world = this.getWorldByCanonicalCorpus(corpusId);
+    if (!world) return null;
+    return this.getCard(world.id, entityKey);
+  }
+
   addEvidenceCorpus(input: {
     worldId: string;
     corpusId: string;
