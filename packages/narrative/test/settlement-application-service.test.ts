@@ -78,6 +78,7 @@ beforeEach(() => {
         id,
         projectId: "p1",
         type: "character",
+        worldScopeId: "project:p1",
         name,
         now,
       }),
