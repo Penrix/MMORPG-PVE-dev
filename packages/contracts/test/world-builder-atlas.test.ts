@@ -117,4 +117,59 @@ describe("World Builder → World Atlas production contract", () => {
       "atlas kind/type mismatch: ore resource requires item, got concept",
     );
   });
+  it("stores Atlas audit as an engine snapshot without turning it into world truth", () => {
+    const families = WORLD_ATLAS_CONTENT_FAMILIES.map((family) => ({
+      family: family.id,
+      label: family.label,
+      status: family.id === "people" ? ("present" as const) : ("thin" as const),
+      evidence: family.id === "people" ? ["hero"] : [],
+      reason:
+        family.id === "people"
+          ? "人物已经进入关系网。"
+          : "仍可继续向下制作。",
+      suggestedWorkshop:
+        family.id === "space"
+          ? ("geography" as const)
+          : family.id === "organization"
+            ? ("factions" as const)
+            : family.id === "people"
+              ? ("people" as const)
+              : family.id === "power"
+                ? ("power" as const)
+                : family.id === "asset" || family.id === "economy"
+                  ? ("economy" as const)
+                  : family.id === "activity"
+                    ? ("events" as const)
+                    : family.id === "information" || family.id === "value"
+                      ? ("social" as const)
+                      : ("playability" as const),
+    }));
+    const parsed = WorldPackDocumentSchema.parse({
+      summary: "Atlas audit snapshot",
+      nodes: [],
+      links: [],
+      activities: [],
+      interactions: [],
+      openThreads: [],
+      dimensionSignals: [],
+      production: {
+        engine: "mmorpg-world-workshop-v1",
+        executed: [],
+        playtestedPaths: [],
+        atlasAudit: {
+          families,
+          peopleConnectedWorldObjects: [],
+          orphanWorldObjects: ["orphan"],
+          nextWorkshop: "economy",
+          nextReason: "资产网络偏薄。",
+        },
+      },
+    });
+    expect(parsed.production?.atlasAudit?.families).toHaveLength(10);
+    expect(parsed.production?.atlasAudit?.nextWorkshop).toBe("economy");
+    expect(parsed.production?.atlasAudit?.orphanWorldObjects).toEqual([
+      "orphan",
+    ]);
+  });
+
 });
