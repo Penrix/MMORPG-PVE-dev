@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 import {
+  type ExpectationDesign,
+  type ExpectationDesignEvidence,
   type ExpectationState,
   type NarrativeAllocationBatch,
   type NarrativeAllocationDecisionDraft,
@@ -17,9 +19,49 @@ import type { JsonSchemaContract } from "@narralume/llm";
 import type { NarrativeModelClient } from "./model-client.js";
 import { zodValidator } from "./schemas.js";
 import {
+  finalizeExpectationDesign,
   finalizeNarrativeAllocationBatch,
   narrativeCandidatesFromArbitration,
 } from "./expectation-runtime.js";
+
+const ExpectationDesignOutputSchema = z.object({
+  targetOutcome: z.string().min(1),
+  scarcityIntents: z
+    .array(
+      z.object({
+        claim: z.string().min(1),
+        subjectRef: z.string().min(1).nullable(),
+        existingEvidenceRefs: z.array(z.string().min(1)),
+        evidenceToEstablish: z.array(z.string().min(1)),
+      }),
+    )
+    .min(1),
+  beliefIntents: z
+    .array(
+      z.object({
+        proposition: z.string().min(1),
+        scope: z.enum(["world", "circle", "identity", "character"]),
+        holderEntityIds: z.array(z.string().min(1)),
+        existingEvidenceRefs: z.array(z.string().min(1)),
+        stakeToCultivate: z.array(z.string().min(1)),
+        breakCondition: z.string().min(1),
+      }),
+    )
+    .min(1),
+  protagonistAdvantageRefs: z.array(z.string().min(1)).min(1),
+  reactionTargetEntityIds: z.array(z.string().min(1)),
+  retainedGainTarget: z.string().min(1).nullable(),
+  activationEntityIds: z.array(z.string().min(1)),
+  worldFocusRefs: z.array(z.string().min(1)),
+  designReasons: z.array(z.string().min(1)).min(1).max(12),
+});
+type ExpectationDesignOutput = z.infer<typeof ExpectationDesignOutputSchema>;
+
+const EXPECTATION_DESIGN_CONTRACT: JsonSchemaContract = {
+  name: "story_expectation_design",
+  strict: true,
+  schema: z.toJSONSchema(ExpectationDesignOutputSchema),
+};
 
 const NarrativeAllocationOutputItemSchema = z.object({
   candidateId: z.string().min(1),
@@ -49,6 +91,16 @@ const NARRATIVE_ALLOCATION_CONTRACT: JsonSchemaContract = {
   schema: z.toJSONSchema(NarrativeAllocationOutputSchema),
 };
 
+export interface ExpectationDesignModelRequest {
+  projectId: string;
+  protagonistId: string;
+  readerNeed: string;
+  targetEmotion: string;
+  realityFingerprint: string;
+  storyStateFingerprint: string;
+  evidence: readonly ExpectationDesignEvidence[];
+}
+
 export interface ExpectationAllocationModelRequest {
   state: ExpectationState;
   candidates: readonly NarrativeCandidate[];
@@ -73,6 +125,108 @@ export interface ExpectationRuntimeModelResult<T> {
  */
 export class ExpectationNarrativeService {
   constructor(private readonly model: NarrativeModelClient) {}
+
+  async designExpectation(
+    run: NarrativeRun,
+    step: NarrativeRunStep,
+    request: ExpectationDesignModelRequest,
+    signal: AbortSignal,
+  ): Promise<ExpectationRuntimeModelResult<ExpectationDesign>> {
+    if (
+      run.projectId !== request.projectId ||
+      request.evidence.length === 0 ||
+      request.readerNeed.trim().length === 0 ||
+      request.targetEmotion.trim().length === 0
+    ) {
+      throw new Error("story_runtime.expectation.invalid_design_request");
+    }
+
+    const allowedEvidenceRefs = new Set(
+      request.evidence.map((item) => item.ref),
+    );
+    const allowedEntityIds = new Set<string>([request.protagonistId]);
+    for (const item of request.evidence) {
+      for (const entityId of item.entityIds) allowedEntityIds.add(entityId);
+    }
+
+    const result = await this.model.structured(
+      run,
+      step,
+      "story-expectation-design",
+      {
+        instructions: [
+          "你正在做第二层的设计阶段。这个阶段发生在第一层 Reality Runtime 运行之前。",
+          "先确定这一阶段要经营哪一笔 Reader 期待交易，再让第一层人物与世界真实运行去验证和实现它。",
+          "设计的是目标、稀缺性建设方向、要形成/加深的固有认知、主角已有优势、未来值得收割的反应与现实权益。",
+          "不得预写第一层结果，不得决定某个角色一定会如何行动，不得为了剧情强迫人物违背其 Observation / Goal / 利益。",
+          "existingEvidenceRefs、protagonistAdvantageRefs、worldFocusRefs 只能引用 evidence 中真实存在的 ref。",
+          "holderEntityIds、reactionTargetEntityIds、activationEntityIds 只能引用 evidence 中出现的人物，或 protagonistId。",
+          "稀缺性不是分数；如果当前证据不足，用 evidenceToEstablish 说明接下来应该通过什么世界事实/失败案例/门槛/社会价格来建立。",
+          "固有认知不是一句台词；如果当前尚未成立，用 stakeToCultivate 说明未来应让哪些人物基于该认知做出什么真实选择或投入。",
+          "activationEntityIds 只是告诉第一层哪些人物值得优先观察/激活，不代表他们必须按某个剧情行动。",
+          "targetOutcome 是期待兑现方向，不是已经发生的事实。",
+          "retainedGainTarget 应尽量对应男主最终留下的真实资产、身份、权限、关系、能力或入口；若本阶段不适用可为 null。",
+        ].join("\n"),
+        messages: [
+          {
+            role: "user",
+            content: JSON.stringify(
+              {
+                readerNeed: request.readerNeed,
+                targetEmotion: request.targetEmotion,
+                protagonistId: request.protagonistId,
+                evidence: request.evidence,
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+        reasoningEffort: "high",
+      },
+      EXPECTATION_DESIGN_CONTRACT,
+      zodValidator(ExpectationDesignOutputSchema, (value) =>
+        expectationDesignOutputIssues(
+          value,
+          allowedEvidenceRefs,
+          allowedEntityIds,
+        ),
+      ),
+      signal,
+    );
+
+    const value = finalizeExpectationDesign(
+      {
+        version: "expectation-design.v1",
+        authority: "speculative",
+        projectId: request.projectId,
+        protagonistId: request.protagonistId,
+        readerNeed: request.readerNeed,
+        targetEmotion: request.targetEmotion,
+        targetOutcome: result.value.targetOutcome,
+        scarcityIntents: result.value.scarcityIntents,
+        beliefIntents: result.value.beliefIntents,
+        protagonistAdvantageRefs: result.value.protagonistAdvantageRefs,
+        reactionTargetEntityIds: result.value.reactionTargetEntityIds,
+        retainedGainTarget: result.value.retainedGainTarget,
+        activationEntityIds: result.value.activationEntityIds,
+        worldFocusRefs: result.value.worldFocusRefs,
+        designReasons: result.value.designReasons,
+        realityFingerprint: request.realityFingerprint,
+        storyStateFingerprint: request.storyStateFingerprint,
+        mustPreserveAgentAutonomy: true,
+        mustNotPredetermineOutcome: true,
+      },
+      allowedEvidenceRefs,
+      allowedEntityIds,
+    );
+
+    return {
+      value,
+      usage: result.usage,
+      generation: { mode: result.mode, attempts: result.attempts },
+    };
+  }
 
   async allocateArbitrationReaderTime(
     run: NarrativeRun,
@@ -205,6 +359,39 @@ function allocationOutputIssues(
   for (const candidate of candidates) {
     if (!seen.has(candidate.id)) {
       issues.push(`decisions: missing candidateId ${candidate.id}`);
+    }
+  }
+
+  return issues;
+}
+
+
+function expectationDesignOutputIssues(
+  value: ExpectationDesignOutput,
+  allowedEvidenceRefs: ReadonlySet<string>,
+  allowedEntityIds: ReadonlySet<string>,
+): string[] {
+  const issues: string[] = [];
+  const evidenceRefs = [
+    ...value.protagonistAdvantageRefs,
+    ...value.worldFocusRefs,
+    ...value.scarcityIntents.flatMap((item) => item.existingEvidenceRefs),
+    ...value.beliefIntents.flatMap((item) => item.existingEvidenceRefs),
+  ];
+  for (const ref of evidenceRefs) {
+    if (!allowedEvidenceRefs.has(ref)) {
+      issues.push(`design: unknown evidence ref ${ref}`);
+    }
+  }
+
+  const entityIds = [
+    ...value.reactionTargetEntityIds,
+    ...value.activationEntityIds,
+    ...value.beliefIntents.flatMap((item) => item.holderEntityIds),
+  ];
+  for (const entityId of entityIds) {
+    if (!allowedEntityIds.has(entityId)) {
+      issues.push(`design: unknown entityId ${entityId}`);
     }
   }
 
