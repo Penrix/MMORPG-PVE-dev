@@ -25,7 +25,7 @@ afterEach(() => {
 describe("WorldAtlasNarrativeContextBuilder", () => {
   it("keeps Source World as reference, Project Reality as confirmed, and searches bound Atlas cards", () => {
     db = new NodeNarrativeDatabase();
-    expect(db.migrate()).toBe(54);
+    expect(db.migrate()).toBe(55);
 
     new SqliteProjectRepository(db).insert(
       createProject({ id: "p1", title: "火影同人", now }),
