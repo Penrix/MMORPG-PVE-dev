@@ -113,6 +113,60 @@ Settlement accepted
 
 Project Reality 是统一读取视图。已确认 Canon Fact 会立即出现在下一次 Project Reality context；关系、时间线、认知继续由 StoryStatePacket 提供。这样只有一个确认写入口，没有双真相同步问题。
 
+## 5.5 底座 schema 适配
+
+第三模块正式调用 Project Reality 后，暴露出 NarraLume 底座两处“Migration 已升级、Repository/后续 schema 未跟上”的断口。本分支一并修复，因为它们正是底座适配当前第二模块所必需的。
+
+### Migration 055｜Scoped Canon FTS 修复
+
+Migration 052 已把 `canon_entities` 别名列统一为 `aliases_json`，但当时重建的 external-content FTS 仍声明 `aliases`，导致 FTS5 读取时寻找不存在的 `canon_entities.aliases`。
+
+055 以新迁移重建：
+
+```text
+canon_entities_fts
+name / aliases_json / description
+```
+
+并同步修正 insert / delete / update triggers。历史 052 不修改 checksum，已有数据库和新数据库通过 055 收敛。
+
+### Migration 056｜Project Reality 事件版本 overlay
+
+`SqliteProjectRealityRepository` 已经定义了：
+
+```text
+project_reality_revisions
+  project + entity
+  event + optional branch
+  facet + slotKey
+  set / unset
+  optional canonFact pointer
+  optional section JSON
+```
+
+但此前没有迁移真正创建该表。056 补齐这一 schema。
+
+它不是第二套真相：
+
+- `claim SET` 只保存 `canon_fact_id` 指针，不复制 Canon Fact；
+- 非 claim 的世界 section 才保存事件版本 JSON；
+- revision 必须绑定已有 timeline event；
+- Project / entity / event / branch / fact 跨项目错配由数据库拒绝。
+
+### Canon 默认 World Scope
+
+Migration 052 把 `canon_entities.world_scope_id` 设为 `NOT NULL DEFAULT ''`，其中空字符串表示默认/未显式分区 world scope。
+
+旧 `insertEntity()` 却显式传入 `NULL`，绕过 default。现在与已经正确的 update 路径统一为：
+
+```text
+entity.worldScopeId ?? ""
+```
+
+这三个修复共同保证旧 NarraLume Canon 写入口、搜索入口与 Project Reality 读取入口真正服从当前第二模块 schema。
+
+---
+
 ## 6. 第三模块各入口 Crosswalk
 
 | 第三模块入口                | Atlas 接入                                                          | 权限                  |
