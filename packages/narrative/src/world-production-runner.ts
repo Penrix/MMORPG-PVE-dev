@@ -472,6 +472,7 @@ export async function runWorldWorkshops(args: {
         changedRefs: step.changedRefs,
       })),
       playtestedPaths: playtest.interactionPaths,
+      atlasAudit: playtest.atlasAudit,
     },
   };
   return { document, usage, steps, remaining: null };
