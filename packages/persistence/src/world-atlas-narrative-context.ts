@@ -1,5 +1,6 @@
 import type { ContextSource } from "@narralume/context";
 import { worldAtlasNarrativePriority } from "@narralume/contracts";
+import { SqliteCanonRepository } from "./canon-repository.js";
 import type { NarrativeDatabase } from "./database.js";
 import {
   SqliteProjectRealityRepository,
@@ -26,11 +27,13 @@ export interface WorldAtlasNarrativeContextRequest {
  * project's future and never writes anything.
  */
 export class WorldAtlasNarrativeContextBuilder {
+  private readonly canon: SqliteCanonRepository;
   private readonly reality: SqliteProjectRealityRepository;
   private readonly sources: SqliteSourceCorpusRepository;
   private readonly atlas: SqliteUnifiedSourceWorldRepository;
 
   constructor(private readonly database: NarrativeDatabase) {
+    this.canon = new SqliteCanonRepository(database);
     this.reality = new SqliteProjectRealityRepository(database);
     this.sources = new SqliteSourceCorpusRepository(database);
     this.atlas = new SqliteUnifiedSourceWorldRepository(database);
@@ -43,12 +46,11 @@ export class WorldAtlasNarrativeContextBuilder {
     const seenSourceCards = new Set<string>();
 
     for (const entityId of [...new Set(request.focalEntityIds)]) {
-      let view: ProjectRealityView;
-      try {
-        view = this.reality.getEntityReality(request.projectId, entityId);
-      } catch {
-        continue;
-      }
+      if (!this.canon.getEntity(request.projectId, entityId)) continue;
+      const view: ProjectRealityView = this.reality.getEntityReality(
+        request.projectId,
+        entityId,
+      );
 
       const projectSlots = view.effectiveSlots.filter(
         (entry) => entry.origin === "project",
