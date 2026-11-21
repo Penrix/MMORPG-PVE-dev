@@ -22,6 +22,7 @@ import {
   SqliteRunRepository,
   SqliteStoryRepository,
   SqliteSourceCorpusRepository,
+  WorldAtlasStoryContextBuilder,
   type NarrativeDatabase,
 } from "@narralume/persistence";
 
@@ -35,7 +36,7 @@ import {
   type AssistantToolCall,
 } from "./assistant-schemas.js";
 import { requireActiveProject } from "./project-guard.js";
-import { WorldAtlasStoryContextBuilder } from "./world-atlas-story-context.js";
+
 
 interface AssistantContextArtifact extends Readonly<Record<string, unknown>> {
   conversationId: string;
