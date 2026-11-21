@@ -1,3 +1,4 @@
+import { inverseRelation } from "./source-card-links.js";
 import type { NarrativeDatabase } from "./database.js";
 
 export type SourceKind =
@@ -50,6 +51,14 @@ export interface SourceRecordHit {
   kind: SourceKind;
   summary: string;
   originCollection: string;
+}
+
+export interface SourceRelationView extends SourceRelation {
+  otherName: string;
+  otherKind: SourceKind;
+  direction: "out" | "in";
+  /** Author-facing label from the current card's point of view. */
+  displayRelation: string;
 }
 
 type CorpusRow = {
@@ -228,6 +237,38 @@ export class SqliteSourceCorpusRepository {
     return row ? recordFromRow(row) : null;
   }
 
+  /**
+   * Resolve a wiki-link target inside one source world. An explicit source key
+   * wins; otherwise exact name/alias matching is used. This is deliberately a
+   * lookup helper, not an identity-merging rule.
+   */
+  findRecordByReference(corpusId: string, reference: string): SourceRecord | null {
+    const ref = reference.trim();
+    if (!ref) return null;
+    const exactKey = this.getRecord(corpusId, ref);
+    if (exactKey) return exactKey;
+    const row = this.db.raw
+      .prepare(
+        `
+      SELECT r.*
+      FROM source_records r
+      LEFT JOIN source_record_presence presence
+        ON presence.corpus_id=r.corpus_id AND presence.source_key=r.source_key
+      WHERE r.corpus_id=? AND COALESCE(presence.active,1)=1
+        AND (
+          r.name=?
+          OR EXISTS (
+            SELECT 1 FROM json_each(r.aliases_json) alias WHERE alias.value=?
+          )
+        )
+      ORDER BY CASE WHEN r.name=? THEN 0 ELSE 1 END, r.source_key
+      LIMIT 1
+    `,
+      )
+      .get(corpusId, ref, ref, ref) as RecordRow | undefined;
+    return row ? recordFromRow(row) : null;
+  }
+
   upsertRelation(edge: SourceRelation): void {
     this.db.raw
       .prepare(
@@ -247,16 +288,7 @@ export class SqliteSourceCorpusRepository {
       );
   }
 
-  listRelations(
-    corpusId: string,
-    sourceKey: string,
-  ): Array<
-    SourceRelation & {
-      otherName: string;
-      otherKind: SourceKind;
-      direction: "out" | "in";
-    }
-  > {
+  listRelations(corpusId: string, sourceKey: string): SourceRelationView[] {
     const rows = this.db.raw
       .prepare(
         `
@@ -271,14 +303,28 @@ export class SqliteSourceCorpusRepository {
       ORDER BY r.relation,other.name
     `,
       )
-      .all(sourceKey, sourceKey, corpusId, sourceKey, sourceKey);
-    return rows as Array<
-      SourceRelation & {
-        otherName: string;
-        otherKind: SourceKind;
-        direction: "out" | "in";
-      }
-    >;
+      .all(sourceKey, sourceKey, corpusId, sourceKey, sourceKey) as Array<
+        SourceRelation & {
+          otherName: string;
+          otherKind: SourceKind;
+          direction: "out" | "in";
+        }
+      >;
+    return rows.map((row) => ({
+      ...row,
+      displayRelation:
+        row.direction === "out"
+          ? row.relation
+          : (inverseRelation(row.relation) ?? `← ${row.relation}`),
+    }));
+  }
+
+  /** Rebuild only one card's outgoing derived index; incoming edges belong to
+   * the other cards and are left intact. */
+  clearOutgoingRelations(corpusId: string, sourceKey: string): void {
+    this.db.raw
+      .prepare("DELETE FROM source_relations WHERE corpus_id=? AND from_key=?")
+      .run(corpusId, sourceKey);
   }
 
   bindProject(projectId: string, corpusId: string, enabled = true): void {
