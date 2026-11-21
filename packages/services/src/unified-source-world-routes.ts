@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { WorldAtlasCardKindSchema } from "@narralume/contracts";
+import {
+  WORLD_ATLAS_CARD_TYPES,
+  WORLD_ATLAS_CONTENT_FAMILIES,
+  WORLD_ATLAS_RELATIONS,
+  WorldAtlasCardKindSchema,
+} from "@narralume/contracts";
 import {
   SqliteProjectRepository,
   SqliteSourceCorpusRepository,
@@ -87,6 +92,12 @@ export function registerUnifiedSourceWorldRoutes(
   const now = () => new Date().toISOString();
 
   app.route("GET", "/api/source-worlds", async () => worlds.listWorlds());
+  app.route("GET", "/api/source-worlds/framework", async () => ({
+    version: "0.1",
+    contentFamilies: WORLD_ATLAS_CONTENT_FAMILIES,
+    cardTypes: WORLD_ATLAS_CARD_TYPES,
+    relations: WORLD_ATLAS_RELATIONS,
+  }));
   app.route("POST", "/api/source-worlds", async (request) => {
     const body = CreateWorldBody.parse(request.body);
     const world = {
