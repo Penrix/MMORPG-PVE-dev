@@ -2,6 +2,22 @@
 
 > 本文件冻结第三模块新的核心方向。NarraLume 原生 Chapter Pipeline 继续负责正文生产、审阅、修订与 Settlement；本模块补上它原来薄弱的 Reality → Story → Outline 之间的故事运行时。
 
+## 2026-11-22 第二层语义覆盖
+
+**第二层“什么值得写 / Reader Time 投在哪里”不再由泛化 NarrativeDirector 自由判断。先读 [19 Expectation / Narrative Runtime](19-expectation-narrative-runtime.md)。**
+
+最新分层：
+
+```text
+第一层 Reality Runtime
+→ 世界里真实会发生什么
+
+第二层 Expectation / Narrative Runtime
+→ 围绕 Reader 需求与主线情绪，经营稀缺性、固有认知、主角优势、信息差、代入感、三阵营下注与反应，决定哪些真实候选值得 seed / charge / payoff，以及分配多少 Reader Time
+```
+
+固有认知优先理解为由世界/圈层常识与真实经历支撑、并已驱动人物行动的稳定默认判断；禁止把它退化成单个 NPC 的临时 belief。稀缺性负责构造/加深这种认知，不得压成数字 rarity score。详见 19。
+
 ## 0. 一句话裁决
 
 **第三模块的核心不再是“给 Chapter Goal 写正文”，而是：从 Project Reality 中恢复当前世界，让人物只依据自己可感知的 Reality 独立行动，由世界裁判结算多人行动，再由作者态 Narrative Director 按商业男频目标选择值得进入 Reader Time 的故事。**
