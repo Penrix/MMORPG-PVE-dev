@@ -137,9 +137,7 @@ export const StoryButterflyEffectSchema = z.object({
   arrivalHorizon: z.number().int().nonnegative(),
   protagonistImpact: z.string().min(1),
 });
-export type StoryButterflyEffect = z.infer<
-  typeof StoryButterflyEffectSchema
->;
+export type StoryButterflyEffect = z.infer<typeof StoryButterflyEffectSchema>;
 
 export const CharacterDecisionResolutionSchema = z.object({
   agentId: z.string().min(1),
@@ -167,9 +165,7 @@ export const ProtagonistProjectionSchema = z.object({
   planConstraints: z.array(z.string().min(1)).min(1),
   causalChain: z.array(z.string().min(1)).min(1),
 });
-export type ProtagonistProjection = z.infer<
-  typeof ProtagonistProjectionSchema
->;
+export type ProtagonistProjection = z.infer<typeof ProtagonistProjectionSchema>;
 
 export const WorldArbitrationReceiptSchema = z.object({
   version: z.literal("world-arbitration-receipt.v1"),
