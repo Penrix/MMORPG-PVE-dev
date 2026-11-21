@@ -93,15 +93,15 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
         },
       ],
     };
-    // Every world needs concrete public powers; playable action chains are
-    // optional diagnostics rather than mandatory game-runtime mechanics.
+    // Public power is required only while absent. After it exists, the
+    // remaining blocking gap is an actual affordance that leaves real equity.
     expect(playtestWorld(doc, req).next?.workshop).toBe("power");
     doc = {
       ...doc,
       nodes: [...doc.nodes, node("cultivation", "rule", "灵脉炼器规则")],
       links: [...doc.links, link("chief", "cultivation", "can_use")],
     };
-    expect(playtestWorld(doc, req).next).toBeNull();
+    expect(playtestWorld(doc, req).next?.workshop).toBe("playability");
     doc = {
       ...doc,
       interactions: [
