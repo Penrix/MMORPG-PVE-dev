@@ -46,6 +46,30 @@ const AdoptBody = z.object({
   sourceNote: z.string().trim().min(1),
 });
 const LinkBody = AdoptBody.omit({ canonicalKey: true });
+const SourceKindSchema = z.enum([
+  "character",
+  "organization",
+  "location",
+  "ability",
+  "creature",
+  "item",
+  "event",
+  "other",
+]);
+const CardQuery = z.object({
+  q: z.string().default(""),
+  kind: SourceKindSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+  offset: z.coerce.number().int().nonnegative().default(0),
+});
+const CreateCardBody = z.object({
+  entityKey: z.string().trim().min(1).max(300),
+  kind: SourceKindSchema,
+  name: z.string().trim().min(1).max(300),
+  aliases: z.array(z.string().trim().min(1).max(300)).default([]),
+  content: z.string().trim().min(1).max(200_000),
+});
+const UpdateCardBody = CreateCardBody.omit({ entityKey: true });
 
 /** Global source-world wiki: one Naruto identity, many evidence datasets.
  * No operation here writes a novel's Canon/Timeline, nor merges two raw
@@ -99,6 +123,76 @@ export function registerUnifiedSourceWorldRoutes(
     const { worldId } = WorldParams.parse(request.params);
     return requireWorld(worldId);
   });
+
+  app.route("GET", "/api/source-worlds/:worldId/cards", async (request) => {
+    const { worldId } = WorldParams.parse(request.params);
+    requireWorld(worldId);
+    const query = CardQuery.parse(request.query);
+    return worlds.listCards(worldId, query.q, {
+      ...(query.kind ? { kind: query.kind } : {}),
+      limit: query.limit,
+      offset: query.offset,
+    });
+  });
+  app.route("POST", "/api/source-worlds/:worldId/cards", async (request) => {
+    const { worldId } = WorldParams.parse(request.params);
+    requireWorld(worldId);
+    const body = CreateCardBody.parse(request.body);
+    const result = worlds.upsertCard({
+      worldId,
+      ...body,
+      now: now(),
+    });
+    return { status: 201, body: result };
+  });
+  app.route(
+    "GET",
+    "/api/source-worlds/:worldId/cards/:entityKey",
+    async (request) => {
+      const { worldId, entityKey } = EntityParams.parse(request.params);
+      requireWorld(worldId);
+      const card = worlds.getCard(worldId, entityKey);
+      if (!card)
+        throw new ServiceError(
+          "source.world.card_not_found",
+          "World Atlas card not found",
+          404,
+        );
+      return card;
+    },
+  );
+  app.route(
+    "PUT",
+    "/api/source-worlds/:worldId/cards/:entityKey",
+    async (request) => {
+      const { worldId, entityKey } = EntityParams.parse(request.params);
+      requireWorld(worldId);
+      const body = UpdateCardBody.parse(request.body);
+      return worlds.upsertCard({
+        worldId,
+        entityKey,
+        ...body,
+        now: now(),
+      });
+    },
+  );
+  app.route(
+    "POST",
+    "/api/source-worlds/:worldId/cards/:entityKey/reindex",
+    async (request) => {
+      const { worldId, entityKey } = EntityParams.parse(request.params);
+      requireWorld(worldId);
+      const unresolvedLinks = worlds.reindexCard(worldId, entityKey);
+      const card = worlds.getCard(worldId, entityKey);
+      if (!card)
+        throw new ServiceError(
+          "source.world.card_not_found",
+          "World Atlas card not found",
+          404,
+        );
+      return { card, unresolvedLinks };
+    },
+  );
   app.route(
     "POST",
     "/api/source-worlds/:worldId/evidence-corpora",
