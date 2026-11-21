@@ -115,13 +115,19 @@ export function resolveWorldDesignEntry(
       );
   if (candidates.length !== 1) return null;
   const node = candidates[0]!;
-  const typeMap: Record<typeof node.type, WorldWorkshop> = {
+  const atlasWorkshop = worldBuilderWorkshopForAtlasKind(
+    worldPackAtlasKind(node),
+  );
+  const legacyTypeMap: Record<typeof node.type, WorldWorkshop> = {
     location: "geography",
     organization: "factions",
     character: "people",
     item: "economy",
     rule: "power",
-    concept: "power",
+    concept: "social",
   };
-  return { workshop: typeMap[node.type], subjectRef: node.localId };
+  return {
+    workshop: atlasWorkshop ?? legacyTypeMap[node.type],
+    subjectRef: node.localId,
+  };
 }
