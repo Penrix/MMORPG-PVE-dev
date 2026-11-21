@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  WorldAtlasCardKindSchema,
+  type WorldAtlasCardKind,
+} from "./world-atlas.js";
 
 /**
  * Covel-inspired package boundary: a single AI run creates mutually
@@ -23,18 +27,51 @@ export const WorldPackRequestSchema = z.object({
 });
 export type WorldPackRequest = z.infer<typeof WorldPackRequestSchema>;
 
+export const WorldPackCoarseNodeTypeSchema = z.enum([
+  "character",
+  "location",
+  "organization",
+  "item",
+  "rule",
+  "concept",
+]);
+export type WorldPackCoarseNodeType = z.infer<
+  typeof WorldPackCoarseNodeTypeSchema
+>;
+
+export const WORLD_PACK_ATLAS_KIND_COARSE_TYPE = {
+  character: "character",
+  population: "concept",
+  organization: "organization",
+  institution: "concept",
+  position: "concept",
+  location: "location",
+  ability: "rule",
+  rule: "rule",
+  technology: "concept",
+  resource: "item",
+  item: "item",
+  work: "item",
+  information: "concept",
+  event: "concept",
+  activity: "concept",
+  creature: "character",
+  other: "concept",
+} as const satisfies Readonly<Record<WorldAtlasCardKind, WorldPackCoarseNodeType>>;
+
+export function worldPackCoarseTypeForAtlasKind(
+  kind: WorldAtlasCardKind,
+): WorldPackCoarseNodeType {
+  return WORLD_PACK_ATLAS_KIND_COARSE_TYPE[kind];
+}
+
 export const WorldPackNodeSchema = z
   .object({
     localId: z.string().regex(/^[a-z][a-z0-9_-]{1,79}$/),
     existingCanonId: z.string().trim().min(1).nullable(),
-    type: z.enum([
-      "character",
-      "location",
-      "organization",
-      "item",
-      "rule",
-      "concept",
-    ]),
+    type: WorldPackCoarseNodeTypeSchema,
+    /** Logical World Atlas card type. Optional only for old stored WorldPacks. */
+    atlasKind: WorldAtlasCardKindSchema.optional(),
     name: z.string().trim().min(1).max(300),
     description: z.string().trim().min(1).max(30_000),
     areaRef: z.string().trim().min(1).nullable(),
@@ -211,6 +248,14 @@ export function worldPackReferenceProblems(
     if (nodes.has(node.localId))
       problems.push(`duplicate local node: ${node.localId}`);
     nodes.set(node.localId, node);
+    if (
+      node.atlasKind &&
+      worldPackCoarseTypeForAtlasKind(node.atlasKind) !== node.type
+    ) {
+      problems.push(
+        `atlas kind/type mismatch: ${node.localId} ${node.atlasKind} requires ${worldPackCoarseTypeForAtlasKind(node.atlasKind)}, got ${node.type}`,
+      );
+    }
     const nameKey = `${node.type}:${node.name.toLocaleLowerCase()}`;
     if (names.has(nameKey))
       problems.push(`duplicate Canon name in package: ${node.name}`);
