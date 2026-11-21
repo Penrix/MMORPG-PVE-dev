@@ -47,7 +47,10 @@ import {
   workCraftLayer,
 } from "./prompt-language.js";
 import { StoryStatePacketBuilder } from "./story-state-packet.js";
-import { WorldAtlasStoryContextBuilder } from "./world-atlas-story-context.js";
+import {
+  WorldAtlasStoryContextBuilder,
+  worldAtlasSourcesForAccess,
+} from "./world-atlas-story-context.js";
 import {
   ADOPTION_RESULT_CONTRACT,
   AdoptionResultSchema,
@@ -526,9 +529,12 @@ export class CollaborationWorkerSuite {
     // mother-world reference facts. Its StoryState packet already enforces
     // what that character currently knows. Narrators may use current Reality
     // and the lightweight source baseline, but never the full source card.
-    if (speakerPersona.kind !== "character") {
-      sources.push(...atlasContext.current, ...atlasContext.reference);
-    }
+    sources.push(
+      ...worldAtlasSourcesForAccess(
+        atlasContext,
+        speakerPersona.kind === "character" ? "character" : "narrative",
+      ),
+    );
     const retrievalQuery = [
       session.title,
       session.directorNote,
