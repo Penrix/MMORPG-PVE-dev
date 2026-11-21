@@ -86,6 +86,7 @@ import {
   promptInvariants,
 } from "@narralume/harness";
 import { StoryStatePacketBuilder } from "./story-state-packet.js";
+import { WorldAtlasStoryContextBuilder } from "./world-atlas-story-context.js";
 import {
   REVIEW_CONTRACT,
   ReviewResultSchema,
@@ -120,6 +121,7 @@ export class ChapterWorkerSuite {
   private readonly compiler: ContextCompiler;
   private readonly templates: SqliteTemplateRepository;
   private readonly storyState: StoryStatePacketBuilder;
+  private readonly worldAtlasContext: WorldAtlasStoryContextBuilder;
   private readonly settlementApplication: SettlementApplicationService;
 
   constructor(
@@ -149,6 +151,7 @@ export class ChapterWorkerSuite {
       this.state,
       this.story,
     );
+    this.worldAtlasContext = new WorldAtlasStoryContextBuilder(database);
     this.settlementApplication = new SettlementApplicationService(database);
   }
 
@@ -297,6 +300,10 @@ export class ChapterWorkerSuite {
           "A chapter entity is no longer available; update the chapter plan",
         );
       return entity;
+    });
+    const worldAtlasContext = this.worldAtlasContext.build({
+      projectId: run.projectId,
+      entityIds: plannedEntityIds,
     });
     const entitySources = (authorView: boolean): ContextSource[] =>
       plannedEntities.map((entity) => ({
@@ -623,6 +630,9 @@ export class ChapterWorkerSuite {
       stableContextInventory([
         ...sources,
         ...entitySources(true),
+        ...worldAtlasContext.current,
+        ...worldAtlasContext.reference,
+        ...worldAtlasContext.referenceDetail,
         ...authorStoryStatePacket.sources,
       ]),
     );
@@ -654,9 +664,17 @@ export class ChapterWorkerSuite {
       ].includes(purpose)
         ? authorStoryStatePacket
         : draftStoryStatePacket;
+      const authorPurpose = [
+        "scene-plan",
+        "semantic-review",
+        "chapter-settlement",
+      ].includes(purpose);
       const purposeSources = [
         ...sources,
         ...entitySources(statePacket === authorStoryStatePacket),
+        ...worldAtlasContext.current,
+        ...worldAtlasContext.reference,
+        ...(authorPurpose ? worldAtlasContext.referenceDetail : []),
         ...statePacket.sources,
       ];
       const purposeInventoryDigest = sha256(
@@ -740,6 +758,16 @@ export class ChapterWorkerSuite {
         storyStateFingerprints: {
           author: authorStoryStatePacket.fingerprint,
           draft: draftStoryStatePacket.fingerprint,
+        },
+        worldAtlasContext: {
+          counts: worldAtlasContext.counts,
+          currentSourceIds: worldAtlasContext.current.map((source) => source.id),
+          referenceSourceIds: worldAtlasContext.reference.map(
+            (source) => source.id,
+          ),
+          referenceDetailSourceIds: worldAtlasContext.referenceDetail.map(
+            (source) => source.id,
+          ),
         },
         retrievalEmbedding: {
           model: queryEmbedding.model,
