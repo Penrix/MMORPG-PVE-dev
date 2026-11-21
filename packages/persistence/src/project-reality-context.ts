@@ -1,3 +1,4 @@
+import { worldAtlasNarrativePriority } from "@narralume/contracts";
 import type { ContextSource } from "@narralume/context";
 import type { NarrativeDatabase } from "./database.js";
 import {
@@ -74,9 +75,9 @@ export class WorldAtlasStoryContextBuilder {
 
       current.push(projectRealitySource(view, project));
 
-      const sourceIdentityAndRelations = source.filter(
-        (slot) => !(slot.facet === "lore" && slot.slotKey === "card"),
-      );
+      const sourceIdentityAndRelations = source
+        .filter((slot) => !(slot.facet === "lore" && slot.slotKey === "card"))
+        .sort(compareNarrativeReferenceSlots);
       if (
         sourceIdentityAndRelations.length > 0 ||
         view.ambiguousSourceBaseline ||
@@ -105,6 +106,30 @@ export class WorldAtlasStoryContextBuilder {
       },
     };
   }
+}
+
+function compareNarrativeReferenceSlots(
+  left: RealitySlot,
+  right: RealitySlot,
+): number {
+  const leftRank = narrativeReferenceRank(left);
+  const rightRank = narrativeReferenceRank(right);
+  return (
+    leftRank - rightRank ||
+    left.facet.localeCompare(right.facet) ||
+    left.slotKey.localeCompare(right.slotKey, "zh-CN")
+  );
+}
+
+function narrativeReferenceRank(slot: RealitySlot): number {
+  if (slot.facet === "state" && slot.slotKey === "source_identity") return -1;
+  if (slot.facet !== "relationship") return 10_000;
+  const value = slot.value as { otherKind?: unknown };
+  return typeof value?.otherKind === "string"
+    ? worldAtlasNarrativePriority(
+        value.otherKind as Parameters<typeof worldAtlasNarrativePriority>[0],
+      )
+    : 9_999;
 }
 
 function projectRealitySource(
