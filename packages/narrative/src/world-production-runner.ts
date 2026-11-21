@@ -46,14 +46,10 @@ function addUsage(a: RunBudgetUsage, b: RunBudgetUsage): RunBudgetUsage {
   };
 }
 
-/** Not a list of cards: these are separate workshops that actually build an
- * interlocking live-world graph. The specific subject and expansion targets
- * are chosen after every workshop from the produced world, never by the model.
- * v0.2 §§3,8 and v0.5 content-production mechanics are the design source.
+/** Bootstrap hints only. They are not a mandatory pipeline.
+ * After the first real object exists, the graph/audit chooses the next work.
  */
-function requiredWorkshops(request: WorldPackRequest): WorldWorkshop[] {
-  // One world design method for every source: the program always builds an
-  // actual world. History/IP provenance never selects a simplified path.
+function bootstrapWorkshops(request: WorldPackRequest): WorldWorkshop[] {
   return [...initialWorldWorkshopOrder(request)];
 }
 
@@ -338,36 +334,24 @@ export async function runWorldWorkshops(args: {
   ];
   const existingWorld = args.existingWorld ?? emptyWorldDocument();
   const view = () => previewProductionReality(existingWorld, state);
-  const workshops = requiredWorkshops(args.request);
-  // A W1 request can open an already-known rule or unusual resource directly.
-  // Do not suppress that branch merely because the shared W0 already
-  // produced its foundational power system.
-  const requestedSubject = resolveWorldDesignEntry(args.request, view());
-  if (requestedSubject && !workshops.includes(requestedSubject.workshop))
-    workshops.unshift(requestedSubject.workshop);
-  // Additional focused iterations are chosen from actual shortcomings of
-  // the world graph, not a model-authored generic TODO or number of cards.
-  const maxExtra = 6;
-  const completedWorkshops = new Set<WorldWorkshop>(
-    steps.map((s) => s.workshop),
-  );
-  for (let index = steps.length; index < workshops.length + maxExtra; index++) {
-    const gap = playtestWorld(view(), args.request).next;
-    const unfinished = workshops.find((w) => !completedWorkshops.has(w));
+  const bootstrap = bootstrapWorkshops(args.request);
+  // The queue is deliberately open: a workshop may repeat if the same real
+  // deficiency remains, and unrelated workshops are not executed merely to
+  // tick a checklist. The bootstrap list is only a fallback for an otherwise
+  // undiagnosable empty start.
+  const maxSteps = 16;
+  for (let index = steps.length; index < maxSteps; index++) {
+    const check = playtestWorld(view(), args.request);
     const requestedEntry =
-      index === 0 ? resolveWorldDesignEntry(args.request, view()) : null;
-    // An actual newly exposed deficit may move ahead of the old work queue.
-    // Every core workshop still runs; no model may declare one unnecessary.
-    const op =
-      requestedEntry && workshops.includes(requestedEntry.workshop)
-        ? workOrder(requestedEntry.workshop, view(), args.request)
-        : gap &&
-            workshops.includes(gap.workshop) &&
-            !completedWorkshops.has(gap.workshop)
-          ? gap
-          : unfinished
-            ? workOrder(unfinished, view(), args.request)
-            : gap;
+      steps.length === 0 && index === 0
+        ? resolveWorldDesignEntry(args.request, view())
+        : null;
+    const op = requestedEntry
+      ? workOrder(requestedEntry.workshop, view(), args.request)
+      : check.next ??
+        (steps.length === 0 && bootstrap[0]
+          ? workOrder(bootstrap[0], view(), args.request)
+          : null);
     if (!op) break;
     const instruction = {
       ...worldWorkOrderInput(op, view()),
@@ -451,14 +435,14 @@ export async function runWorldWorkshops(args: {
     );
     state = merged.document;
     steps.push(merged.step);
-    completedWorkshops.add(op.workshop);
     usage = addUsage(usage, result.usage);
     await args.onCheckpoint?.({ document: state, usage, steps: [...steps] });
   }
   const remaining = playtestWorld(view(), args.request).next;
   if (remaining) {
-    // Never silently stage an incomplete package as if a game world exists.
-    // The Run remains recoverably failed for the author to inspect/retry.
+    // Never silently stage a package while a blocking structural deficiency
+    // still exists. Non-blocking Atlas audit gaps remain recommendations for
+    // the next expansion batch, not mandatory checklist failures.
     throw new Error(
       "world.production.unfinished: " +
         remaining.workshop +
