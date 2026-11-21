@@ -1,4 +1,9 @@
-import type { WorldPackDocument, WorldPackRequest } from "@narralume/contracts";
+import {
+  worldBuilderWorkshopForAtlasKind,
+  worldPackAtlasKind,
+  type WorldPackDocument,
+  type WorldPackRequest,
+} from "@narralume/contracts";
 import type { WorldWorkshop } from "./world-production-engine.js";
 
 /**
