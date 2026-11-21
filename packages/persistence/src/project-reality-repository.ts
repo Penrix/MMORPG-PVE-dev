@@ -150,7 +150,6 @@ function sourceSlots(
           name: dossier.record.name,
           kind: dossier.record.kind,
           aliases: dossier.record.aliases,
-          summary: dossier.record.summary,
         },
         c,
         k,
