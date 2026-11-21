@@ -26,9 +26,9 @@ export function worldPowerMode(
     : "ordinary";
 }
 
-/** v0.2's ten world systems share one content-production framework.
- * A lens can be reused to deepen or revisit a specific world object;
- * they are NOT ten separate one-shot prompts or genre-specific pipelines.
+/** Historical v0.2 design lenses.
+ * These are NOT the ten World Atlas Families and NOT a mandatory runtime queue.
+ * Atlas Families describe content coverage; workshops are production operations.
  */
 export const WORLD_DESIGN_SYSTEMS = [
   "world-map",
@@ -60,9 +60,9 @@ export function powerDesignProducts(
   ];
 }
 
-/** The source may be history, IP, notes or original; the production queue
- * does not change. W0 establishes world-wide foundations; W1 inherits those
- * laws and expands locally without demanding duplicate public rules.
+/** Bootstrap hints for a fresh production batch.
+ * The runtime no longer executes this list as a fixed pipeline: after the
+ * first step, actual graph deficiencies choose what runs next.
  */
 export function initialWorldWorkshopOrder(
   request: WorldPackRequest,
