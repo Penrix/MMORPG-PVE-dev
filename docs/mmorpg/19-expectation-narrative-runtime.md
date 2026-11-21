@@ -681,3 +681,60 @@ Expectation State 更新
 先验证最关键问题：
 
 > 给定当前 Expectation State 与第一层产生的十个真实候选，系统能否解释为什么某些应该略过、某些应该铺垫、某些应该继续加价、某些现在必须兑现，并且不能靠一个“精彩度分数”糊弄过去。
+
+
+## 15. 当前实现状态（2026-11-22）
+
+第一批已经落代码，不是仅有设计：
+
+```text
+packages/contracts/src/story-runtime.ts
+  ├─ ScarcityEvidence
+  ├─ EstablishedBelief
+  ├─ ProtagonistAdvantage
+  ├─ ExpectationThread
+  ├─ ExpectationState
+  ├─ NarrativeCandidate
+  └─ NarrativeAllocation
+
+packages/narrative/src/expectation-runtime.ts
+  ├─ finalizeExpectationState()
+  ├─ 固有认知 / 稀缺证据 / 主角优势引用校验
+  ├─ ripe/payoff 的 Reader-visible gap 校验
+  ├─ finalizeNarrativeAllocationDecision()
+  └─ finalizeNarrativeAllocationBatch()
+
+packages/narrative/src/expectation-runtime-workers.ts
+  └─ ExpectationNarrativeService.allocateReaderTime()
+     真实 structured model call，走 planning model
+```
+
+第一批宿主硬约束：
+
+- 不存在 `scarcityScore / excitementScore`。
+- `charge` 必须明确加固 scarcity / established belief / gap / embodiment 中至少一项。
+- `payoff` 只能兑现已经 ripe/payoff 的 thread。
+- `skip` 不占 Reader Time。
+- `background` 只能是 mention / beat。
+- 每个 Reality Candidate 必须得到一次且仅一次 allocation。
+- Layer 2 不能改写 Candidate，也不能重写 Character Agent intent。
+- 所有输出仍是 `authority=speculative`，不能绕过正文 Settlement 写 Canon。
+
+已新增回归测试：
+
+- `packages/narrative/test/expectation-runtime.test.ts`
+- `packages/narrative/test/expectation-runtime-workers.test.ts`
+
+当前尚未完成：
+
+1. 从 World Atlas / Project Reality 自动构建 ScarcityEvidence / EstablishedBelief，而不是由上层传入。
+2. 把第一层 WorldArbitration 结果自动转换成 NarrativeCandidate。
+3. Expectation State 在章节 Settlement 后如何增量更新。
+4. 三阵营真实“下注”如何从人物行动 / 关系 / 资产变更自动提取。
+5. Reader Knowledge / Reader Feels 的显式状态投影。
+6. NarrativeAllocation → Story Move / Chapter Target → NarraLume Scene Plan 的正式接线。
+7. HorizonRehearsal 对 active Expectation Threads 的未来加价/兑现推演。
+
+因此当前实现准确定位：
+
+> **已经有了第二层“给定 Expectation State + 多个真实候选 → 分配 Reader Time”的第一段可执行闭环；还没有完成“从数据库自动发现固有认知与稀缺性 → 自动维护期待线程 → 自动接回章节生产”的完整闭环。**
