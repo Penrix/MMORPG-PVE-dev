@@ -128,7 +128,7 @@ export const WORLD_BUILDER_ATLAS_CROSSWALK = [
   {
     workshop: "people",
     families: ["people", "activity", "information"],
-    cardKinds: ["character", "population"],
+    cardKinds: ["character", "population", "creature"],
     peopleQuestions: [
       "他与谁有私人、职业或权力关系？",
       "他属于哪些组织或圈层？",
@@ -224,6 +224,38 @@ export function worldBuilderAtlasTarget(
   return WORLD_BUILDER_ATLAS_CROSSWALK.find(
     (entry) => entry.workshop === workshop,
   )!;
+}
+
+export function worldBuilderWorkshopForAtlasKind(
+  kind: WorldAtlasCardKind,
+): WorldBuilderWorkshopId | null {
+  switch (kind) {
+    case "character":
+    case "population":
+    case "creature":
+      return "people";
+    case "organization":
+    case "institution":
+    case "position":
+      return "factions";
+    case "location":
+      return "geography";
+    case "ability":
+    case "rule":
+    case "technology":
+      return "power";
+    case "resource":
+    case "item":
+    case "work":
+      return "economy";
+    case "information":
+      return "social";
+    case "event":
+    case "activity":
+      return "events";
+    case "other":
+      return null;
+  }
 }
 
 export const WORLD_BUILDER_ATLAS_CONTRACT = {
