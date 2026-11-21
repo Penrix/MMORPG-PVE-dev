@@ -247,7 +247,7 @@ export class SqliteSourceCorpusRepository {
     if (!ref) return null;
     const exactKey = this.getRecord(corpusId, ref);
     if (exactKey) return exactKey;
-    const row = this.db.raw
+    const rows = this.db.raw
       .prepare(
         `
       SELECT r.*
@@ -262,11 +262,13 @@ export class SqliteSourceCorpusRepository {
           )
         )
       ORDER BY CASE WHEN r.name=? THEN 0 ELSE 1 END, r.source_key
-      LIMIT 1
+      LIMIT 2
     `,
       )
-      .get(corpusId, ref, ref, ref) as RecordRow | undefined;
-    return row ? recordFromRow(row) : null;
+      .all(corpusId, ref, ref, ref) as unknown as RecordRow[];
+    // A human-readable wiki link may be ambiguous. Never silently choose the
+    // first same-name card; use [[stable-key|display name]] to disambiguate.
+    return rows.length === 1 ? recordFromRow(rows[0]!) : null;
   }
 
   upsertRelation(edge: SourceRelation): void {
