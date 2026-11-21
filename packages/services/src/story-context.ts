@@ -4,12 +4,12 @@ import {
   type ContextSource,
 } from "@narralume/context";
 import type { CanonAccess } from "@narralume/domain";
-import { WorldAtlasNarrativeContextBuilder } from "@narralume/narrative";
 import {
   SqliteCanonRepository,
   SqliteContextReceiptRepository,
   SqliteRetrievalRepository,
   SqliteStoryRepository,
+  WorldAtlasNarrativeContextBuilder,
   type NarrativeDatabase,
 } from "@narralume/persistence";
 
