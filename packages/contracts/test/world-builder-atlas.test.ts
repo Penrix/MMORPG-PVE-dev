@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { WORLD_ATLAS_CONTENT_FAMILIES } from "../src/world-atlas.js";
 import {
-  WORLD_ATLAS_CONTENT_FAMILIES,
   WORLD_BUILDER_ATLAS_CONTRACT,
   WORLD_BUILDER_ATLAS_CROSSWALK,
   WORLD_BUILDER_STAGES,
