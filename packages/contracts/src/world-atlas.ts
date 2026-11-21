@@ -365,8 +365,10 @@ export const WORLD_ATLAS_RELATIONS = [
   { relation: "rival", inverse: "rival", group: "social" },
 ] as const satisfies readonly WorldAtlasRelationDefinition[];
 
-const WORLD_ATLAS_INVERSE_RELATIONS = new Map(
-  WORLD_ATLAS_RELATIONS.map((entry) => [entry.relation, entry.inverse]),
+const WORLD_ATLAS_INVERSE_RELATIONS = new Map<string, string>(
+  WORLD_ATLAS_RELATIONS.map(
+    (entry): [string, string] => [entry.relation, entry.inverse],
+  ),
 );
 
 export function inverseWorldAtlasRelation(relation: string): string | null {
