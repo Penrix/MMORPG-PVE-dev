@@ -2,6 +2,7 @@ import {
   AdoptWorldPackRequestSchema,
   UpdateWorldPackRequestSchema,
   WorldPackRequestSchema,
+  worldPackAtlasKind,
   worldPackReferenceProblems,
   type WorldPackRecord,
 } from "@narralume/contracts";
@@ -90,6 +91,20 @@ export function adoptWorldPack(
             "world.pack.type_mismatch",
             `Type mismatch for ${node.name}`,
           );
+        const reusedAtlasKind =
+          typeof reused.attributes.atlasKind === "string"
+            ? reused.attributes.atlasKind
+            : null;
+        if (
+          node.atlasKind &&
+          reusedAtlasKind &&
+          node.atlasKind !== reusedAtlasKind
+        )
+          throw new WorldPackRouteError(
+            "world.pack.atlas_kind_mismatch",
+            `Atlas kind mismatch for ${node.name}: ${reusedAtlasKind} -> ${node.atlasKind}`,
+            409,
+          );
         if (reused.name !== node.name && !reused.aliases.includes(node.name))
           throw new WorldPackRouteError(
             "world.pack.name_mismatch",
@@ -124,6 +139,7 @@ export function adoptWorldPack(
           attributes: {
             worldPackId: pack.id,
             worldPackLocalId: node.localId,
+            ...(node.atlasKind ? { atlasKind: node.atlasKind } : {}),
             worldScale: pack.request.scale,
             worldTime: pack.request.worldTime,
             worldValue: node.value,
@@ -168,6 +184,7 @@ export function adoptWorldPack(
           predicate: "world.content",
           value: {
             scale: pack.request.scale,
+            atlasKind: worldPackAtlasKind(node),
             worldTime: pack.request.worldTime,
             value: node.value,
             access: node.access,
