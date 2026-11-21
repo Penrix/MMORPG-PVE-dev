@@ -46,7 +46,11 @@ describe("World Atlas content framework", () => {
 
   it("derives inverse labels from the shared relation vocabulary while leaving unknown relations open", () => {
     expect(inverseWorldAtlasRelation("老师")).toBe("学生");
+    expect(inverseWorldAtlasRelation("学生")).toBe("老师");
+    expect(inverseWorldAtlasRelation("所属组织")).toBe("成员");
+    expect(inverseWorldAtlasRelation("成员")).toBe("所属");
     expect(inverseWorldAtlasRelation("参与")).toBe("参与者");
+    expect(inverseWorldAtlasRelation("参与者")).toBe("参与");
     expect(inverseWorldAtlasRelation("敌对")).toBe("敌对");
     expect(inverseWorldAtlasRelation("作者自定义关系")).toBeNull();
   });
