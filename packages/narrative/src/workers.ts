@@ -43,6 +43,7 @@ import {
   SqliteRunRepository,
   SqliteStoryRepository,
   SqliteTemplateRepository,
+  WorldAtlasNarrativeContextBuilder,
   type NarrativeDatabase,
 } from "@narralume/persistence";
 
@@ -86,7 +87,6 @@ import {
   promptInvariants,
 } from "@narralume/harness";
 import { StoryStatePacketBuilder } from "./story-state-packet.js";
-import { WorldAtlasNarrativeContextBuilder } from "./world-atlas-context.js";
 import {
   REVIEW_CONTRACT,
   ReviewResultSchema,
