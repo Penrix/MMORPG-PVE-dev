@@ -188,9 +188,7 @@ export function auditWorldAtlasProduction(
   doc: WorldPackDocument,
 ): WorldAtlasProductionAudit {
   const live = currentLinks(doc);
-  const people = doc.nodes.filter(
-    (node) => atlasKindOf(node) === "character",
-  );
+  const people = doc.nodes.filter((node) => atlasKindOf(node) === "character");
   const peopleFamily = doc.nodes.filter((node) =>
     ["character", "population", "creature"].includes(atlasKindOf(node)),
   );
@@ -370,10 +368,12 @@ export function auditWorldAtlasProduction(
         : people.length === 0 || socialPeople.length === 0
           ? "thin"
           : "present",
-      [...new Set([
-        ...peopleFamily.map((node) => node.localId),
-        ...socialPeople.map((node) => node.localId),
-      ])],
+      [
+        ...new Set([
+          ...peopleFamily.map((node) => node.localId),
+          ...socialPeople.map((node) => node.localId),
+        ]),
+      ],
       peopleFamily.length === 0
         ? "没有人物、人口群体或生物对象。"
         : people.length === 0
@@ -403,10 +403,12 @@ export function auditWorldAtlasProduction(
         : organizations.length === 0 || socialOrganizations.length === 0
           ? "thin"
           : "present",
-      [...new Set([
-        ...organizationFamily.map((node) => node.localId),
-        ...socialOrganizations.map((node) => node.localId),
-      ])],
+      [
+        ...new Set([
+          ...organizationFamily.map((node) => node.localId),
+          ...socialOrganizations.map((node) => node.localId),
+        ]),
+      ],
       organizationFamily.length === 0
         ? "没有组织、制度或职位对象。"
         : organizations.length === 0
