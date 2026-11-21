@@ -111,8 +111,8 @@
   margin-top: 3px;
   font-size: 12px;
 }
-.world-builder__atlas-family[data-status="present"] strong { color: var(--success); }
-.world-builder__atlas-family[data-status="thin"] strong { color: var(--warning); }
+.world-builder__atlas-family[data-status="present"] strong { color: var(--vera); }
+.world-builder__atlas-family[data-status="thin"] strong { color: var(--ink-soft); }
 .world-builder__atlas-family[data-status="missing"] strong { color: var(--conflict); }
 .world-builder__atlas-next {
   margin: 10px 0 5px;
