@@ -65,6 +65,21 @@ export function worldPackCoarseTypeForAtlasKind(
   return WORLD_PACK_ATLAS_KIND_COARSE_TYPE[kind];
 }
 
+export const WORLD_PACK_COARSE_TYPE_DEFAULT_ATLAS_KIND = {
+  character: "character",
+  location: "location",
+  organization: "organization",
+  item: "item",
+  rule: "rule",
+  concept: "other",
+} as const satisfies Readonly<Record<WorldPackCoarseNodeType, WorldAtlasCardKind>>;
+
+export function worldPackAtlasKind(
+  node: Pick<WorldPackNode, "type" | "atlasKind">,
+): WorldAtlasCardKind {
+  return node.atlasKind ?? WORLD_PACK_COARSE_TYPE_DEFAULT_ATLAS_KIND[node.type];
+}
+
 export const WorldPackNodeSchema = z
   .object({
     localId: z.string().regex(/^[a-z][a-z0-9_-]{1,79}$/),
