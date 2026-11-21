@@ -1,4 +1,5 @@
 import type {
+  ExpectationDesignDraft,
   ExpectationState,
   NarrativeAllocationDecisionDraft,
   NarrativeCandidate,
@@ -7,6 +8,7 @@ import type {
 import { describe, expect, it } from "vitest";
 
 import {
+  finalizeExpectationDesign,
   finalizeExpectationState,
   finalizeNarrativeAllocationBatch,
   finalizeNarrativeAllocationDecision,
@@ -120,6 +122,60 @@ function decision(
 }
 
 describe("Expectation / Narrative Runtime", () => {
+  it("designs the expectation transaction before Reality simulation without scripting character outcomes", () => {
+    const draft: ExpectationDesignDraft = {
+      version: "expectation-design.v1",
+      authority: "speculative",
+      projectId: "p1",
+      protagonistId: "xiuxin",
+      readerNeed: "看低位秀信凭真实能力被高价人物识货",
+      targetEmotion: "得意与被识货",
+      targetOutcome: "让木叶高价人物重新估值秀信",
+      scarcityIntents: [
+        {
+          claim: "基础忍术通常没有高阶价值",
+          subjectRef: "basic-ninjutsu",
+          existingEvidenceRefs: ["atlas:basic-limit"],
+          evidenceToEstablish: ["让专业忍者基于训练经验说明正常上限"],
+        },
+      ],
+      beliefIntents: [
+        {
+          proposition: "病床上的普通下忍不可能靠基础忍术体现高阶价值",
+          scope: "circle",
+          holderEntityIds: ["medic", "sakumo"],
+          existingEvidenceRefs: ["atlas:basic-limit"],
+          stakeToCultivate: ["医疗体系继续按普通伤员流程处理"],
+          breakCondition: "可信高手获得不可否认的异常证据",
+        },
+      ],
+      protagonistAdvantageRefs: ["reality:xiuxin-control"],
+      reactionTargetEntityIds: ["medic", "sakumo"],
+      retainedGainTarget: "获得更高层训练与关系入口",
+      activationEntityIds: ["medic", "sakumo"],
+      worldFocusRefs: ["atlas:basic-limit"],
+      designReasons: [
+        "先经营基础忍术上限这一固有认知，再让第一层人物自行行动",
+      ],
+      realityFingerprint: "r1",
+      storyStateFingerprint: "s1",
+      mustPreserveAgentAutonomy: true,
+      mustNotPredetermineOutcome: true,
+    };
+
+    const design = finalizeExpectationDesign(
+      draft,
+      new Set(["atlas:basic-limit", "reality:xiuxin-control"]),
+      new Set(["xiuxin", "medic", "sakumo"]),
+    );
+
+    expect(design.targetEmotion).toBe("得意与被识货");
+    expect(design.activationEntityIds).toEqual(["medic", "sakumo"]);
+    expect(design.mustNotPredetermineOutcome).toBe(true);
+    expect(design.digest).toBeTruthy();
+    expect(JSON.stringify(design)).not.toContain("scarcityScore");
+  });
+
   it("bridges finalized arbitration into speculative NarrativeCandidates without rewriting the result", () => {
     const receipt: WorldArbitrationReceipt = {
       version: "world-arbitration-receipt.v1",
