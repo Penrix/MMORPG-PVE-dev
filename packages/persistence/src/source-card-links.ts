@@ -119,7 +119,7 @@ export function parseTypedWikiLinks(markdown: string): TypedWikiLink[] {
 
   for (const rawLine of markdown.split(/\r?\n/)) {
     const line = rawLine.trimEnd();
-    const heading = /^\s*([^:：\[\]]{1,80})\s*[:：]\s*(.*)$/.exec(line);
+    const heading = /^\s*([^:：[\]]{1,80})\s*[:：]\s*(.*)$/.exec(line);
     if (heading) {
       const relation = cleanRelation(heading[1] ?? "");
       currentRelation = relation || null;
