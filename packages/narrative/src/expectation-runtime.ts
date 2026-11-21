@@ -39,7 +39,9 @@ function requireUniqueIds(
   const ids = new Set<string>();
   for (const item of values) {
     if (ids.has(item.id)) {
-      throw new Error(`story_runtime.expectation.duplicate_${label}:${item.id}`);
+      throw new Error(
+        `story_runtime.expectation.duplicate_${label}:${item.id}`,
+      );
     }
     ids.add(item.id);
   }
@@ -184,16 +186,8 @@ export function finalizeNarrativeAllocationDecision(
     parsed.deepenScarcityEvidenceIds,
     refs.scarcityIds,
   );
-  requireRefs(
-    "established_belief",
-    parsed.reinforceBeliefIds,
-    refs.beliefIds,
-  );
-  requireRefs(
-    "established_belief",
-    parsed.widenGapBeliefIds,
-    refs.beliefIds,
-  );
+  requireRefs("established_belief", parsed.reinforceBeliefIds, refs.beliefIds);
+  requireRefs("established_belief", parsed.widenGapBeliefIds, refs.beliefIds);
   requireRefs("expectation_thread", parsed.payoffThreadIds, refs.threadIds);
 
   if (parsed.action === "skip" && parsed.readerTime !== "none") {
@@ -211,7 +205,9 @@ export function finalizeNarrativeAllocationDecision(
     ["seed", "charge", "payoff"].includes(parsed.action) &&
     parsed.readerTime === "none"
   ) {
-    throw new Error("story_runtime.expectation.story_action_requires_reader_time");
+    throw new Error(
+      "story_runtime.expectation.story_action_requires_reader_time",
+    );
   }
   if (
     ["seed", "charge", "payoff"].includes(parsed.action) &&
@@ -317,7 +313,6 @@ export function finalizeNarrativeAllocationBatch(
     digest: digest(withoutDigest),
   });
 }
-
 
 /**
  * Bridge Layer 1 Reality Runtime into Layer 2 Expectation Runtime.
