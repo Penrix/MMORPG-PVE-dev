@@ -6,6 +6,7 @@ import {
   Cpu,
   LibraryBig,
   Map,
+  Network,
   PenLine,
   Radar,
 
@@ -66,6 +67,17 @@ export const WORKSPACES: WorkspaceDef[] = [
     icon: Map,
     blurb: "shell.nav.worldBlurb",
     seal: "界",
+  },
+  {
+    id: "atlas",
+    path: "/atlas",
+    projectScoped: false,
+    label: "shell.nav.atlas",
+    en: "ATLAS",
+    index: "W1",
+    icon: Network,
+    blurb: "shell.nav.atlasBlurb",
+    seal: "图",
   },
   {
     id: "bible",
