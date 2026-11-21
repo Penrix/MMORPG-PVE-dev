@@ -186,9 +186,12 @@ describe("SettlementApplicationService", () => {
     });
     expect(context.current[0]!.content).toContain('"condition"');
     expect(context.current[0]!.content).toContain('"awake"');
+    expect(context.current[0]!.content).toContain('"trusts"');
+    expect(context.current[0]!.content).toContain('"Hero wakes"');
 
     // Settlement remains the single write path. Current Reality projects the
-    // accepted Canon fact instead of duplicating it into another truth table.
+    // accepted Canon fact, native relationship and native timeline event
+    // instead of duplicating them into another truth table.
     expect(
       database.raw
         .prepare(
