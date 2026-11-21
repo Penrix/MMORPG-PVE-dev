@@ -7,6 +7,8 @@ export const shell = {
     overviewBlurb: "当前进度、活动任务与下一步",
     world: "世界生成",
     worldBlurb: "W0世界底图、W1新地图、人物与价值内容生产",
+    atlas: "世界资料库",
+    atlasBlurb: "原生母体世界卡片、语义关系、反向链接与关系网",
     bible: "故事",
     bibleBlurb: "意图、人物、大纲与故事事实",
     studio: "写作",

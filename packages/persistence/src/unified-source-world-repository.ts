@@ -3,7 +3,10 @@ import {
   SqliteSourceCorpusRepository,
   type SourceKind,
   type SourceRecord,
+  type SourceRecordHit,
+  type SourceRelationView,
 } from "./source-corpus-repository.js";
+import { parseTypedWikiLinks } from "./source-card-links.js";
 import {
   SqliteMotherWorldEncyclopediaRepository,
   type MotherWorldDossier,
@@ -37,6 +40,18 @@ export interface UnifiedSourceWorldDossier {
   world: SourceWorld;
   dossier: MotherWorldDossier;
   evidence: SourceWorldEvidence[];
+}
+
+export interface SourceWorldCard {
+  world: SourceWorld;
+  record: SourceRecord;
+  content: string;
+  relations: SourceRelationView[];
+}
+
+export interface SourceWorldCardSaveResult {
+  card: SourceWorldCard;
+  unresolvedLinks: Array<{ relation: string; target: string }>;
 }
 
 /** A single original WORLD may have multiple upstream source corpora.
@@ -247,6 +262,148 @@ export class SqliteUnifiedSourceWorldRepository {
           ]
         : [];
     });
+  }
+
+  listCards(
+    worldId: string,
+    query = "",
+    options: { kind?: SourceKind; limit?: number; offset?: number } = {},
+  ): SourceRecordHit[] {
+    const world = this.getWorld(worldId);
+    if (!world) throw Error("source.world.not_found");
+    return this.sources.search(query, {
+      corpusId: world.canonicalCorpusId,
+      ...(options.kind ? { kind: options.kind } : {}),
+      limit: options.limit ?? 100,
+      offset: options.offset ?? 0,
+    });
+  }
+
+  getCard(worldId: string, entityKey: string): SourceWorldCard | null {
+    const world = this.getWorld(worldId);
+    if (!world) return null;
+    const dossier = this.wiki.getDossier(world.canonicalCorpusId, entityKey);
+    if (!dossier) return null;
+    const primary = dossier.lore.find(
+      (section) => section.sectionKey === "card",
+    );
+    const content =
+      primary?.content ??
+      dossier.lore
+        .map((section) => `## ${section.title}\n\n${section.content}`)
+        .join("\n\n");
+    return {
+      world,
+      record: dossier.record,
+      content,
+      relations: this.sources.listRelations(world.canonicalCorpusId, entityKey),
+    };
+  }
+
+  /**
+   * Author-facing Source World card write.
+   *
+   * The Markdown card is the content truth. source_relations is rebuilt from
+   * typed wiki links after each save and can be discarded/recreated at any
+   * time without losing the card.
+   */
+  upsertCard(input: {
+    worldId: string;
+    entityKey: string;
+    kind: SourceKind;
+    name: string;
+    aliases?: string[];
+    content: string;
+    now: string;
+  }): SourceWorldCardSaveResult {
+    const world = this.getWorld(input.worldId);
+    if (!world) throw Error("source.world.not_found");
+    if (!input.name.trim()) throw Error("source.world.card.name_required");
+    if (!input.content.trim())
+      throw Error("source.world.card.content_required");
+
+    const existing = this.sources.getRecord(
+      world.canonicalCorpusId,
+      input.entityKey,
+    );
+    const summary = input.content
+      .replace(
+        /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,
+        (_m, target: string, label?: string) => label ?? target,
+      )
+      .replace(/[#*_>\x60]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 500);
+
+    this.sources.upsertRecord({
+      corpusId: world.canonicalCorpusId,
+      sourceKey: input.entityKey,
+      kind: input.kind,
+      name: input.name.trim(),
+      aliases: input.aliases ?? existing?.aliases ?? [],
+      summary,
+      raw: {
+        ...(existing?.raw ?? {}),
+        atlasCard: true,
+      },
+      sourceUrl: existing?.sourceUrl ?? "",
+      originCollection: existing?.originCollection ?? "curated-original-world",
+      importedAt: input.now,
+    });
+    this.wiki.upsertLore({
+      corpusId: world.canonicalCorpusId,
+      sourceKey: input.entityKey,
+      sectionKey: "card",
+      title: input.name.trim(),
+      content: input.content,
+      sourceUrl: existing?.sourceUrl ?? "",
+      sourceNote: "World Atlas author card",
+      updatedAt: input.now,
+    });
+
+    const unresolvedLinks = this.reindexCard(
+      input.worldId,
+      input.entityKey,
+      input.content,
+    );
+    const card = this.getCard(input.worldId, input.entityKey);
+    if (!card) throw Error("source.world.card.write_failed");
+    return { card, unresolvedLinks };
+  }
+
+  reindexCard(
+    worldId: string,
+    entityKey: string,
+    content?: string,
+  ): Array<{ relation: string; target: string }> {
+    const world = this.getWorld(worldId);
+    if (!world) throw Error("source.world.not_found");
+    const card =
+      content === undefined ? this.getCard(worldId, entityKey) : null;
+    const markdown = content ?? card?.content;
+    if (markdown === undefined) throw Error("source.world.card.not_found");
+
+    const unresolved: Array<{ relation: string; target: string }> = [];
+    this.sources.clearOutgoingRelations(world.canonicalCorpusId, entityKey);
+    for (const link of parseTypedWikiLinks(markdown)) {
+      const target = this.sources.findRecordByReference(
+        world.canonicalCorpusId,
+        link.target,
+      );
+      if (!target) {
+        unresolved.push({ relation: link.relation, target: link.target });
+        continue;
+      }
+      this.sources.upsertRelation({
+        corpusId: world.canonicalCorpusId,
+        fromKey: entityKey,
+        toKey: target.sourceKey,
+        relation: link.relation,
+        sourceNote: "derived-from-atlas-card",
+      });
+    }
+    return unresolved;
   }
 
   getDossier(

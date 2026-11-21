@@ -1,4 +1,9 @@
-import type { WorldPackRequest, WorldPackRecord, WorldPackDocument } from "@narralume/contracts";
+import type {
+  WorldAtlasCardKind,
+  WorldPackDocument,
+  WorldPackRecord,
+  WorldPackRequest,
+} from "@narralume/contracts";
 import {
   type StoryStateQuery,
   type StoryStateSnapshotDto,
@@ -3814,5 +3819,150 @@ export async function getWorldGraph(
   return requestJson(
     `/api/projects/${encodeURIComponent(projectId)}/world-graph${query}`,
     signal ? { signal } : {},
+  );
+}
+
+
+/* ==========================================================================
+   World Atlas（原生母体卡片 + typed links + 可重建关系索引）
+   ========================================================================== */
+
+export type AtlasSourceKind = WorldAtlasCardKind;
+
+export interface AtlasSourceWorld {
+  id: string;
+  name: string;
+  kind: "fictional" | "historical" | "era" | "original_reference";
+  canonicalCorpusId: string;
+  description: string;
+  createdAt: string;
+}
+
+export interface AtlasCardHit {
+  corpusId: string;
+  sourceKey: string;
+  name: string;
+  kind: AtlasSourceKind;
+  summary: string;
+  originCollection: string;
+}
+
+export interface AtlasRelation {
+  corpusId: string;
+  fromKey: string;
+  toKey: string;
+  relation: string;
+  sourceNote: string;
+  otherName: string;
+  otherKind: AtlasSourceKind;
+  direction: "out" | "in";
+  displayRelation: string;
+}
+
+export interface AtlasCard {
+  world: AtlasSourceWorld;
+  record: {
+    corpusId: string;
+    sourceKey: string;
+    kind: AtlasSourceKind;
+    name: string;
+    aliases: string[];
+    summary: string;
+    raw: Record<string, unknown>;
+    sourceUrl: string;
+    originCollection: string;
+    importedAt: string;
+  };
+  content: string;
+  relations: AtlasRelation[];
+}
+
+export interface AtlasCardSaveResult {
+  card: AtlasCard;
+  unresolvedLinks: Array<{ relation: string; target: string }>;
+}
+
+export async function listAtlasWorlds(signal?: AbortSignal): Promise<AtlasSourceWorld[]> {
+  return requestJson("/api/source-worlds", signal ? { signal } : {});
+}
+
+export async function createAtlasWorld(input: {
+  id: string;
+  name: string;
+  kind: AtlasSourceWorld["kind"];
+  description?: string;
+}): Promise<AtlasSourceWorld> {
+  return requestJson(
+    "/api/source-worlds",
+    jsonRequest("POST", { ...input, description: input.description ?? "" }),
+  );
+}
+
+export async function listAtlasCards(
+  worldId: string,
+  options: { q?: string; kind?: AtlasSourceKind; limit?: number; offset?: number } = {},
+  signal?: AbortSignal,
+): Promise<AtlasCardHit[]> {
+  const params = new URLSearchParams();
+  if (options.q) params.set("q", options.q);
+  if (options.kind) params.set("kind", options.kind);
+  params.set("limit", String(options.limit ?? 100));
+  params.set("offset", String(options.offset ?? 0));
+  return requestJson(
+    `/api/source-worlds/${encodeURIComponent(worldId)}/cards?${params.toString()}`,
+    signal ? { signal } : {},
+  );
+}
+
+export async function getAtlasCard(
+  worldId: string,
+  entityKey: string,
+  signal?: AbortSignal,
+): Promise<AtlasCard> {
+  return requestJson(
+    `/api/source-worlds/${encodeURIComponent(worldId)}/cards/${encodeURIComponent(entityKey)}`,
+    signal ? { signal } : {},
+  );
+}
+
+export async function createAtlasCard(
+  worldId: string,
+  input: {
+    entityKey: string;
+    kind: AtlasSourceKind;
+    name: string;
+    aliases: string[];
+    content: string;
+  },
+): Promise<AtlasCardSaveResult> {
+  return requestJson(
+    `/api/source-worlds/${encodeURIComponent(worldId)}/cards`,
+    jsonRequest("POST", input),
+  );
+}
+
+export async function updateAtlasCard(
+  worldId: string,
+  entityKey: string,
+  input: {
+    kind: AtlasSourceKind;
+    name: string;
+    aliases: string[];
+    content: string;
+  },
+): Promise<AtlasCardSaveResult> {
+  return requestJson(
+    `/api/source-worlds/${encodeURIComponent(worldId)}/cards/${encodeURIComponent(entityKey)}`,
+    jsonRequest("PUT", input),
+  );
+}
+
+export async function reindexAtlasCard(
+  worldId: string,
+  entityKey: string,
+): Promise<AtlasCardSaveResult> {
+  return requestJson(
+    `/api/source-worlds/${encodeURIComponent(worldId)}/cards/${encodeURIComponent(entityKey)}/reindex`,
+    jsonRequest("POST", {}),
   );
 }

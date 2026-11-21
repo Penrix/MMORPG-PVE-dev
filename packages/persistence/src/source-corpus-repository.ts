@@ -1,6 +1,13 @@
+import {
+  WorldAtlasCardKindSchema,
+  type WorldAtlasCardKind,
+} from "@narralume/contracts";
+import { inverseRelation } from "./source-card-links.js";
 import type { NarrativeDatabase } from "./database.js";
 
-export type SourceKind =
+export type SourceKind = WorldAtlasCardKind;
+
+type LegacySourceKind =
   | "character"
   | "organization"
   | "location"
@@ -9,6 +16,51 @@ export type SourceKind =
   | "item"
   | "event"
   | "other";
+
+const LEGACY_SOURCE_KINDS = new Set<SourceKind>([
+  "character",
+  "organization",
+  "location",
+  "ability",
+  "creature",
+  "item",
+  "event",
+  "other",
+]);
+
+function isLegacySourceKind(kind: SourceKind): kind is LegacySourceKind {
+  return LEGACY_SOURCE_KINDS.has(kind);
+}
+
+function storageKindFor(kind: SourceKind): LegacySourceKind {
+  return isLegacySourceKind(kind) ? kind : "other";
+}
+
+function logicalKindFromStorage(
+  kind: LegacySourceKind,
+  raw: Record<string, unknown>,
+): SourceKind {
+  const atlasCardKind = raw.atlasCardKind;
+  if (
+    typeof atlasCardKind === "string" &&
+    WorldAtlasCardKindSchema.safeParse(atlasCardKind).success
+  ) {
+    return atlasCardKind as SourceKind;
+  }
+  return kind;
+}
+
+function rawForStorage(
+  raw: Record<string, unknown>,
+  kind: SourceKind,
+): Record<string, unknown> {
+  if (isLegacySourceKind(kind)) {
+    const stored = { ...raw };
+    delete stored.atlasCardKind;
+    return stored;
+  }
+  return { ...raw, atlasCardKind: kind };
+}
 
 export interface SourceCorpus {
   id: string;
@@ -52,6 +104,14 @@ export interface SourceRecordHit {
   originCollection: string;
 }
 
+export interface SourceRelationView extends SourceRelation {
+  otherName: string;
+  otherKind: SourceKind;
+  direction: "out" | "in";
+  /** Author-facing label from the current card's point of view. */
+  displayRelation: string;
+}
+
 type CorpusRow = {
   id: string;
   title: string;
@@ -66,7 +126,7 @@ type CorpusRow = {
 type RecordRow = {
   corpus_id: string;
   source_key: string;
-  kind: SourceKind;
+  kind: LegacySourceKind;
   name: string;
   aliases_json: string;
   summary: string;
@@ -94,14 +154,15 @@ function corpusFromRow(row: CorpusRow): SourceCorpus {
   };
 }
 function recordFromRow(row: RecordRow): SourceRecord {
+  const raw = JSON.parse(row.raw_json) as Record<string, unknown>;
   return {
     corpusId: row.corpus_id,
     sourceKey: row.source_key,
-    kind: row.kind,
+    kind: logicalKindFromStorage(row.kind, raw),
     name: row.name,
     aliases: JSON.parse(row.aliases_json) as string[],
     summary: row.summary,
-    raw: JSON.parse(row.raw_json) as Record<string, unknown>,
+    raw,
     sourceUrl: row.source_url,
     originCollection: row.origin_collection,
     importedAt: row.imported_at,
@@ -184,11 +245,11 @@ export class SqliteSourceCorpusRepository {
       .run(
         record.corpusId,
         record.sourceKey,
-        record.kind,
+        storageKindFor(record.kind),
         record.name,
         JSON.stringify(record.aliases),
         record.summary,
-        JSON.stringify(record.raw),
+        JSON.stringify(rawForStorage(record.raw, record.kind)),
         record.sourceUrl,
         record.originCollection,
         record.importedAt,
@@ -228,6 +289,43 @@ export class SqliteSourceCorpusRepository {
     return row ? recordFromRow(row) : null;
   }
 
+  /**
+   * Resolve a wiki-link target inside one source world. An explicit source key
+   * wins; otherwise exact name/alias matching is used. This is deliberately a
+   * lookup helper, not an identity-merging rule.
+   */
+  findRecordByReference(
+    corpusId: string,
+    reference: string,
+  ): SourceRecord | null {
+    const ref = reference.trim();
+    if (!ref) return null;
+    const exactKey = this.getRecord(corpusId, ref);
+    if (exactKey) return exactKey;
+    const rows = this.db.raw
+      .prepare(
+        `
+      SELECT r.*
+      FROM source_records r
+      LEFT JOIN source_record_presence presence
+        ON presence.corpus_id=r.corpus_id AND presence.source_key=r.source_key
+      WHERE r.corpus_id=? AND COALESCE(presence.active,1)=1
+        AND (
+          r.name=?
+          OR EXISTS (
+            SELECT 1 FROM json_each(r.aliases_json) alias WHERE alias.value=?
+          )
+        )
+      ORDER BY CASE WHEN r.name=? THEN 0 ELSE 1 END, r.source_key
+      LIMIT 2
+    `,
+      )
+      .all(corpusId, ref, ref, ref) as unknown as RecordRow[];
+    // A human-readable wiki link may be ambiguous. Never silently choose the
+    // first same-name card; use [[stable-key|display name]] to disambiguate.
+    return rows.length === 1 ? recordFromRow(rows[0]!) : null;
+  }
+
   upsertRelation(edge: SourceRelation): void {
     this.db.raw
       .prepare(
@@ -247,23 +345,15 @@ export class SqliteSourceCorpusRepository {
       );
   }
 
-  listRelations(
-    corpusId: string,
-    sourceKey: string,
-  ): Array<
-    SourceRelation & {
-      otherName: string;
-      otherKind: SourceKind;
-      direction: "out" | "in";
-    }
-  > {
+  listRelations(corpusId: string, sourceKey: string): SourceRelationView[] {
     const rows = this.db.raw
       .prepare(
         `
       SELECT r.corpus_id AS corpusId, r.from_key AS fromKey, r.to_key AS toKey,
         r.relation, r.source_note AS sourceNote,
         CASE WHEN r.from_key=? THEN 'out' ELSE 'in' END AS direction,
-        other.name AS otherName, other.kind AS otherKind
+        other.name AS otherName, other.kind AS otherKind,
+        other.raw_json AS otherRawJson
       FROM source_relations r JOIN source_records other
         ON other.corpus_id=r.corpus_id
         AND other.source_key=(CASE WHEN r.from_key=? THEN r.to_key ELSE r.from_key END)
@@ -271,14 +361,34 @@ export class SqliteSourceCorpusRepository {
       ORDER BY r.relation,other.name
     `,
       )
-      .all(sourceKey, sourceKey, corpusId, sourceKey, sourceKey);
-    return rows as Array<
+      .all(sourceKey, sourceKey, corpusId, sourceKey, sourceKey) as Array<
       SourceRelation & {
         otherName: string;
-        otherKind: SourceKind;
+        otherKind: LegacySourceKind;
+        otherRawJson: string;
         direction: "out" | "in";
       }
     >;
+    return rows.map((row) => {
+      const { otherRawJson, ...relation } = row;
+      const raw = JSON.parse(otherRawJson) as Record<string, unknown>;
+      return {
+        ...relation,
+        otherKind: logicalKindFromStorage(row.otherKind, raw),
+        displayRelation:
+          row.direction === "out"
+            ? row.relation
+            : (inverseRelation(row.relation) ?? `← ${row.relation}`),
+      };
+    });
+  }
+
+  /** Rebuild only one card's outgoing derived index; incoming edges belong to
+   * the other cards and are left intact. */
+  clearOutgoingRelations(corpusId: string, sourceKey: string): void {
+    this.db.raw
+      .prepare("DELETE FROM source_relations WHERE corpus_id=? AND from_key=?")
+      .run(corpusId, sourceKey);
   }
 
   bindProject(projectId: string, corpusId: string, enabled = true): void {
@@ -345,8 +455,19 @@ export class SqliteSourceCorpusRepository {
         AND presence.active=0
     )`);
     if (options.kind) {
-      clauses.push("r.kind=?");
-      args.push(options.kind);
+      if (options.kind === "other") {
+        clauses.push(
+          "r.kind='other' AND json_extract(r.raw_json,'$.atlasCardKind') IS NULL",
+        );
+      } else if (isLegacySourceKind(options.kind)) {
+        clauses.push("r.kind=?");
+        args.push(options.kind);
+      } else {
+        clauses.push(
+          "r.kind='other' AND json_extract(r.raw_json,'$.atlasCardKind')=?",
+        );
+        args.push(options.kind);
+      }
     }
     const normalized = query.trim();
     if (normalized) {
@@ -364,14 +485,35 @@ export class SqliteSourceCorpusRepository {
       .prepare(
         `
       SELECT r.corpus_id AS corpusId, r.source_key AS sourceKey,
-        r.name, r.kind, r.summary, r.origin_collection AS originCollection
+        r.name, r.kind, r.raw_json AS rawJson,
+        r.summary, r.origin_collection AS originCollection
       FROM source_records r
       ${clauses.length ? "WHERE " + clauses.join(" AND ") : ""}
       ORDER BY r.kind,r.name,r.source_key LIMIT ? OFFSET ?
     `,
       )
       .all(...args, limit, offset);
-    return rows as SourceRecordHit[];
+    return (
+      rows as Array<{
+        corpusId: string;
+        sourceKey: string;
+        name: string;
+        kind: LegacySourceKind;
+        rawJson: string;
+        summary: string;
+        originCollection: string;
+      }>
+    ).map((row) => ({
+      corpusId: row.corpusId,
+      sourceKey: row.sourceKey,
+      name: row.name,
+      kind: logicalKindFromStorage(
+        row.kind,
+        JSON.parse(row.rawJson) as Record<string, unknown>,
+      ),
+      summary: row.summary,
+      originCollection: row.originCollection,
+    }));
   }
 
   /** Upstream re-import replaces only this corpus's computed relations.
