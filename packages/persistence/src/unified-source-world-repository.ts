@@ -331,7 +331,7 @@ export class SqliteUnifiedSourceWorldRepository {
         /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,
         (_m, target: string, label?: string) => label ?? target,
       )
-      .replace(/[#*_>\`]/g, "")
+      .replace(/[#*_>\x60]/g, "")
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 500);
