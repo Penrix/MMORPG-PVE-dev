@@ -273,7 +273,12 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
         suggestedCardKinds: need.suggestedCardKinds,
       },
     });
-    expect(JSON.stringify(instruction)).toContain("People");
+    expect(instruction).toMatchObject({
+      atlasTarget: {
+        peopleQuestions: need.peopleQuestions,
+        completionRule: need.completionRule,
+      },
+    });
   });
   it("keeps information cards distinct from assets and power after coarse staging", () => {
     const doc: WorldPackDocument = {
