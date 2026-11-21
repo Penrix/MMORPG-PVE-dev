@@ -42,11 +42,11 @@ NarraLume 原第三模块主要直接读取 Canon Entity / Canon Fact / Narrativ
 
 ## 2. 三层世界上下文
 
-| 层                      | 内容                               | authority | 使用位置                                                   |
-| ----------------------- | ---------------------------------- | --------- | ---------------------------------------------------------- |
+| 层                      | 内容                                             | authority | 使用位置                                                   |
+| ----------------------- | ------------------------------------------------ | --------- | ---------------------------------------------------------- |
 | Project Reality Current | 当前项目实体、Canon claims、项目关系与已发生事件 | confirmed | 作者侧步骤；无 POV 的叙事步骤                              |
-| Source Atlas Baseline   | 母体身份摘要 + typed relations     | reference | 作者侧步骤；无 POV 的叙事步骤                              |
-| Source Atlas Full Card  | 完整 Markdown 母体卡片             | reference | scene-plan / semantic-review / settlement / 作者 Assistant |
+| Source Atlas Baseline   | 母体身份摘要 + typed relations                   | reference | 作者侧步骤；无 POV 的叙事步骤                              |
+| Source Atlas Full Card  | 完整 Markdown 母体卡片                           | reference | scene-plan / semantic-review / settlement / 作者 Assistant |
 
 权威顺序固定：
 
@@ -227,17 +227,17 @@ entity.worldScopeId ?? ""
 
 ## 6. 第三模块各入口 Crosswalk
 
-| 第三模块入口                | Atlas 接入                                                          | 权限                  |
-| --------------------------- | ------------------------------------------------------------------- | --------------------- |
-| Chapter scene-plan          | Reality + baseline + full card                                      | author                |
-| Chapter draft 有 POV        | 不注入全知 Atlas；用 StoryState                                     | character             |
-| Chapter draft 无 POV        | Reality + baseline                                                  | narrative             |
-| Semantic review             | Reality + baseline + full card                                      | author                |
-| Chapter revision            | 跟随 draft 的 POV 边界                                              | character / narrative |
-| Chapter settlement          | Reality + baseline + full card                                      | author                |
-| Co-create character Persona | 不注入全知 Atlas                                                    | character             |
-| Co-create narrator          | Reality + baseline                                                  | narrative             |
-| Author Assistant            | 聚焦实体 Reality + baseline + full card；另显示已绑定 Source Corpus | author                |
+| 第三模块入口                | Atlas 接入                                                              | 权限                  |
+| --------------------------- | ----------------------------------------------------------------------- | --------------------- |
+| Chapter scene-plan          | Reality + baseline + full card                                          | author                |
+| Chapter draft 有 POV        | 不注入全知 Atlas；用 StoryState                                         | character             |
+| Chapter draft 无 POV        | Reality + baseline                                                      | narrative             |
+| Semantic review             | Reality + baseline + full card                                          | author                |
+| Chapter revision            | 跟随 draft 的 POV 边界                                                  | character / narrative |
+| Chapter settlement          | Reality + baseline + full card                                          | author                |
+| Co-create character Persona | 不注入全知 Atlas                                                        | character             |
+| Co-create narrator          | Reality + baseline                                                      | narrative             |
+| Author Assistant            | 聚焦实体 Reality + baseline + full card；另显示已绑定 Source Corpus     | author                |
 | Context Preview             | 使用同一 WorldAtlasStoryContextBuilder；仅 author/omniscient 注入 Atlas | author boundary       |
 
 ## 6.5 Context Preview 权限边界
