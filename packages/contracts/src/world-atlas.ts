@@ -98,6 +98,53 @@ export const WORLD_ATLAS_CONTENT_FAMILIES = [
   description: string;
 }>;
 
+export interface WorldAtlasNarrativeAxisDefinition {
+  id: "people-centered";
+  label: string;
+  centerKind: "character";
+  principle: string;
+  databaseRule: string;
+  expansionPriority: readonly WorldAtlasCardKind[];
+}
+
+export const WORLD_ATLAS_NARRATIVE_AXIS = {
+  id: "people-centered",
+  label: "人物叙事轴",
+  centerKind: "character",
+  principle:
+    "十个 World Family 保持并排；人物作为小说关系展开、检索与上下文组装的默认中心。",
+  databaseRule:
+    "People-centered 是 View / Query / Priority，不是新的 Database Schema；仍使用同一批 Card + Typed Edge。",
+  expansionPriority: [
+    "character",
+    "organization",
+    "position",
+    "population",
+    "location",
+    "resource",
+    "item",
+    "ability",
+    "information",
+    "event",
+    "activity",
+    "technology",
+    "institution",
+    "work",
+    "rule",
+    "creature",
+    "other",
+  ],
+} as const satisfies WorldAtlasNarrativeAxisDefinition;
+
+export function worldAtlasNarrativePriority(
+  kind: WorldAtlasCardKind,
+): number {
+  const index = WORLD_ATLAS_NARRATIVE_AXIS.expansionPriority.indexOf(kind);
+  return index < 0
+    ? WORLD_ATLAS_NARRATIVE_AXIS.expansionPriority.length
+    : index;
+}
+
 export interface WorldAtlasCardTypeDefinition {
   kind: WorldAtlasCardKind;
   label: string;
