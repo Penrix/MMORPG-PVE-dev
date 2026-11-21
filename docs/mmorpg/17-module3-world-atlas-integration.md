@@ -38,7 +38,7 @@ Source World Card + Typed Relation
 
 NarraLume 原第三模块主要直接读取 Canon Entity / Canon Fact / NarrativeState / Retrieval。第二模块现在已经确立了 Source World Card + Typed Relation + Project Reality 的世界结构。如果第三模块继续绕开它，就会出现“Atlas 有一套世界，正文模型又自己拼一套世界”的平行结构。
 
-因此新增 `WorldAtlasStoryContextBuilder`。它不替换 Canon，而是把第二模块的世界语言适配成 ContextSource。
+因此第二模块 persistence 层新增 `WorldAtlasStoryContextBuilder`。它不替换 Canon，而是把 Project Reality / Source Atlas 投影成共享 ContextSource，供 narrative 与 services 同时消费。
 
 ## 2. 三层世界上下文
 
