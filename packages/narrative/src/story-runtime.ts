@@ -271,7 +271,7 @@ function evidence(input: {
 
 function stringifyValue(value: unknown): string {
   if (typeof value === "string") return value;
-  return JSON.stringify(value);
+  return JSON.stringify(value) ?? "null";
 }
 
 function normalizeStrings(values: readonly string[]): string[] {
