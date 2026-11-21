@@ -669,11 +669,18 @@ export class ChapterWorkerSuite {
         "semantic-review",
         "chapter-settlement",
       ].includes(purpose);
+      const characterBoundPurpose =
+        statePacket === draftStoryStatePacket &&
+        draftStoryStatePacket !== authorStoryStatePacket;
       const purposeSources = [
         ...sources,
         ...entitySources(statePacket === authorStoryStatePacket),
-        ...worldAtlasContext.current,
-        ...worldAtlasContext.reference,
+        // Preserve the existing POV/knowledge boundary. Author-side steps can
+        // inspect the complete current Reality and the mother-world reference.
+        // A character-bound draft/revision relies on StoryStatePacket instead
+        // of receiving omniscient Project Reality slots.
+        ...(!characterBoundPurpose ? worldAtlasContext.current : []),
+        ...(!characterBoundPurpose ? worldAtlasContext.reference : []),
         ...(authorPurpose ? worldAtlasContext.referenceDetail : []),
         ...statePacket.sources,
       ];
@@ -761,6 +768,10 @@ export class ChapterWorkerSuite {
         },
         worldAtlasContext: {
           counts: worldAtlasContext.counts,
+          povBoundary:
+            draftStoryStatePacket === authorStoryStatePacket
+              ? "author-view"
+              : "character-filtered",
           currentSourceIds: worldAtlasContext.current.map((source) => source.id),
           referenceSourceIds: worldAtlasContext.reference.map(
             (source) => source.id,
