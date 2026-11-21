@@ -65,6 +65,14 @@ describe("Module 3 World Atlas context adapter", () => {
     });
     worlds.upsertCard({
       worldId: "naruto",
+      entityKey: "forbidden-technique",
+      kind: "ability",
+      name: "禁术甲",
+      content: "# 禁术甲\n\n测试能力。",
+      now,
+    });
+    worlds.upsertCard({
+      worldId: "naruto",
       entityKey: "hero-source",
       kind: "character",
       name: "秀信",
@@ -73,8 +81,9 @@ describe("Module 3 World Atlas context adapter", () => {
         "",
         "原著参考身份。",
         "",
-        "## 人物关系",
-        "老师：[[旗木卡卡西]]",
+        "## 关系",
+        "A能力：[[禁术甲]]",
+        "Z老师：[[旗木卡卡西]]",
         "",
         "## 原著后续",
         "原著未来会离开木叶。",
@@ -134,6 +143,10 @@ describe("Module 3 World Atlas context adapter", () => {
       sourceType: "source_world_atlas",
     });
     expect(context.reference[0]!.content).toContain("旗木卡卡西");
+    expect(context.reference[0]!.content).toContain("禁术甲");
+    expect(context.reference[0]!.content.indexOf("旗木卡卡西")).toBeLessThan(
+      context.reference[0]!.content.indexOf("禁术甲"),
+    );
     expect(context.reference[0]!.content).not.toContain("原著未来会离开木叶");
 
     expect(context.referenceDetail).toHaveLength(1);
