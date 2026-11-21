@@ -12,6 +12,7 @@ import {
   SqliteReviewRepository,
   SqliteRunRepository,
   SqliteStoryRepository,
+  WorldAtlasStoryContextBuilder,
 } from "@narralume/persistence";
 import { NodeNarrativeDatabase } from "@narralume/persistence/node";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -20,7 +21,6 @@ import {
   SettlementApplicationService,
   SettlementConflictError,
 } from "../src/settlement-application-service.js";
-import { WorldAtlasStoryContextBuilder } from "../src/world-atlas-story-context.js";
 
 const now = "2026-08-10T00:00:00.000Z";
 let database: NodeNarrativeDatabase;
