@@ -2,6 +2,7 @@ import type {
   ExpectationState,
   NarrativeAllocationDecisionDraft,
   NarrativeCandidate,
+  WorldArbitrationReceipt,
 } from "@narralume/contracts";
 import { describe, expect, it } from "vitest";
 
@@ -9,6 +10,7 @@ import {
   finalizeExpectationState,
   finalizeNarrativeAllocationBatch,
   finalizeNarrativeAllocationDecision,
+  narrativeCandidatesFromArbitration,
 } from "../src/expectation-runtime.js";
 
 function state(phase: ExpectationState["threads"][number]["phase"] = "ripe") {
@@ -117,6 +119,56 @@ function decision(
 }
 
 describe("Expectation / Narrative Runtime", () => {
+  it("bridges finalized arbitration into speculative NarrativeCandidates without rewriting the result", () => {
+    const receipt: WorldArbitrationReceipt = {
+      version: "world-arbitration-receipt.v1",
+      authority: "speculative",
+      projectId: "p1",
+      generationId: "g1",
+      round: 1,
+      proposalDigests: ["proposal:xiuxin"],
+      resolutions: [
+        {
+          agentId: "character:xiuxin",
+          characterId: "xiuxin",
+          characterName: "秀信",
+          proposalDigest: "proposal:xiuxin",
+          decision: "测试基础忍术",
+          intendedAction: "在病房允许范围内测试基础忍术控制",
+          actionOrder: 1,
+          outcome: "success",
+          immediateResult: "医疗忍者看见异常稳定的查克拉控制",
+          stateAfter: "秀信仍在病房，但异常能力第一次被旁人直接见证",
+          butterflyEffects: [
+            {
+              effect: "医疗记录可能被上级重新查看",
+              transmissionPath: "换班记录",
+              arrivalHorizon: 1,
+              protagonistImpact: "更高层人物可能注意到秀信",
+            },
+          ],
+          conflictIds: [],
+        },
+      ],
+      conflicts: [],
+      hardContractStatus: "feasible",
+      hardContractConflicts: [],
+      protagonistProjection: null,
+      finalized: true,
+      generatedAt: null,
+      digest: "arbiter:1",
+    };
+
+    const candidates = narrativeCandidatesFromArbitration(receipt);
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0]?.source).toBe("actor_initiative");
+    expect(candidates[0]?.summary).toContain("测试基础忍术控制");
+    expect(candidates[0]?.summary).toContain("医疗忍者看见异常稳定");
+    expect(candidates[0]?.effects[0]).toContain("异常能力第一次被旁人直接见证");
+    expect(candidates[0]?.originDigest).toBe("arbiter:1");
+  });
+
+
   it("keeps scarcity, established cognition and Reader-visible advantage as relations rather than scores", () => {
     const current = state();
     expect(current.scarcityEvidence[0]?.claim).toContain("基础忍术");
