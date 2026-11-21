@@ -27,7 +27,6 @@ describe("World Atlas content framework", () => {
     ]);
   });
 
-
   it("keeps content families parallel while people-centered stays a view/query priority", () => {
     expect(WORLD_ATLAS_CONTENT_FAMILIES).toHaveLength(10);
     expect(WORLD_ATLAS_NARRATIVE_AXIS.centerKind).toBe("character");

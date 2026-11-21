@@ -136,9 +136,7 @@ export const WORLD_ATLAS_NARRATIVE_AXIS = {
   ],
 } as const satisfies WorldAtlasNarrativeAxisDefinition;
 
-export function worldAtlasNarrativePriority(
-  kind: WorldAtlasCardKind,
-): number {
+export function worldAtlasNarrativePriority(kind: WorldAtlasCardKind): number {
   const index = WORLD_ATLAS_NARRATIVE_AXIS.expansionPriority.indexOf(kind);
   return index < 0
     ? WORLD_ATLAS_NARRATIVE_AXIS.expansionPriority.length
