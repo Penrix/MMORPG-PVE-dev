@@ -43,16 +43,12 @@ describe("World Atlas content framework API", () => {
     expect(framework.statusCode).toBe(200);
     expect(framework.json().version).toBe("0.1");
     expect(
-      framework
-        .json()
-        .contentFamilies.map((entry: { id: string }) => entry.id),
+      framework.json().contentFamilies.map((entry: { id: string }) => entry.id),
     ).toEqual(
       expect.arrayContaining(["space", "power", "economy", "playable"]),
     );
     expect(
-      framework
-        .json()
-        .cardTypes.map((entry: { kind: string }) => entry.kind),
+      framework.json().cardTypes.map((entry: { kind: string }) => entry.kind),
     ).toEqual(expect.arrayContaining(["character", "resource", "information"]));
 
     const world = await app.inject({
