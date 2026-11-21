@@ -4,6 +4,7 @@ import {
   type ContextSource,
 } from "@narralume/context";
 import type { CanonAccess } from "@narralume/domain";
+import { WorldAtlasNarrativeContextBuilder } from "@narralume/narrative";
 import {
   SqliteCanonRepository,
   SqliteContextReceiptRepository,
@@ -35,6 +36,7 @@ export class StoryContextPreviewService {
   private readonly canon: SqliteCanonRepository;
   private readonly retrieval: SqliteRetrievalRepository;
   private readonly receipts: SqliteContextReceiptRepository;
+  private readonly worldAtlas: WorldAtlasNarrativeContextBuilder;
   private readonly compiler = new ContextCompiler();
 
   constructor(database: NarrativeDatabase) {
@@ -42,6 +44,7 @@ export class StoryContextPreviewService {
     this.canon = new SqliteCanonRepository(database);
     this.retrieval = new SqliteRetrievalRepository(database);
     this.receipts = new SqliteContextReceiptRepository(database);
+    this.worldAtlas = new WorldAtlasNarrativeContextBuilder(database);
   }
 
   compile(input: StoryContextPreviewInput) {
@@ -113,6 +116,17 @@ export class StoryContextPreviewService {
         sourceType: "outline",
         sourceId: input.currentOutlineNodeId ?? input.projectId,
       });
+    }
+
+    if (input.access.audience === "author") {
+      sources.push(
+        ...this.worldAtlas.buildAuthorSources({
+          projectId: input.projectId,
+          focalEntityIds: input.entityIds,
+          query: input.query,
+          sourceLimit: 8,
+        }),
+      );
     }
 
     sources.push(
