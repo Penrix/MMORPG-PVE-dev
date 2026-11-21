@@ -2,11 +2,13 @@
 
 > 这是基于 [NarraLume](https://github.com/abligail/narralume) 的小说世界与长篇创作系统开发仓库。原版用户指南、数据库、写作流程、测试与许可**继续有效**；本目录只记录 MMORPG-PVE 新业务的决策和修正，不宣称已有功能已完成。
 
-## 2026-11-20 当前任务：第二模块数据库
+## 2026-11-21 当前任务：第二模块 World Atlas
 
-**第一模块世界设计暂时停止开发。** 本轮工作是扩展 NarraLume 已有 Story Bible + Lorebook + Canon + Timeline + 来源检索，为一部男频小说构建真实可用的完整世界数据库。
+**第一模块世界设计暂时停止开发。** 第二模块已经重新收敛：原生母体世界不是大型百科/知识图谱工程，而是 **可编辑世界卡片 + typed wiki links + 可重建关系索引/图谱**。NarraLume 底座和 SQLite 不更换；正文后形成的动态 Reality 继续由原有 Canon / Timeline / settlement 链承担。
 
-- **当前第二模块工作：[12 原生母体专业世界百科](12-original-world-encyclopedia.md)**。053 完整原著百科专项、054 一个世界/多个证据来源的统一人物身份；原著世界与项目世界严格隔离。
+- **最新且最高优先级：[13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)**。后续 Source World 开发先读此文；若与 10～12 的旧设计复杂度冲突，以 13 为准。
+
+- **历史实现参考：[12 原生母体专业世界百科](12-original-world-encyclopedia.md)**。053/054 已落地结构保留，但不再把大量专项表视为当前 World Atlas 完成度中心；当前优先卡片编辑、typed links、反向关系和图谱。
 - **最新认知：[11 世界 Fork/Diff 与人物内核恒定](11-world-fork-diff-character-invariants.md)**。原生母体是参考基线，项目 Canon 是持续改写的 Fork；人格锚点稳定，经历与现实状态可因故事改变。Migration 051 的第一版数据库映射与差异查询见本页。
 - **必读：[10 已确认认知及历史错误禁令](10-module2-cognition-and-error-guardrails.md)**。此文记录母体/项目/跨世界/穿越/高价人物等历次误解，未来任务先读，不能凭旧记忆重新争论。
 - **全库需求：[08 v0.1～v0.7 数据库 Crosswalk](08-world-database-v01-v07-crosswalk.md)**。七版是世界内容要求，不是七个单独 Prompt。
