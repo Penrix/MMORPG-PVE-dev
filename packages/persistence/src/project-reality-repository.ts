@@ -1,6 +1,8 @@
 import type { CanonEntity, CanonFact } from "@narralume/domain";
 import { SqliteCanonRepository } from "./canon-repository.js";
 import type { NarrativeDatabase } from "./database.js";
+import { SqliteNarrativeStateRepository } from "./narrative-state-repository.js";
+import { SqliteStoryRepository } from "./story-repository.js";
 import {
   SqliteProjectWorldRepository,
   type ProjectSourceIdentity,
@@ -257,6 +259,7 @@ function rowToRevision(
  */
 export class SqliteProjectRealityRepository {
   private readonly canon: SqliteCanonRepository;
+  private readonly state: SqliteNarrativeStateRepository;
   private readonly worlds: SqliteProjectWorldRepository;
   private readonly source: SqliteMotherWorldEncyclopediaRepository;
   private readonly atlas: SqliteUnifiedSourceWorldRepository;
@@ -264,6 +267,11 @@ export class SqliteProjectRealityRepository {
 
   constructor(private readonly db: NarrativeDatabase) {
     this.canon = new SqliteCanonRepository(db);
+    this.state = new SqliteNarrativeStateRepository(
+      db,
+      this.canon,
+      new SqliteStoryRepository(db),
+    );
     this.worlds = new SqliteProjectWorldRepository(db);
     this.source = new SqliteMotherWorldEncyclopediaRepository(db);
     this.atlas = new SqliteUnifiedSourceWorldRepository(db);
@@ -513,6 +521,21 @@ export class SqliteProjectRealityRepository {
           facet: "relationship",
           slotKey: relation.id,
           value: relation,
+          origin: "project",
+          revisionId: null,
+          sourceCorpusId: null,
+          sourceKey: null,
+        });
+      // Timeline is also native NarraLume truth written by chapter settlement.
+      // Project Reality projects participant events rather than asking Novel
+      // Studio to duplicate them into world_chronicle_links.
+      for (const event of this.state
+        .listTimeline(projectId)
+        .filter((candidate) => candidate.participants.includes(entityId)))
+        effective.set(keyFor("chronicle", event.id), {
+          facet: "chronicle",
+          slotKey: event.id,
+          value: event,
           origin: "project",
           revisionId: null,
           sourceCorpusId: null,
