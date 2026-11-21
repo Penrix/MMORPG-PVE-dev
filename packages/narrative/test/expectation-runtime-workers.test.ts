@@ -101,6 +101,91 @@ function candidate(id: string, summary: string): NarrativeCandidate {
 }
 
 describe("ExpectationNarrativeService", () => {
+  it("designs an expectation transaction before Layer 1 without scripting character decisions", async () => {
+    const model: NarrativeModelClient = {
+      text: vi.fn(),
+      structured: vi.fn(
+        async (_run, _step, purpose, request, _contract, validate) => {
+          expect(purpose).toBe("story-expectation-design");
+          expect(JSON.stringify(request)).toContain("得意与被识货");
+          expect(JSON.stringify(request)).toContain("atlas:basic-limit");
+          const checked = validate({
+            targetOutcome: "让木叶高价人物重新估值秀信",
+            scarcityIntents: [
+              {
+                claim: "基础忍术通常没有高阶价值",
+                subjectRef: "basic-ninjutsu",
+                existingEvidenceRefs: ["atlas:basic-limit"],
+                evidenceToEstablish: [
+                  "让专业忍者基于训练经验说明基础忍术的正常上限",
+                ],
+              },
+            ],
+            beliefIntents: [
+              {
+                proposition:
+                  "病床上的普通下忍不可能靠基础忍术体现高阶价值",
+                scope: "circle",
+                holderEntityIds: ["medic", "sakumo"],
+                existingEvidenceRefs: ["atlas:basic-limit"],
+                stakeToCultivate: ["医疗体系继续按普通伤员流程处理"],
+                breakCondition: "可信高手获得不可否认的异常证据",
+              },
+            ],
+            protagonistAdvantageRefs: ["reality:xiuxin-control"],
+            reactionTargetEntityIds: ["medic", "sakumo"],
+            retainedGainTarget: "获得更高层训练与关系入口",
+            activationEntityIds: ["medic", "sakumo"],
+            worldFocusRefs: ["atlas:basic-limit"],
+            designReasons: [
+              "先让基础忍术上限成为稳定认知，再让第一层真实行动决定兑现路径",
+            ],
+          });
+          if (!checked.success) throw new Error(checked.issues.join("; "));
+          return {
+            value: checked.data,
+            usage,
+            mode: "native" as const,
+            attempts: 1,
+          };
+        },
+      ),
+    };
+
+    const result = await new ExpectationNarrativeService(model).designExpectation(
+      run,
+      step,
+      {
+        projectId: "p1",
+        protagonistId: "xiuxin",
+        readerNeed: "看低位秀信凭真实能力被高价人物识货",
+        targetEmotion: "得意与被识货",
+        realityFingerprint: "r1",
+        storyStateFingerprint: "s1",
+        evidence: [
+          {
+            ref: "atlas:basic-limit",
+            kind: "rule",
+            summary: "基础忍术在木叶通常被视为低阶、上限有限",
+            entityIds: ["medic", "sakumo"],
+          },
+          {
+            ref: "reality:xiuxin-control",
+            kind: "reality",
+            summary: "秀信实际拥有远超普通下忍的基础忍术控制",
+            entityIds: ["xiuxin"],
+          },
+        ],
+      },
+      new AbortController().signal,
+    );
+
+    expect(result.value.activationEntityIds).toEqual(["medic", "sakumo"]);
+    expect(result.value.mustPreserveAgentAutonomy).toBe(true);
+    expect(result.value.mustNotPredetermineOutcome).toBe(true);
+    expect(result.value.targetOutcome).toContain("重新估值");
+  });
+
   it("allocates Reader Time without replacing Reality candidates with invented plot", async () => {
     const state = expectationState();
     const handoff = candidate(
