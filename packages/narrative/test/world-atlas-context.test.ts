@@ -90,6 +90,7 @@ describe("WorldAtlasNarrativeContextBuilder", () => {
         id: "kakashi",
         projectId: "p1",
         type: "character",
+        worldScopeId: "project:p1",
         name: "旗木卡卡西",
         now,
       }),
