@@ -124,9 +124,7 @@ describe("World Builder → World Atlas production contract", () => {
       status: family.id === "people" ? ("present" as const) : ("thin" as const),
       evidence: family.id === "people" ? ["hero"] : [],
       reason:
-        family.id === "people"
-          ? "人物已经进入关系网。"
-          : "仍可继续向下制作。",
+        family.id === "people" ? "人物已经进入关系网。" : "仍可继续向下制作。",
       suggestedWorkshop:
         family.id === "space"
           ? ("geography" as const)
@@ -171,5 +169,4 @@ describe("World Builder → World Atlas production contract", () => {
       "orphan",
     ]);
   });
-
 });
