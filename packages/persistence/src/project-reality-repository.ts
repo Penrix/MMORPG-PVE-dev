@@ -174,7 +174,10 @@ function sourceSlots(
           (left, right) =>
             worldAtlasNarrativePriority(left.otherKind) -
               worldAtlasNarrativePriority(right.otherKind) ||
-            left.displayRelation.localeCompare(right.displayRelation, "zh-CN") ||
+            left.displayRelation.localeCompare(
+              right.displayRelation,
+              "zh-CN",
+            ) ||
             left.otherName.localeCompare(right.otherName, "zh-CN"),
         )
         .map((rel) =>
