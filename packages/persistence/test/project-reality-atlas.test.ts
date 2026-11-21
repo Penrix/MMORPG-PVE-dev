@@ -28,7 +28,7 @@ afterEach(() => {
 describe("Project Reality ↔ lightweight World Atlas adapter", () => {
   it("prefers Markdown Atlas cards for source baseline and projects native project facts/relations", () => {
     db = new NodeNarrativeDatabase();
-    expect(db.migrate()).toBe(54);
+    expect(db.migrate()).toBe(55);
 
     const projects = new SqliteProjectRepository(db);
     projects.insert(createProject({ id: "p1", title: "火影同人", now }));
