@@ -89,7 +89,7 @@ export class ExpectationNarrativeService {
     const result = await this.model.structured(
       run,
       step,
-      "story-expectation-narrative-allocation",
+      "story-expectation-narrative-plan",
       {
         instructions: [
           "你是第二层 Expectation / Narrative Runtime，不是第一层世界裁判，也不是自由编剧情的编剧。",
