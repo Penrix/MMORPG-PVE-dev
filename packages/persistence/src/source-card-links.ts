@@ -1,3 +1,5 @@
+import { inverseWorldAtlasRelation } from "@narralume/contracts";
+
 export interface TypedWikiLink {
   relation: string;
   target: string;
@@ -5,75 +7,6 @@ export interface TypedWikiLink {
 }
 
 const WIKI_LINK = /\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|([^\]]+))?\]\]/g;
-
-const INVERSE_RELATIONS: Readonly<Record<string, string>> = {
-  老师: "学生",
-  学生: "老师",
-  师父: "徒弟",
-  师傅: "徒弟",
-  徒弟: "师父",
-  父亲: "子女",
-  母亲: "子女",
-  父母: "子女",
-  子女: "父母",
-  上级: "下级",
-  下级: "上级",
-  领导: "下属",
-  下属: "领导",
-  所属: "成员",
-  所属组织: "成员",
-  所属家族: "成员",
-  成员: "所属",
-  隶属: "成员",
-  掌握: "掌握者",
-  拥有能力: "掌握者",
-  掌握者: "掌握",
-  拥有: "拥有者",
-  拥有者: "拥有",
-  位于: "包含",
-  属于: "包含",
-  包含: "属于",
-  出身: "出身者",
-  出身者: "出身",
-  创建: "创建者",
-  创建者: "创建",
-  teacher: "student",
-  student: "teacher",
-  parent: "child",
-  child: "parent",
-  member_of: "member",
-  member: "member_of",
-  owns: "owned_by",
-  owned_by: "owns",
-  located_in: "contains",
-  contains: "located_in",
-};
-
-const SYMMETRIC_RELATIONS = new Set([
-  "兄弟",
-  "姐妹",
-  "兄弟姐妹",
-  "配偶",
-  "夫妻",
-  "伴侣",
-  "朋友",
-  "好友",
-  "盟友",
-  "同盟",
-  "敌对",
-  "敌人",
-  "对手",
-  "竞争",
-  "竞争者",
-  "搭档",
-  "同伴",
-  "spouse",
-  "partner",
-  "friend",
-  "ally",
-  "enemy",
-  "rival",
-]);
 
 function cleanRelation(value: string): string {
   return value
@@ -155,7 +88,5 @@ export function parseTypedWikiLinks(markdown: string): TypedWikiLink[] {
 
 export function inverseRelation(relation: string): string | null {
   const normalized = cleanRelation(relation);
-  if (!normalized) return null;
-  if (SYMMETRIC_RELATIONS.has(normalized)) return normalized;
-  return INVERSE_RELATIONS[normalized] ?? null;
+  return normalized ? inverseWorldAtlasRelation(normalized) : null;
 }
