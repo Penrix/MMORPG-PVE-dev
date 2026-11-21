@@ -1,12 +1,18 @@
 import { playWorldActionPaths } from "./world-action-runtime.js";
 import { powerDesignProducts } from "./world-design-policy.js";
-import type {
-  WorldPackDocument,
-  WorldPackLink,
-  WorldPackNode,
-  WorldPackRequest,
+import {
+  WORLD_ATLAS_CONTENT_FAMILIES,
+  worldBuilderAtlasTarget,
+  worldPackAtlasKind,
+  worldPackReferenceProblems,
+  type WorldAtlasCardKind,
+  type WorldAtlasContentFamily,
+  type WorldBuilderWorkshopId,
+  type WorldPackDocument,
+  type WorldPackLink,
+  type WorldPackNode,
+  type WorldPackRequest,
 } from "@narralume/contracts";
-import { worldPackReferenceProblems } from "@narralume/contracts";
 
 /**
  * World content production is a *state machine*, not a giant prompt.
@@ -14,16 +20,7 @@ import { worldPackReferenceProblems } from "@narralume/contracts";
  * Each operation works on an actual named subject found in the current graph.
  * The caller, not the LLM, chooses the next operation and when to stop.
  */
-export type WorldWorkshop =
-  | "geography"
-  | "factions"
-  | "people"
-  | "economy"
-  | "power"
-  | "events"
-  | "social"
-  | "playability"
-  | "living";
+export type WorldWorkshop = WorldBuilderWorkshopId;
 
 export interface WorldWorkOrder {
   workshop: WorldWorkshop;
@@ -31,6 +28,29 @@ export interface WorldWorkOrder {
   subjectName: string;
   reason: string;
   deliverables: readonly string[];
+  targetFamilies: readonly WorldAtlasContentFamily[];
+  suggestedCardKinds: readonly WorldAtlasCardKind[];
+  peopleQuestions: readonly string[];
+  completionRule: string;
+}
+
+export type WorldFamilyCoverageStatus = "missing" | "thin" | "present";
+
+export interface WorldFamilyCoverage {
+  family: WorldAtlasContentFamily;
+  label: string;
+  status: WorldFamilyCoverageStatus;
+  evidence: string[];
+  reason: string;
+  suggestedWorkshop: WorldWorkshop;
+}
+
+export interface WorldAtlasProductionAudit {
+  families: WorldFamilyCoverage[];
+  peopleConnectedWorldObjects: string[];
+  orphanWorldObjects: string[];
+  nextWorkshop: WorldWorkshop | null;
+  nextReason: string | null;
 }
 
 export interface WorldPlaytest {
@@ -42,6 +62,7 @@ export interface WorldPlaytest {
   actionableRoutes: string[];
   feedbackPaths: string[];
   interactionPaths: string[][];
+  atlasAudit: WorldAtlasProductionAudit;
   next: WorldWorkOrder | null;
 }
 
@@ -95,6 +116,10 @@ function idOf(node: WorldPackNode): string {
   return node.localId;
 }
 
+function atlasKindOf(node: WorldPackNode) {
+  return worldPackAtlasKind(node);
+}
+
 function named(doc: WorldPackDocument, id: string): string {
   return doc.nodes.find((n) => n.localId === id)?.name ?? id;
 }
@@ -106,12 +131,417 @@ function order(
   reason: string,
   deliverables: string[],
 ): WorldWorkOrder {
+  const atlasTarget = worldBuilderAtlasTarget(workshop);
   return {
     workshop,
     subjectRef: ref,
     subjectName: ref ? named(doc, ref) : "世界/当前地区",
     reason,
     deliverables,
+    targetFamilies: atlasTarget.families,
+    suggestedCardKinds: atlasTarget.cardKinds,
+    peopleQuestions: atlasTarget.peopleQuestions,
+    completionRule: atlasTarget.completionRule,
+  };
+}
+
+function relationMatches(relation: string, pattern: RegExp): boolean {
+  return pattern.test(relation.trim());
+}
+
+function familyLabel(family: WorldAtlasContentFamily): string {
+  return (
+    WORLD_ATLAS_CONTENT_FAMILIES.find((entry) => entry.id === family)?.label ??
+    family
+  );
+}
+
+const FAMILY_WORKSHOP: Readonly<
+  Record<WorldAtlasContentFamily, WorldWorkshop>
+> = {
+  space: "geography",
+  people: "people",
+  organization: "factions",
+  power: "power",
+  asset: "economy",
+  economy: "economy",
+  activity: "events",
+  information: "social",
+  value: "social",
+  playable: "playability",
+};
+
+const FAMILY_PRIORITY: readonly WorldAtlasContentFamily[] = [
+  "people",
+  "organization",
+  "activity",
+  "asset",
+  "space",
+  "power",
+  "information",
+  "economy",
+  "value",
+  "playable",
+];
+
+export function auditWorldAtlasProduction(
+  doc: WorldPackDocument,
+): WorldAtlasProductionAudit {
+  const live = currentLinks(doc);
+  const people = doc.nodes.filter((node) => atlasKindOf(node) === "character");
+  const peopleFamily = doc.nodes.filter((node) =>
+    ["character", "population", "creature"].includes(atlasKindOf(node)),
+  );
+  const organizations = doc.nodes.filter(
+    (node) => atlasKindOf(node) === "organization",
+  );
+  const organizationFamily = doc.nodes.filter((node) =>
+    ["organization", "institution", "position"].includes(atlasKindOf(node)),
+  );
+  const places = doc.nodes.filter((node) => atlasKindOf(node) === "location");
+  const assets = doc.nodes.filter((node) =>
+    ["resource", "item", "work"].includes(atlasKindOf(node)),
+  );
+  const powers = doc.nodes.filter((node) =>
+    ["ability", "rule", "technology"].includes(atlasKindOf(node)),
+  );
+  const informationCards = doc.nodes.filter(
+    (node) => atlasKindOf(node) === "information",
+  );
+  const actors = new Set(
+    [...people, ...organizations].map((node) => node.localId),
+  );
+  const peopleIds = new Set(people.map((node) => node.localId));
+  const connectedToPerson = (ref: string) =>
+    live.some(
+      (edge) =>
+        (edge.fromRef === ref && peopleIds.has(edge.toRef)) ||
+        (edge.toRef === ref && peopleIds.has(edge.fromRef)),
+    ) ||
+    doc.activities.some(
+      (activity) =>
+        activity.actorRefs.some((actor) => peopleIds.has(actor)) &&
+        activity.resourceRefs.includes(ref),
+    );
+  const connectedToActor = (ref: string) =>
+    live.some(
+      (edge) =>
+        (edge.fromRef === ref && actors.has(edge.toRef)) ||
+        (edge.toRef === ref && actors.has(edge.fromRef)),
+    ) ||
+    doc.activities.some(
+      (activity) =>
+        activity.actorRefs.some((actor) => actors.has(actor)) &&
+        activity.resourceRefs.includes(ref),
+    );
+
+  const nonPeople = doc.nodes.filter(
+    (node) => atlasKindOf(node) !== "character",
+  );
+  const peopleConnectedWorldObjects = nonPeople
+    .filter((node) => connectedToPerson(node.localId))
+    .map((node) => node.localId);
+  const orphanWorldObjects = nonPeople
+    .filter(
+      (node) =>
+        node.type !== "location" &&
+        !connectedToPerson(node.localId) &&
+        !connectedToActor(node.localId),
+    )
+    .map((node) => node.localId);
+
+  const socialPeople = people.filter(
+    (person) =>
+      live.some(
+        (edge) =>
+          edge.fromRef === person.localId || edge.toRef === person.localId,
+      ) ||
+      doc.activities.some((activity) =>
+        activity.actorRefs.includes(person.localId),
+      ),
+  );
+  const socialOrganizations = organizations.filter((org) =>
+    live.some(
+      (edge) =>
+        (edge.fromRef === org.localId &&
+          (peopleIds.has(edge.toRef) ||
+            places.some((p) => p.localId === edge.toRef))) ||
+        (edge.toRef === org.localId &&
+          (peopleIds.has(edge.fromRef) ||
+            places.some((p) => p.localId === edge.fromRef))),
+    ),
+  );
+  const activePlaces = places.filter(
+    (place) =>
+      connectedToActor(place.localId) ||
+      (doc.interactions ?? []).some(
+        (action) => action.locationRef === place.localId,
+      ),
+  );
+  const controlledAssets = assets.filter((asset) =>
+    live.some(
+      (edge) =>
+        ((edge.toRef === asset.localId && actors.has(edge.fromRef)) ||
+          (edge.fromRef === asset.localId && actors.has(edge.toRef))) &&
+        relationMatches(
+          edge.relation,
+          /own|control|hold|custod|possess|拥有|控制|持有|保管|所属|管理/i,
+        ),
+    ),
+  );
+  const connectedPowers = powers.filter(
+    (power) =>
+      connectedToActor(power.localId) ||
+      live.some(
+        (edge) =>
+          (edge.fromRef === power.localId || edge.toRef === power.localId) &&
+          relationMatches(
+            edge.relation,
+            /掌握|使用|传授|克制|反制|ability|use|teach|counter|permit|authorize/i,
+          ),
+      ),
+  );
+  const economyEdges = live.filter((edge) =>
+    relationMatches(
+      edge.relation,
+      /生产|加工|运输|交易|消费|产于|来源|供给|销售|购买|produce|manufact|transport|trade|sell|buy|supply|consume/i,
+    ),
+  );
+  const ongoingActivities = doc.activities.filter(
+    (activity) =>
+      activity.stage === "ongoing" &&
+      activity.actorRefs.some((ref) => actors.has(ref)),
+  );
+  const informationEdges = live.filter((edge) =>
+    relationMatches(
+      edge.relation,
+      /知道|传播|接收|隐瞒|秘密|情报|消息|know|inform|tell|secret|rumou?r|broadcast/i,
+    ),
+  );
+  const informationNodes = powers.filter(
+    (node) =>
+      node.type === "concept" &&
+      (informationEdges.some(
+        (edge) => edge.fromRef === node.localId || edge.toRef === node.localId,
+      ) ||
+        connectedToPerson(node.localId)),
+  );
+  const valuedNodes = doc.nodes.filter((node) => node.value.trim().length > 0);
+  const sociallyPriced = valuedNodes.filter(
+    (node) =>
+      connectedToActor(node.localId) ||
+      live.some(
+        (edge) =>
+          (edge.fromRef === node.localId || edge.toRef === node.localId) &&
+          relationMatches(
+            edge.relation,
+            /评价|争夺|竞争|购买|交易|重视|威胁|value|price|rival|compete|trade|buy/i,
+          ),
+      ),
+  );
+  const availableInteractions = (doc.interactions ?? []).filter(
+    (action) => action.state === "available",
+  );
+  const usefulInteractions = availableInteractions.filter((action) =>
+    action.yields.some((term) => term.kind !== "access"),
+  );
+
+  const coverage = (
+    family: WorldAtlasContentFamily,
+    status: WorldFamilyCoverageStatus,
+    evidence: string[],
+    reason: string,
+  ): WorldFamilyCoverage => ({
+    family,
+    label: familyLabel(family),
+    status,
+    evidence,
+    reason,
+    suggestedWorkshop: FAMILY_WORKSHOP[family],
+  });
+
+  const families: WorldFamilyCoverage[] = [
+    coverage(
+      "people",
+      peopleFamily.length === 0
+        ? "missing"
+        : people.length === 0 || socialPeople.length === 0
+          ? "thin"
+          : "present",
+      [
+        ...new Set([
+          ...peopleFamily.map((node) => node.localId),
+          ...socialPeople.map((node) => node.localId),
+        ]),
+      ],
+      peopleFamily.length === 0
+        ? "没有人物、人口群体或生物对象。"
+        : people.length === 0
+          ? "有人口/生物资料，但还没有能发动故事的具体人物。"
+          : socialPeople.length === 0
+            ? "有人物，但人物尚未进入关系或当前事务。"
+            : "人物已经进入关系网或当前事务。",
+    ),
+    coverage(
+      "space",
+      places.length === 0
+        ? "missing"
+        : activePlaces.length === 0
+          ? "thin"
+          : "present",
+      activePlaces.map((node) => node.localId),
+      places.length === 0
+        ? "没有可定位、可反复进入的地点。"
+        : activePlaces.length === 0
+          ? "有地点，但没有人与组织在其中活动，也没有可执行入口。"
+          : "地点已经接入人物/组织活动或实际入口。",
+    ),
+    coverage(
+      "organization",
+      organizationFamily.length === 0
+        ? "missing"
+        : organizations.length === 0 || socialOrganizations.length === 0
+          ? "thin"
+          : "present",
+      [
+        ...new Set([
+          ...organizationFamily.map((node) => node.localId),
+          ...socialOrganizations.map((node) => node.localId),
+        ]),
+      ],
+      organizationFamily.length === 0
+        ? "没有组织、制度或职位对象。"
+        : organizations.length === 0
+          ? "有制度/职位资料，但还没有实际运作的组织。"
+          : socialOrganizations.length === 0
+            ? "有组织名称，但没有具体人物/地点关系支撑其运转。"
+            : "组织已经接上人物或实际区域。",
+    ),
+    coverage(
+      "power",
+      powers.length === 0
+        ? "missing"
+        : connectedPowers.length === 0
+          ? "thin"
+          : "present",
+      connectedPowers.map((node) => node.localId),
+      powers.length === 0
+        ? "没有公共力量、规则或专业能力对象。"
+        : connectedPowers.length === 0
+          ? "力量存在，但没有掌握者、使用者、授权或反制关系。"
+          : "力量已经连接实际行动者或关系。",
+    ),
+    coverage(
+      "asset",
+      assets.length === 0
+        ? "missing"
+        : controlledAssets.length === 0
+          ? "thin"
+          : "present",
+      controlledAssets.map((node) => node.localId),
+      assets.length === 0
+        ? "没有可占有、交换或争夺的具体资产。"
+        : controlledAssets.length === 0
+          ? "有资产，但没有真实持有人/控制者。"
+          : "资产已经进入权属或控制关系。",
+    ),
+    coverage(
+      "economy",
+      economyEdges.length === 0
+        ? assets.length > 0
+          ? "thin"
+          : "missing"
+        : "present",
+      economyEdges.map(
+        (edge) => edge.fromRef + "|" + edge.relation + "|" + edge.toRef,
+      ),
+      economyEdges.length === 0
+        ? assets.length > 0
+          ? "有资产，但生产、加工、运输、交易或消费网络尚未出现。"
+          : "没有可观察的生产与流通网络。"
+        : "已有生产或流通关系。",
+    ),
+    coverage(
+      "activity",
+      ongoingActivities.length === 0
+        ? doc.activities.length > 0
+          ? "thin"
+          : "missing"
+        : "present",
+      ongoingActivities.map((activity) => activity.localId),
+      ongoingActivities.length === 0
+        ? doc.activities.length > 0
+          ? "有活动记录，但没有真实行动者正在推进的当前事务。"
+          : "世界中没有当前正在推进的事务。"
+        : "已有行动者在推进当前事务。",
+    ),
+    coverage(
+      "information",
+      informationCards.length === 0 && informationEdges.length === 0
+        ? "missing"
+        : informationEdges.length === 0
+          ? "thin"
+          : "present",
+      [
+        ...informationCards.map((node) => node.localId),
+        ...informationNodes.map((node) => node.localId),
+        ...informationEdges.map(
+          (edge) => edge.fromRef + "|" + edge.relation + "|" + edge.toRef,
+        ),
+      ],
+      informationCards.length === 0 && informationEdges.length === 0
+        ? "没有信息卡，也没有谁知道、传播、隐瞒或误判什么的可查询关系。"
+        : informationEdges.length === 0
+          ? "存在信息对象，但尚未进入人物认知与传播网络。"
+          : "信息已经进入知情或传播关系。",
+    ),
+    coverage(
+      "value",
+      valuedNodes.length === 0
+        ? "missing"
+        : sociallyPriced.length === 0
+          ? "thin"
+          : "present",
+      sociallyPriced.map((node) => node.localId),
+      valuedNodes.length === 0
+        ? "没有对象被赋予实际世界价值。"
+        : sociallyPriced.length === 0
+          ? "写了价值说明，但尚未通过人物/组织关系形成社会价格。"
+          : "价值对象已经接入实际人物或组织关系。",
+    ),
+    coverage(
+      "playable",
+      availableInteractions.length === 0
+        ? live.some((edge) =>
+            places.some(
+              (place) =>
+                edge.fromRef === place.localId || edge.toRef === place.localId,
+            ),
+          )
+          ? "thin"
+          : "missing"
+        : usefulInteractions.length === 0
+          ? "thin"
+          : "present",
+      availableInteractions.map((action) => action.localId),
+      availableInteractions.length === 0
+        ? "没有明确可执行的进入、取得、学习、经营或争夺入口。"
+        : usefulInteractions.length === 0
+          ? "已有入口动作，但还没有能留下资产、权限、关系、知识或能力的取得路径。"
+          : "已有能产生现实权益的可执行路径。",
+    ),
+  ];
+
+  const nextFamily = FAMILY_PRIORITY.map((family) =>
+    families.find((entry) => entry.family === family),
+  ).find((entry) => entry && entry.status !== "present");
+
+  return {
+    families,
+    peopleConnectedWorldObjects,
+    orphanWorldObjects,
+    nextWorkshop: nextFamily?.suggestedWorkshop ?? null,
+    nextReason: nextFamily ? nextFamily.label + "：" + nextFamily.reason : null,
   };
 }
 
@@ -127,9 +557,10 @@ export function playtestWorld(
   const places = doc.nodes.filter((node) => node.type === "location");
   const factions = doc.nodes.filter((node) => node.type === "organization");
   const people = doc.nodes.filter((node) => node.type === "character");
-  const resources = doc.nodes.filter(
-    (node) =>
-      node.type === "item" || node.type === "rule" || node.type === "concept",
+  const resources = doc.nodes.filter((node) =>
+    ["resource", "item", "work", "ability", "rule", "technology"].includes(
+      atlasKindOf(node),
+    ),
   );
   const live = currentLinks(doc);
   const actors = new Set([...people, ...factions].map(idOf));
@@ -288,14 +719,13 @@ export function playtestWorld(
     );
   }
 
-  // v0.2 §9: a short sandbox action chain is an optional *diagnostic*, not
-  // a condition for producing or accepting a rich textual world bible.
-  // v0.2 §3.04: an ordinary historical/social world has real power systems,
-  // just as a supernatural world does (office, law, capital, reputation).
-  if (!next && request.scale === "W0" && request.intent !== "advance") {
+  // Public power is a world-content requirement, but not a fixed workshop
+  // slot. If an existing world already has usable public power, no power
+  // workshop is scheduled.
+  if (!next && request.intent !== "advance") {
     const hasPower = resources.some(
       (n) =>
-        n.type === "rule" &&
+        ["ability", "rule", "technology"].includes(atlasKindOf(n)) &&
         n.value.trim().length > 0 &&
         live.some(
           (edge) => edge.fromRef === n.localId || edge.toRef === n.localId,
@@ -311,6 +741,35 @@ export function playtestWorld(
       );
   }
 
+  // Explicit WorldAction chains are not a universal completion gate for a
+  // textual world. Cards, typed relations, access/value and current activities
+  // can already describe a usable world without pretending this is a literal
+  // game runtime. In advance mode, however, an existing Reality that exposes
+  // only entry/access and no way to convert retained rights into new equity
+  // has a concrete playability gap worth producing next.
+  if (
+    !next &&
+    request.intent === "advance" &&
+    !(doc.interactions ?? []).some(
+      (action) =>
+        action.state === "available" &&
+        action.yields.some((term) => term.kind !== "access"),
+    )
+  ) {
+    next = order(
+      "playability",
+      controlledResources[0] ?? places[0]?.localId ?? null,
+      doc,
+      "已有 Reality 能进入，但还没有把现有资源、权限或关系转化成下一步现实收益的取得路径",
+      [
+        "由已有具体人物/组织提供的可执行动作",
+        "动作完成后留下资产、权限、关系、知识或能力，并能继续连接下一层世界内容",
+      ],
+    );
+  }
+
+  const atlasAudit = auditWorldAtlasProduction(doc);
+
   return {
     entryLocations: places.map(idOf),
     operatingOrganizations,
@@ -320,6 +779,7 @@ export function playtestWorld(
     actionableRoutes,
     feedbackPaths,
     interactionPaths,
+    atlasAudit,
     next,
   };
 }
@@ -343,6 +803,7 @@ export function applyWorldProductionDelta(
     if (
       previous &&
       (previous.type !== incoming.type ||
+        atlasKindOf(previous) !== atlasKindOf(incoming) ||
         previous.name !== incoming.name ||
         previous.existingCanonId !== incoming.existingCanonId)
     ) {
@@ -436,7 +897,14 @@ export function worldWorkOrderInput(
     actualSubject: { ref: order.subjectRef, name: order.subjectName },
     whyThisOperation: order.reason,
     requiredWorldProducts: order.deliverables,
+    atlasTarget: {
+      families: order.targetFamilies,
+      suggestedCardKinds: order.suggestedCardKinds,
+      peopleQuestions: order.peopleQuestions,
+      completionRule: order.completionRule,
+    },
+    currentAtlasAudit: auditWorldAtlasProduction(state),
     currentWorld: state,
-    rule: "Make concrete people, permissions, businesses, action and rewards. Reuse existing local IDs to deepen; new IDs must be unique. Return only the new or revised world-content increment. Never author a chapter outline. The engine decides the next work order.",
+    rule: "Produce candidate World Atlas objects and typed relations, not a prose-only world overview. Creating a node is not completion: connect it into the real world graph, and when appropriate connect non-person content to concrete people or organizations. Reuse existing local IDs to deepen; new IDs must be unique. Return only the new or revised world-content increment. Never author a chapter outline. The engine decides the next work order.",
   };
 }

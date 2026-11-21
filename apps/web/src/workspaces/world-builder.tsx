@@ -1,5 +1,6 @@
-/* First true W0/W1 world-pack desk: one run generates a graph of entities,
- * relationships and independent activities, not seven isolated Canon edits.
+/* World Builder desk.
+ * One run produces a candidate batch of World Atlas objects, typed relations
+ * and independent activities. WorldPack is a staging envelope, not the world.
  */
 import "../styles/world-builder.css";
 
@@ -159,18 +160,19 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
       <PageBand
         index="WORLD · PVE"
         title="世界生成"
-        meta={<span>{bible.data?.project.title ?? "World Builder"} · {packs.data?.length ?? 0} 个世界包</span>}
+        meta={<span>{bible.data?.project.title ?? "World Builder"} · {packs.data?.length ?? 0} 个候选生产批次</span>}
       />
       <div className="world-builder__intro">
-        <h2>先把世界制作出来，再让故事进入其中</h2>
+        <h2>把世界持续生产成可查询的 World Atlas</h2>
         <p>
-          程序按 v0.1～v0.7 的共同世界设计框架分工序制作文字设定，
-          逐步生产真实地点、人物、势力、资源及其关系；作者审阅后写入同一份 NarraLume Canon。
-          未采用的世界包不会改变小说的Reality。
+          第一模块不再追求一次生成一篇“完整世界观”。程序读取现有 Reality，
+          按 World Atlas 的十个内容 Family 与 People-centered 叙事轴发现缺口，
+          逐步生产真实对象、typed relations、当前事务、社会价格和可进入路径。
+          每个 WorldPack 只是一次候选生产批次，作者采用前不会改变 Reality。
         </p>
       </div>
       <div className="world-builder__layout">
-        <section className="world-builder__form" aria-label="世界包生成配置">
+        <section className="world-builder__form" aria-label="世界内容生产配置">
           <div className="world-builder__scale" role="group" aria-label="世界分辨率">
             <button className="btn" type="button" aria-pressed={form.scale === "W0"}
               onClick={() => update("scale", "W0")}>W0 · 世界战略底图</button>
@@ -256,7 +258,7 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
               disabled={!valid || generation.isPending || Boolean(activeRun)}
               onClick={start}>
               <Sparkles size={14} />
-              {generation.isPending ? "创建任务中…" : "AI 生产完整世界包"}
+              {generation.isPending ? "创建任务中…" : "AI 生产 / 扩张世界内容"}
             </button>
             <Link className="world-builder__link" to={projectWorkspacePath(projectId, "runs")}>
               运行中心 <ArrowUpRight size={14} />
@@ -266,7 +268,7 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
           {generation.isError ? <ErrorNote title="世界生产未启动" error={generation.error} /> : null}
           {activeRun ? (
             <p className="world-builder__running">
-              <Layers3 size={15} /> 世界包正在生产：{activeRun.status}。
+              <Layers3 size={15} /> 世界内容生产批次正在运行：{activeRun.status}。
               <Link to={`${projectWorkspacePath(projectId,"runs")}?run=${encodeURIComponent(activeRun.id)}`}>
                 查看步骤
               </Link>
@@ -280,8 +282,8 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
           <div className="world-builder__status-head"><Compass size={18} /><h3>世界当前 Reality</h3></div>
           <p>已采纳 Canon：{bible.data?.entities.filter((e) => e.status === "active").length ?? 0} 个实体、{bible.data?.facts.length ?? 0} 条事实、{bible.data?.relationships.length ?? 0} 条关系。</p>
           <p className="world-builder__hint">
-            这里展示的是已确认的现实，不是世界包候选。
-            过去正文和世界卡的现有关系会进入下一轮世界生成的上下文。
+            这里展示的是已确认的 Reality，不是本轮候选生产批次。
+            过去正文和世界卡的现有关系会进入下一轮世界生产与缺口判断。
           </p>
           {bible.isError ? <ErrorNote title="读取世界资料失败" error={bible.error} /> : null}
           {areas.length ? (
@@ -339,15 +341,15 @@ function WorldBuilderProject({ projectId }: { projectId: string }) {
       </div>
 
       <section className="world-builder__results">
-        <header><h2><Network size={18}/> 世界包与审阅</h2>
-          <p>每包都有实体图、具体关系和人物事务。可编辑后整体采用，一次提交所有内部引用。</p>
+        <header><h2><Network size={18}/> 世界内容候选批次与审阅</h2>
+          <p>每批都是一组互相引用的世界对象、typed relations 和人物事务。WorldPack 只负责暂存与原子审阅，不是第二套世界数据库。</p>
         </header>
-        {packs.isError ? <ErrorNote title="读取世界包失败" error={packs.error} /> : null}
+        {packs.isError ? <ErrorNote title="读取世界内容候选失败" error={packs.error} /> : null}
         {packs.data?.length ? packs.data.slice(0, 12).map((pack) => (
           <WorldPackReview key={`${pack.id}:${pack.version}`}
             pack={pack} projectId={projectId} onSaved={refresh}/>
         )) : (
-          <p className="world-builder__hint">还没有世界包。填写上面的世界设想后即可生成。</p>
+          <p className="world-builder__hint">还没有候选生产批次。填写上面的世界设想后即可开始生产或扩张世界内容。</p>
         )}
       </section>
     </div>
@@ -401,6 +403,54 @@ function WorldPackReview({
         <span>{pack.document.activities.length} 项自主活动</span>
         <span>{pack.document.interactions?.length ?? 0} 种可执行玩法</span>
       </div>
+      {pack.document.production?.atlasAudit ? (
+        <section className="world-builder__atlas-audit" aria-label="World Atlas 内容缺口">
+          <div className="world-builder__atlas-audit-head">
+            <div>
+              <small>World Atlas 生产完成时体检快照</small>
+              <strong>十个内容 Family</strong>
+            </div>
+            <span>
+              {pack.document.production.atlasAudit.orphanWorldObjects.length} 个孤立对象
+            </span>
+          </div>
+          <div className="world-builder__atlas-family-grid">
+            {pack.document.production.atlasAudit.families.map((family) => (
+              <div
+                className="world-builder__atlas-family"
+                data-status={family.status}
+                key={family.family}
+                title={family.reason}
+              >
+                <span>{family.label}</span>
+                <strong>
+                  {family.status === "present"
+                    ? "已形成"
+                    : family.status === "thin"
+                      ? "偏薄"
+                      : "缺失"}
+                </strong>
+              </div>
+            ))}
+          </div>
+          {pack.document.production.atlasAudit.nextReason ? (
+            <p className="world-builder__atlas-next">
+              <b>下一轮建议：</b>
+              {pack.document.production.atlasAudit.nextReason}
+              {pack.document.production.atlasAudit.nextWorkshop
+                ? ` · ${pack.document.production.atlasAudit.nextWorkshop}`
+                : ""}
+            </p>
+          ) : (
+            <p className="world-builder__atlas-next">
+              当前批次没有明显的十 Family 结构缺口；仍可按具体 Zone 继续向下制作。
+            </p>
+          )}
+          <p className="world-builder__hint">
+            这是引擎根据本批 Card / Relation / Activity 推出的生产反馈，不是新的世界真相；手工修改 JSON 后可在下一轮生产重新计算。
+          </p>
+        </section>
+      ) : null}
       {pack.document.production ? (
         <details>
           <summary>程序实际执行的世界生产工序（{pack.document.production.executed.length}）</summary>
@@ -436,7 +486,7 @@ function WorldPackReview({
         <div className="world-builder__nodes">
           {pack.document.nodes.map((node: WorldPackNode) => (
             <div className="world-builder__node" key={node.localId}>
-              <div><small>{node.type} · {node.localId}{node.existingCanonId ? " · 复用旧Canon" : ""}</small><h4>{node.name}</h4></div>
+              <div><small>{node.atlasKind ?? node.type}{node.atlasKind && node.atlasKind !== node.type ? ` · staging:${node.type}` : ""} · {node.localId}{node.existingCanonId ? " · 复用旧Canon" : ""}</small><h4>{node.name}</h4></div>
               <p>{node.description}</p>
               {node.value ? <p><b>实际价值：</b>{node.value}</p> : null}
               {node.access ? <p><b>取得 / 进入：</b>{node.access}</p> : null}
@@ -486,7 +536,7 @@ function WorldPackReview({
           </button>
           {edit ? (
             <div className="world-builder__json">
-              <p className="world-builder__hint">当前版本的完整世界包。可改人物、资源、关系、状态；保存前会校验 schema 和引用。采纳前修改不会影响 Canon。</p>
+              <p className="world-builder__hint">当前候选生产批次。可改人物、资源、关系、状态；保存前会校验 schema 和引用。采用前不会影响 Reality。</p>
               <textarea aria-label="世界包完整JSON" value={raw} rows={18}
                 onChange={(event) => setRaw(event.target.value)} />
               <button className="btn btn--primary" type="button" disabled={save.isPending}
@@ -497,11 +547,11 @@ function WorldPackReview({
           ) : null}
           <label className="world-builder__confirm">
             <input type="checkbox" checked={confirm} onChange={(event) => setConfirm(event.target.checked)}/>
-            我已审阅这组人物、关系和世界活动，确认把当前事实采用到 Canon
+            我已审阅这批世界对象、关系和当前活动，确认把候选事实采用到 Reality
           </label>
           <button className="btn btn--primary" type="button"
             disabled={!confirm || adoption.isPending}
-            onClick={() => adoption.mutate()}>整体采用世界包（原子提交）</button>
+            onClick={() => adoption.mutate()}>采用本批世界内容（原子提交）</button>
           {adoption.isError ? <ErrorNote error={adoption.error} title="世界包采用失败" /> : null}
         </div>
       ) : (

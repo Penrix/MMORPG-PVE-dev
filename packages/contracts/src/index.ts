@@ -22,6 +22,7 @@ export * from "./agent-skills.js";
 export * from "./canon-candidate.js";
 export * from "./world-pack.js";
 export * from "./world-atlas.js";
+export * from "./world-builder-atlas.js";
 
 export const HealthResponseSchema = z.object({
   status: z.literal("ok"),
