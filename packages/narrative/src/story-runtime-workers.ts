@@ -300,8 +300,7 @@ export class StoryRuntimeAgentService {
 
     const protagonistProposal = request.protagonistCharacterId
       ? request.proposals.find(
-          (proposal) =>
-            proposal.characterId === request.protagonistCharacterId,
+          (proposal) => proposal.characterId === request.protagonistCharacterId,
         )
       : undefined;
     const protagonistProjection =
@@ -323,9 +322,7 @@ export class StoryRuntimeAgentService {
         projectId: request.projectId,
         generationId: request.generationId,
         round: request.round,
-        proposalDigests: request.proposals.map(
-          (proposal) => proposal.digest,
-        ),
+        proposalDigests: request.proposals.map((proposal) => proposal.digest),
         resolutions,
         conflicts: output.conflicts,
         hardContractStatus: output.hardContractStatus,
