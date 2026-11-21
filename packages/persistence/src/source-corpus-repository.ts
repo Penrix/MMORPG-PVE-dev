@@ -55,8 +55,9 @@ function rawForStorage(
   kind: SourceKind,
 ): Record<string, unknown> {
   if (isLegacySourceKind(kind)) {
-    const { atlasCardKind: _legacyMarker, ...rest } = raw;
-    return rest;
+    const stored = { ...raw };
+    delete stored.atlasCardKind;
+    return stored;
   }
   return { ...raw, atlasCardKind: kind };
 }
