@@ -2,7 +2,6 @@ import {
   AdoptWorldPackRequestSchema,
   UpdateWorldPackRequestSchema,
   WorldPackRequestSchema,
-  worldPackAtlasKind,
   worldPackReferenceProblems,
   type WorldPackRecord,
 } from "@narralume/contracts";
@@ -184,7 +183,7 @@ export function adoptWorldPack(
           predicate: "world.content",
           value: {
             scale: pack.request.scale,
-            atlasKind: worldPackAtlasKind(node),
+            ...(node.atlasKind ? { atlasKind: node.atlasKind } : {}),
             worldTime: pack.request.worldTime,
             value: node.value,
             access: node.access,
