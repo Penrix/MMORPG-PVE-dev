@@ -1,4 +1,3 @@
-import { worldAtlasNarrativePriority } from "@narralume/contracts";
 import type { CanonEntity, CanonFact } from "@narralume/domain";
 import { SqliteCanonRepository } from "./canon-repository.js";
 import type { NarrativeDatabase } from "./database.js";
@@ -169,31 +168,20 @@ function sourceSlots(
         c,
         k,
       ),
-      ...[...atlasRelations]
-        .sort(
-          (left, right) =>
-            worldAtlasNarrativePriority(left.otherKind) -
-              worldAtlasNarrativePriority(right.otherKind) ||
-            left.displayRelation.localeCompare(
-              right.displayRelation,
-              "zh-CN",
-            ) ||
-            left.otherName.localeCompare(right.otherName, "zh-CN"),
-        )
-        .map((rel) =>
-          slot(
-            "relationship",
-            JSON.stringify([
-              rel.direction,
-              rel.displayRelation,
-              rel.fromKey,
-              rel.toKey,
-            ]),
-            rel,
-            c,
-            k,
-          ),
+      ...atlasRelations.map((rel) =>
+        slot(
+          "relationship",
+          JSON.stringify([
+            rel.direction,
+            rel.displayRelation,
+            rel.fromKey,
+            rel.toKey,
+          ]),
+          rel,
+          c,
+          k,
         ),
+      ),
     ];
   }
 
