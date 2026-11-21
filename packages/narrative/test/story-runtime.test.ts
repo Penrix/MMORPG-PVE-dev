@@ -259,9 +259,7 @@ describe("Module 3 Story Runtime core", () => {
         },
         current,
       ),
-    ).toThrow(
-      "story_runtime.proposal.unavailable_knowledge:secret-identity",
-    );
+    ).toThrow("story_runtime.proposal.unavailable_knowledge:secret-identity");
   });
 
   it("binds arbitration to original character intent and keeps its delta speculative", () => {
@@ -317,9 +315,7 @@ describe("Module 3 Story Runtime core", () => {
     const delta = speculativeRealityDeltaFromArbitration(receipt);
     expect(delta.authority).toBe("speculative");
     expect(delta.warning).toContain("Do not write to Canon");
-    expect(delta.mutations[0]?.stateAfter).toBe(
-      "Hero is outside the harbor",
-    );
+    expect(delta.mutations[0]?.stateAfter).toBe("Hero is outside the harbor");
     expect(canon.getFact("p1", "runtime-created-fact")).toBeNull();
     expect(state.listTimeline("p1")).toHaveLength(2);
   });
