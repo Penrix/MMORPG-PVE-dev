@@ -16,7 +16,7 @@ afterEach(() => {
 });
 function setup() {
   db = new NodeNarrativeDatabase();
-  expect(db.migrate()).toBe(54);
+  expect(db.migrate()).toBe(55);
   const source = new SqliteSourceCorpusRepository(db);
   const wiki = new SqliteMotherWorldEncyclopediaRepository(db);
   source.upsertCorpus({
