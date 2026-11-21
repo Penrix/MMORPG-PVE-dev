@@ -30,6 +30,17 @@ describe("WorldAtlasNarrativeContextBuilder", () => {
     new SqliteProjectRepository(db).insert(
       createProject({ id: "p1", title: "火影同人", now }),
     );
+    const projectWorld = new SqliteProjectWorldRepository(db);
+    projectWorld.createSpace({
+      id: "scope-main",
+      projectId: "p1",
+      name: "项目主世界",
+      kind: "realm",
+      parentSpaceId: null,
+      sourceCorpusId: null,
+      description: "",
+      createdAt: now,
+    });
     const sources = new SqliteSourceCorpusRepository(db);
     sources.upsertCorpus({
       id: "wiki:naruto",
@@ -90,7 +101,7 @@ describe("WorldAtlasNarrativeContextBuilder", () => {
         id: "kakashi",
         projectId: "p1",
         type: "character",
-        worldScopeId: "project:p1",
+        worldScopeId: "scope-main",
         name: "旗木卡卡西",
         now,
       }),
@@ -107,7 +118,7 @@ describe("WorldAtlasNarrativeContextBuilder", () => {
         now,
       }),
     );
-    new SqliteProjectWorldRepository(db).linkSourceEntity({
+    projectWorld.linkSourceEntity({
       projectId: "p1",
       entityId: "kakashi",
       corpusId: "wiki:naruto",
