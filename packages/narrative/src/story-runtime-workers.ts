@@ -34,8 +34,6 @@ const CharacterDecisionOutputSchema = z.object({
   contingencies: z.array(z.string().min(1)).max(20),
   expectedConsequences: z.array(z.string().min(1)).max(20),
 });
-type CharacterDecisionOutput = z.infer<typeof CharacterDecisionOutputSchema>;
-
 const ButterflyEffectOutputSchema = z.object({
   effect: z.string().min(1),
   transmissionPath: z.string().min(1),
