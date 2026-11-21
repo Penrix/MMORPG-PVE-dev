@@ -47,6 +47,7 @@ import {
   workCraftLayer,
 } from "./prompt-language.js";
 import { StoryStatePacketBuilder } from "./story-state-packet.js";
+import { WorldAtlasStoryContextBuilder } from "./world-atlas-story-context.js";
 import {
   ADOPTION_RESULT_CONTRACT,
   AdoptionResultSchema,
@@ -83,6 +84,7 @@ export class CollaborationWorkerSuite {
   private readonly compiler: ContextCompiler;
   private readonly templates: SqliteTemplateRepository;
   private readonly storyState: StoryStatePacketBuilder;
+  private readonly worldAtlasContext: WorldAtlasStoryContextBuilder;
 
   constructor(
     private readonly database: NarrativeDatabase,
@@ -111,6 +113,7 @@ export class CollaborationWorkerSuite {
       this.state,
       this.story,
     );
+    this.worldAtlasContext = new WorldAtlasStoryContextBuilder(database);
   }
 
   /** 替换式指令组装：模板生效内容（override ?? 官方默认）整体替换写作层，
@@ -498,6 +501,34 @@ export class CollaborationWorkerSuite {
       targetOutlineNodeId: session.targetOutlineNodeId,
     });
     sources.push(...storyStatePacket.sources);
+    const targetNode = session.targetOutlineNodeId
+      ? this.story.requireOutlineNode(
+          session.projectId,
+          session.targetOutlineNodeId,
+        )
+      : null;
+    const atlasEntityIds = [
+      ...new Set([
+        ...(speakerPersona.entityId ? [speakerPersona.entityId] : []),
+        ...(targetNode?.povEntityId ? [targetNode.povEntityId] : []),
+        ...(Array.isArray(targetNode?.metadata.plannedEntityIds)
+          ? targetNode.metadata.plannedEntityIds.filter(
+              (id): id is string => typeof id === "string",
+            )
+          : []),
+      ]),
+    ];
+    const atlasContext = this.worldAtlasContext.build({
+      projectId: session.projectId,
+      entityIds: atlasEntityIds,
+    });
+    // A character Persona must not receive author-omniscient Reality or
+    // mother-world reference facts. Its StoryState packet already enforces
+    // what that character currently knows. Narrators may use current Reality
+    // and the lightweight source baseline, but never the full source card.
+    if (speakerPersona.kind !== "character") {
+      sources.push(...atlasContext.current, ...atlasContext.reference);
+    }
     const retrievalQuery = [
       session.title,
       session.directorNote,
@@ -673,6 +704,13 @@ export class CollaborationWorkerSuite {
         speakerSelectionHash,
         storyStateFingerprint: storyStatePacket.fingerprint,
         storyStateCounts: storyStatePacket.counts,
+        worldAtlasContext: {
+          mode:
+            speakerPersona.kind === "character"
+              ? "character-filtered"
+              : "narrator-reference",
+          counts: atlasContext.counts,
+        },
         loreActivation: {
           includedCount: loreContextEntries.filter(
             ({ contextStatus }) => contextStatus !== "excluded",
