@@ -3,6 +3,7 @@ import { powerDesignProducts } from "./world-design-policy.js";
 import {
   WORLD_ATLAS_CONTENT_FAMILIES,
   worldBuilderAtlasTarget,
+  worldPackAtlasKind,
   worldPackReferenceProblems,
   type WorldAtlasCardKind,
   type WorldAtlasContentFamily,
@@ -115,6 +116,10 @@ function idOf(node: WorldPackNode): string {
   return node.localId;
 }
 
+function atlasKindOf(node: WorldPackNode) {
+  return worldPackAtlasKind(node);
+}
+
 function named(doc: WorldPackDocument, id: string): string {
   return doc.nodes.find((n) => n.localId === id)?.name ?? id;
 }
@@ -183,14 +188,27 @@ export function auditWorldAtlasProduction(
   doc: WorldPackDocument,
 ): WorldAtlasProductionAudit {
   const live = currentLinks(doc);
-  const people = doc.nodes.filter((node) => node.type === "character");
-  const organizations = doc.nodes.filter(
-    (node) => node.type === "organization",
+  const people = doc.nodes.filter(
+    (node) => atlasKindOf(node) === "character",
   );
-  const places = doc.nodes.filter((node) => node.type === "location");
-  const assets = doc.nodes.filter((node) => node.type === "item");
-  const powers = doc.nodes.filter(
-    (node) => node.type === "rule" || node.type === "concept",
+  const peopleFamily = doc.nodes.filter((node) =>
+    ["character", "population", "creature"].includes(atlasKindOf(node)),
+  );
+  const organizations = doc.nodes.filter(
+    (node) => atlasKindOf(node) === "organization",
+  );
+  const organizationFamily = doc.nodes.filter((node) =>
+    ["organization", "institution", "position"].includes(atlasKindOf(node)),
+  );
+  const places = doc.nodes.filter((node) => atlasKindOf(node) === "location");
+  const assets = doc.nodes.filter((node) =>
+    ["resource", "item", "work"].includes(atlasKindOf(node)),
+  );
+  const powers = doc.nodes.filter((node) =>
+    ["ability", "rule", "technology"].includes(atlasKindOf(node)),
+  );
+  const informationCards = doc.nodes.filter(
+    (node) => atlasKindOf(node) === "information",
   );
   const actors = new Set(
     [...people, ...organizations].map((node) => node.localId),
@@ -219,7 +237,9 @@ export function auditWorldAtlasProduction(
         activity.resourceRefs.includes(ref),
     );
 
-  const nonPeople = doc.nodes.filter((node) => node.type !== "character");
+  const nonPeople = doc.nodes.filter(
+    (node) => atlasKindOf(node) !== "character",
+  );
   const peopleConnectedWorldObjects = nonPeople
     .filter((node) => connectedToPerson(node.localId))
     .map((node) => node.localId);
@@ -345,17 +365,22 @@ export function auditWorldAtlasProduction(
   const families: WorldFamilyCoverage[] = [
     coverage(
       "people",
-      people.length === 0
+      peopleFamily.length === 0
         ? "missing"
-        : socialPeople.length === 0
+        : people.length === 0 || socialPeople.length === 0
           ? "thin"
           : "present",
-      socialPeople.map((node) => node.localId),
-      people.length === 0
-        ? "没有具名人物。"
-        : socialPeople.length === 0
-          ? "有人物，但人物尚未进入关系或当前事务。"
-          : "人物已经进入关系网或当前事务。",
+      [...new Set([
+        ...peopleFamily.map((node) => node.localId),
+        ...socialPeople.map((node) => node.localId),
+      ])],
+      peopleFamily.length === 0
+        ? "没有人物、人口群体或生物对象。"
+        : people.length === 0
+          ? "有人口/生物资料，但还没有能发动故事的具体人物。"
+          : socialPeople.length === 0
+            ? "有人物，但人物尚未进入关系或当前事务。"
+            : "人物已经进入关系网或当前事务。",
     ),
     coverage(
       "space",
@@ -373,17 +398,22 @@ export function auditWorldAtlasProduction(
     ),
     coverage(
       "organization",
-      organizations.length === 0
+      organizationFamily.length === 0
         ? "missing"
-        : socialOrganizations.length === 0
+        : organizations.length === 0 || socialOrganizations.length === 0
           ? "thin"
           : "present",
-      socialOrganizations.map((node) => node.localId),
-      organizations.length === 0
-        ? "没有组织机器。"
-        : socialOrganizations.length === 0
-          ? "有组织名称，但没有具体人物/地点关系支撑其运转。"
-          : "组织已经接上人物或实际区域。",
+      [...new Set([
+        ...organizationFamily.map((node) => node.localId),
+        ...socialOrganizations.map((node) => node.localId),
+      ])],
+      organizationFamily.length === 0
+        ? "没有组织、制度或职位对象。"
+        : organizations.length === 0
+          ? "有制度/职位资料，但还没有实际运作的组织。"
+          : socialOrganizations.length === 0
+            ? "有组织名称，但没有具体人物/地点关系支撑其运转。"
+            : "组织已经接上人物或实际区域。",
     ),
     coverage(
       "power",
@@ -445,19 +475,20 @@ export function auditWorldAtlasProduction(
     ),
     coverage(
       "information",
-      informationEdges.length === 0 && informationNodes.length === 0
+      informationCards.length === 0 && informationEdges.length === 0
         ? "missing"
         : informationEdges.length === 0
           ? "thin"
           : "present",
       [
+        ...informationCards.map((node) => node.localId),
         ...informationNodes.map((node) => node.localId),
         ...informationEdges.map(
           (edge) => edge.fromRef + "|" + edge.relation + "|" + edge.toRef,
         ),
       ],
-      informationEdges.length === 0 && informationNodes.length === 0
-        ? "没有谁知道、传播、隐瞒或误判什么的可查询关系。"
+      informationCards.length === 0 && informationEdges.length === 0
+        ? "没有信息卡，也没有谁知道、传播、隐瞒或误判什么的可查询关系。"
         : informationEdges.length === 0
           ? "存在信息对象，但尚未进入人物认知与传播网络。"
           : "信息已经进入知情或传播关系。",
@@ -524,9 +555,10 @@ export function playtestWorld(
   const places = doc.nodes.filter((node) => node.type === "location");
   const factions = doc.nodes.filter((node) => node.type === "organization");
   const people = doc.nodes.filter((node) => node.type === "character");
-  const resources = doc.nodes.filter(
-    (node) =>
-      node.type === "item" || node.type === "rule" || node.type === "concept",
+  const resources = doc.nodes.filter((node) =>
+    ["resource", "item", "work", "ability", "rule", "technology"].includes(
+      atlasKindOf(node),
+    ),
   );
   const live = currentLinks(doc);
   const actors = new Set([...people, ...factions].map(idOf));
@@ -766,6 +798,7 @@ export function applyWorldProductionDelta(
     if (
       previous &&
       (previous.type !== incoming.type ||
+        atlasKindOf(previous) !== atlasKindOf(incoming) ||
         previous.name !== incoming.name ||
         previous.existingCanonId !== incoming.existingCanonId)
     ) {
