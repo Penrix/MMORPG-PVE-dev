@@ -85,10 +85,7 @@ function expectationState() {
   });
 }
 
-function candidate(
-  id: string,
-  summary: string,
-): NarrativeCandidate {
+function candidate(id: string, summary: string): NarrativeCandidate {
   return {
     id,
     projectId: "p1",
@@ -235,13 +232,14 @@ describe("ExpectationNarrativeService", () => {
       structured: vi.fn(
         async (_run, _step, _purpose, request, _contract, validate) => {
           const serialized = JSON.stringify(request);
-          expect(serialized).toContain("candidate:arbiter:direct:character:xiuxin");
+          expect(serialized).toContain(
+            "candidate:arbiter:direct:character:xiuxin",
+          );
           expect(serialized).toContain("医疗忍者注意到异常控制");
           const checked = validate({
             decisions: [
               {
-                candidateId:
-                  "candidate:arbiter:direct:character:xiuxin",
+                candidateId: "candidate:arbiter:direct:character:xiuxin",
                 action: "charge",
                 readerTime: "scene",
                 expectationThreadIds: ["thread:recognition"],
@@ -249,7 +247,9 @@ describe("ExpectationNarrativeService", () => {
                 deepenScarcityEvidenceIds: [],
                 reinforceBeliefIds: ["belief:limit"],
                 widenGapBeliefIds: ["belief:limit"],
-                embodimentTargets: ["让 Reader 看见医疗体系为何先按普通情况处理"],
+                embodimentTargets: [
+                  "让 Reader 看见医疗体系为何先按普通情况处理",
+                ],
                 payoffThreadIds: [],
                 reactionTargetEntityIds: [],
                 retainedGainOpportunity: null,
