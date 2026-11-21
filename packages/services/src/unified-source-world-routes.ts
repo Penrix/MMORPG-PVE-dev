@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { WorldAtlasCardKindSchema } from "@narralume/contracts";
 import {
   SqliteProjectRepository,
   SqliteSourceCorpusRepository,
@@ -46,16 +47,7 @@ const AdoptBody = z.object({
   sourceNote: z.string().trim().min(1),
 });
 const LinkBody = AdoptBody.omit({ canonicalKey: true });
-const SourceKindSchema = z.enum([
-  "character",
-  "organization",
-  "location",
-  "ability",
-  "creature",
-  "item",
-  "event",
-  "other",
-]);
+const SourceKindSchema = WorldAtlasCardKindSchema;
 const CardQuery = z.object({
   q: z.string().default(""),
   kind: SourceKindSchema.optional(),
