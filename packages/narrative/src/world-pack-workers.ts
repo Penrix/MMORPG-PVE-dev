@@ -1,6 +1,8 @@
 import {
+  WORLD_ATLAS_CARD_TYPES,
   WORLD_BUILDER_ATLAS_CONTRACT,
   WORLD_BUILDER_ATLAS_CROSSWALK,
+  WORLD_PACK_ATLAS_KIND_COARSE_TYPE,
   WorldPackDocumentSchema,
   type WorldPackDocument,
   WorldPackRequestSchema,
@@ -62,6 +64,7 @@ const NODE_SCHEMA = {
     "localId",
     "existingCanonId",
     "type",
+    "atlasKind",
     "name",
     "description",
     "areaRef",
@@ -89,6 +92,12 @@ const NODE_SCHEMA = {
         "rule",
         "concept",
       ],
+    },
+    atlasKind: {
+      type: "string",
+      enum: WORLD_ATLAS_CARD_TYPES.map((entry) => entry.kind),
+      description:
+        "True logical World Atlas card kind. Must match the legacy coarse type through atlasKindCoarseTypeMap.",
     },
     name: txt("Specific named world object"),
     description: txt(
@@ -427,6 +436,7 @@ function makePrompt(
     })),
     atlasProductionContract: WORLD_BUILDER_ATLAS_CONTRACT,
     atlasProductionCrosswalk: WORLD_BUILDER_ATLAS_CROSSWALK,
+    atlasKindCoarseTypeMap: WORLD_PACK_ATLAS_KIND_COARSE_TYPE,
     productionIntent:
       input.intent === "advance"
         ? "本轮是世界自主推进。基于现存人物/组织/关系/活动继续做决定，不为换地图重置现实。既有人物要用 existingCanonId 复用，不重新发明同名角色；可以生成新的关系变化、未完成事务、结束的旧事务与新进入世界的人。注意以现在世界时间推进 NPC 的独立生活，而不是写男主章纲。"
