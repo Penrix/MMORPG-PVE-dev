@@ -33,6 +33,18 @@ describe("Project Reality ↔ lightweight World Atlas adapter", () => {
     const projects = new SqliteProjectRepository(db);
     projects.insert(createProject({ id: "p1", title: "火影同人", now }));
 
+    const projectWorld = new SqliteProjectWorldRepository(db);
+    projectWorld.createSpace({
+      id: "scope-main",
+      projectId: "p1",
+      name: "项目主世界",
+      kind: "realm",
+      parentSpaceId: null,
+      sourceCorpusId: null,
+      description: "",
+      createdAt: now,
+    });
+
     const sources = new SqliteSourceCorpusRepository(db);
     sources.upsertCorpus({
       id: "wiki:naruto",
@@ -77,7 +89,7 @@ describe("Project Reality ↔ lightweight World Atlas adapter", () => {
         id: "kakashi",
         projectId: "p1",
         type: "character",
-        worldScopeId: "project:p1",
+        worldScopeId: "scope-main",
         name: "旗木卡卡西",
         now,
       }),
@@ -87,12 +99,11 @@ describe("Project Reality ↔ lightweight World Atlas adapter", () => {
         id: "minato",
         projectId: "p1",
         type: "character",
-        worldScopeId: "project:p1",
+        worldScopeId: "scope-main",
         name: "波风水门",
         now,
       }),
     );
-    const projectWorld = new SqliteProjectWorldRepository(db);
     projectWorld.linkSourceEntity({
       projectId: "p1",
       entityId: "kakashi",
