@@ -10,6 +10,7 @@ import {
   type NarrativeAllocationDecision,
   type NarrativeAllocationDecisionDraft,
   type NarrativeCandidate,
+  type WorldArbitrationReceipt,
 } from "@narralume/contracts";
 import { sha256Hex } from "@narralume/domain";
 
@@ -315,4 +316,46 @@ export function finalizeNarrativeAllocationBatch(
     ...withoutDigest,
     digest: digest(withoutDigest),
   });
+}
+
+
+/**
+ * Bridge Layer 1 Reality Runtime into Layer 2 Expectation Runtime.
+ *
+ * Every finalized character resolution becomes one speculative NarrativeCandidate.
+ * The candidate preserves what actually happened in the arbitration receipt; the
+ * expectation layer may allocate Reader Time, but may not rewrite it.
+ */
+export function narrativeCandidatesFromArbitration(
+  receipt: WorldArbitrationReceipt,
+): NarrativeCandidate[] {
+  if (!receipt.finalized) {
+    throw new Error("story_runtime.expectation.arbitration_not_final");
+  }
+
+  return [...receipt.resolutions]
+    .sort((left, right) => left.actionOrder - right.actionOrder)
+    .map((resolution) => ({
+      id: `candidate:${receipt.digest}:${resolution.agentId}`,
+      projectId: receipt.projectId,
+      generationId: receipt.generationId,
+      source: "actor_initiative" as const,
+      authority: "speculative" as const,
+      summary: [
+        resolution.characterName,
+        resolution.intendedAction,
+        `outcome=${resolution.outcome}`,
+        resolution.immediateResult,
+      ].join(" | "),
+      involvedEntityIds: [resolution.characterId],
+      evidenceRefs: [resolution.proposalDigest, receipt.digest],
+      effects: [
+        `stateAfter=${resolution.stateAfter}`,
+        ...resolution.butterflyEffects.map(
+          (effect) =>
+            `${effect.effect} | via=${effect.transmissionPath} | horizon=${effect.arrivalHorizon} | protagonistImpact=${effect.protagonistImpact}`,
+        ),
+      ],
+      originDigest: receipt.digest,
+    }));
 }
