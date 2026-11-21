@@ -1,5 +1,7 @@
 # 第二模块｜原生母体专业百科数据库 v0.1（2026-11-20）
 
+> **2026-11-21 状态修正：** 本文记录 053/054 已有工程资产与历史设计，但“专业百科专项表”不再是当前第二模块的中心目标。最新裁决见 [13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)：完整文字卡片是资料真相，typed links 形成可重建 `source_relations` 索引；专项表保留但不强制填写、不继续扩张。
+
 > **工程范围**：独立保存原著、历史、都市年代、人物与世界内容，供多本男频长篇反复 Fork；**不是**第一模块世界生成，也**不是**小说项目 Canon。原生母体的全时代资料不受小说切入时间影响。
 >
 > 依据：《男频语义内核 v1.3》126～135、141 节；世界设计 v0.1～v0.7；[10 已确认错误与禁令](10-module2-cognition-and-error-guardrails.md)、[11 Project Fork/Diff](11-world-fork-diff-character-invariants.md)。
