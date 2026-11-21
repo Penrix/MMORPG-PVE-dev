@@ -1,9 +1,13 @@
 import {
+  ExpectationDesignDraftSchema,
+  ExpectationDesignSchema,
   ExpectationStateDraftSchema,
   ExpectationStateSchema,
   NarrativeAllocationBatchSchema,
   NarrativeAllocationDecisionDraftSchema,
   NarrativeAllocationDecisionSchema,
+  type ExpectationDesign,
+  type ExpectationDesignDraft,
   type ExpectationState,
   type ExpectationStateDraft,
   type NarrativeAllocationBatch,
@@ -58,6 +62,62 @@ function requireRefs(
       throw new Error(`story_runtime.expectation.unknown_${label}:${ref}`);
     }
   }
+}
+
+export function finalizeExpectationDesign(
+  draft: ExpectationDesignDraft,
+  allowedEvidenceRefs?: ReadonlySet<string>,
+  allowedEntityIds?: ReadonlySet<string>,
+): ExpectationDesign {
+  const parsed = ExpectationDesignDraftSchema.parse(draft);
+
+  const evidenceRefs = [
+    ...parsed.protagonistAdvantageRefs,
+    ...parsed.worldFocusRefs,
+    ...parsed.scarcityIntents.flatMap((item) => item.existingEvidenceRefs),
+    ...parsed.beliefIntents.flatMap((item) => item.existingEvidenceRefs),
+  ];
+  if (allowedEvidenceRefs) {
+    requireRefs("design_evidence", evidenceRefs, allowedEvidenceRefs);
+  }
+
+  if (allowedEntityIds) {
+    requireRefs(
+      "design_entity",
+      [
+        parsed.protagonistId,
+        ...parsed.reactionTargetEntityIds,
+        ...parsed.activationEntityIds,
+        ...parsed.beliefIntents.flatMap((item) => item.holderEntityIds),
+      ],
+      allowedEntityIds,
+    );
+  }
+
+  if (
+    parsed.scarcityIntents.every(
+      (item) =>
+        item.existingEvidenceRefs.length === 0 &&
+        item.evidenceToEstablish.length === 0,
+    )
+  ) {
+    throw new Error("story_runtime.expectation.design_without_scarcity_path");
+  }
+  if (
+    parsed.beliefIntents.every(
+      (item) =>
+        item.existingEvidenceRefs.length === 0 &&
+        item.stakeToCultivate.length === 0,
+    )
+  ) {
+    throw new Error("story_runtime.expectation.design_without_belief_path");
+  }
+
+  const withoutDigest = parsed;
+  return ExpectationDesignSchema.parse({
+    ...withoutDigest,
+    digest: digest(withoutDigest),
+  });
 }
 
 /**
