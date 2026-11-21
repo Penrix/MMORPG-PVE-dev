@@ -10,6 +10,10 @@ import {
   type MotherWorldDossier,
 } from "./source-world-encyclopedia-repository.js";
 import {
+  SqliteSourceCorpusRepository,
+  type SourceRelationView,
+} from "./source-corpus-repository.js";
+import {
   SqliteWorldEncyclopediaRepository,
   type WorldEntityDossier,
 } from "./world-encyclopedia-repository.js";
@@ -126,9 +130,58 @@ const slot = (
 /** Deterministic reference facets, without inventing any source-world facts.
  * The original complete dossier remains available in sourceReferences.
  */
-function sourceSlots(dossier: MotherWorldDossier): RealitySlot[] {
+function sourceSlots(
+  dossier: MotherWorldDossier,
+  atlasRelations: readonly SourceRelationView[],
+): RealitySlot[] {
   const c = dossier.record.corpusId;
   const k = dossier.record.sourceKey;
+  const card = dossier.lore.find((section) => section.sectionKey === "card");
+
+  // Current Module 2 authority: once a curated Atlas card exists, Markdown
+  // card + typed relations are the reference truth. The older specialist
+  // encyclopedia tables remain readable only as a compatibility fallback.
+  if (card) {
+    return [
+      slot(
+        "state",
+        "source_identity",
+        {
+          name: dossier.record.name,
+          kind: dossier.record.kind,
+          aliases: dossier.record.aliases,
+          summary: dossier.record.summary,
+        },
+        c,
+        k,
+      ),
+      slot(
+        "lore",
+        "card",
+        {
+          title: card.title,
+          content: card.content,
+        },
+        c,
+        k,
+      ),
+      ...atlasRelations.map((rel) =>
+        slot(
+          "relationship",
+          JSON.stringify([
+            rel.direction,
+            rel.displayRelation,
+            rel.fromKey,
+            rel.toKey,
+          ]),
+          rel,
+          c,
+          k,
+        ),
+      ),
+    ];
+  }
+
   const out: RealitySlot[] = [
     slot("state", "description", dossier.record.summary, c, k),
     slot("state", "source_record", dossier.record.raw, c, k),
@@ -204,12 +257,14 @@ export class SqliteProjectRealityRepository {
   private readonly canon: SqliteCanonRepository;
   private readonly worlds: SqliteProjectWorldRepository;
   private readonly source: SqliteMotherWorldEncyclopediaRepository;
+  private readonly sourceRecords: SqliteSourceCorpusRepository;
   private readonly project: SqliteWorldEncyclopediaRepository;
 
   constructor(private readonly db: NarrativeDatabase) {
     this.canon = new SqliteCanonRepository(db);
     this.worlds = new SqliteProjectWorldRepository(db);
     this.source = new SqliteMotherWorldEncyclopediaRepository(db);
+    this.sourceRecords = new SqliteSourceCorpusRepository(db);
     this.project = new SqliteWorldEncyclopediaRepository(db);
   }
 
@@ -407,9 +462,15 @@ export class SqliteProjectRealityRepository {
     const ambiguousSourceBaseline = sourceReferences.length > 1;
     // Do not merge competing authoritatively distinct source records.
     const effective = new Map<string, RealitySlot>();
-    if (sourceReferences.length === 1)
-      for (const part of sourceSlots(sourceReferences[0]!.dossier))
+    if (sourceReferences.length === 1) {
+      const reference = sourceReferences[0]!;
+      const relations = this.sourceRecords.listRelations(
+        reference.link.corpusId,
+        reference.link.sourceKey,
+      );
+      for (const part of sourceSlots(reference.dossier, relations))
         effective.set(keyFor(part.facet, part.slotKey), part);
+    }
 
     const historical = asOfSequence !== null;
     const currentProjectDossier = historical
