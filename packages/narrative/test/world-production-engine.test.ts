@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { WorldPackDocument, WorldPackRequest } from "@narralume/contracts";
 import {
   applyWorldProductionDelta,
+  auditWorldAtlasProduction,
   emptyWorldDocument,
   playtestWorld,
   worldWorkOrderInput,
@@ -216,4 +217,57 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
     expect(check.independentActivities).toEqual([]);
     expect(check.controlledResources).toEqual([]);
   });
+  it("audits Atlas families by relationships instead of counting named nodes", () => {
+    const doc: WorldPackDocument = {
+      ...emptyWorldDocument(),
+      nodes: [
+        node("market", "location", "紫霄坊市"),
+        node("guild", "organization", "三江商会", "market"),
+        node("chief", "character", "叶掌柜", "market"),
+        node("ore", "item", "千年紫金矿", "market"),
+      ],
+      links: [
+        link("guild", "market", "operates"),
+        link("chief", "guild", "leads"),
+      ],
+    };
+    const first = auditWorldAtlasProduction(doc);
+    expect(first.families.find((entry) => entry.family === "people")?.status).toBe(
+      "present",
+    );
+    expect(first.families.find((entry) => entry.family === "asset")?.status).toBe(
+      "thin",
+    );
+    expect(first.orphanWorldObjects).toContain("ore");
+
+    const connected: WorldPackDocument = {
+      ...doc,
+      links: [...doc.links, link("chief", "ore", "owns")],
+    };
+    const second = auditWorldAtlasProduction(connected);
+    expect(
+      second.families.find((entry) => entry.family === "asset")?.status,
+    ).toBe("present");
+    expect(second.peopleConnectedWorldObjects).toContain("ore");
+    expect(second.orphanWorldObjects).not.toContain("ore");
+  });
+
+  it("puts Atlas targets and people questions into every real work order", () => {
+    const doc = {
+      ...emptyWorldDocument(),
+      nodes: [node("market", "location", "紫霄坊市")],
+    };
+    const need = playtestWorld(doc, req).next!;
+    const instruction = worldWorkOrderInput(need, doc);
+    expect(need.targetFamilies.length).toBeGreaterThan(0);
+    expect(need.peopleQuestions.length).toBeGreaterThan(0);
+    expect(instruction).toMatchObject({
+      atlasTarget: {
+        families: need.targetFamilies,
+        suggestedCardKinds: need.suggestedCardKinds,
+      },
+    });
+    expect(JSON.stringify(instruction)).toContain("People");
+  });
+
 });
