@@ -719,14 +719,13 @@ export function playtestWorld(
     );
   }
 
-  // v0.2 §9: a short sandbox action chain is an optional *diagnostic*, not
-  // a condition for producing or accepting a rich textual world bible.
-  // v0.2 §3.04: an ordinary historical/social world has real power systems,
-  // just as a supernatural world does (office, law, capital, reputation).
+  // Public power is a world-content requirement, but not a fixed workshop
+  // slot. If an existing world already has usable public power, no power
+  // workshop is scheduled.
   if (!next && request.intent !== "advance") {
     const hasPower = resources.some(
       (n) =>
-        n.type === "rule" &&
+        ["ability", "rule", "technology"].includes(atlasKindOf(n)) &&
         n.value.trim().length > 0 &&
         live.some(
           (edge) => edge.fromRef === n.localId || edge.toRef === n.localId,
@@ -742,11 +741,13 @@ export function playtestWorld(
       );
   }
 
-  // In advance mode the world already exists; if the only available action is
-  // merely entering somewhere, the next production gap is still playability.
+  // "Playable" is a capability condition, not a mandatory eighth workshop.
+  // A batch may stop only when the current zone already exposes at least one
+  // available action that leaves a real asset/permission/relationship/
+  // knowledge/ability. If such an affordance already existed, this workshop
+  // never runs.
   if (
     !next &&
-    request.intent === "advance" &&
     !(doc.interactions ?? []).some(
       (action) =>
         action.state === "available" &&
@@ -757,7 +758,9 @@ export function playtestWorld(
       "playability",
       controlledResources[0] ?? places[0]?.localId ?? null,
       doc,
-      "已有 Reality 能进入，但还没有把现有资源、权限或关系转化成下一步现实收益的取得路径",
+      request.intent === "advance"
+        ? "已有 Reality 能进入，但还没有把现有资源、权限或关系转化成下一步现实收益的取得路径"
+        : "当前区域已有世界内容，但还没有可执行且能留下真实权益的取得路径",
       [
         "由已有具体人物/组织提供的可执行动作",
         "动作完成后留下资产、权限、关系、知识或能力，并能继续连接下一层世界内容",
