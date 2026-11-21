@@ -99,7 +99,6 @@ Each file contains its own upstream GitHub source path and exact Git blob SHA. C
 
 The first live bridge is `packages/narrative/src/worldforge-faction-bridge.ts`: it uses actual `runAllAgents` and `arbitrate`, treating the result as **unconfirmed proposals**, not as confirmed novel facts. `runTicks` and the physics/region/registry engine are included and exercised by tests, but **not allowed to rewrite protagonist powers, invention costs, regional geography or Canon without the author's explicit acceptance**.
 
-
 ## novel-studio character-agent protocol adaptation
 
 - Upstream repository: https://github.com/Xiaoyangy/novel-studio
