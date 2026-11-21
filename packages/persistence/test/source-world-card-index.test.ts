@@ -20,7 +20,7 @@ describe("World Atlas lightweight cards and typed wiki links", () => {
     const links = parseTypedWikiLinks(`
 # 旗木卡卡西
 
-这是正文里的普通提及：[[木叶隐村]]
+这是正文里的普通提及 [[木叶隐村]]
 
 老师：[[波风水门]]
 学生：[[漩涡鸣人]]、[[宇智波佐助]]
