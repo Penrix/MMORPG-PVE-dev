@@ -828,6 +828,7 @@ Expectation State 更新
 
 ```text
 packages/contracts/src/story-runtime.ts
+  ├─ ExpectationDesign / ExpectationDesignEvidence
   ├─ ScarcityEvidence
   ├─ EstablishedBelief
   ├─ ProtagonistAdvantage
@@ -837,6 +838,10 @@ packages/contracts/src/story-runtime.ts
   └─ NarrativeAllocation
 
 packages/narrative/src/expectation-runtime.ts
+  ├─ finalizeExpectationDesign()
+  ├─ realityFocusFromExpectationDesign()
+  │  第二层设计 → 第一层“看谁 / 看什么 / 验证什么”的关注范围
+  │  不包含人物必须行动或必须成功的剧情命令
   ├─ finalizeExpectationState()
   ├─ 固有认知 / 稀缺证据 / 主角优势引用校验
   ├─ ripe/payoff 的 Reader-visible gap 校验
@@ -846,8 +851,11 @@ packages/narrative/src/expectation-runtime.ts
      第一层 WorldArbitrationReceipt → 第二层 NarrativeCandidate
 
 packages/narrative/src/expectation-runtime-workers.ts
+  ├─ ExpectationNarrativeService.designExpectation()
+  │  第二层先设计：Reader Need / Emotion → 稀缺 / 固有认知 / 优势 / 反应 / Gain
+  │  真实 structured model call，且只能引用给定 World / Reality evidence
   ├─ ExpectationNarrativeService.allocateReaderTime()
-  │  真实 structured model call，走 planning model
+  │  第一层运行后再经营：skip / background / seed / charge / payoff
   └─ allocateArbitrationReaderTime()
      直接消费第一层 WorldArbitrationReceipt
 ```
@@ -870,14 +878,15 @@ packages/narrative/src/expectation-runtime-workers.ts
 
 当前尚未完成：
 
-1. 从 World Atlas / Project Reality 自动构建 ScarcityEvidence / EstablishedBelief，而不是由上层传入。
-2. 不只把每个 Agent Resolution 转成候选，还要纳入组织行动、World Initiative、信息传播与 Director Catalyst。
-3. Expectation State 在章节 Settlement 后如何增量更新。
-4. 三阵营真实“下注”如何从人物行动 / 关系 / 资产变更自动提取。
-5. Reader Knowledge / Reader Feels 的显式状态投影。
-6. NarrativeAllocation → Story Move / Chapter Target → NarraLume Scene Plan 的正式接线。
-7. HorizonRehearsal 对 active Expectation Threads 的未来加价/兑现推演。
+1. 从 World Atlas / Project Reality 自动组装 `ExpectationDesignEvidence`，目前设计阶段已经能消费证据目录，但证据目录仍由上层提供。
+2. 把 `realityFocusFromExpectationDesign()` 正式接入 Active Cast / Operational World Projection，让第一层按第二层关注范围自动选取相关人物和世界对象，而不是上层人工指定。
+3. 不只把每个 Agent Resolution 转成候选，还要纳入组织行动、World Initiative、信息传播与 Director Catalyst。
+4. Expectation State 在章节 Settlement 后如何增量更新。
+5. 三阵营真实“下注”如何从人物行动 / 关系 / 资产变更自动提取。
+6. Reader Knowledge / Reader Feels 的显式状态投影。
+7. NarrativeAllocation → Story Move / Chapter Target → NarraLume Scene Plan 的正式接线。
+8. HorizonRehearsal 对 active Expectation Threads 的未来加价/兑现推演。
 
 因此当前实现准确定位：
 
-> **已经有了第二层“给定 Expectation State + 多个真实候选 → 分配 Reader Time”的第一段可执行闭环；还没有完成“从数据库自动发现固有认知与稀缺性 → 自动维护期待线程 → 自动接回章节生产”的完整闭环。**
+> **第二层现在已经前后各有一段可执行能力：运行前可先设计一笔 Expectation Transaction，并把关注的人/世界变量投影给第一层；运行后可对真实候选分配 Reader Time。仍未完成的是数据库证据自动组装、Active Cast 自动接线、Expectation State 持续维护，以及 Story Move → Chapter Production 的完整闭环。**
