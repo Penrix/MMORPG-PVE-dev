@@ -342,16 +342,19 @@ export async function runWorldWorkshops(args: {
   const maxSteps = 16;
   for (let index = steps.length; index < maxSteps; index++) {
     const check = playtestWorld(view(), args.request);
-    const requestedEntry =
-      steps.length === 0 && index === 0
-        ? resolveWorldDesignEntry(args.request, view())
-        : null;
-    const op = requestedEntry
-      ? workOrder(requestedEntry.workshop, view(), args.request)
-      : check.next ??
-        (steps.length === 0 && bootstrap[0]
-          ? workOrder(bootstrap[0], view(), args.request)
-          : null);
+    const firstStep = steps.length === 0 && index === 0;
+    const requestedEntry = firstStep
+      ? resolveWorldDesignEntry(args.request, view())
+      : null;
+    const op =
+      firstStep && args.request.intent === "advance"
+        ? workOrder("living", view(), args.request)
+        : requestedEntry
+          ? workOrder(requestedEntry.workshop, view(), args.request)
+          : check.next ??
+            (steps.length === 0 && bootstrap[0]
+              ? workOrder(bootstrap[0], view(), args.request)
+              : null);
     if (!op) break;
     const instruction = {
       ...worldWorkOrderInput(op, view()),
