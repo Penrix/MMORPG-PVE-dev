@@ -1,6 +1,8 @@
 import type { CanonEntity, CanonFact } from "@narralume/domain";
 import { SqliteCanonRepository } from "./canon-repository.js";
 import type { NarrativeDatabase } from "./database.js";
+import { SqliteNarrativeStateRepository } from "./narrative-state-repository.js";
+import { SqliteStoryRepository } from "./story-repository.js";
 import {
   SqliteProjectWorldRepository,
   type ProjectSourceIdentity,
@@ -258,6 +260,7 @@ function rowToRevision(
  */
 export class SqliteProjectRealityRepository {
   private readonly canon: SqliteCanonRepository;
+  private readonly state: SqliteNarrativeStateRepository;
   private readonly worlds: SqliteProjectWorldRepository;
   private readonly source: SqliteMotherWorldEncyclopediaRepository;
   private readonly sourceRecords: SqliteSourceCorpusRepository;
@@ -265,6 +268,11 @@ export class SqliteProjectRealityRepository {
 
   constructor(private readonly db: NarrativeDatabase) {
     this.canon = new SqliteCanonRepository(db);
+    this.state = new SqliteNarrativeStateRepository(
+      db,
+      this.canon,
+      new SqliteStoryRepository(db),
+    );
     this.worlds = new SqliteProjectWorldRepository(db);
     this.source = new SqliteMotherWorldEncyclopediaRepository(db);
     this.sourceRecords = new SqliteSourceCorpusRepository(db);
@@ -497,6 +505,33 @@ export class SqliteProjectRealityRepository {
           value: entries.map((f) =>
             f.objectEntityId ? { objectEntityId: f.objectEntityId } : f.value,
           ),
+          origin: "project",
+          revisionId: null,
+          sourceCorpusId: null,
+          sourceKey: null,
+        });
+      // Native project relationships remain the single accepted truth.
+      // Project Reality only projects them into the same readable view.
+      for (const relation of currentProjectDossier.network)
+        effective.set(keyFor("relationship", relation.id), {
+          facet: "relationship",
+          slotKey: relation.id,
+          value: relation,
+          origin: "project",
+          revisionId: null,
+          sourceCorpusId: null,
+          sourceKey: null,
+        });
+
+      // Accepted timeline events are likewise projected rather than copied.
+      // Only events involving this entity belong in its Reality view.
+      for (const event of this.state
+        .listTimeline(projectId)
+        .filter((candidate) => candidate.participants.includes(entityId)))
+        effective.set(keyFor("chronicle", event.id), {
+          facet: "chronicle",
+          slotKey: event.id,
+          value: event,
           origin: "project",
           revisionId: null,
           sourceCorpusId: null,
