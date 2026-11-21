@@ -12,6 +12,7 @@ import {
   finalizeExpectationState,
   finalizeNarrativeAllocationBatch,
   finalizeNarrativeAllocationDecision,
+  realityFocusFromExpectationDesign,
   narrativeCandidatesFromArbitration,
 } from "../src/expectation-runtime.js";
 
@@ -172,6 +173,58 @@ describe("Expectation / Narrative Runtime", () => {
     expect(design.mustNotPredetermineOutcome).toBe(true);
     expect(design.digest).toBeTruthy();
     expect(JSON.stringify(design)).not.toContain("scarcityScore");
+  });
+
+  it("projects design into Layer 1 focus without scripting an outcome", () => {
+    const design = finalizeExpectationDesign(
+      {
+        version: "expectation-design.v1",
+        authority: "speculative",
+        projectId: "p1",
+        protagonistId: "xiuxin",
+        readerNeed: "看秀信被高手识货",
+        targetEmotion: "得意",
+        targetOutcome: "高价人物重新估值秀信",
+        scarcityIntents: [
+          {
+            claim: "基础忍术通常没有高阶价值",
+            subjectRef: "basic-ninjutsu",
+            existingEvidenceRefs: ["atlas:basic-limit"],
+            evidenceToEstablish: ["验证木叶专业忍者如何理解基础忍术上限"],
+          },
+        ],
+        beliefIntents: [
+          {
+            proposition: "普通下忍不可能靠基础忍术体现高阶价值",
+            scope: "circle",
+            holderEntityIds: ["medic", "sakumo"],
+            existingEvidenceRefs: ["atlas:basic-limit"],
+            stakeToCultivate: ["观察医疗体系是否仍按普通伤员处理"],
+            breakCondition: "可信高手得到异常证据",
+          },
+        ],
+        protagonistAdvantageRefs: ["reality:xiuxin-control"],
+        reactionTargetEntityIds: ["medic", "sakumo"],
+        retainedGainTarget: "高价训练入口",
+        activationEntityIds: ["medic", "sakumo"],
+        worldFocusRefs: ["atlas:basic-limit"],
+        designReasons: ["让第一层优先观察最可能给期待加价的声部"],
+        realityFingerprint: "r1",
+        storyStateFingerprint: "s1",
+        mustPreserveAgentAutonomy: true,
+        mustNotPredetermineOutcome: true,
+      },
+      new Set(["atlas:basic-limit", "reality:xiuxin-control"]),
+      new Set(["xiuxin", "medic", "sakumo"]),
+    );
+
+    const focus = realityFocusFromExpectationDesign(design);
+    expect(focus.priorityEntityIds).toEqual(["medic", "sakumo"]);
+    expect(focus.worldFocusRefs).toEqual(["atlas:basic-limit"]);
+    expect(focus.scarcityQuestions[0]).toContain("验证");
+    expect(focus.beliefQuestions[0]).toContain("观察人物是否会据此下注");
+    expect(JSON.stringify(focus)).not.toContain("mustCome");
+    expect(JSON.stringify(focus)).not.toContain("mustWin");
   });
 
   it("bridges finalized arbitration into speculative NarrativeCandidates without rewriting the result", () => {
