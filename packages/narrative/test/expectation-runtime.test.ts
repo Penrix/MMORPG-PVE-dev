@@ -154,9 +154,7 @@ describe("Expectation / Narrative Runtime", () => {
       retainedGainTarget: "获得更高层训练与关系入口",
       activationEntityIds: ["medic", "sakumo"],
       worldFocusRefs: ["atlas:basic-limit"],
-      designReasons: [
-        "先经营基础忍术上限这一固有认知，再让第一层人物自行行动",
-      ],
+      designReasons: ["先经营基础忍术上限这一固有认知，再让第一层人物自行行动"],
       realityFingerprint: "r1",
       storyStateFingerprint: "s1",
       mustPreserveAgentAutonomy: true,

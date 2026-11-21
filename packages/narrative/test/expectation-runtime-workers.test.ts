@@ -123,8 +123,7 @@ describe("ExpectationNarrativeService", () => {
             ],
             beliefIntents: [
               {
-                proposition:
-                  "病床上的普通下忍不可能靠基础忍术体现高阶价值",
+                proposition: "病床上的普通下忍不可能靠基础忍术体现高阶价值",
                 scope: "circle",
                 holderEntityIds: ["medic", "sakumo"],
                 existingEvidenceRefs: ["atlas:basic-limit"],
@@ -152,7 +151,9 @@ describe("ExpectationNarrativeService", () => {
       ),
     };
 
-    const result = await new ExpectationNarrativeService(model).designExpectation(
+    const result = await new ExpectationNarrativeService(
+      model,
+    ).designExpectation(
       run,
       step,
       {

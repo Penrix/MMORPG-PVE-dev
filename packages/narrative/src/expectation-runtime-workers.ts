@@ -365,7 +365,6 @@ function allocationOutputIssues(
   return issues;
 }
 
-
 function expectationDesignOutputIssues(
   value: ExpectationDesignOutput,
   allowedEvidenceRefs: ReadonlySet<string>,
