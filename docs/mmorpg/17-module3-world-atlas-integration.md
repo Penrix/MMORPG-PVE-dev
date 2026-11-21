@@ -44,7 +44,7 @@ NarraLume 原第三模块主要直接读取 Canon Entity / Canon Fact / Narrativ
 
 | 层                      | 内容                               | authority | 使用位置                                                   |
 | ----------------------- | ---------------------------------- | --------- | ---------------------------------------------------------- |
-| Project Reality Current | 当前项目实体与已确认 project slots | confirmed | 作者侧步骤；无 POV 的叙事步骤                              |
+| Project Reality Current | 当前项目实体、Canon claims、项目关系与已发生事件 | confirmed | 作者侧步骤；无 POV 的叙事步骤                              |
 | Source Atlas Baseline   | 母体身份摘要 + typed relations     | reference | 作者侧步骤；无 POV 的叙事步骤                              |
 | Source Atlas Full Card  | 完整 Markdown 母体卡片             | reference | scene-plan / semantic-review / settlement / 作者 Assistant |
 
@@ -137,7 +137,39 @@ Settlement accepted
 
 禁止为了“适配 Atlas”再复制一份同样的事实到 `project_reality_revisions` 或另一张 Atlas 专用表。
 
-Project Reality 是统一读取视图。已确认 Canon Fact 会立即出现在下一次 Project Reality context；关系、时间线、认知继续由 StoryStatePacket 提供。这样只有一个确认写入口，没有双真相同步问题。
+Project Reality 是统一世界读取视图。已确认 Canon Fact、当前 relationship_events、以及实体参与过的 timeline_events 会直接投影成 Project Reality slots；**knowledge 仍由 StoryStatePacket 负责人物认知过滤**。这些都只是读取投影，不复制原生真相，因此仍然只有一个确认写入口，没有双真相同步问题。
+
+## 5.6 Project Reality 直接投影原生关系与时间线
+
+第三模块 settlement 已经把项目关系与事件写入 NarraLume 原生真相：
+
+```text
+relationship_events
+timeline_events
+```
+
+因此 Project Reality 不应只恢复 Canon claims。当前读取会直接投影：
+
+```text
+canon_facts
+→ claim
+
+relationship_events
+→ relationship
+
+entity participant timeline_events
+→ chronicle
+```
+
+这仍然**不是双写**。Project Reality 只是读取视图，不新增一份关系或事件真相。
+
+Knowledge 不进入这层统一世界投影，因为：
+
+> 数据库知道世界发生了什么，与某个角色知道什么，是两件不同的事。
+
+角色认知继续由 StoryStatePacket / knowledge 体系过滤。
+
+---
 
 ## 5.5 底座 schema 适配
 
@@ -206,7 +238,26 @@ entity.worldScopeId ?? ""
 | Co-create character Persona | 不注入全知 Atlas                                                    | character             |
 | Co-create narrator          | Reality + baseline                                                  | narrative             |
 | Author Assistant            | 聚焦实体 Reality + baseline + full card；另显示已绑定 Source Corpus | author                |
-| Context Preview             | 使用同一 WorldAtlasStoryContextBuilder                              | author preview        |
+| Context Preview             | 使用同一 WorldAtlasStoryContextBuilder；仅 author/omniscient 注入 Atlas | author boundary       |
+
+## 6.5 Context Preview 权限边界
+
+Context Preview 不能因为是“预览工具”就绕过正式生成的知识权限。
+
+当前规则：
+
+```text
+author / omniscient
+→ 可预览 Project Reality + Source Atlas full author reference
+
+character / reader
+→ 不直接注入 author-level Atlas
+→ 继续服从 CanonAccess / StoryState 知识边界
+```
+
+这修复了一个中断前审计发现的真实问题：旧实现虽然正式 Chapter pipeline 有正确的 POV 边界，但 Preview 曾无条件加入 current + reference + full card，可能让角色预览看到作者秘密或母体未来。
+
+---
 
 ## 7. Assistant 不加载整个百科
 
