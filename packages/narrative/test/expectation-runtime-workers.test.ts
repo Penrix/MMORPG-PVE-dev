@@ -113,7 +113,7 @@ describe("ExpectationNarrativeService", () => {
       text: vi.fn(),
       structured: vi.fn(
         async (_run, _step, purpose, request, _contract, validate) => {
-          expect(purpose).toBe("story-expectation-narrative-allocation");
+          expect(purpose).toBe("story-expectation-narrative-plan");
           expect(JSON.stringify(request)).toContain("belief:limit");
           expect(JSON.stringify(request)).toContain("event:handoff");
           const checked = validate({
