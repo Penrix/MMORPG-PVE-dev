@@ -21,14 +21,14 @@
 
 ## 当前先读这五份
 
-| 文件                                                                  | 解决的问题                                                                                                        |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| [00 架构决定及连续纠错](00-architecture-decisions.md)                 | 为什么 Fork NarraLume、三模块如何共用 Reality、为什么暂停特殊 S 系列开发、上一轮原型怎样被重新定性                |
-| [01 对标源码复用 Crosswalk](01-reuse-crosswalk.md)                    | 除 NarraLume 外，Covel、WorldForge、CampaignRepo、SNEQ、Spindle、OnlyWorlds 和私有旧 Atlas 分别借什么，源码在哪里 |
-| [02 第一模块代码审查和目标结构](02-world-builder-audit-and-design.md) | “第一模块是自己编的还是按对标项目开发的？”；清楚列出已有源码、没有移植的能力、WorldPack和世界运行的正确方向       |
-| [03 实施顺序与实际验收](03-build-order-and-acceptance.md)             | 从世界包、复杂内容生产、Canon 采用、世界关系图、NPC 动态到正文世界缺口往返                                        |
-| [04 WorldPack 当前实际代码](04-world-pack-implementation.md)          | 世界包生成/修订/原子采纳、图查询、NPC活动推进、正文实际上下文与待验收部分                                         |
-| [17 Novel Studio ↔ World Atlas](17-module3-world-atlas-integration.md) | 第三模块如何读取 Project Reality / Source Atlas、保持 POV 权限，并通过 settlement 单写回当前 Reality                |
+| 文件                                                                   | 解决的问题                                                                                                        |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [00 架构决定及连续纠错](00-architecture-decisions.md)                  | 为什么 Fork NarraLume、三模块如何共用 Reality、为什么暂停特殊 S 系列开发、上一轮原型怎样被重新定性                |
+| [01 对标源码复用 Crosswalk](01-reuse-crosswalk.md)                     | 除 NarraLume 外，Covel、WorldForge、CampaignRepo、SNEQ、Spindle、OnlyWorlds 和私有旧 Atlas 分别借什么，源码在哪里 |
+| [02 第一模块代码审查和目标结构](02-world-builder-audit-and-design.md)  | “第一模块是自己编的还是按对标项目开发的？”；清楚列出已有源码、没有移植的能力、WorldPack和世界运行的正确方向       |
+| [03 实施顺序与实际验收](03-build-order-and-acceptance.md)              | 从世界包、复杂内容生产、Canon 采用、世界关系图、NPC 动态到正文世界缺口往返                                        |
+| [04 WorldPack 当前实际代码](04-world-pack-implementation.md)           | 世界包生成/修订/原子采纳、图查询、NPC活动推进、正文实际上下文与待验收部分                                         |
+| [17 Novel Studio ↔ World Atlas](17-module3-world-atlas-integration.md) | 第三模块如何读取 Project Reality / Source Atlas、保持 POV 权限，并通过 settlement 单写回当前 Reality              |
 
 **当前直接移植与研究全文**：[06 WorldForge完整模拟核心迁入](06-worldforge-full-engine-port.md) · [05 已移植的第三方源码和运行接线](05-actual-upstream-ports.md) · [v0.1～v0.7 七版独立母本](research/README.md)。**第二模块数据库需求**：[v0.1～v0.7 全覆盖差距及宇智波一族实例](08-world-database-v01-v07-crosswalk.md)。
 

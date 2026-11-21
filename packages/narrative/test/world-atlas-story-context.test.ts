@@ -137,9 +137,7 @@ describe("Module 3 World Atlas context adapter", () => {
     expect(context.reference[0]!.content).not.toContain("原著未来会离开木叶");
 
     expect(context.referenceDetail).toHaveLength(1);
-    expect(context.referenceDetail[0]!.content).toContain(
-      "原著未来会离开木叶",
-    );
+    expect(context.referenceDetail[0]!.content).toContain("原著未来会离开木叶");
     expect(context.referenceDetail[0]!.content).toContain(
       "不得把原著未来自动写回当前 Project Reality",
     );

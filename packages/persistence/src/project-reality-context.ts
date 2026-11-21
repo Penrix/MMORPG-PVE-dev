@@ -18,7 +18,6 @@ export interface WorldAtlasStoryContext {
   };
 }
 
-
 export type WorldAtlasContextAccess = "author" | "narrative" | "character";
 
 export function worldAtlasSourcesForAccess(
@@ -29,11 +28,7 @@ export function worldAtlasSourcesForAccess(
   if (access === "narrative") {
     return [...context.current, ...context.reference];
   }
-  return [
-    ...context.current,
-    ...context.reference,
-    ...context.referenceDetail,
-  ];
+  return [...context.current, ...context.reference, ...context.referenceDetail];
 }
 
 export interface WorldAtlasStoryContextRequest {
@@ -87,9 +82,7 @@ export class WorldAtlasStoryContextBuilder {
         view.ambiguousSourceBaseline ||
         view.sourceReferences.length > 0
       ) {
-        reference.push(
-          sourceBaselineSource(view, sourceIdentityAndRelations),
-        );
+        reference.push(sourceBaselineSource(view, sourceIdentityAndRelations));
       }
 
       const fullCard = source.find(
@@ -132,8 +125,7 @@ function projectRealitySource(
           description: view.entity.description,
           attributes: view.entity.attributes,
         },
-        rule:
-          "这些是当前项目已确认的 Reality。若与 Source World reference 冲突，以这里为准。",
+        rule: "这些是当前项目已确认的 Reality。若与 Source World reference 冲突，以这里为准。",
         slots: slots.map(renderSlot),
       },
       null,

@@ -774,7 +774,9 @@ export class ChapterWorkerSuite {
             draftStoryStatePacket === authorStoryStatePacket
               ? "author-view"
               : "character-filtered",
-          currentSourceIds: worldAtlasContext.current.map((source) => source.id),
+          currentSourceIds: worldAtlasContext.current.map(
+            (source) => source.id,
+          ),
           referenceSourceIds: worldAtlasContext.reference.map(
             (source) => source.id,
           ),

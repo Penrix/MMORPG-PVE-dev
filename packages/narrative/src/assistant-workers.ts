@@ -37,7 +37,6 @@ import {
 } from "./assistant-schemas.js";
 import { requireActiveProject } from "./project-guard.js";
 
-
 interface AssistantContextArtifact extends Readonly<Record<string, unknown>> {
   conversationId: string;
   userMessageId: string;
@@ -183,13 +182,17 @@ export class AssistantWorkerSuite {
         .map((node, index) => [node.id, index + 1]),
     );
     const focalOutlineNodeId =
-      userMessage.context?.outlineNodeId ?? selectedDocument?.outlineNodeId ?? null;
+      userMessage.context?.outlineNodeId ??
+      selectedDocument?.outlineNodeId ??
+      null;
     const focalOutlineNode = focalOutlineNodeId
-      ? outline.find((node) => node.id === focalOutlineNodeId) ?? null
+      ? (outline.find((node) => node.id === focalOutlineNodeId) ?? null)
       : null;
     const atlasEntityIds = [
       ...new Set([
-        ...(focalOutlineNode?.povEntityId ? [focalOutlineNode.povEntityId] : []),
+        ...(focalOutlineNode?.povEntityId
+          ? [focalOutlineNode.povEntityId]
+          : []),
         ...(Array.isArray(focalOutlineNode?.metadata.plannedEntityIds)
           ? focalOutlineNode.metadata.plannedEntityIds.filter(
               (id): id is string => typeof id === "string",
@@ -242,8 +245,7 @@ export class AssistantWorkerSuite {
         };
       }),
       worldAtlas: {
-        rule:
-          "Project Reality 是当前项目事实；Source Atlas 只是母体世界 reference。两者冲突时必须服从 Project Reality，不得把母体世界未来自动写回项目。",
+        rule: "Project Reality 是当前项目事实；Source Atlas 只是母体世界 reference。两者冲突时必须服从 Project Reality，不得把母体世界未来自动写回项目。",
         boundSourceCorpora,
         focalEntityIds: atlasEntityIds,
         current: atlasContext.current.map((source) => ({
