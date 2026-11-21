@@ -1,4 +1,9 @@
-import type { WorldPackRequest, WorldPackRecord, WorldPackDocument } from "@narralume/contracts";
+import type {
+  WorldAtlasCardKind,
+  WorldPackDocument,
+  WorldPackRecord,
+  WorldPackRequest,
+} from "@narralume/contracts";
 import {
   type StoryStateQuery,
   type StoryStateSnapshotDto,
