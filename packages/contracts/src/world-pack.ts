@@ -57,7 +57,9 @@ export const WORLD_PACK_ATLAS_KIND_COARSE_TYPE = {
   activity: "concept",
   creature: "character",
   other: "concept",
-} as const satisfies Readonly<Record<WorldAtlasCardKind, WorldPackCoarseNodeType>>;
+} as const satisfies Readonly<
+  Record<WorldAtlasCardKind, WorldPackCoarseNodeType>
+>;
 
 export function worldPackCoarseTypeForAtlasKind(
   kind: WorldAtlasCardKind,
@@ -72,7 +74,9 @@ export const WORLD_PACK_COARSE_TYPE_DEFAULT_ATLAS_KIND = {
   item: "item",
   rule: "rule",
   concept: "other",
-} as const satisfies Readonly<Record<WorldPackCoarseNodeType, WorldAtlasCardKind>>;
+} as const satisfies Readonly<
+  Record<WorldPackCoarseNodeType, WorldAtlasCardKind>
+>;
 
 export function worldPackAtlasKind(
   node: Pick<WorldPackNode, "type" | "atlasKind">,
