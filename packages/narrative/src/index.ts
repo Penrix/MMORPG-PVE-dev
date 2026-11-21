@@ -28,3 +28,6 @@ export * from "./canon-candidate-service.js";
 export * from "./workers.js";
 export * from "./story-line-proposals.js";
 export * from "./world-pack-workers.js";
+
+export * from "./story-runtime.js";
+export * from "./vendor/novel-studio/character-agent-protocol.js";
