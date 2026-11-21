@@ -1,15 +1,8 @@
+import type { WorldAtlasCardKind } from "@narralume/contracts";
 import { inverseRelation } from "./source-card-links.js";
 import type { NarrativeDatabase } from "./database.js";
 
-export type SourceKind =
-  | "character"
-  | "organization"
-  | "location"
-  | "ability"
-  | "creature"
-  | "item"
-  | "event"
-  | "other";
+export type SourceKind = WorldAtlasCardKind;
 
 export interface SourceCorpus {
   id: string;
