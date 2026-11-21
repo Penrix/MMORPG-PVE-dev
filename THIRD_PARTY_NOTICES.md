@@ -98,3 +98,18 @@ Each file contains its own upstream GitHub source path and exact Git blob SHA. C
 **Deliberate platform adaptation**: WorldForge `llm.ts` originally dynamically calls a Tauri store/API; only the default caller was replaced with an injected `LLMCaller` boundary, preserving its JSON parsing/safe-call methods. The upstream `persistence.ts` and `bridge.ts` were intentionally not copied because they target a separate Tauri file store and world timeline. NarraLume Canon/SQLite remain the sole accepted history. The upstream `index.ts` barrel omits those two Tauri integrations. Vendored TypeScript retains upstream compiler assumptions and uses `@ts-nocheck` pending a non-destructive strict-options migration; fully typed NarraLume adapters and integration tests check the externally consumed boundary.
 
 The first live bridge is `packages/narrative/src/worldforge-faction-bridge.ts`: it uses actual `runAllAgents` and `arbitrate`, treating the result as **unconfirmed proposals**, not as confirmed novel facts. `runTicks` and the physics/region/registry engine are included and exercised by tests, but **not allowed to rewrite protagonist powers, invention costs, regional geography or Canon without the author's explicit acceptance**.
+
+
+## novel-studio character-agent protocol adaptation
+
+- Upstream repository: https://github.com/Xiaoyangy/novel-studio
+- Upstream license: Apache License 2.0.
+- Adapted source: `internal/domain/character_agents.go`, blob `99ed52aadea2ac85145e23a2288aaff02960d7e3`.
+- Local adapted implementation: `packages/narrative/src/vendor/novel-studio/character-agent-protocol.ts`.
+- The local TypeScript implementation preserves selected runtime invariants from the upstream Go implementation: proposal-to-observation binding, evidence visibility checks, arbitration-to-proposal binding, prohibition on Arbiter intent rewriting, conflict-finalization checks, and speculative-only simulation deltas.
+- NarraLume-specific changes are substantial and explicit: Canon Entity IDs replace the upstream character-name registry; NarraLume StoryState supplies character-visible evidence; NarraLume Settlement remains the only accepted Canon write path; upstream Go storage/resource/chapter protocols are not copied.
+- The adapted file carries a prominent modification/provenance notice as required by Apache-2.0. No upstream `NOTICE` file was present at the repository root when this source was reviewed.
+
+### Study-only AGPL reference
+
+`ExplosiveCoderflome/AI-Novel-Writing-Assistant` was reviewed for its World/NovelWorld and StoryWorldSlice/WorldContextGateway architecture. Its current repository license is AGPL-3.0-only with additional commercial-authorization language. **No source code from that project is copied into this fork.** Similar context-projection ideas, where used, are independently implemented.
