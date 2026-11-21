@@ -164,6 +164,61 @@ export const WorldActionSchema = z
   .strict();
 export type WorldAction = z.infer<typeof WorldActionSchema>;
 
+export const WorldPackAtlasAuditSchema = z
+  .object({
+    families: z.array(
+      z
+        .object({
+          family: z.enum([
+            "space",
+            "people",
+            "organization",
+            "power",
+            "asset",
+            "economy",
+            "activity",
+            "information",
+            "value",
+            "playable",
+          ]),
+          label: z.string().trim().min(1).max(100),
+          status: z.enum(["missing", "thin", "present"]),
+          evidence: z.array(z.string()).max(200),
+          reason: z.string().trim().min(1).max(2000),
+          suggestedWorkshop: z.enum([
+            "geography",
+            "factions",
+            "people",
+            "economy",
+            "power",
+            "events",
+            "social",
+            "playability",
+            "living",
+          ]),
+        })
+        .strict(),
+    ).length(10),
+    peopleConnectedWorldObjects: z.array(z.string()).max(200),
+    orphanWorldObjects: z.array(z.string()).max(200),
+    nextWorkshop: z
+      .enum([
+        "geography",
+        "factions",
+        "people",
+        "economy",
+        "power",
+        "events",
+        "social",
+        "playability",
+        "living",
+      ])
+      .nullable(),
+    nextReason: z.string().trim().min(1).max(2000).nullable(),
+  })
+  .strict();
+export type WorldPackAtlasAudit = z.infer<typeof WorldPackAtlasAuditSchema>;
+
 export const WorldPackDocumentSchema = z
   .object({
     summary: z.string().trim().min(1).max(16_000),
@@ -196,6 +251,8 @@ export const WorldPackDocumentSchema = z
             .strict(),
         ),
         playtestedPaths: z.array(z.array(z.string())),
+        /** Engine-derived snapshot for author inspection; not world truth. */
+        atlasAudit: WorldPackAtlasAuditSchema.optional(),
       })
       .strict()
       .optional(),
