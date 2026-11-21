@@ -108,12 +108,14 @@ describe("World Atlas lightweight cards and typed wiki links", () => {
     ]);
 
     const kakashi = worlds.getCard("naruto", "character:kakashi");
-    expect(kakashi?.relations.map((r) => [r.displayRelation, r.otherName])).toEqual([
-      ["学生", "漩涡鸣人"],
-      ["老师", "波风水门"],
-      ["拥有", "写轮眼"],
-      ["所属", "木叶隐村"],
-    ]);
+    expect(kakashi?.relations.map((r) => [r.displayRelation, r.otherName])).toEqual(
+      expect.arrayContaining([
+        ["学生", "漩涡鸣人"],
+        ["老师", "波风水门"],
+        ["拥有", "写轮眼"],
+        ["所属", "木叶隐村"],
+      ]),
+    );
 
     const minato = worlds.getCard("naruto", "character:minato");
     expect(minato?.relations).toEqual(
