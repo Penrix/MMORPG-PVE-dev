@@ -241,7 +241,7 @@ export function worldAtlasCardType(
 ): WorldAtlasCardTypeDefinition {
   return (
     WORLD_ATLAS_CARD_TYPES.find((entry) => entry.kind === kind) ??
-    WORLD_ATLAS_CARD_TYPES[WORLD_ATLAS_CARD_TYPES.length - 1]
+    WORLD_ATLAS_CARD_TYPES[WORLD_ATLAS_CARD_TYPES.length - 1]!
   );
 }
 
