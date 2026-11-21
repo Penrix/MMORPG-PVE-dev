@@ -10,10 +10,10 @@ import {
   SqliteProjectWorldRepository,
   SqliteSourceCorpusRepository,
   SqliteUnifiedSourceWorldRepository,
+  WorldAtlasNarrativeContextBuilder,
 } from "@narralume/persistence";
 import { NodeNarrativeDatabase } from "@narralume/persistence/node";
 
-import { WorldAtlasNarrativeContextBuilder } from "../src/world-atlas-context.js";
 
 const now = "2026-11-21T10:45:00.000Z";
 let db: NodeNarrativeDatabase | null = null;
