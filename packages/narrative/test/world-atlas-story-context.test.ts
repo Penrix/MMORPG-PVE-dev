@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   WorldAtlasStoryContextBuilder,
   worldAtlasSourcesForAccess,
-} from "../src/world-atlas-story-context.js";
+} from "@narralume/persistence";
 
 const now = "2026-11-21T10:00:00.000Z";
 let db: NodeNarrativeDatabase;
