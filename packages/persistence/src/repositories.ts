@@ -35,6 +35,8 @@ export * from "./source-corpus-repository.js";
 export * from "./source-world-encyclopedia-repository.js";
 export * from "./unified-source-world-repository.js";
 export * from "./project-world-repository.js";
+export * from "./project-reality-repository.js";
+export * from "./project-reality-context.js";
 export * from "./project-fork-repository.js";
 export * from "./naruto-source-import.js";
 export * from "./source-card-links.js";

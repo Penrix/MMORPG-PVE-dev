@@ -7,6 +7,8 @@ import type { CanonAccess } from "@narralume/domain";
 import {
   SqliteCanonRepository,
   SqliteContextReceiptRepository,
+  WorldAtlasStoryContextBuilder,
+  worldAtlasSourcesForAccess,
   SqliteRetrievalRepository,
   SqliteStoryRepository,
   type NarrativeDatabase,
@@ -35,6 +37,7 @@ export class StoryContextPreviewService {
   private readonly canon: SqliteCanonRepository;
   private readonly retrieval: SqliteRetrievalRepository;
   private readonly receipts: SqliteContextReceiptRepository;
+  private readonly worldAtlas: WorldAtlasStoryContextBuilder;
   private readonly compiler = new ContextCompiler();
 
   constructor(database: NarrativeDatabase) {
@@ -42,6 +45,7 @@ export class StoryContextPreviewService {
     this.canon = new SqliteCanonRepository(database);
     this.retrieval = new SqliteRetrievalRepository(database);
     this.receipts = new SqliteContextReceiptRepository(database);
+    this.worldAtlas = new WorldAtlasStoryContextBuilder(database);
   }
 
   compile(input: StoryContextPreviewInput) {
@@ -126,6 +130,20 @@ export class StoryContextPreviewService {
         input.access,
       ),
     );
+
+    // Context Preview must obey the same authority boundary as production.
+    // Character/reader previews cannot inherit author-level Project Reality or
+    // full mother-world Atlas prose merely because the database contains it.
+    if (
+      input.access.audience === "author" ||
+      input.access.audience === "omniscient"
+    ) {
+      const atlas = this.worldAtlas.build({
+        projectId: input.projectId,
+        entityIds: input.entityIds,
+      });
+      sources.push(...worldAtlasSourcesForAccess(atlas, "author"));
+    }
 
     for (const hit of this.retrieval.search(input.projectId, input.query, {
       entityIds: input.entityIds,

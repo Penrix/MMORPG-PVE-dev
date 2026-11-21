@@ -12,6 +12,7 @@ import {
   SqliteReviewRepository,
   SqliteRunRepository,
   SqliteStoryRepository,
+  WorldAtlasStoryContextBuilder,
 } from "@narralume/persistence";
 import { NodeNarrativeDatabase } from "@narralume/persistence/node";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -164,6 +165,42 @@ describe("SettlementApplicationService", () => {
         timelineEventId: "change-1:timeline:0",
         belief: "suspected",
       }),
+    ]);
+  });
+
+  it("accepted settlement facts are immediately visible through Project Reality without duplicate writes", () => {
+    seedChangeSet("change-reality", settlementPayload("awake"));
+    new SettlementApplicationService(database).apply({
+      projectId: "p1",
+      changeSetId: "change-reality",
+      now,
+    });
+
+    const context = new WorldAtlasStoryContextBuilder(database).build({
+      projectId: "p1",
+      entityIds: ["hero"],
+    });
+    expect(context.current[0]).toMatchObject({
+      authority: "confirmed",
+      sourceType: "project_reality",
+    });
+    expect(context.current[0]!.content).toContain('"condition"');
+    expect(context.current[0]!.content).toContain('"awake"');
+    expect(context.current[0]!.content).toContain('"trusts"');
+    expect(context.current[0]!.content).toContain('"Hero wakes"');
+
+    // Settlement remains the single write path. Current Reality projects the
+    // accepted Canon fact, native relationship and native timeline event
+    // instead of duplicating them into another truth table.
+    expect(
+      database.raw
+        .prepare(
+          "SELECT COUNT(*) AS count FROM project_reality_revisions WHERE project_id=?",
+        )
+        .get("p1"),
+    ).toEqual({ count: 0 });
+    expect(state.listCurrentRelationships("p1")).toEqual([
+      expect.objectContaining({ relation: "trusts" }),
     ]);
   });
 

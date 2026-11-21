@@ -1,6 +1,8 @@
 import type { CanonEntity, CanonFact } from "@narralume/domain";
 import { SqliteCanonRepository } from "./canon-repository.js";
 import type { NarrativeDatabase } from "./database.js";
+import { SqliteNarrativeStateRepository } from "./narrative-state-repository.js";
+import { SqliteStoryRepository } from "./story-repository.js";
 import {
   SqliteProjectWorldRepository,
   type ProjectSourceIdentity,
@@ -9,6 +11,10 @@ import {
   SqliteMotherWorldEncyclopediaRepository,
   type MotherWorldDossier,
 } from "./source-world-encyclopedia-repository.js";
+import {
+  SqliteSourceCorpusRepository,
+  type SourceRelationView,
+} from "./source-corpus-repository.js";
 import {
   SqliteWorldEncyclopediaRepository,
   type WorldEntityDossier,
@@ -126,9 +132,61 @@ const slot = (
 /** Deterministic reference facets, without inventing any source-world facts.
  * The original complete dossier remains available in sourceReferences.
  */
-function sourceSlots(dossier: MotherWorldDossier): RealitySlot[] {
+function sourceSlots(
+  dossier: MotherWorldDossier,
+  atlasRelations: readonly SourceRelationView[],
+): RealitySlot[] {
   const c = dossier.record.corpusId;
   const k = dossier.record.sourceKey;
+  const card = dossier.lore.find((section) => section.sectionKey === "card");
+
+  // Current Module 2 authority: once a curated Atlas card exists, Markdown
+  // card + typed relations are the reference truth. The older specialist
+  // encyclopedia tables remain readable only as a compatibility fallback.
+  if (card) {
+    // Atlas-card record.summary is an index/search excerpt generated from the
+    // first 500 characters of the full Markdown card. It may contain future
+    // chronology or author-only details, so it is intentionally NOT part of
+    // the narrative-safe baseline. Full prose stays in lore/card only.
+    return [
+      slot(
+        "state",
+        "source_identity",
+        {
+          name: dossier.record.name,
+          kind: dossier.record.kind,
+          aliases: dossier.record.aliases,
+        },
+        c,
+        k,
+      ),
+      slot(
+        "lore",
+        "card",
+        {
+          title: card.title,
+          content: card.content,
+        },
+        c,
+        k,
+      ),
+      ...atlasRelations.map((rel) =>
+        slot(
+          "relationship",
+          JSON.stringify([
+            rel.direction,
+            rel.displayRelation,
+            rel.fromKey,
+            rel.toKey,
+          ]),
+          rel,
+          c,
+          k,
+        ),
+      ),
+    ];
+  }
+
   const out: RealitySlot[] = [
     slot("state", "description", dossier.record.summary, c, k),
     slot("state", "source_record", dossier.record.raw, c, k),
@@ -202,14 +260,22 @@ function rowToRevision(
  */
 export class SqliteProjectRealityRepository {
   private readonly canon: SqliteCanonRepository;
+  private readonly state: SqliteNarrativeStateRepository;
   private readonly worlds: SqliteProjectWorldRepository;
   private readonly source: SqliteMotherWorldEncyclopediaRepository;
+  private readonly sourceRecords: SqliteSourceCorpusRepository;
   private readonly project: SqliteWorldEncyclopediaRepository;
 
   constructor(private readonly db: NarrativeDatabase) {
     this.canon = new SqliteCanonRepository(db);
+    this.state = new SqliteNarrativeStateRepository(
+      db,
+      this.canon,
+      new SqliteStoryRepository(db),
+    );
     this.worlds = new SqliteProjectWorldRepository(db);
     this.source = new SqliteMotherWorldEncyclopediaRepository(db);
+    this.sourceRecords = new SqliteSourceCorpusRepository(db);
     this.project = new SqliteWorldEncyclopediaRepository(db);
   }
 
@@ -407,9 +473,15 @@ export class SqliteProjectRealityRepository {
     const ambiguousSourceBaseline = sourceReferences.length > 1;
     // Do not merge competing authoritatively distinct source records.
     const effective = new Map<string, RealitySlot>();
-    if (sourceReferences.length === 1)
-      for (const part of sourceSlots(sourceReferences[0]!.dossier))
+    if (sourceReferences.length === 1) {
+      const reference = sourceReferences[0]!;
+      const relations = this.sourceRecords.listRelations(
+        reference.link.corpusId,
+        reference.link.sourceKey,
+      );
+      for (const part of sourceSlots(reference.dossier, relations))
         effective.set(keyFor(part.facet, part.slotKey), part);
+    }
 
     const historical = asOfSequence !== null;
     const currentProjectDossier = historical
@@ -433,6 +505,33 @@ export class SqliteProjectRealityRepository {
           value: entries.map((f) =>
             f.objectEntityId ? { objectEntityId: f.objectEntityId } : f.value,
           ),
+          origin: "project",
+          revisionId: null,
+          sourceCorpusId: null,
+          sourceKey: null,
+        });
+      // Native project relationships remain the single accepted truth.
+      // Project Reality only projects them into the same readable view.
+      for (const relation of currentProjectDossier.network)
+        effective.set(keyFor("relationship", relation.id), {
+          facet: "relationship",
+          slotKey: relation.id,
+          value: relation,
+          origin: "project",
+          revisionId: null,
+          sourceCorpusId: null,
+          sourceKey: null,
+        });
+
+      // Accepted timeline events are likewise projected rather than copied.
+      // Only events involving this entity belong in its Reality view.
+      for (const event of this.state
+        .listTimeline(projectId)
+        .filter((candidate) => candidate.participants.includes(entityId)))
+        effective.set(keyFor("chronicle", event.id), {
+          facet: "chronicle",
+          slotKey: event.id,
+          value: event,
           origin: "project",
           revisionId: null,
           sourceCorpusId: null,

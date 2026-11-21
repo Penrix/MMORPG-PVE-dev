@@ -21,6 +21,8 @@ import {
   SqliteProjectRepository,
   SqliteRunRepository,
   SqliteStoryRepository,
+  SqliteSourceCorpusRepository,
+  WorldAtlasStoryContextBuilder,
   type NarrativeDatabase,
 } from "@narralume/persistence";
 
@@ -61,6 +63,8 @@ export class AssistantWorkerSuite {
   private readonly projects: SqliteProjectRepository;
   private readonly runs: SqliteRunRepository;
   private readonly story: SqliteStoryRepository;
+  private readonly sourceCorpora: SqliteSourceCorpusRepository;
+  private readonly worldAtlasContext: WorldAtlasStoryContextBuilder;
 
   constructor(
     private readonly database: NarrativeDatabase,
@@ -74,6 +78,8 @@ export class AssistantWorkerSuite {
     this.projects = new SqliteProjectRepository(database);
     this.runs = new SqliteRunRepository(database);
     this.story = new SqliteStoryRepository(database);
+    this.sourceCorpora = new SqliteSourceCorpusRepository(database);
+    this.worldAtlasContext = new WorldAtlasStoryContextBuilder(database);
     this.narrativeState = new SqliteNarrativeStateRepository(
       database,
       this.canon,
@@ -175,6 +181,37 @@ export class AssistantWorkerSuite {
         .filter((node) => node.kind === "chapter")
         .map((node, index) => [node.id, index + 1]),
     );
+    const focalOutlineNodeId =
+      userMessage.context?.outlineNodeId ??
+      selectedDocument?.outlineNodeId ??
+      null;
+    const focalOutlineNode = focalOutlineNodeId
+      ? (outline.find((node) => node.id === focalOutlineNodeId) ?? null)
+      : null;
+    const atlasEntityIds = [
+      ...new Set([
+        ...(focalOutlineNode?.povEntityId
+          ? [focalOutlineNode.povEntityId]
+          : []),
+        ...(Array.isArray(focalOutlineNode?.metadata.plannedEntityIds)
+          ? focalOutlineNode.metadata.plannedEntityIds.filter(
+              (id): id is string => typeof id === "string",
+            )
+          : []),
+      ]),
+    ].slice(0, 40);
+    const atlasContext = this.worldAtlasContext.build({
+      projectId: project.id,
+      entityIds: atlasEntityIds,
+    });
+    const boundSourceCorpora = this.sourceCorpora
+      .listProjectCorpora(project.id)
+      .map((corpus) => ({
+        id: corpus.id,
+        title: corpus.title,
+        recordCount: corpus.recordCount,
+        relationCount: corpus.relationCount,
+      }));
 
     const packet = {
       project: {
@@ -207,6 +244,27 @@ export class AssistantWorkerSuite {
           status: node.status,
         };
       }),
+      worldAtlas: {
+        rule: "Project Reality 是当前项目事实；Source Atlas 只是母体世界 reference。两者冲突时必须服从 Project Reality，不得把母体世界未来自动写回项目。",
+        boundSourceCorpora,
+        focalEntityIds: atlasEntityIds,
+        current: atlasContext.current.map((source) => ({
+          label: source.label,
+          authority: source.authority,
+          content: source.content,
+        })),
+        reference: atlasContext.reference.map((source) => ({
+          label: source.label,
+          authority: source.authority,
+          content: source.content,
+        })),
+        referenceDetail: atlasContext.referenceDetail.map((source) => ({
+          label: source.label,
+          authority: source.authority,
+          content: source.content,
+        })),
+        counts: atlasContext.counts,
+      },
       canon: {
         entities: entities.slice(0, 160).map((entity) => ({
           id: entity.id,
