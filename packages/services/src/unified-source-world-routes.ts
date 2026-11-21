@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   WORLD_ATLAS_CARD_TYPES,
   WORLD_ATLAS_CONTENT_FAMILIES,
+  WORLD_ATLAS_NARRATIVE_AXIS,
   WORLD_ATLAS_RELATIONS,
   WorldAtlasCardKindSchema,
 } from "@narralume/contracts";
@@ -95,6 +96,7 @@ export function registerUnifiedSourceWorldRoutes(
   app.route("GET", "/api/source-worlds/framework", async () => ({
     version: "0.1",
     contentFamilies: WORLD_ATLAS_CONTENT_FAMILIES,
+    narrativeAxis: WORLD_ATLAS_NARRATIVE_AXIS,
     cardTypes: WORLD_ATLAS_CARD_TYPES,
     relations: WORLD_ATLAS_RELATIONS,
   }));
