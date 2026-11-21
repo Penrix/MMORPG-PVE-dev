@@ -257,3 +257,214 @@ export const NarrativeDirectorCandidateSchema = z.object({
 export type NarrativeDirectorCandidate = z.infer<
   typeof NarrativeDirectorCandidateSchema
 >;
+
+
+/**
+ * Module 3 layer-2 expectation runtime.
+ *
+ * These contracts deliberately model evidence, shared/established cognition and
+ * Reader-visible expectation gaps. They MUST NOT be collapsed into numeric
+ * "scarcity" or "excitement" scores.
+ */
+export const ScarcityEvidenceKindSchema = z.enum([
+  "rule",
+  "barrier",
+  "cost",
+  "failure_history",
+  "authority_judgment",
+  "social_price",
+  "comparison",
+  "access",
+  "historical_case",
+]);
+export type ScarcityEvidenceKind = z.infer<typeof ScarcityEvidenceKindSchema>;
+
+export const ScarcityEvidenceSchema = z.object({
+  id: z.string().min(1),
+  kind: ScarcityEvidenceKindSchema,
+  claim: z.string().min(1),
+  subjectRef: z.string().min(1).nullable(),
+  sourceRefs: z.array(z.string().min(1)).min(1),
+});
+export type ScarcityEvidence = z.infer<typeof ScarcityEvidenceSchema>;
+
+export const EstablishedBeliefScopeSchema = z.enum([
+  "world",
+  "circle",
+  "identity",
+  "character",
+]);
+export type EstablishedBeliefScope = z.infer<
+  typeof EstablishedBeliefScopeSchema
+>;
+
+export const EstablishedBeliefStatusSchema = z.enum([
+  "emerging",
+  "established",
+  "hardened",
+]);
+export type EstablishedBeliefStatus = z.infer<
+  typeof EstablishedBeliefStatusSchema
+>;
+
+export const EstablishedBeliefSchema = z.object({
+  id: z.string().min(1),
+  proposition: z.string().min(1),
+  scope: EstablishedBeliefScopeSchema,
+  holderEntityIds: z.array(z.string().min(1)),
+  supportingScarcityEvidenceIds: z.array(z.string().min(1)),
+  supportingEvidenceRefs: z.array(z.string().min(1)).min(1),
+  actionStakeRefs: z.array(z.string().min(1)),
+  status: EstablishedBeliefStatusSchema,
+  breakCondition: z.string().min(1),
+});
+export type EstablishedBelief = z.infer<typeof EstablishedBeliefSchema>;
+
+export const ReaderKnowledgeLevelSchema = z.enum([
+  "hidden",
+  "partial",
+  "known",
+]);
+export type ReaderKnowledgeLevel = z.infer<
+  typeof ReaderKnowledgeLevelSchema
+>;
+
+export const ProtagonistAdvantageSchema = z.object({
+  id: z.string().min(1),
+  summary: z.string().min(1),
+  evidenceRefs: z.array(z.string().min(1)).min(1),
+  readerKnowledge: ReaderKnowledgeLevelSchema,
+  knownByEntityIds: z.array(z.string().min(1)),
+  contradictsBeliefIds: z.array(z.string().min(1)).min(1),
+});
+export type ProtagonistAdvantage = z.infer<
+  typeof ProtagonistAdvantageSchema
+>;
+
+export const ExpectationThreadPhaseSchema = z.enum([
+  "seeding",
+  "charging",
+  "ripe",
+  "payoff",
+  "settled",
+]);
+export type ExpectationThreadPhase = z.infer<
+  typeof ExpectationThreadPhaseSchema
+>;
+
+export const ExpectationThreadSchema = z.object({
+  id: z.string().min(1),
+  readerNeed: z.string().min(1),
+  targetEmotion: z.string().min(1),
+  targetOutcome: z.string().min(1),
+  scarcityEvidenceIds: z.array(z.string().min(1)),
+  establishedBeliefIds: z.array(z.string().min(1)),
+  protagonistAdvantageIds: z.array(z.string().min(1)),
+  readerKnowledgeSummary: z.string().min(1),
+  payoffCondition: z.string().min(1),
+  reactionTargetEntityIds: z.array(z.string().min(1)),
+  retainedGainTarget: z.string().min(1).nullable(),
+  phase: ExpectationThreadPhaseSchema,
+});
+export type ExpectationThread = z.infer<typeof ExpectationThreadSchema>;
+
+export const ExpectationStateSchema = z.object({
+  version: z.literal("expectation-state.v1"),
+  authority: z.literal("speculative"),
+  projectId: z.string().min(1),
+  targetEmotion: z.string().min(1),
+  readerNeed: z.string().min(1),
+  scarcityEvidence: z.array(ScarcityEvidenceSchema),
+  establishedBeliefs: z.array(EstablishedBeliefSchema),
+  protagonistAdvantages: z.array(ProtagonistAdvantageSchema),
+  threads: z.array(ExpectationThreadSchema),
+  realityFingerprint: z.string().min(1),
+  storyStateFingerprint: z.string().min(1),
+  digest: z.string().min(1),
+});
+export type ExpectationState = z.infer<typeof ExpectationStateSchema>;
+export const ExpectationStateDraftSchema = ExpectationStateSchema.omit({
+  digest: true,
+});
+export type ExpectationStateDraft = z.infer<
+  typeof ExpectationStateDraftSchema
+>;
+
+export const NarrativeCandidateSchema = z.object({
+  id: z.string().min(1),
+  projectId: z.string().min(1),
+  generationId: z.string().min(1),
+  source: StoryEventSourceSchema,
+  authority: StoryRuntimeAuthoritySchema,
+  summary: z.string().min(1),
+  involvedEntityIds: z.array(z.string().min(1)),
+  evidenceRefs: z.array(z.string().min(1)).min(1),
+  effects: z.array(z.string().min(1)),
+  originDigest: z.string().min(1).nullable(),
+});
+export type NarrativeCandidate = z.infer<typeof NarrativeCandidateSchema>;
+
+export const NarrativeAllocationActionSchema = z.enum([
+  "skip",
+  "background",
+  "seed",
+  "charge",
+  "payoff",
+]);
+export type NarrativeAllocationAction = z.infer<
+  typeof NarrativeAllocationActionSchema
+>;
+
+export const ReaderTimeAllocationSchema = z.enum([
+  "none",
+  "mention",
+  "beat",
+  "scene",
+  "chapter",
+]);
+export type ReaderTimeAllocation = z.infer<
+  typeof ReaderTimeAllocationSchema
+>;
+
+export const NarrativeAllocationDecisionSchema = z.object({
+  version: z.literal("narrative-allocation.v1"),
+  authority: z.literal("speculative"),
+  projectId: z.string().min(1),
+  candidateId: z.string().min(1),
+  action: NarrativeAllocationActionSchema,
+  readerTime: ReaderTimeAllocationSchema,
+  expectationThreadIds: z.array(z.string().min(1)),
+  reasons: z.array(z.string().min(1)).min(1),
+  deepenScarcityEvidenceIds: z.array(z.string().min(1)),
+  reinforceBeliefIds: z.array(z.string().min(1)),
+  widenGapBeliefIds: z.array(z.string().min(1)),
+  embodimentTargets: z.array(z.string().min(1)),
+  payoffThreadIds: z.array(z.string().min(1)),
+  reactionTargetEntityIds: z.array(z.string().min(1)),
+  retainedGainOpportunity: z.string().min(1).nullable(),
+  mustPreserveReality: z.literal(true),
+  mustNotRewriteIntent: z.literal(true),
+  digest: z.string().min(1),
+});
+export type NarrativeAllocationDecision = z.infer<
+  typeof NarrativeAllocationDecisionSchema
+>;
+export const NarrativeAllocationDecisionDraftSchema =
+  NarrativeAllocationDecisionSchema.omit({ digest: true });
+export type NarrativeAllocationDecisionDraft = z.infer<
+  typeof NarrativeAllocationDecisionDraftSchema
+>;
+
+export const NarrativeAllocationBatchSchema = z.object({
+  version: z.literal("narrative-allocation-batch.v1"),
+  authority: z.literal("speculative"),
+  projectId: z.string().min(1),
+  expectationStateDigest: z.string().min(1),
+  candidateIds: z.array(z.string().min(1)).min(1),
+  decisions: z.array(NarrativeAllocationDecisionSchema).min(1),
+  selectedCandidateIds: z.array(z.string().min(1)),
+  digest: z.string().min(1),
+});
+export type NarrativeAllocationBatch = z.infer<
+  typeof NarrativeAllocationBatchSchema
+>;
