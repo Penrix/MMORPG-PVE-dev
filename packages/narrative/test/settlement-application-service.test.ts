@@ -20,6 +20,7 @@ import {
   SettlementApplicationService,
   SettlementConflictError,
 } from "../src/settlement-application-service.js";
+import { WorldAtlasStoryContextBuilder } from "../src/world-atlas-story-context.js";
 
 const now = "2026-08-10T00:00:00.000Z";
 let database: NodeNarrativeDatabase;
@@ -164,6 +165,39 @@ describe("SettlementApplicationService", () => {
         timelineEventId: "change-1:timeline:0",
         belief: "suspected",
       }),
+    ]);
+  });
+
+  it("accepted settlement facts are immediately visible through Project Reality without duplicate writes", () => {
+    seedChangeSet("change-reality", settlementPayload("awake"));
+    new SettlementApplicationService(database).apply({
+      projectId: "p1",
+      changeSetId: "change-reality",
+      now,
+    });
+
+    const context = new WorldAtlasStoryContextBuilder(database).build({
+      projectId: "p1",
+      entityIds: ["hero"],
+    });
+    expect(context.current[0]).toMatchObject({
+      authority: "confirmed",
+      sourceType: "project_reality",
+    });
+    expect(context.current[0]!.content).toContain('"condition"');
+    expect(context.current[0]!.content).toContain('"awake"');
+
+    // Settlement remains the single write path. Current Reality projects the
+    // accepted Canon fact instead of duplicating it into another truth table.
+    expect(
+      database.raw
+        .prepare(
+          "SELECT COUNT(*) AS count FROM project_reality_revisions WHERE project_id=?",
+        )
+        .get("p1"),
+    ).toEqual({ count: 0 });
+    expect(state.listCurrentRelationships("p1")).toEqual([
+      expect.objectContaining({ relation: "trusts" }),
     ]);
   });
 
