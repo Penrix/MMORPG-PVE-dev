@@ -54,18 +54,18 @@ describe("WorldAtlasNarrativeContextBuilder", () => {
     });
     atlas.upsertCard({
       worldId: "naruto",
-      entityKey: "character:kakashi",
-      kind: "character",
-      name: "旗木卡卡西",
-      content: "# 旗木卡卡西\n\n木叶上忍。\n\n所属：[[木叶隐村]]",
-      now,
-    });
-    atlas.upsertCard({
-      worldId: "naruto",
       entityKey: "organization:konoha",
       kind: "organization",
       name: "木叶隐村",
       content: "# 木叶隐村\n\n火之国忍村。",
+      now,
+    });
+    atlas.upsertCard({
+      worldId: "naruto",
+      entityKey: "character:kakashi",
+      kind: "character",
+      name: "旗木卡卡西",
+      content: "# 旗木卡卡西\n\n木叶上忍。\n\n所属：[[木叶隐村]]",
       now,
     });
     atlas.upsertCard({
