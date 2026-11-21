@@ -1,5 +1,7 @@
 import {
+  WORLD_BUILDER_ATLAS_CONTRACT,
   WorldPackDocumentSchema,
+  worldBuilderAtlasTarget,
   type WorldPackDocument,
   type WorldPackRequest,
 } from "@narralume/contracts";
@@ -157,6 +159,7 @@ function workOrder(
     },
   };
   const spec = workshops[workshop];
+  const atlasTarget = worldBuilderAtlasTarget(workshop);
   return {
     workshop,
     subjectRef: ref,
@@ -164,6 +167,10 @@ function workOrder(
     reason: spec.reason,
     deliverables:
       workshop === "power" ? powerDesignProducts(request) : spec.products,
+    targetFamilies: atlasTarget.families,
+    suggestedCardKinds: atlasTarget.cardKinds,
+    peopleQuestions: atlasTarget.peopleQuestions,
+    completionRule: atlasTarget.completionRule,
   };
 }
 
@@ -371,13 +378,15 @@ export async function runWorldWorkshops(args: {
             notes: args.extraContext ?? "",
           }
         : {}),
+      worldBuilderAtlasContract: WORLD_BUILDER_ATLAS_CONTRACT,
+      atlasAudit: playtestWorld(view(), args.request).atlasAudit,
       alreadyProduced: steps.map((s) => ({
         workshop: s.workshop,
         subjectRef: s.subjectRef,
         changedRefs: s.changedRefs,
       })),
       resultContract:
-        "Return a structured increment with nodes, links, activities, interactions, openThreads and dimensionSignals. Reuse the same local IDs for edits. Existing Canon IDs must not be fabricated. Partial refs may point to prior increments. One new playable object, relation or actual action is required for this workshop.",
+        "Return one candidate World Atlas production increment in the current WorldPack staging envelope: concrete objects, typed relations, current activities and useful access/value connections. Reuse the same local IDs for edits. Existing Canon IDs must not be fabricated. Partial refs may point to prior increments. A newly named object alone is not a product; connect it into the world graph.",
     };
     const result = await args.model.structured<WorldPackDocument>(
       args.run,
@@ -385,7 +394,7 @@ export async function runWorldWorkshops(args: {
       "world-pack",
       {
         instructions:
-          "执行一个明确的MMORPG世界内容生产工序。不是写剧情大纲，不是填十个标题。程序将按实际图关系另行选择后续工序。",
+          "执行一个明确的 World Atlas 世界内容生产工序。不是写剧情大纲，不是生成一篇完整世界观，也不是填十个标题。生产具体对象并用 typed relations 接入现实关系网；People-centered 是生产优先级而不是数据库层级。程序将依据实际缺口另行选择后续工序。",
         messages: [{ role: "user", content: JSON.stringify(instruction) }],
         reasoningEffort: "medium",
       },
