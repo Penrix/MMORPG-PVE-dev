@@ -281,6 +281,42 @@ suggestedWorkshop: 下一步最合适的生产工序
 
 ---
 
+### Playable Content 不等于必须有 WorldAction
+
+第一模块借鉴游戏行业的 Affordance / Exploration / Access / Reward 思想，但产物仍然是**文字世界**。
+
+因此：
+
+```text
+Playable Content
+≠ 必须先生成两个 action / quest / game button 才算完成
+
+Playable Content
+= 世界中已经存在可进入、可取得、可学习、可经营、可争夺、可享受的真实路径
+```
+
+例如：
+
+```text
+叶掌柜 ─领导→ 三江商会 ─控制→ 紫金矿
+三江商会 ─经营于→ 紫霄坊市
+紫金矿：价值明确
+紫霄坊市：准入方式明确
+叶掌柜：正在联合工匠竞买矿权
+```
+
+这已经是可用于小说的 Playable World Content，即使尚未另写一条 `WorldAction`。
+
+`interaction / WorldAction` 是把现有世界路径进一步显式执行化的工具：
+
+- 在需要检查“进入 → 行动 → 取得 → 留下权益”的闭环时很有用；
+- 在 Project Reality advance 中，如果现状只有“能进入”却没有任何把现有权益转化成新权益的路径，可以触发 playability 工序；
+- **但它不是所有新建世界批次的硬性完成条件。**
+
+Atlas Audit 可以把没有显式 action 的区域标成 `thin` 供后续扩张，但不能仅凭这一点否定一组已经成立的文字世界内容。
+
+---
+
 ## 6. WorldPack 的新定位
 
 当前代码已经围绕 WorldPack 做：
