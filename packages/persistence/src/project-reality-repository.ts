@@ -142,6 +142,10 @@ function sourceSlots(
   // card + typed relations are the reference truth. The older specialist
   // encyclopedia tables remain readable only as a compatibility fallback.
   if (card) {
+    // Atlas-card record.summary is an index/search excerpt generated from the
+    // first 500 characters of the full Markdown card. It may contain future
+    // chronology or author-only details, so it is intentionally NOT part of
+    // the narrative-safe baseline. Full prose stays in lore/card only.
     return [
       slot(
         "state",
