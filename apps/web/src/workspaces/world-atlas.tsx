@@ -2,9 +2,12 @@ import "../styles/world-atlas.css";
 
 import {
   WORLD_ATLAS_CARD_TYPES,
+  WORLD_ATLAS_CONTENT_FAMILIES,
+  WORLD_ATLAS_NARRATIVE_AXIS,
   WORLD_ATLAS_RELATIONS,
   worldAtlasCardTemplate,
   worldAtlasCardType,
+  worldAtlasNarrativePriority,
 } from "@narralume/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -189,12 +192,22 @@ export function WorldAtlasWorkspace() {
 
   const relationGroups = useMemo(() => {
     const groups = new Map<string, NonNullable<typeof currentCard>["relations"]>();
-    for (const relation of currentCard?.relations ?? []) {
+    const relations = [...(currentCard?.relations ?? [])].sort(
+      (left, right) =>
+        worldAtlasNarrativePriority(left.otherKind) -
+          worldAtlasNarrativePriority(right.otherKind) ||
+        left.otherName.localeCompare(right.otherName, "zh-CN"),
+    );
+    for (const relation of relations) {
       const list = groups.get(relation.displayRelation) ?? [];
       list.push(relation);
       groups.set(relation.displayRelation, list);
     }
-    return [...groups.entries()];
+    return [...groups.entries()].sort(
+      ([, left], [, right]) =>
+        Math.min(...left.map((item) => worldAtlasNarrativePriority(item.otherKind))) -
+        Math.min(...right.map((item) => worldAtlasNarrativePriority(item.otherKind))),
+    );
   }, [currentCard]);
 
   const selectWorld = (id: string) => {
@@ -242,6 +255,25 @@ export function WorldAtlasWorkspace() {
         <strong>typed links 写关系</strong>
         <ArrowLeftRight size={15} />
         <strong>索引负责反向查询与关系网</strong>
+      </div>
+
+      <div className="world-atlas__axes">
+        <section>
+          <small>World Content Axis · 世界有什么</small>
+          <strong>十个 World Family 并排</strong>
+          <div>
+            {WORLD_ATLAS_CONTENT_FAMILIES.map((family) => (
+              <span key={family.id}>{family.label}</span>
+            ))}
+          </div>
+        </section>
+        <section>
+          <small>Narrative Axis · 故事从哪里发动</small>
+          <strong>{WORLD_ATLAS_NARRATIVE_AXIS.label} · People-centered</strong>
+          <p>
+            人物是默认关系展开与检索中心，但不改变数据库层级。非人物卡的关系网会优先把相关人物与组织放到前面。
+          </p>
+        </section>
       </div>
 
       <div className="world-atlas__layout">
@@ -464,7 +496,7 @@ export function WorldAtlasWorkspace() {
                     <Network size={17} />
                     <div>
                       <strong>一跳关系网</strong>
-                      <small>{currentCard.relations.length} 条关系，incoming 已自动换成当前卡片视角</small>
+                      <small>{currentCard.relations.length} 条关系，incoming 已换成当前卡片视角；人物相关节点优先展示</small>
                     </div>
                   </div>
                   <div className="world-atlas__relation-center">{currentCard.record.name}</div>
