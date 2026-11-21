@@ -10,6 +10,7 @@ import {
   SqliteNarrativeStateRepository,
   SqliteProjectRealityRepository,
   SqliteProjectRepository,
+  SqliteProjectWorldRepository,
   SqliteReviewRepository,
   SqliteRunRepository,
   SqliteStoryRepository,
@@ -34,6 +35,16 @@ beforeEach(() => {
   new SqliteProjectRepository(database).insert(
     createProject({ id: "p1", title: "Settlement", now }),
   );
+  new SqliteProjectWorldRepository(database).createSpace({
+    id: "scope-main",
+    projectId: "p1",
+    name: "项目主世界",
+    kind: "realm",
+    parentSpaceId: null,
+    sourceCorpusId: null,
+    description: "",
+    createdAt: now,
+  });
   const story = new SqliteStoryRepository(database);
   const root = story.insertOutlineNode(
     createOutlineNode({
@@ -78,7 +89,7 @@ beforeEach(() => {
         id,
         projectId: "p1",
         type: "character",
-        worldScopeId: "project:p1",
+        worldScopeId: "scope-main",
         name,
         now,
       }),
