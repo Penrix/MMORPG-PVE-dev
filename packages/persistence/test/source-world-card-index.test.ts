@@ -42,7 +42,7 @@ describe("World Atlas lightweight cards and typed wiki links", () => {
 
   it("keeps the Markdown card as truth and rebuilds source_relations as a derived index", () => {
     db = new NodeNarrativeDatabase();
-    expect(db.migrate()).toBe(54);
+    expect(db.migrate()).toBe(55);
 
     const sources = new SqliteSourceCorpusRepository(db);
     const worlds = new SqliteUnifiedSourceWorldRepository(db);
