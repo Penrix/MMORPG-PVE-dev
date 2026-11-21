@@ -66,6 +66,7 @@ function GitHubMark({ size = 17 }: { size?: number }) {
 const ShelfWorkspace = lazy(() => import("../workspaces/shelf").then((module) => ({ default: module.ShelfWorkspace })));
 const OverviewWorkspace = lazy(() => import("../workspaces/overview").then((module) => ({ default: module.OverviewWorkspace })));
 const WorldBuilderWorkspace = lazy(() => import("../workspaces/world-builder").then((module) => ({ default: module.WorldBuilderWorkspace })));
+const WorldAtlasWorkspace = lazy(() => import("../workspaces/world-atlas").then((module) => ({ default: module.WorldAtlasWorkspace })));
 const BibleWorkspace = lazy(() => import("../workspaces/bible").then((module) => ({ default: module.BibleWorkspace })));
 const StudioWorkspace = lazy(() => import("../workspaces/studio").then((module) => ({ default: module.StudioWorkspace })));
 const DeliveryWorkspace = lazy(() => import("../workspaces/delivery").then((module) => ({ default: module.DeliveryWorkspace })));
@@ -387,6 +388,7 @@ function ShellFrame() {
             <Route path="/projects/:projectId/overview" element={<OverviewWorkspace />} />
             <Route path="/world" element={<WorldBuilderWorkspace />} />
             <Route path="/projects/:projectId/world" element={<WorldBuilderWorkspace />} />
+            <Route path="/atlas" element={<WorldAtlasWorkspace />} />
             <Route path="/bible" element={<BibleWorkspace />} />
             <Route path="/projects/:projectId/bible" element={<BibleWorkspace />} />
             <Route path="/studio" element={<StudioWorkspace />} />
