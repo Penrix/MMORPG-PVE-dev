@@ -2,21 +2,24 @@
 
 > 这是基于 [NarraLume](https://github.com/abligail/narralume) 的小说世界与长篇创作系统开发仓库。原版用户指南、数据库、写作流程、测试与许可**继续有效**；本目录只记录 MMORPG-PVE 新业务的决策和修正，不宣称已有功能已完成。
 
-## 2026-11-21 当前任务：第二模块 World Atlas
+## 2026-11-21 当前任务：从第二模块反推第一模块 World Builder
 
-**第一模块世界设计暂时停止开发。** 第二模块已经重新收敛：原生母体世界不是大型百科/知识图谱工程，而是 **可编辑世界卡片 + typed wiki links + 可重建关系索引/图谱**。NarraLume 底座和 SQLite 不更换；正文后形成的动态 Reality 继续由原有 Canon / Timeline / settlement 链承担。
+第二模块 World Atlas 的底层已经收敛为 **Markdown 卡片 + typed relations + 可重建关系索引/图谱**，并明确了两条正交轴：
 
-- **最新且最高优先级：[13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)**。后续 Source World 开发先读此文；若与 10～12 的旧设计复杂度冲突，以 13 为准。\n- **世界内容语言：[14 World Atlas 世界内容框架](14-world-atlas-content-framework-v01.md)**。v0.1～v0.7 是 Content Schema，不是 SQL Schema；十个 World Family 是并排的内容覆盖轴。\n- **叙事重心：[15 People-Centered Narrative Axis](15-people-centered-narrative-axis.md)**。人物是默认图谱展开、检索和 LLM Context 的中心，但不改数据库层级；两条轴共享同一批 Card + Typed Edge。
+- **World Content Axis**：十个 World Family 并排，回答“世界里有什么”。
+- **People-Centered Narrative Axis**：人物作为默认关系展开、检索和叙事生产中心，回答“故事从哪里发动”。
 
-- **历史实现参考：[12 原生母体专业世界百科](12-original-world-encyclopedia.md)**。053/054 已落地结构保留，但不再把大量专项表视为当前 World Atlas 完成度中心；当前优先卡片编辑、typed links、反向关系和图谱。
-- **最新认知：[11 世界 Fork/Diff 与人物内核恒定](11-world-fork-diff-character-invariants.md)**。原生母体是参考基线，项目 Canon 是持续改写的 Fork；人格锚点稳定，经历与现实状态可因故事改变。Migration 051 的第一版数据库映射与差异查询见本页。
-- **必读：[10 已确认认知及历史错误禁令](10-module2-cognition-and-error-guardrails.md)**。此文记录母体/项目/跨世界/穿越/高价人物等历次误解，未来任务先读，不能凭旧记忆重新争论。
-- **全库需求：[08 v0.1～v0.7 数据库 Crosswalk](08-world-database-v01-v07-crosswalk.md)**。七版是世界内容要求，不是七个单独 Prompt。
-- **已经存在：[09 火影原生母体导入](09-naruto-source-corpus-import.md)** 和 Migration 049，不得再造第二份 Source Corpus。
-- **本轮补强：Migration 050** 将项目人物 ↔ 来源人物、世界区域、事件时空坐标、跨世界/时间旅行对应到 NarraLume **同一项目 Canon**。楼兰的时间分支必须作者明确决定；不是穿越自动创建。
-- **工程真值**：Migration / API / 自动测试成功、真实来源导入、已核实世界事实、真实小说回访是四种不同验收。任何一项未通过要明确报告。
+现在第一模块重新启动，并以第二模块作为**输出合同**：
 
-## 当前先读这四份
+- **第一模块总合同：[16 World Builder ← World Atlas 反推](16-world-builder-from-world-atlas.md)**。World Builder 不再生成一篇“完整世界观”，而是持续生产 Atlas Card / Typed Relation / 当前事务候选，并根据结构性缺口决定下一轮制作。
+- **存储底座：[13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)**。卡片正文是真相，typed links 写关系，索引可重建。
+- **世界内容语言：[14 World Atlas 世界内容框架](14-world-atlas-content-framework-v01.md)**。v0.1～v0.7 是 Content Schema，不是 SQL Schema。
+- **叙事重心：[15 People-Centered Narrative Axis](15-people-centered-narrative-axis.md)**。人物中心改变 View / Query / Priority，不改变数据库层级。
+- **必读纠错：[10 已确认认知及历史错误禁令](10-module2-cognition-and-error-guardrails.md)**。母体世界与项目 Reality 继续严格分开。
+
+当前工程原则：**WorldPack 只是一轮生产候选的 staging envelope，不是世界本体；第一模块生产，第二模块保存/查询，第三模块写故事并结算项目 Reality。**
+
+## 当前先读这五份
 
 | 文件                                                                  | 解决的问题                                                                                                        |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -24,7 +27,8 @@
 | [01 对标源码复用 Crosswalk](01-reuse-crosswalk.md)                    | 除 NarraLume 外，Covel、WorldForge、CampaignRepo、SNEQ、Spindle、OnlyWorlds 和私有旧 Atlas 分别借什么，源码在哪里 |
 | [02 第一模块代码审查和目标结构](02-world-builder-audit-and-design.md) | “第一模块是自己编的还是按对标项目开发的？”；清楚列出已有源码、没有移植的能力、WorldPack和世界运行的正确方向       |
 | [03 实施顺序与实际验收](03-build-order-and-acceptance.md)             | 从世界包、复杂内容生产、Canon 采用、世界关系图、NPC 动态到正文世界缺口往返                                        |
-| [04 WorldPack 当前实际代码](04-world-pack-implementation.md)          | 世界包生成/修订/原子采纳、图查询、NPC活动推进、正文实际上下文与待验收部分                                         |
+| [04 WorldPack 当前实际代码](04-world-pack-implementation.md)          | WorldPack 生成/修订/原子采纳、图查询、NPC活动推进；现在重新定位为候选生产批次                                    |
+| [16 World Builder ← World Atlas](16-world-builder-from-world-atlas.md) | 当前第一模块最高优先级：Atlas 输出合同、生产 Crosswalk、开放状态机、结构缺口检测与 People-centered 生产原则        |
 
 **当前直接移植与研究全文**：[06 WorldForge完整模拟核心迁入](06-worldforge-full-engine-port.md) · [05 已移植的第三方源码和运行接线](05-actual-upstream-ports.md) · [v0.1～v0.7 七版独立母本](research/README.md)。**第二模块数据库需求**：[v0.1～v0.7 全覆盖差距及宇智波一族实例](08-world-database-v01-v07-crosswalk.md)。
 
