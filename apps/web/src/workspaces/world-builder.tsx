@@ -403,6 +403,54 @@ function WorldPackReview({
         <span>{pack.document.activities.length} 项自主活动</span>
         <span>{pack.document.interactions?.length ?? 0} 种可执行玩法</span>
       </div>
+      {pack.document.production?.atlasAudit ? (
+        <section className="world-builder__atlas-audit" aria-label="World Atlas 内容缺口">
+          <div className="world-builder__atlas-audit-head">
+            <div>
+              <small>World Atlas 生产完成时体检快照</small>
+              <strong>十个内容 Family</strong>
+            </div>
+            <span>
+              {pack.document.production.atlasAudit.orphanWorldObjects.length} 个孤立对象
+            </span>
+          </div>
+          <div className="world-builder__atlas-family-grid">
+            {pack.document.production.atlasAudit.families.map((family) => (
+              <div
+                className="world-builder__atlas-family"
+                data-status={family.status}
+                key={family.family}
+                title={family.reason}
+              >
+                <span>{family.label}</span>
+                <strong>
+                  {family.status === "present"
+                    ? "已形成"
+                    : family.status === "thin"
+                      ? "偏薄"
+                      : "缺失"}
+                </strong>
+              </div>
+            ))}
+          </div>
+          {pack.document.production.atlasAudit.nextReason ? (
+            <p className="world-builder__atlas-next">
+              <b>下一轮建议：</b>
+              {pack.document.production.atlasAudit.nextReason}
+              {pack.document.production.atlasAudit.nextWorkshop
+                ? ` · ${pack.document.production.atlasAudit.nextWorkshop}`
+                : ""}
+            </p>
+          ) : (
+            <p className="world-builder__atlas-next">
+              当前批次没有明显的十 Family 结构缺口；仍可按具体 Zone 继续向下制作。
+            </p>
+          )}
+          <p className="world-builder__hint">
+            这是引擎根据本批 Card / Relation / Activity 推出的生产反馈，不是新的世界真相；手工修改 JSON 后可在下一轮生产重新计算。
+          </p>
+        </section>
+      ) : null}
       {pack.document.production ? (
         <details>
           <summary>程序实际执行的世界生产工序（{pack.document.production.executed.length}）</summary>
