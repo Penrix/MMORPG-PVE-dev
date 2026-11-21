@@ -186,6 +186,15 @@ describe("SettlementApplicationService", () => {
             to_entity_id: "rival",
           }),
         }),
+        expect.objectContaining({
+          facet: "chronicle",
+          slotKey: "change-1:timeline:0",
+          origin: "project",
+          value: expect.objectContaining({
+            title: "Hero wakes",
+            participants: ["hero"],
+          }),
+        }),
       ]),
     );
   });
