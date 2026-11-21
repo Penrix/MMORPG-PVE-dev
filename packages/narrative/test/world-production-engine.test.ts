@@ -232,12 +232,12 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
       ],
     };
     const first = auditWorldAtlasProduction(doc);
-    expect(first.families.find((entry) => entry.family === "people")?.status).toBe(
-      "present",
-    );
-    expect(first.families.find((entry) => entry.family === "asset")?.status).toBe(
-      "thin",
-    );
+    expect(
+      first.families.find((entry) => entry.family === "people")?.status,
+    ).toBe("present");
+    expect(
+      first.families.find((entry) => entry.family === "asset")?.status,
+    ).toBe("thin");
     expect(first.orphanWorldObjects).toContain("ore");
 
     const connected: WorldPackDocument = {
@@ -269,5 +269,4 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
     });
     expect(JSON.stringify(instruction)).toContain("People");
   });
-
 });

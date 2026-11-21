@@ -151,17 +151,17 @@ Playable Content
 
 ## 3. World Builder → World Atlas Production Crosswalk
 
-| World Builder 工序 | 主要覆盖 Family | 主要生产对象 | 必须优先寻找的人物连接 |
-|---|---|---|---|
-| geography | Space / Playable | location | 谁生活、控制、通行、带入 |
-| factions | Organization / People / Value | organization / position / institution / population | 谁掌权、执行、争位、代表 |
-| people | People / Activity / Information | character / population | 与谁有私人/职业/权力关系，正在做什么 |
-| economy | Asset / Economy / Value | resource / item / work / technology | 谁拥有、生产、运输、交易、消费、争夺 |
-| power | Power / Asset / Value | ability / rule / technology / resource | 谁掌握、教授、授权、使用、反制 |
-| events | Activity / Information / People | activity / event | 谁发动、参与、受益、受损、知道 |
-| social | People / Organization / Information / Value / Playable | character / position / information / institution | 谁能引荐、批准、阻碍、评价、泄密 |
-| playability | Playable / Space / Asset / Value | 不强制新增实体，主要补关系与可操作入口 | 谁提供入口、谁决定结果、拿到后还能找谁 |
-| living | Activity / People / Information / Value | activity / event + 既有人物关系变化 | 已有人物凭现有资产和认知正在做什么 |
+| World Builder 工序 | 主要覆盖 Family                                        | 主要生产对象                                       | 必须优先寻找的人物连接                 |
+| ------------------ | ------------------------------------------------------ | -------------------------------------------------- | -------------------------------------- |
+| geography          | Space / Playable                                       | location                                           | 谁生活、控制、通行、带入               |
+| factions           | Organization / People / Value                          | organization / position / institution / population | 谁掌权、执行、争位、代表               |
+| people             | People / Activity / Information                        | character / population                             | 与谁有私人/职业/权力关系，正在做什么   |
+| economy            | Asset / Economy / Value                                | resource / item / work / technology                | 谁拥有、生产、运输、交易、消费、争夺   |
+| power              | Power / Asset / Value                                  | ability / rule / technology / resource             | 谁掌握、教授、授权、使用、反制         |
+| events             | Activity / Information / People                        | activity / event                                   | 谁发动、参与、受益、受损、知道         |
+| social             | People / Organization / Information / Value / Playable | character / position / information / institution   | 谁能引荐、批准、阻碍、评价、泄密       |
+| playability        | Playable / Space / Asset / Value                       | 不强制新增实体，主要补关系与可操作入口             | 谁提供入口、谁决定结果、拿到后还能找谁 |
+| living             | Activity / People / Information / Value                | activity / event + 既有人物关系变化                | 已有人物凭现有资产和认知正在做什么     |
 
 **注意：Crosswalk 不是固定流水线。**
 

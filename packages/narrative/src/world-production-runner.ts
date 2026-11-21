@@ -351,10 +351,10 @@ export async function runWorldWorkshops(args: {
         ? workOrder("living", view(), args.request)
         : requestedEntry
           ? workOrder(requestedEntry.workshop, view(), args.request)
-          : check.next ??
+          : (check.next ??
             (steps.length === 0 && bootstrap[0]
               ? workOrder(bootstrap[0], view(), args.request)
-              : null);
+              : null));
     if (!op) break;
     const instruction = {
       ...worldWorkOrderInput(op, view()),

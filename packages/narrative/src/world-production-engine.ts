@@ -151,7 +151,9 @@ function familyLabel(family: WorldAtlasContentFamily): string {
   );
 }
 
-const FAMILY_WORKSHOP: Readonly<Record<WorldAtlasContentFamily, WorldWorkshop>> = {
+const FAMILY_WORKSHOP: Readonly<
+  Record<WorldAtlasContentFamily, WorldWorkshop>
+> = {
   space: "geography",
   people: "people",
   organization: "factions",
@@ -244,9 +246,11 @@ export function auditWorldAtlasProduction(
     live.some(
       (edge) =>
         (edge.fromRef === org.localId &&
-          (peopleIds.has(edge.toRef) || places.some((p) => p.localId === edge.toRef))) ||
+          (peopleIds.has(edge.toRef) ||
+            places.some((p) => p.localId === edge.toRef))) ||
         (edge.toRef === org.localId &&
-          (peopleIds.has(edge.fromRef) || places.some((p) => p.localId === edge.fromRef))),
+          (peopleIds.has(edge.fromRef) ||
+            places.some((p) => p.localId === edge.fromRef))),
     ),
   );
   const activePlaces = places.filter(
@@ -300,8 +304,7 @@ export function auditWorldAtlasProduction(
     (node) =>
       node.type === "concept" &&
       (informationEdges.some(
-        (edge) =>
-          edge.fromRef === node.localId || edge.toRef === node.localId,
+        (edge) => edge.fromRef === node.localId || edge.toRef === node.localId,
       ) ||
         connectedToPerson(node.localId)),
   );
@@ -505,9 +508,7 @@ export function auditWorldAtlasProduction(
     peopleConnectedWorldObjects,
     orphanWorldObjects,
     nextWorkshop: nextFamily?.suggestedWorkshop ?? null,
-    nextReason: nextFamily
-      ? nextFamily.label + "：" + nextFamily.reason
-      : null,
+    nextReason: nextFamily ? nextFamily.label + "：" + nextFamily.reason : null,
   };
 }
 

@@ -67,7 +67,15 @@ export const WORLD_BUILDER_STAGES = [
     id: "audit",
     label: "世界缺口审计",
     purpose: "按 World Atlas 两条轴发现结构性缺口并决定下一轮生产。",
-    next: ["root", "skeleton", "zone", "humanize", "connect", "activate", "price"],
+    next: [
+      "root",
+      "skeleton",
+      "zone",
+      "humanize",
+      "connect",
+      "activate",
+      "price",
+    ],
   },
 ] as const satisfies readonly WorldBuilderStageDefinition[];
 
