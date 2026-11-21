@@ -86,6 +86,7 @@ import {
   promptInvariants,
 } from "@narralume/harness";
 import { StoryStatePacketBuilder } from "./story-state-packet.js";
+import { WorldAtlasNarrativeContextBuilder } from "./world-atlas-context.js";
 import {
   REVIEW_CONTRACT,
   ReviewResultSchema,
@@ -120,6 +121,7 @@ export class ChapterWorkerSuite {
   private readonly compiler: ContextCompiler;
   private readonly templates: SqliteTemplateRepository;
   private readonly storyState: StoryStatePacketBuilder;
+  private readonly worldAtlasContext: WorldAtlasNarrativeContextBuilder;
   private readonly settlementApplication: SettlementApplicationService;
 
   constructor(
@@ -149,6 +151,7 @@ export class ChapterWorkerSuite {
       this.state,
       this.story,
     );
+    this.worldAtlasContext = new WorldAtlasNarrativeContextBuilder(database);
     this.settlementApplication = new SettlementApplicationService(database);
   }
 
@@ -490,6 +493,15 @@ export class ChapterWorkerSuite {
         })
       : authorStoryStatePacket;
 
+    const worldAtlasAuthorSources = this.worldAtlasContext.buildAuthorSources({
+      projectId: run.projectId,
+      focalEntityIds: plannedEntityIds,
+      query: [target.title, target.summary, target.goal, target.conflict]
+        .filter(Boolean)
+        .join(" "),
+      sourceLimit: 8,
+    });
+
     const chapterNodes = outline.filter((node) => node.kind === "chapter");
     const pinnedDocumentSourceIds = new Set<string>();
     const targetChapterIndex = chapterNodes.findIndex(
@@ -624,6 +636,7 @@ export class ChapterWorkerSuite {
         ...sources,
         ...entitySources(true),
         ...authorStoryStatePacket.sources,
+        ...worldAtlasAuthorSources,
       ]),
     );
     const purposes = [
@@ -658,6 +671,9 @@ export class ChapterWorkerSuite {
         ...sources,
         ...entitySources(statePacket === authorStoryStatePacket),
         ...statePacket.sources,
+        ...(statePacket === authorStoryStatePacket
+          ? worldAtlasAuthorSources
+          : []),
       ];
       const purposeInventoryDigest = sha256(
         stableContextInventory(purposeSources),
@@ -737,6 +753,7 @@ export class ChapterWorkerSuite {
         chapterWritingReference,
         storyStateFingerprint: authorStoryStatePacket.fingerprint,
         storyStateCounts: authorStoryStatePacket.counts,
+        worldAtlasContextSources: worldAtlasAuthorSources.length,
         storyStateFingerprints: {
           author: authorStoryStatePacket.fingerprint,
           draft: draftStoryStatePacket.fingerprint,
@@ -1230,6 +1247,42 @@ export class ChapterWorkerSuite {
     add("author-intent", "author", this.story.getAuthorIntent(projectId));
     add("author-compass", "author", this.automation.getCompass(projectId));
     add("author-steering", "author", snapshot.run.policy.steerNotes);
+    const target = snapshot.run.targetOutlineNodeId
+      ? this.story.requireOutlineNode(projectId, snapshot.run.targetOutlineNodeId)
+      : null;
+    const atlasFocalIds = target
+      ? [
+          ...new Set([
+            ...(Array.isArray(target.metadata.plannedEntityIds)
+              ? target.metadata.plannedEntityIds.filter(
+                  (id): id is string => typeof id === "string",
+                )
+              : []),
+            ...(target.povEntityId ? [target.povEntityId] : []),
+          ]),
+        ]
+      : [];
+    for (const source of this.worldAtlasContext.buildAuthorSources({
+      projectId,
+      focalEntityIds: atlasFocalIds,
+      query: target
+        ? [target.title, target.summary, target.goal, target.conflict]
+            .filter(Boolean)
+            .join(" ")
+        : "",
+      sourceLimit: 8,
+    })) {
+      add(
+        `world-atlas-editorial:${source.id}`,
+        "canon",
+        {
+          authority: source.authority,
+          sourceType: source.sourceType,
+          content: source.content,
+          metadata: source.metadata,
+        },
+      );
+    }
     for (const entity of this.canon.listEntities(projectId))
       add(`entity:${entity.id}`, "canon", entity);
     for (const fact of this.canon.listEffectiveFacts(projectId))
