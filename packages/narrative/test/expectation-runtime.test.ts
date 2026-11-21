@@ -61,7 +61,8 @@ function state(phase: ExpectationState["threads"][number]["phase"] = "ripe") {
         scarcityEvidenceIds: ["scarcity:basic-ninjutsu-limit"],
         establishedBeliefIds: ["belief:basic-is-basic"],
         protagonistAdvantageIds: ["advantage:xiuxin-control"],
-        readerKnowledgeSummary: "Reader 已知道秀信能做到，相关人物仍按旧常识行动",
+        readerKnowledgeSummary:
+          "Reader 已知道秀信能做到，相关人物仍按旧常识行动",
         payoffCondition: "可信高价人物亲眼见证或收到不可否认的结果",
         reactionTargetEntityIds: ["medic", "observer"],
         retainedGainTarget: "获得更高层人物注意与新的训练/权限入口",
@@ -168,13 +169,12 @@ describe("Expectation / Narrative Runtime", () => {
     expect(candidates[0]?.originDigest).toBe("arbiter:1");
   });
 
-
   it("keeps scarcity, established cognition and Reader-visible advantage as relations rather than scores", () => {
     const current = state();
     expect(current.scarcityEvidence[0]?.claim).toContain("基础忍术");
-    expect(current.establishedBeliefs[0]?.supportingScarcityEvidenceIds).toEqual([
-      "scarcity:basic-ninjutsu-limit",
-    ]);
+    expect(
+      current.establishedBeliefs[0]?.supportingScarcityEvidenceIds,
+    ).toEqual(["scarcity:basic-ninjutsu-limit"]);
     expect(current.protagonistAdvantages[0]?.readerKnowledge).toBe("known");
     expect(current.threads[0]?.phase).toBe("ripe");
     expect(current.digest).toBeTruthy();
@@ -231,19 +231,23 @@ describe("Expectation / Narrative Runtime", () => {
     );
     const shop = candidate("event:shop", "木叶商店正常进货");
 
-    const batch = finalizeNarrativeAllocationBatch(current, [shift, shop], [
-      decision(shift.id),
-      decision(shop.id, {
-        action: "background",
-        readerTime: "mention",
-        expectationThreadIds: [],
-        reasons: ["真实发生，但与当前期待交易没有直接关系"],
-        deepenScarcityEvidenceIds: [],
-        reinforceBeliefIds: [],
-        widenGapBeliefIds: [],
-        embodimentTargets: [],
-      }),
-    ]);
+    const batch = finalizeNarrativeAllocationBatch(
+      current,
+      [shift, shop],
+      [
+        decision(shift.id),
+        decision(shop.id, {
+          action: "background",
+          readerTime: "mention",
+          expectationThreadIds: [],
+          reasons: ["真实发生，但与当前期待交易没有直接关系"],
+          deepenScarcityEvidenceIds: [],
+          reinforceBeliefIds: [],
+          widenGapBeliefIds: [],
+          embodimentTargets: [],
+        }),
+      ],
+    );
 
     expect(batch.selectedCandidateIds).toEqual(["event:handoff"]);
     expect(
