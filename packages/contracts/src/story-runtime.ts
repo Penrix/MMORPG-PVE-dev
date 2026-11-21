@@ -258,7 +258,6 @@ export type NarrativeDirectorCandidate = z.infer<
   typeof NarrativeDirectorCandidateSchema
 >;
 
-
 /**
  * Module 3 layer-2 expectation runtime.
  *
@@ -325,9 +324,7 @@ export const ReaderKnowledgeLevelSchema = z.enum([
   "partial",
   "known",
 ]);
-export type ReaderKnowledgeLevel = z.infer<
-  typeof ReaderKnowledgeLevelSchema
->;
+export type ReaderKnowledgeLevel = z.infer<typeof ReaderKnowledgeLevelSchema>;
 
 export const ProtagonistAdvantageSchema = z.object({
   id: z.string().min(1),
@@ -337,9 +334,7 @@ export const ProtagonistAdvantageSchema = z.object({
   knownByEntityIds: z.array(z.string().min(1)),
   contradictsBeliefIds: z.array(z.string().min(1)).min(1),
 });
-export type ProtagonistAdvantage = z.infer<
-  typeof ProtagonistAdvantageSchema
->;
+export type ProtagonistAdvantage = z.infer<typeof ProtagonistAdvantageSchema>;
 
 export const ExpectationThreadPhaseSchema = z.enum([
   "seeding",
@@ -386,9 +381,7 @@ export type ExpectationState = z.infer<typeof ExpectationStateSchema>;
 export const ExpectationStateDraftSchema = ExpectationStateSchema.omit({
   digest: true,
 });
-export type ExpectationStateDraft = z.infer<
-  typeof ExpectationStateDraftSchema
->;
+export type ExpectationStateDraft = z.infer<typeof ExpectationStateDraftSchema>;
 
 export const NarrativeCandidateSchema = z.object({
   id: z.string().min(1),
@@ -422,9 +415,7 @@ export const ReaderTimeAllocationSchema = z.enum([
   "scene",
   "chapter",
 ]);
-export type ReaderTimeAllocation = z.infer<
-  typeof ReaderTimeAllocationSchema
->;
+export type ReaderTimeAllocation = z.infer<typeof ReaderTimeAllocationSchema>;
 
 export const NarrativeAllocationDecisionSchema = z.object({
   version: z.literal("narrative-allocation.v1"),
