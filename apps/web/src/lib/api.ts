@@ -3822,15 +3822,7 @@ export async function getWorldGraph(
    World Atlas（原生母体卡片 + typed links + 可重建关系索引）
    ========================================================================== */
 
-export type AtlasSourceKind =
-  | "character"
-  | "organization"
-  | "location"
-  | "ability"
-  | "creature"
-  | "item"
-  | "event"
-  | "other";
+export type AtlasSourceKind = WorldAtlasCardKind;
 
 export interface AtlasSourceWorld {
   id: string;
