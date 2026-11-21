@@ -725,11 +725,15 @@ packages/narrative/src/expectation-runtime.ts
   ├─ 固有认知 / 稀缺证据 / 主角优势引用校验
   ├─ ripe/payoff 的 Reader-visible gap 校验
   ├─ finalizeNarrativeAllocationDecision()
-  └─ finalizeNarrativeAllocationBatch()
+  ├─ finalizeNarrativeAllocationBatch()
+  └─ narrativeCandidatesFromArbitration()
+     第一层 WorldArbitrationReceipt → 第二层 NarrativeCandidate
 
 packages/narrative/src/expectation-runtime-workers.ts
-  └─ ExpectationNarrativeService.allocateReaderTime()
-     真实 structured model call，走 planning model
+  ├─ ExpectationNarrativeService.allocateReaderTime()
+  │  真实 structured model call，走 planning model
+  └─ allocateArbitrationReaderTime()
+     直接消费第一层 WorldArbitrationReceipt
 ```
 
 第一批宿主硬约束：
@@ -751,7 +755,7 @@ packages/narrative/src/expectation-runtime-workers.ts
 当前尚未完成：
 
 1. 从 World Atlas / Project Reality 自动构建 ScarcityEvidence / EstablishedBelief，而不是由上层传入。
-2. 把第一层 WorldArbitration 结果自动转换成 NarrativeCandidate。
+2. 不只把每个 Agent Resolution 转成候选，还要纳入组织行动、World Initiative、信息传播与 Director Catalyst。
 3. Expectation State 在章节 Settlement 后如何增量更新。
 4. 三阵营真实“下注”如何从人物行动 / 关系 / 资产变更自动提取。
 5. Reader Knowledge / Reader Feels 的显式状态投影。
