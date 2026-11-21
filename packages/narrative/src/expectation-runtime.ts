@@ -120,6 +120,51 @@ export function finalizeExpectationDesign(
   });
 }
 
+export interface ExpectationRealityFocus {
+  projectId: string;
+  expectationDesignDigest: string;
+  priorityEntityIds: readonly string[];
+  worldFocusRefs: readonly string[];
+  scarcityQuestions: readonly string[];
+  beliefQuestions: readonly string[];
+}
+
+/**
+ * Layer 2 is designed first, but this bridge only tells Layer 1 where to look.
+ * It never tells a Character Agent what decision to make or the Arbiter what
+ * outcome to produce.
+ */
+export function realityFocusFromExpectationDesign(
+  design: ExpectationDesign,
+): ExpectationRealityFocus {
+  return {
+    projectId: design.projectId,
+    expectationDesignDigest: design.digest,
+    priorityEntityIds: [...new Set(design.activationEntityIds)],
+    worldFocusRefs: [...new Set(design.worldFocusRefs)],
+    scarcityQuestions: design.scarcityIntents.map((intent) =>
+      [
+        intent.claim,
+        intent.evidenceToEstablish.length > 0
+          ? `需要验证/建立：${intent.evidenceToEstablish.join("；")}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" | "),
+    ),
+    beliefQuestions: design.beliefIntents.map((intent) =>
+      [
+        intent.proposition,
+        intent.stakeToCultivate.length > 0
+          ? `观察人物是否会据此下注：${intent.stakeToCultivate.join("；")}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" | "),
+    ),
+  };
+}
+
 /**
  * Finalize author-side expectation state.
  *
