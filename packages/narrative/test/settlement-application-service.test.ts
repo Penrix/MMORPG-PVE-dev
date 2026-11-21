@@ -8,6 +8,7 @@ import { buildChapterRecipe } from "@narralume/harness";
 import {
   SqliteCanonRepository,
   SqliteNarrativeStateRepository,
+  SqliteProjectRealityRepository,
   SqliteProjectRepository,
   SqliteReviewRepository,
   SqliteRunRepository,
@@ -165,6 +166,29 @@ describe("SettlementApplicationService", () => {
         belief: "suspected",
       }),
     ]);
+    const reality = new SqliteProjectRealityRepository(database).getEntityReality(
+      "p1",
+      "hero",
+    );
+    expect(reality.effectiveSlots).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          facet: "claim",
+          slotKey: "condition",
+          origin: "project",
+          value: ["awake"],
+        }),
+        expect.objectContaining({
+          facet: "relationship",
+          origin: "project",
+          value: expect.objectContaining({
+            relation: "trusts",
+            from_entity_id: "hero",
+            to_entity_id: "rival",
+          }),
+        }),
+      ]),
+    );
   });
 
   it("updates relationships and foreshadows by stable id and preserves timeline causality", () => {
