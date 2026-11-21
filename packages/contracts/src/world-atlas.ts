@@ -127,105 +127,218 @@ export const WORLD_ATLAS_CARD_TYPES = [
     label: "人口/职业群体",
     family: "people",
     description: "普通人口、职业群体、阶层或稳定社会群体",
-    templateSections: ["分布与生计", "职业与组织", "资源与需求", "社会关系", "当前变化"],
+    templateSections: [
+      "分布与生计",
+      "职业与组织",
+      "资源与需求",
+      "社会关系",
+      "当前变化",
+    ],
   },
   {
     kind: "organization",
     label: "组织",
     family: "organization",
     description: "正式组织、派系、联盟、家族网络及其运转机器",
-    templateSections: ["组织形态与区域", "领导与成员", "资产与资源", "决策与权限", "当前目标与事务", "对外关系"],
+    templateSections: [
+      "组织形态与区域",
+      "领导与成员",
+      "资产与资源",
+      "决策与权限",
+      "当前目标与事务",
+      "对外关系",
+    ],
   },
   {
     kind: "institution",
     label: "制度",
     family: "organization",
     description: "法律、组织制度、资格体系、继承或任命规则",
-    templateSections: ["制度内容", "适用范围", "执行者", "资格与程序", "实际影响", "相关组织与人物"],
+    templateSections: [
+      "制度内容",
+      "适用范围",
+      "执行者",
+      "资格与程序",
+      "实际影响",
+      "相关组织与人物",
+    ],
   },
   {
     kind: "position",
     label: "职位/身份位",
     family: "organization",
     description: "能够被具体人物占据并产生真实权限的职位或社会身份位",
-    templateSections: ["职位性质", "任命/取得方式", "实际权限", "限制与监督", "历任/现任", "相关组织"],
+    templateSections: [
+      "职位性质",
+      "任命/取得方式",
+      "实际权限",
+      "限制与监督",
+      "历任/现任",
+      "相关组织",
+    ],
   },
   {
     kind: "location",
     label: "地点/区域",
     family: "space",
     description: "世界、国家、Zone、Hub、POI及可反复进入的空间",
-    templateSections: ["范围与地理", "交通与通路", "组织与人物", "资源与活动", "准入与控制", "日常运行", "相邻世界内容"],
+    templateSections: [
+      "范围与地理",
+      "交通与通路",
+      "组织与人物",
+      "资源与活动",
+      "准入与控制",
+      "日常运行",
+      "相邻世界内容",
+    ],
   },
   {
     kind: "ability",
     label: "能力/技能",
     family: "power",
     description: "忍术、功法、技能、专业能力及其实际动作",
-    templateSections: ["能力本体", "取得与学习", "实际动作", "作用范围", "前置与反制", "组合与传承", "社会价格"],
+    templateSections: [
+      "能力本体",
+      "取得与学习",
+      "实际动作",
+      "作用范围",
+      "前置与反制",
+      "组合与传承",
+      "社会价格",
+    ],
   },
   {
     kind: "rule",
     label: "世界规则",
     family: "power",
     description: "物理、超凡、制度或交互中稳定成立的公共规则",
-    templateSections: ["规则内容", "适用对象", "成立条件", "可观察结果", "例外与边界", "关联能力与社会影响"],
+    templateSections: [
+      "规则内容",
+      "适用对象",
+      "成立条件",
+      "可观察结果",
+      "例外与边界",
+      "关联能力与社会影响",
+    ],
   },
   {
     kind: "technology",
     label: "技术/工艺",
     family: "power",
     description: "研究、制造、工艺、工程或组织技术",
-    templateSections: ["技术原理", "掌握者", "材料与条件", "生产/研究过程", "实际用途", "传播与垄断", "产业影响"],
+    templateSections: [
+      "技术原理",
+      "掌握者",
+      "材料与条件",
+      "生产/研究过程",
+      "实际用途",
+      "传播与垄断",
+      "产业影响",
+    ],
   },
   {
     kind: "resource",
     label: "资源",
     family: "asset",
     description: "可采集、生产、交换、积累或争夺的世界资源",
-    templateSections: ["分布与产地", "控制者", "价值", "取得方式", "加工与流通", "用途", "再生/耗尽与替代"],
+    templateSections: [
+      "分布与产地",
+      "控制者",
+      "价值",
+      "取得方式",
+      "加工与流通",
+      "用途",
+      "再生/耗尽与替代",
+    ],
   },
   {
     kind: "item",
     label: "物品/资产",
     family: "asset",
     description: "具体物件、房产、契约、秘卷、装备与可持有资产",
-    templateSections: ["本体与权属", "来源", "用途", "取得/转让", "限制", "当前持有人", "相关事件"],
+    templateSections: [
+      "本体与权属",
+      "来源",
+      "用途",
+      "取得/转让",
+      "限制",
+      "当前持有人",
+      "相关事件",
+    ],
   },
   {
     kind: "work",
     label: "作品/文化产品",
     family: "asset",
     description: "小说、剧本、歌曲、报刊栏目及其他可传播作品",
-    templateSections: ["作品内容", "创作者", "权属", "发表/发行", "受众与评价", "经济价值", "改编与衍生"],
+    templateSections: [
+      "作品内容",
+      "创作者",
+      "权属",
+      "发表/发行",
+      "受众与评价",
+      "经济价值",
+      "改编与衍生",
+    ],
   },
   {
     kind: "information",
     label: "信息/秘密",
     family: "information",
     description: "情报、秘密、传闻、线索与可传播知识",
-    templateSections: ["信息内容", "真实性", "来源", "知情者", "传播渠道", "保密/误判", "实际用途"],
+    templateSections: [
+      "信息内容",
+      "真实性",
+      "来源",
+      "知情者",
+      "传播渠道",
+      "保密/误判",
+      "实际用途",
+    ],
   },
   {
     kind: "event",
     label: "事件",
     family: "activity",
     description: "已经发生或母体历史中明确存在的世界事件",
-    templateSections: ["时间与地点", "参与者", "起因", "实际经过", "结果", "长期影响", "关联资料"],
+    templateSections: [
+      "时间与地点",
+      "参与者",
+      "起因",
+      "实际经过",
+      "结果",
+      "长期影响",
+      "关联资料",
+    ],
   },
   {
     kind: "activity",
     label: "持续事务/活动",
     family: "activity",
     description: "战争、研究、训练、连载、调查、经营等持续中的世界事务",
-    templateSections: ["活动主体", "目标", "地点与时间", "已有行动", "资源与条件", "当前状态", "相关人物与组织"],
+    templateSections: [
+      "活动主体",
+      "目标",
+      "地点与时间",
+      "已有行动",
+      "资源与条件",
+      "当前状态",
+      "相关人物与组织",
+    ],
   },
   {
     kind: "creature",
     label: "生物/种族对象",
     family: "people",
     description: "尾兽、魔兽、特殊种群及具有稳定世界身份的生物对象",
-    templateSections: ["形态与分布", "生态", "能力", "资源价值", "与人物/组织关系", "历史与社会影响"],
+    templateSections: [
+      "形态与分布",
+      "生态",
+      "能力",
+      "资源价值",
+      "与人物/组织关系",
+      "历史与社会影响",
+    ],
   },
   {
     kind: "other",
@@ -253,20 +366,12 @@ export function worldAtlasCardTemplate(
   return [
     `# ${name}`,
     "",
-    ...definition.templateSections.flatMap((section) => [
-      `## ${section}`,
-      "",
-    ]),
+    ...definition.templateSections.flatMap((section) => [`## ${section}`, ""]),
   ].join("\n");
 }
 
 export type WorldAtlasRelationGroup =
-  | "space"
-  | "social"
-  | "power"
-  | "asset"
-  | "activity"
-  | "information";
+  "space" | "social" | "power" | "asset" | "activity" | "information";
 
 export interface WorldAtlasRelationDefinition {
   relation: string;
@@ -366,9 +471,10 @@ export const WORLD_ATLAS_RELATIONS = [
 ] as const satisfies readonly WorldAtlasRelationDefinition[];
 
 const WORLD_ATLAS_INVERSE_RELATIONS = new Map<string, string>(
-  WORLD_ATLAS_RELATIONS.map(
-    (entry): [string, string] => [entry.relation, entry.inverse],
-  ),
+  WORLD_ATLAS_RELATIONS.map((entry): [string, string] => [
+    entry.relation,
+    entry.inverse,
+  ]),
 );
 
 export function inverseWorldAtlasRelation(relation: string): string | null {
