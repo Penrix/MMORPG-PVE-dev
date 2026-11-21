@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { WorldPackDocument, WorldPackRequest } from "@narralume/contracts";
+import type {
+  WorldAtlasCardKind,
+  WorldPackDocument,
+  WorldPackRequest,
+} from "@narralume/contracts";
 import {
   applyWorldProductionDelta,
   auditWorldAtlasProduction,
@@ -21,13 +25,15 @@ const req: WorldPackRequest = {
 };
 const node = (
   id: string,
-  type: "location" | "organization" | "character" | "item" | "rule",
+  type: "location" | "organization" | "character" | "item" | "rule" | "concept",
   name: string,
   areaRef: string | null = null,
+  atlasKind?: WorldAtlasCardKind,
 ) => ({
   localId: id,
   existingCanonId: null,
   type,
+  ...(atlasKind ? { atlasKind } : {}),
   name,
   description: name + "具有持续而具体的世界生活",
   areaRef,
@@ -269,4 +275,35 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
     });
     expect(JSON.stringify(instruction)).toContain("People");
   });
+  it("keeps information cards distinct from assets and power after coarse staging", () => {
+    const doc: WorldPackDocument = {
+      ...emptyWorldDocument(),
+      nodes: [
+        node("market", "location", "紫霄坊市"),
+        node("chief", "character", "叶掌柜", "market"),
+        node("secret", "concept", "矿脉密报", "market", "information"),
+        node("ore", "item", "千年紫金矿", "market", "resource"),
+        node("skill", "rule", "炼器术", "market", "ability"),
+      ],
+      links: [
+        link("chief", "secret", "知道"),
+        link("chief", "ore", "拥有"),
+        link("chief", "skill", "掌握"),
+      ],
+    };
+    const audit = auditWorldAtlasProduction(doc);
+    expect(
+      audit.families.find((entry) => entry.family === "information")?.status,
+    ).toBe("present");
+    expect(
+      audit.families.find((entry) => entry.family === "asset")?.status,
+    ).toBe("present");
+    expect(
+      audit.families.find((entry) => entry.family === "power")?.status,
+    ).toBe("present");
+    expect(audit.peopleConnectedWorldObjects).toEqual(
+      expect.arrayContaining(["secret", "ore", "skill"]),
+    );
+  });
+
 });
