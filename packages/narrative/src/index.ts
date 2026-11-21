@@ -1,6 +1,7 @@
 export * from "./model-client.js";
 export * from "./embedding-support.js";
 export * from "./story-state-packet.js";
+export * from "./world-atlas-story-context.js";
 export {
   buildOutlineScope,
   nodeIsNotAfterTarget,
