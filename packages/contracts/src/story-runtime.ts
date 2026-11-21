@@ -265,6 +265,78 @@ export type NarrativeDirectorCandidate = z.infer<
  * Reader-visible expectation gaps. They MUST NOT be collapsed into numeric
  * "scarcity" or "excitement" scores.
  */
+export const ExpectationDesignEvidenceSchema = z.object({
+  ref: z.string().min(1),
+  kind: z.enum([
+    "world",
+    "rule",
+    "people",
+    "relationship",
+    "resource",
+    "history",
+    "information",
+    "reality",
+    "story_state",
+  ]),
+  summary: z.string().min(1),
+  entityIds: z.array(z.string().min(1)),
+});
+export type ExpectationDesignEvidence = z.infer<
+  typeof ExpectationDesignEvidenceSchema
+>;
+
+export const ExpectationScarcityIntentSchema = z.object({
+  claim: z.string().min(1),
+  subjectRef: z.string().min(1).nullable(),
+  existingEvidenceRefs: z.array(z.string().min(1)),
+  evidenceToEstablish: z.array(z.string().min(1)),
+});
+export type ExpectationScarcityIntent = z.infer<
+  typeof ExpectationScarcityIntentSchema
+>;
+
+export const ExpectationBeliefIntentSchema = z.object({
+  proposition: z.string().min(1),
+  scope: z.enum(["world", "circle", "identity", "character"]),
+  holderEntityIds: z.array(z.string().min(1)),
+  existingEvidenceRefs: z.array(z.string().min(1)),
+  stakeToCultivate: z.array(z.string().min(1)),
+  breakCondition: z.string().min(1),
+});
+export type ExpectationBeliefIntent = z.infer<
+  typeof ExpectationBeliefIntentSchema
+>;
+
+export const ExpectationDesignSchema = z.object({
+  version: z.literal("expectation-design.v1"),
+  authority: z.literal("speculative"),
+  projectId: z.string().min(1),
+  protagonistId: z.string().min(1),
+  readerNeed: z.string().min(1),
+  targetEmotion: z.string().min(1),
+  targetOutcome: z.string().min(1),
+  scarcityIntents: z.array(ExpectationScarcityIntentSchema).min(1),
+  beliefIntents: z.array(ExpectationBeliefIntentSchema).min(1),
+  protagonistAdvantageRefs: z.array(z.string().min(1)).min(1),
+  reactionTargetEntityIds: z.array(z.string().min(1)),
+  retainedGainTarget: z.string().min(1).nullable(),
+  activationEntityIds: z.array(z.string().min(1)),
+  worldFocusRefs: z.array(z.string().min(1)),
+  designReasons: z.array(z.string().min(1)).min(1),
+  realityFingerprint: z.string().min(1),
+  storyStateFingerprint: z.string().min(1),
+  mustPreserveAgentAutonomy: z.literal(true),
+  mustNotPredetermineOutcome: z.literal(true),
+  digest: z.string().min(1),
+});
+export type ExpectationDesign = z.infer<typeof ExpectationDesignSchema>;
+export const ExpectationDesignDraftSchema = ExpectationDesignSchema.omit({
+  digest: true,
+});
+export type ExpectationDesignDraft = z.infer<
+  typeof ExpectationDesignDraftSchema
+>;
+
 export const ScarcityEvidenceKindSchema = z.enum([
   "rule",
   "barrier",
