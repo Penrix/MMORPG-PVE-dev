@@ -438,7 +438,7 @@ function WorldPackReview({
         <div className="world-builder__nodes">
           {pack.document.nodes.map((node: WorldPackNode) => (
             <div className="world-builder__node" key={node.localId}>
-              <div><small>{node.type} · {node.localId}{node.existingCanonId ? " · 复用旧Canon" : ""}</small><h4>{node.name}</h4></div>
+              <div><small>{node.atlasKind ?? node.type}{node.atlasKind && node.atlasKind !== node.type ? ` · staging:${node.type}` : ""} · {node.localId}{node.existingCanonId ? " · 复用旧Canon" : ""}</small><h4>{node.name}</h4></div>
               <p>{node.description}</p>
               {node.value ? <p><b>实际价值：</b>{node.value}</p> : null}
               {node.access ? <p><b>取得 / 进入：</b>{node.access}</p> : null}
