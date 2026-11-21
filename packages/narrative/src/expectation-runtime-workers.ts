@@ -88,12 +88,7 @@ export class ExpectationNarrativeService {
       throw new Error("story_runtime.expectation.arbitration_project_mismatch");
     }
     const candidates = narrativeCandidatesFromArbitration(receipt);
-    return this.allocateReaderTime(
-      run,
-      step,
-      { state, candidates },
-      signal,
-    );
+    return this.allocateReaderTime(run, step, { state, candidates }, signal);
   }
 
   async allocateReaderTime(
