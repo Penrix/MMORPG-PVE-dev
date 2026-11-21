@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { createCanonEntity, createCanonFact, createProject } from "@narralume/domain";
+import {
+  createCanonEntity,
+  createCanonFact,
+  createProject,
+} from "@narralume/domain";
 import {
   SqliteCanonRepository,
   SqliteProjectRepository,

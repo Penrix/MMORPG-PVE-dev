@@ -16,7 +16,7 @@
 
 **Novel Studio 读取第二模块的 World Atlas / Project Reality，正文确认后继续写 NarraLume 原生 Canon / Timeline / Relationship；Project Reality 从这些原生真相投影，而不是第三模块双写另一份世界状态。**
 
-~~~text
+```text
 【写作读取】
 
 Source World Atlas
@@ -52,7 +52,7 @@ Project Reality 统一投影
           │
           ▼
 下一章再次读取
-~~~
+```
 
 ---
 
@@ -77,19 +77,19 @@ NarraLume 原底座已经有：
 
 如果第三模块再增加：
 
-~~~text
+```text
 novel_studio_world_cards
 novel_studio_relations
 novel_studio_current_state
-~~~
+```
 
 就会立刻出现三份真相：
 
-~~~text
+```text
 Canon
 Project Reality
 Novel Studio World
-~~~
+```
 
 随后必然需要同步、冲突处理和“到底听谁”的额外规则。
 
@@ -105,9 +105,9 @@ Novel Studio World
 
 ### Source World Atlas
 
-~~~text
+```text
 authority = reference
-~~~
+```
 
 它回答：
 
@@ -125,9 +125,9 @@ authority = reference
 
 ### Project Reality
 
-~~~text
+```text
 authority = confirmed
-~~~
+```
 
 它回答：
 
@@ -139,13 +139,13 @@ authority = confirmed
 
 因此：
 
-~~~text
+```text
 Source World Atlas
 = 世界原本是什么
 
 Project Reality
 = 这本书现在已经变成什么
-~~~
+```
 
 两者都进入作者侧写作上下文，但不能被压成同一种 Canon。
 
@@ -163,7 +163,7 @@ WorldAtlasNarrativeContextBuilder
 
 本章已经规划的人物 / POV 人物优先读取：
 
-~~~text
+```text
 Project Canon Entity
       │
       ▼
@@ -179,7 +179,7 @@ linked Source World Atlas Card
       │
       ├─ full Markdown
       └─ typed relations
-~~~
+```
 
 ### 3.2 Query Retrieval
 
@@ -189,7 +189,7 @@ linked Source World Atlas Card
 
 结果按 People-centered priority 排序：
 
-~~~text
+```text
 人物
  ↓
 组织 / 职位 / 人口
@@ -197,7 +197,7 @@ linked Source World Atlas Card
 地点 / 资源 / 物品 / 能力 / 信息 / 事件
  ↓
 外围规则 / 其他
-~~~
+```
 
 这意味着写“木叶医院”时，不只给建筑简介，还能通过 typed relations 把真正活动于此的人带回来。
 
@@ -209,15 +209,15 @@ World Atlas 是作者可以查询的世界资料，不等于 POV 人物知道所
 
 因此当前接线：
 
-| Purpose | Atlas / Project Reality |
-|---|---|
-| scene-plan | 作者视图，可用 |
-| semantic-review | 作者视图，可用 |
-| chapter-settlement | 作者视图，可用 |
-| chapter-draft，有明确 POV | 不直接注入作者级 Atlas |
-| chapter-revision，有明确 POV | 不直接注入作者级 Atlas |
-| Context Preview，author | 可用 |
-| Context Preview，character / reader | 不直接注入作者级 Atlas |
+| Purpose                             | Atlas / Project Reality |
+| ----------------------------------- | ----------------------- |
+| scene-plan                          | 作者视图，可用          |
+| semantic-review                     | 作者视图，可用          |
+| chapter-settlement                  | 作者视图，可用          |
+| chapter-draft，有明确 POV           | 不直接注入作者级 Atlas  |
+| chapter-revision，有明确 POV        | 不直接注入作者级 Atlas  |
+| Context Preview，author             | 可用                    |
+| Context Preview，character / reader | 不直接注入作者级 Atlas  |
 
 正文草稿继续服从原有 StoryStatePacket 的人物知识权限。
 
@@ -235,7 +235,7 @@ World Atlas 是作者可以查询的世界资料，不等于 POV 人物知道所
 
 现在调整为：
 
-~~~text
+```text
 Project source identity
 (corpusId + sourceKey)
        │
@@ -248,17 +248,17 @@ Markdown + typed relations
        │
        ▼
 Reality reference slots
-~~~
+```
 
 旧 specialist dossier 继续保留为兼容 fallback：
 
-~~~text
+```text
 有当前 Atlas Card
 → Atlas Card 为优先母体资料
 
 没有 Atlas Card
 → 旧 dossier 作为兼容 fallback
-~~~
+```
 
 不删除旧数据，也不让旧结构继续主导新的写作链。
 
@@ -276,18 +276,18 @@ Reality reference slots
 
 采用后写入 NarraLume 原生：
 
-~~~text
+```text
 canon_facts
 timeline_events
 relationship_events
 ...
-~~~
+```
 
 这些就是项目已经发生的真相。
 
 Project Reality 现在直接投影：
 
-~~~text
+```text
 canon_facts
 → claim slots
 
@@ -296,25 +296,25 @@ relationship_events
 
 timeline / travel / project world records
 → Project Reality 的时空和历史视图
-~~~
+```
 
 因此禁止：
 
-~~~text
+```text
 chapter.settle
    ├─ write Canon
    └─ 再复制写一份 Atlas relation
-~~~
+```
 
 正确的是：
 
-~~~text
+```text
 chapter.settle
    ↓
 native accepted state
    ↓
 Project Reality projection
-~~~
+```
 
 **Projection 可以重建，accepted story truth 只保留一份。**
 
@@ -324,18 +324,18 @@ Project Reality projection
 
 Source typed relation：
 
-~~~text
+```text
 卡卡西 ─老师→ 水门
-~~~
+```
 
 属于母体世界 reference。
 
 项目正文可能后来产生：
 
-~~~text
+```text
 卡卡西 ─怀疑→ 男主
 卡卡西 ─保护→ 男主
-~~~
+```
 
 这些属于 Project Reality。
 
@@ -348,13 +348,13 @@ Source typed relation：
 
 所以第二模块内部实际存在：
 
-~~~text
+```text
 Source typed relation
 = 母体参考索引
 
 Project relationship_events
 = 项目动态关系真相
-~~~
+```
 
 Novel Studio 读取时可以统一呈现，存储时绝不能混写。
 
@@ -372,7 +372,7 @@ Novel Studio 读取时可以统一呈现，存储时绝不能混写。
 
 因此 World Atlas / Project Reality 已加入 editorial source fingerprint。
 
-~~~text
+```text
 世界资料变化
        ↓
 source fingerprint 变化
@@ -382,7 +382,7 @@ source fingerprint 变化
 重新 review
        ↓
 才能 settle / commit
-~~~
+```
 
 这保证审阅不是基于一版过期世界继续放行正文。
 
@@ -390,24 +390,24 @@ source fingerprint 变化
 
 ## 9. 当前 Crosswalk
 
-| 第三模块对象 | 第二模块对应 | 处理方式 |
-|---|---|---|
-| plannedEntityIds | Project Reality entity | focal query |
-| POV entity | Project Reality + Story Knowledge | Reality 受知识权限约束 |
-| 世界背景资料 | Source World Atlas Card | reference |
-| 原著人物关系 | Source typed relations | reference |
-| 项目已确认事实 | Canon → Reality claim | confirmed |
-| 项目人物关系 | relationship_events → Reality relationship | confirmed |
-| 已发生事件 | timeline_events | confirmed |
-| 跨世界/时间移动 | Project World travel | confirmed |
-| 正文章节 settlement | Canon/Timeline/Relationship native write | Reality 自动投影 |
-| semantic review grounding | Atlas + Reality + Canon + manuscript | fingerprinted author source |
+| 第三模块对象              | 第二模块对应                               | 处理方式                    |
+| ------------------------- | ------------------------------------------ | --------------------------- |
+| plannedEntityIds          | Project Reality entity                     | focal query                 |
+| POV entity                | Project Reality + Story Knowledge          | Reality 受知识权限约束      |
+| 世界背景资料              | Source World Atlas Card                    | reference                   |
+| 原著人物关系              | Source typed relations                     | reference                   |
+| 项目已确认事实            | Canon → Reality claim                      | confirmed                   |
+| 项目人物关系              | relationship_events → Reality relationship | confirmed                   |
+| 已发生事件                | timeline_events                            | confirmed                   |
+| 跨世界/时间移动           | Project World travel                       | confirmed                   |
+| 正文章节 settlement       | Canon/Timeline/Relationship native write   | Reality 自动投影            |
+| semantic review grounding | Atlas + Reality + Canon + manuscript       | fingerprinted author source |
 
 ---
 
 ## 10. 防重犯状态机
 
-~~~text
+```text
 第三模块需要世界资料
         │
         ▼
@@ -450,7 +450,7 @@ Source 世界发生变化？
 Project 世界发生变化？
         │
         └─ 不写回 Source Card
-~~~
+```
 
 ---
 

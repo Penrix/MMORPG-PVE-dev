@@ -34,7 +34,9 @@ export class WorldAtlasNarrativeContextBuilder {
     this.atlas = new SqliteUnifiedSourceWorldRepository(database);
   }
 
-  buildAuthorSources(request: WorldAtlasNarrativeContextRequest): ContextSource[] {
+  buildAuthorSources(
+    request: WorldAtlasNarrativeContextRequest,
+  ): ContextSource[] {
     const out: ContextSource[] = [];
     const seenSourceCards = new Set<string>();
 

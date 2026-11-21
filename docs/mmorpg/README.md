@@ -16,7 +16,7 @@
 
 当前接口：
 
-~~~text
+```text
 Source World Atlas (reference)
              ┐
              ├─→ Novel Studio author context
@@ -35,7 +35,7 @@ Project Reality (confirmed)
              Project Reality
                     │
                     └─→ 下一章
-~~~
+```
 
 第三模块不增加 Novel-Studio-only world tables。POV / Reader knowledge 继续服从原有 StoryStatePacket 权限，不能因为数据库知道就让人物也知道。
 

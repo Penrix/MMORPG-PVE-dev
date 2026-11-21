@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { createCanonEntity, createCanonFact, createProject } from "@narralume/domain";
+import {
+  createCanonEntity,
+  createCanonFact,
+  createProject,
+} from "@narralume/domain";
 import {
   SqliteCanonRepository,
   SqliteProjectRepository,
@@ -114,12 +118,14 @@ describe("WorldAtlasNarrativeContextBuilder", () => {
       createdAt: now,
     });
 
-    const result = new WorldAtlasNarrativeContextBuilder(db).buildAuthorSources({
-      projectId: "p1",
-      focalEntityIds: ["kakashi"],
-      query: "木叶医院",
-      sourceLimit: 8,
-    });
+    const result = new WorldAtlasNarrativeContextBuilder(db).buildAuthorSources(
+      {
+        projectId: "p1",
+        focalEntityIds: ["kakashi"],
+        query: "木叶医院",
+        sourceLimit: 8,
+      },
+    );
 
     const reality = result.find(
       (source) => source.sourceType === "project_reality",

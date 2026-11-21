@@ -1248,7 +1248,10 @@ export class ChapterWorkerSuite {
     add("author-compass", "author", this.automation.getCompass(projectId));
     add("author-steering", "author", snapshot.run.policy.steerNotes);
     const target = snapshot.run.targetOutlineNodeId
-      ? this.story.requireOutlineNode(projectId, snapshot.run.targetOutlineNodeId)
+      ? this.story.requireOutlineNode(
+          projectId,
+          snapshot.run.targetOutlineNodeId,
+        )
       : null;
     const atlasFocalIds = target
       ? [
@@ -1272,16 +1275,12 @@ export class ChapterWorkerSuite {
         : "",
       sourceLimit: 8,
     })) {
-      add(
-        `world-atlas-editorial:${source.id}`,
-        "canon",
-        {
-          authority: source.authority,
-          sourceType: source.sourceType,
-          content: source.content,
-          metadata: source.metadata,
-        },
-      );
+      add(`world-atlas-editorial:${source.id}`, "canon", {
+        authority: source.authority,
+        sourceType: source.sourceType,
+        content: source.content,
+        metadata: source.metadata,
+      });
     }
     for (const entity of this.canon.listEntities(projectId))
       add(`entity:${entity.id}`, "canon", entity);

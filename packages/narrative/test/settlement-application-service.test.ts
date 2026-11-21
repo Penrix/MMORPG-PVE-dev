@@ -166,10 +166,9 @@ describe("SettlementApplicationService", () => {
         belief: "suspected",
       }),
     ]);
-    const reality = new SqliteProjectRealityRepository(database).getEntityReality(
-      "p1",
-      "hero",
-    );
+    const reality = new SqliteProjectRealityRepository(
+      database,
+    ).getEntityReality("p1", "hero");
     expect(reality.effectiveSlots).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

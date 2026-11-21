@@ -471,7 +471,10 @@ export class SqliteProjectRealityRepository {
     if (sourceAtlasReferences.length === 1 && !ambiguousSourceBaseline) {
       for (const part of sourceAtlasSlots(sourceAtlasReferences[0]!.card))
         effective.set(keyFor(part.facet, part.slotKey), part);
-    } else if (sourceAtlasReferences.length === 0 && sourceReferences.length === 1) {
+    } else if (
+      sourceAtlasReferences.length === 0 &&
+      sourceReferences.length === 1
+    ) {
       for (const part of sourceSlots(sourceReferences[0]!.dossier))
         effective.set(keyFor(part.facet, part.slotKey), part);
     }
