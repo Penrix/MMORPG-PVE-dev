@@ -477,6 +477,55 @@ const WORLD_ATLAS_INVERSE_RELATIONS = new Map<string, string>(
   ]),
 );
 
+/**
+ * Preferred author-facing inverse labels for the reverse side of a relation.
+ * Some forward labels intentionally converge on one reverse label (for
+ * example 所属组织 / 所属家族 / 隶属 → 成员), so the reverse direction needs
+ * one simple canonical display choice rather than a relationship rule engine.
+ */
+const WORLD_ATLAS_REVERSE_INPUTS: Readonly<Record<string, string>> = {
+  包含: "属于",
+  被控制: "控制",
+  活动者: "活动于",
+  成员: "所属",
+  任职者: "任职",
+  下属: "领导",
+  下级: "上级",
+  学生: "老师",
+  徒弟: "师父",
+  子女: "父母",
+  效忠者: "效忠",
+  被监管: "监管",
+  出身者: "出身",
+  创建者: "创建",
+  掌握者: "掌握",
+  使用者: "使用",
+  受传者: "传授",
+  后续: "前置",
+  被克制: "克制",
+  被反制: "反制",
+  拥有者: "拥有",
+  生产者: "生产",
+  加工者: "加工",
+  运输者: "运输",
+  交易方: "交易",
+  消费者: "消费",
+  支撑: "依赖",
+  产出: "产于",
+  参与者: "参与",
+  发生事件: "发生于",
+  结果来自: "导致",
+  被知晓: "知道",
+  信息来源: "来自",
+  接收自: "传播到",
+  被评价: "评价",
+};
+
 export function inverseWorldAtlasRelation(relation: string): string | null {
-  return WORLD_ATLAS_INVERSE_RELATIONS.get(relation.trim()) ?? null;
+  const normalized = relation.trim();
+  return (
+    WORLD_ATLAS_INVERSE_RELATIONS.get(normalized) ??
+    WORLD_ATLAS_REVERSE_INPUTS[normalized] ??
+    null
+  );
 }
