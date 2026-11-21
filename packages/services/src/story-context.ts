@@ -4,6 +4,7 @@ import {
   type ContextSource,
 } from "@narralume/context";
 import type { CanonAccess } from "@narralume/domain";
+import { WorldAtlasStoryContextBuilder } from "@narralume/narrative";
 import {
   SqliteCanonRepository,
   SqliteContextReceiptRepository,
@@ -35,6 +36,7 @@ export class StoryContextPreviewService {
   private readonly canon: SqliteCanonRepository;
   private readonly retrieval: SqliteRetrievalRepository;
   private readonly receipts: SqliteContextReceiptRepository;
+  private readonly worldAtlas: WorldAtlasStoryContextBuilder;
   private readonly compiler = new ContextCompiler();
 
   constructor(database: NarrativeDatabase) {
@@ -42,6 +44,7 @@ export class StoryContextPreviewService {
     this.canon = new SqliteCanonRepository(database);
     this.retrieval = new SqliteRetrievalRepository(database);
     this.receipts = new SqliteContextReceiptRepository(database);
+    this.worldAtlas = new WorldAtlasStoryContextBuilder(database);
   }
 
   compile(input: StoryContextPreviewInput) {
@@ -125,6 +128,16 @@ export class StoryContextPreviewService {
         }),
         input.access,
       ),
+    );
+
+    const atlas = this.worldAtlas.build({
+      projectId: input.projectId,
+      entityIds: input.entityIds,
+    });
+    sources.push(
+      ...atlas.current,
+      ...atlas.reference,
+      ...atlas.referenceDetail,
     );
 
     for (const hit of this.retrieval.search(input.projectId, input.query, {
