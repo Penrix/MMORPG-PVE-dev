@@ -305,5 +305,4 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
       expect.arrayContaining(["secret", "ore", "skill"]),
     );
   });
-
 });

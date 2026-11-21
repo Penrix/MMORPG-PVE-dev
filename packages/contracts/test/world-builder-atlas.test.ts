@@ -117,5 +117,4 @@ describe("World Builder → World Atlas production contract", () => {
       "atlas kind/type mismatch: ore resource requires item, got concept",
     );
   });
-
 });
