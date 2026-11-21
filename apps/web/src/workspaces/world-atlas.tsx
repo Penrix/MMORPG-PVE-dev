@@ -1,5 +1,11 @@
 import "../styles/world-atlas.css";
 
+import {
+  WORLD_ATLAS_CARD_TYPES,
+  WORLD_ATLAS_RELATIONS,
+  worldAtlasCardTemplate,
+  worldAtlasCardType,
+} from "@narralume/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeftRight,
@@ -30,15 +36,16 @@ import {
 
 const KINDS: Array<{ value: AtlasSourceKind | ""; label: string }> = [
   { value: "", label: "全部类型" },
-  { value: "character", label: "人物" },
-  { value: "organization", label: "组织" },
-  { value: "location", label: "地点" },
-  { value: "ability", label: "能力" },
-  { value: "item", label: "物品" },
-  { value: "event", label: "事件" },
-  { value: "creature", label: "生物" },
-  { value: "other", label: "其他" },
+  ...WORLD_ATLAS_CARD_TYPES.map((entry) => ({
+    value: entry.kind,
+    label: entry.label,
+  })),
 ];
+
+const RELATION_HINTS = WORLD_ATLAS_RELATIONS.filter(
+  (entry, index, all) =>
+    index === all.findIndex((candidate) => candidate.relation === entry.relation),
+).slice(0, 24);
 
 type Draft = {
   entityKey: string;
@@ -54,7 +61,7 @@ const emptyDraft = (): Draft => ({
   kind: "character",
   name: "",
   aliases: "",
-  content: "# 新卡片\n\n",
+  content: worldAtlasCardTemplate("character"),
   isNew: true,
 });
 
@@ -176,6 +183,10 @@ export function WorldAtlasWorkspace() {
     },
   });
 
+  const activeCardType = activeDraft
+    ? worldAtlasCardType(activeDraft.kind)
+    : null;
+
   const relationGroups = useMemo(() => {
     const groups = new Map<string, NonNullable<typeof currentCard>["relations"]>();
     for (const relation of currentCard?.relations ?? []) {
@@ -197,6 +208,17 @@ export function WorldAtlasWorkspace() {
     setSelectedKey(null);
     setDraft(emptyDraft());
     setUnresolved([]);
+  };
+
+  const applySuggestedTemplate = () => {
+    if (!activeDraft) return;
+    setDraft({
+      ...activeDraft,
+      content: worldAtlasCardTemplate(
+        activeDraft.kind,
+        activeDraft.name.trim() || "新卡片",
+      ),
+    });
   };
 
   const openRelation = (relation: NonNullable<typeof currentCard>["relations"][number]) => {
@@ -381,9 +403,42 @@ export function WorldAtlasWorkspace() {
                 </label>
               </div>
 
+              {activeCardType ? (
+                <div className="world-atlas__framework">
+                  <div>
+                    <strong>{activeCardType.label}</strong>
+                    <span>{activeCardType.description}</span>
+                  </div>
+                  <div className="world-atlas__framework-sections">
+                    {activeCardType.templateSections.map((section) => (
+                      <span key={section}>{section}</span>
+                    ))}
+                  </div>
+                  <button
+                    className="btn"
+                    type="button"
+                    onClick={applySuggestedTemplate}
+                    title="用当前类型的建议章节替换编辑区内容；它只是写作提示，不是强制字段"
+                  >
+                    填入建议结构
+                  </button>
+                </div>
+              ) : null}
+
               <div className="world-atlas__link-tip">
                 <Link2 size={15} />
                 <span>写法示例：<code>老师：[[波风水门]]</code>、<code>所属：[[木叶隐村]]</code>。普通正文里的 <code>[[链接]]</code> 不会自动变成结构化关系。</span>
+              </div>
+
+              <div className="world-atlas__relation-hints">
+                <small>常用关系词，只是提示；未登记的新关系也允许直接写：</small>
+                <div>
+                  {RELATION_HINTS.map((entry) => (
+                    <code key={entry.relation}>
+                      {entry.relation} ↔ {entry.inverse}
+                    </code>
+                  ))}
+                </div>
               </div>
 
               <textarea
