@@ -36,6 +36,25 @@ describe("World Atlas content framework API", () => {
     });
     opened.push({ app, db });
 
+    const framework = await app.inject({
+      method: "GET",
+      url: "/api/source-worlds/framework",
+    });
+    expect(framework.statusCode).toBe(200);
+    expect(framework.json().version).toBe("0.1");
+    expect(
+      framework
+        .json()
+        .contentFamilies.map((entry: { id: string }) => entry.id),
+    ).toEqual(
+      expect.arrayContaining(["space", "power", "economy", "playable"]),
+    );
+    expect(
+      framework
+        .json()
+        .cardTypes.map((entry: { kind: string }) => entry.kind),
+    ).toEqual(expect.arrayContaining(["character", "resource", "information"]));
+
     const world = await app.inject({
       method: "POST",
       url: "/api/source-worlds",
