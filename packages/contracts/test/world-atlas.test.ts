@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import {
   WORLD_ATLAS_CARD_TYPES,
   WORLD_ATLAS_CONTENT_FAMILIES,
+  WORLD_ATLAS_NARRATIVE_AXIS,
   WorldAtlasCardKindSchema,
   inverseWorldAtlasRelation,
   worldAtlasCardTemplate,
   worldAtlasCardType,
+  worldAtlasNarrativePriority,
 } from "../src/world-atlas.js";
 
 describe("World Atlas content framework", () => {
@@ -23,6 +25,21 @@ describe("World Atlas content framework", () => {
       "value",
       "playable",
     ]);
+  });
+
+
+  it("keeps content families parallel while people-centered stays a view/query priority", () => {
+    expect(WORLD_ATLAS_CONTENT_FAMILIES).toHaveLength(10);
+    expect(WORLD_ATLAS_NARRATIVE_AXIS.centerKind).toBe("character");
+    expect(WORLD_ATLAS_NARRATIVE_AXIS.databaseRule).toContain(
+      "not a new Database Schema",
+    );
+    expect(worldAtlasNarrativePriority("character")).toBeLessThan(
+      worldAtlasNarrativePriority("organization"),
+    );
+    expect(worldAtlasNarrativePriority("organization")).toBeLessThan(
+      worldAtlasNarrativePriority("ability"),
+    );
   });
 
   it("accepts every registered card kind through the shared validation schema", () => {
