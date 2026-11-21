@@ -105,26 +105,25 @@ export class CharacterObservationBuilder {
         }),
     );
 
-    const relationships: CharacterObservationEvidence[] =
-      snapshot.relationships
-        .filter(
-          (item) =>
-            item.fromEntityId === request.characterId ||
-            item.toEntityId === request.characterId,
-        )
-        .map((item) =>
-          evidence({
-            id: item.id,
-            kind: "relationship",
-            text: [
-              item.fromEntityId,
-              item.relation,
-              item.toEntityId,
-              `intensity=${item.intensity}`,
-            ].join(" | "),
-            sourceType: "relationship_event",
-          }),
-        );
+    const relationships: CharacterObservationEvidence[] = snapshot.relationships
+      .filter(
+        (item) =>
+          item.fromEntityId === request.characterId ||
+          item.toEntityId === request.characterId,
+      )
+      .map((item) =>
+        evidence({
+          id: item.id,
+          kind: "relationship",
+          text: [
+            item.fromEntityId,
+            item.relation,
+            item.toEntityId,
+            `intensity=${item.intensity}`,
+          ].join(" | "),
+          sourceType: "relationship_event",
+        }),
+      );
 
     const perceivedEvents: CharacterObservationEvidence[] =
       snapshot.timeline.map((item) =>
@@ -134,9 +133,7 @@ export class CharacterObservationBuilder {
           text: [
             item.title,
             item.description,
-            item.storyTimeStart
-              ? `storyTime=${item.storyTimeStart}`
-              : null,
+            item.storyTimeStart ? `storyTime=${item.storyTimeStart}` : null,
           ]
             .filter(Boolean)
             .join(" | "),
@@ -174,7 +171,9 @@ export class CharacterObservationBuilder {
         ? locationFromVisibleFacts(snapshot.facts)
         : request.location;
     const resources = normalizeStrings(request.resources ?? []);
-    const sourceIds = normalizeStrings(packet.sources.map((source) => source.id));
+    const sourceIds = normalizeStrings(
+      packet.sources.map((source) => source.id),
+    );
 
     const realityFingerprint = sha256Hex(
       stableJson({
@@ -263,9 +262,7 @@ function evidence(input: {
     kind: input.kind,
     text: input.text,
     sourceType: input.sourceType,
-    ...(input.visibility === undefined
-      ? {}
-      : { visibility: input.visibility }),
+    ...(input.visibility === undefined ? {} : { visibility: input.visibility }),
   };
 }
 
@@ -277,9 +274,7 @@ function stringifyValue(value: unknown): string {
 function normalizeStrings(values: readonly string[]): string[] {
   return [
     ...new Set(
-      values
-        .map((value) => value.trim())
-        .filter((value) => value.length > 0),
+      values.map((value) => value.trim()).filter((value) => value.length > 0),
     ),
   ].sort((left, right) => left.localeCompare(right, "zh-CN"));
 }
