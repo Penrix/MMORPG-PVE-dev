@@ -96,6 +96,32 @@ character
 
 这保证 Novel Studio 读取的确实是第二模块当前接受的轻量 World Atlas，而不是历史遗留的复杂专项表。
 
+## 4.5 People-centered 关系排序
+
+第二模块已经裁决：十个 World Family 是内容覆盖轴，People-centered 是叙事关系轴。因此第三模块读取 Source Atlas typed relations 时，不再沿数据库默认的 relation/name 排序直接交给模型。
+
+Narrative Context 的关系展开顺序服从第二模块共享的：
+
+```text
+worldAtlasNarrativePriority()
+```
+
+即同一焦点对象存在大量邻接节点时，优先让模型先看到：
+
+```text
+具体人物
+  ↓
+组织 / 职位 / 人口群体
+  ↓
+地点 / 资源 / 物品 / 能力 / 信息 / 事件
+  ↓
+规则 / 技术 / 其他外围对象
+```
+
+这**不改变 Source Atlas 数据，也不删减非人物内容**，只是保证第三模块读取同一张图时继续服从第二模块的叙事轴，而不是重新退回平权邻接列表。
+
+---
+
 ## 5. Settlement 写回不双写
 
 章节正式结算继续使用已有成熟入口：
