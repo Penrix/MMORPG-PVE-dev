@@ -18,6 +18,24 @@ export interface WorldAtlasStoryContext {
   };
 }
 
+
+export type WorldAtlasContextAccess = "author" | "narrative" | "character";
+
+export function worldAtlasSourcesForAccess(
+  context: WorldAtlasStoryContext,
+  access: WorldAtlasContextAccess,
+): ContextSource[] {
+  if (access === "character") return [];
+  if (access === "narrative") {
+    return [...context.current, ...context.reference];
+  }
+  return [
+    ...context.current,
+    ...context.reference,
+    ...context.referenceDetail,
+  ];
+}
+
 export interface WorldAtlasStoryContextRequest {
   projectId: string;
   entityIds: readonly string[];
