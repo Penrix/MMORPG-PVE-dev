@@ -2,6 +2,7 @@ import {
   WORLD_BUILDER_ATLAS_CONTRACT,
   WorldPackDocumentSchema,
   worldBuilderAtlasTarget,
+  worldPackAtlasKind,
   type WorldPackDocument,
   type WorldPackRequest,
 } from "@narralume/contracts";
@@ -63,8 +64,10 @@ function subjectFor(
   const org = doc.nodes.find((n) => n.type === "organization");
   const npc = doc.nodes.find((n) => n.type === "character");
   const zone = doc.nodes.find((n) => n.type === "location");
-  const resource = doc.nodes.find(
-    (n) => n.type === "item" || n.type === "rule" || n.type === "concept",
+  const resource = doc.nodes.find((n) =>
+    ["resource", "item", "work", "ability", "rule", "technology"].includes(
+      worldPackAtlasKind(n),
+    ),
   );
   if (workshop === "factions" || workshop === "social")
     return zone?.localId ?? null;
@@ -308,10 +311,9 @@ export interface WorldWorkshopRun {
 }
 
 /**
- * Each mandatory workshop must produce a new world object/link/action.
- * Failure is explicit. The engine never marks a world playable because the
- * model claimed it "has completed all modules" in narrative text.
- * Repeatedly re-check the graph and send the NEXT actual work order.
+ * Each selected workshop must produce a real object/link/action contribution.
+ * Selection is deficiency-driven, can repeat the same workshop, and stops
+ * when blocking graph gaps are gone. The model never marks modules complete.
  */
 export async function runWorldWorkshops(args: {
   run: NarrativeRun;
