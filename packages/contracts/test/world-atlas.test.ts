@@ -31,7 +31,7 @@ describe("World Atlas content framework", () => {
     expect(WORLD_ATLAS_CONTENT_FAMILIES).toHaveLength(10);
     expect(WORLD_ATLAS_NARRATIVE_AXIS.centerKind).toBe("character");
     expect(WORLD_ATLAS_NARRATIVE_AXIS.databaseRule).toContain(
-      "not a new Database Schema",
+      "不是新的 Database Schema",
     );
     expect(worldAtlasNarrativePriority("character")).toBeLessThan(
       worldAtlasNarrativePriority("organization"),
