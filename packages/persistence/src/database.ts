@@ -46,6 +46,15 @@ import { migration042 } from "./migrations/042-cocreate-natural-speaker.js";
 import { migration043 } from "./migrations/043-persona-card-profile.js";
 import { migration044 } from "./migrations/044-lorebooks.js";
 import { migration045 } from "./migrations/045-knowledge-corrections.js";
+import { migration046 } from "./migrations/046-world-pack-drafts.js";
+import { migration047 } from "./migrations/047-world-database-crosswalk.js";
+import { migration048 } from "./migrations/048-world-map-power-production-information.js";
+import { migration049 } from "./migrations/049-shared-source-corpora.js";
+import { migration050 } from "./migrations/050-project-world-identity-and-travel.js";
+import { migration051 } from "./migrations/051-project-fork-baselines.js";
+import { migration052 } from "./migrations/052-scoped-canon-identity.js";
+import { migration053 } from "./migrations/053-source-world-encyclopedia.js";
+import { migration054 } from "./migrations/054-unified-source-world.js";
 
 export interface Migration {
   readonly version: number;
@@ -113,6 +122,15 @@ const MIGRATIONS: readonly Migration[] = [
   migration043,
   migration044,
   migration045,
+  migration046,
+  migration047,
+  migration048,
+  migration049,
+  migration050,
+  migration051,
+  migration052,
+  migration053,
+  migration054,
 ];
 
 interface MigrationRow {

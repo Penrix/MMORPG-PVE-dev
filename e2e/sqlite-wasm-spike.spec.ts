@@ -27,7 +27,8 @@ test("sqlite-wasm OPFS driver passes the persistence spike", async ({
     results: Record<string, unknown>;
   };
   expect(result.ok).toBe(true);
-  expect(result.results.migrationVersion).toBe(45);
+  // WorldPack drafts add migration 046; browser OPFS must migrate it too.
+  expect(result.results.migrationVersion).toBe(46);
   // sahpool 官方建议 exclusive + WAL；若 WAL 不可接受则退化为 delete 也算过，
   // 但要显式记录（journalMode 进结果便于诊断）。
   expect(["wal", "delete", "truncate"]).toContain(result.results.journalMode);

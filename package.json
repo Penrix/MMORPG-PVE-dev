@@ -49,7 +49,8 @@
     "typecheck": "tsc -b --pretty false && tsc -p scripts/tsconfig.json --noEmit --pretty false",
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run test:evidence && npm run licenses:check && npm run build",
     "verify:ci": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run test:evidence && npm run licenses:check",
-    "verify:release": "npm run verify:ci && npm run test:e2e && npm run test:release:recovery && npm run test:real:matrix"
+    "verify:release": "npm run verify:ci && npm run test:e2e && npm run test:release:recovery && npm run test:real:matrix",
+    "import:naruto": "tsx scripts/import-naruto.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

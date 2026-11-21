@@ -8,8 +8,17 @@
   },
   "include": ["src/**/*.ts"],
   "references": [
-    { "path": "../domain" },
-    { "path": "../context" },
-    { "path": "../llm" }
+    {
+      "path": "../domain"
+    },
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../llm"
+    },
+    {
+      "path": "../contracts"
+    }
   ]
 }

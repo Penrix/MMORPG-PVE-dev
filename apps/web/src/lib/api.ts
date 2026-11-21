@@ -1,3 +1,4 @@
+import type { WorldPackRequest, WorldPackRecord, WorldPackDocument } from "@narralume/contracts";
 import {
   type StoryStateQuery,
   type StoryStateSnapshotDto,
@@ -802,7 +803,10 @@ export type RunStepKind =
   | "assistant.stage"
   | "canon.context"
   | "canon.candidate"
-  | "canon.stage";
+  | "canon.stage"
+  | "world.context"
+  | "world.generate"
+  | "world.stage";
 
 export interface NarrativeRun {
   id: string;
@@ -3745,4 +3749,70 @@ export function getStoryLineProposals(projectId: string, signal?: AbortSignal): 
 }
 export function decideStoryLineProposal(projectId: string, setId: string, itemId: string, action: "apply" | "reject"): Promise<StoryLineProposalSetDto> {
   return requestJson(`/api/projects/${encodeURIComponent(projectId)}/compass/proposals/${encodeURIComponent(setId)}/items/${encodeURIComponent(itemId)}/decision`, jsonRequest("POST", { action }));
+}
+
+/* WorldPack is an independent world-content production run: one document
+ * contains named objects, references and NPC/organization activities. */
+export async function generateWorldPack(
+  projectId: string,
+  input: WorldPackRequest,
+): Promise<{ runId: string; idempotentReplay: boolean }> {
+  return requestJson(
+    `/api/projects/${encodeURIComponent(projectId)}/world-packs/generate`,
+    jsonRequest("POST", input),
+  );
+}
+
+export async function listWorldPacks(
+  projectId: string,
+  signal?: AbortSignal,
+): Promise<WorldPackRecord[]> {
+  return requestJson(
+    `/api/projects/${encodeURIComponent(projectId)}/world-packs`,
+    signal ? { signal } : {},
+  );
+}
+
+export async function reviseWorldPack(
+  projectId: string,
+  packId: string,
+  expectedVersion: number,
+  document: WorldPackDocument,
+): Promise<WorldPackRecord> {
+  return requestJson(
+    `/api/projects/${encodeURIComponent(projectId)}/world-packs/${encodeURIComponent(packId)}`,
+    jsonRequest("PUT", { expectedVersion, document }),
+  );
+}
+
+export async function adoptWorldPack(
+  projectId: string,
+  packId: string,
+  expectedVersion: number,
+): Promise<WorldPackRecord> {
+  return requestJson(
+    `/api/projects/${encodeURIComponent(projectId)}/world-packs/${encodeURIComponent(packId)}/adopt`,
+    jsonRequest("POST", { expectedVersion }),
+  );
+}
+
+export async function getWorldGraph(
+  projectId: string,
+  centerId?: string,
+  signal?: AbortSignal,
+): Promise<{
+  nodes: CanonEntity[];
+  edges: Array<{
+    id: string; from: string; to: string;
+    relation: string; description: string; source: "relationship" | "fact";
+  }>;
+  ongoingActivities: Array<{
+    id: string; actorId: string; detail: unknown; sourceId: string | null;
+  }>;
+}> {
+  const query = centerId ? `?centerId=${encodeURIComponent(centerId)}&hops=2` : "";
+  return requestJson(
+    `/api/projects/${encodeURIComponent(projectId)}/world-graph${query}`,
+    signal ? { signal } : {},
+  );
 }

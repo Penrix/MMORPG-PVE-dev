@@ -5,6 +5,8 @@ export const shell = {
     shelfBlurb: "作品编目、检索与建书入口",
     overview: "项目概览",
     overviewBlurb: "当前进度、活动任务与下一步",
+    world: "世界生成",
+    worldBlurb: "W0世界底图、W1新地图、人物与价值内容生产",
     bible: "故事",
     bibleBlurb: "意图、人物、大纲与故事事实",
     studio: "写作",

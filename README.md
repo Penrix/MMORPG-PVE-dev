@@ -1,3 +1,7 @@
+> **MMORPG-PVE development fork (Penrix):** Architecture, open-source source mapping and current prototype audit: [docs/mmorpg/README.md](docs/mmorpg/README.md). W0/W1 now has a typed WorldPack generation/revision pipeline, graph relations and atomic Canon adoption. It reimplements ideas from Covel/WorldForge, not their original code; CI and real-model quality are not yet verified. See [WorldPack implementation](docs/mmorpg/04-world-pack-implementation.md). The original NarraLume documentation continues below.
+
+---
+
 <p align="center">
   <img src="assets/narralume-logo-wide.svg" alt="NarraLume · 叙灯" width="960">
 </p>

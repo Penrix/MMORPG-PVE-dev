@@ -13,6 +13,9 @@ export default tseslint.config(
       "playwright-report/**",
       "test-results/**",
       "data/**",
+      // Vendored upstream WorldForge engine retains its own style and type conventions.
+      // Our NarraLume adapter and tests remain fully linted.
+      "packages/narrative/src/vendor/worldforge/full/**",
       "*.sqlite*",
     ],
   },

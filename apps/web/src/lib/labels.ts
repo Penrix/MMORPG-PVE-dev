@@ -68,7 +68,7 @@ export function runStatusShortLabel(status: string): string {
 }
 
 export function runStepLabel(kind: RunStepKind): string {
-  const keys: Record<RunStepKind, MessageKey> = {
+  const keys: Partial<Record<RunStepKind, MessageKey>> = {
     "context.compile": "labels.runStepKind.contextCompile",
     "scene.plan": "labels.runStepKind.scenePlan",
     "draft.generate": "labels.runStepKind.draftGenerate",
@@ -102,7 +102,14 @@ export function runStepLabel(kind: RunStepKind): string {
     "canon.candidate": "labels.runStepKind.canonCandidate",
     "canon.stage": "labels.runStepKind.canonStage",
   };
-  return translate(getLocale(), keys[kind]);
+  const key = keys[kind];
+  if (key) return translate(getLocale(), key);
+  const world: Partial<Record<RunStepKind, string>> = {
+    "world.context": "装配世界资料与已有Reality",
+    "world.generate": "生产完整世界包",
+    "world.stage": "保存世界包候选",
+  };
+  return world[kind] ?? kind;
 }
 
 export function runModeLabel(mode: NarrativeRun["mode"]): string {

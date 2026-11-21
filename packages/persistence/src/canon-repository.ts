@@ -9,6 +9,7 @@ interface EntityRow {
   project_id: string;
   type: CanonEntity["type"];
   name: string;
+  world_scope_id: string;
   aliases_json: string;
   description: string | null;
   attributes_json: string;
@@ -56,9 +57,9 @@ export class SqliteCanonRepository {
       .prepare(
         `
         INSERT INTO canon_entities(
-          id, project_id, type, name, aliases_json, description, attributes_json,
+          id, project_id, type, name, world_scope_id, aliases_json, description, attributes_json,
           status, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -66,6 +67,7 @@ export class SqliteCanonRepository {
         entity.projectId,
         entity.type,
         entity.name,
+        entity.worldScopeId ?? null,
         JSON.stringify(entity.aliases),
         entity.description,
         JSON.stringify(entity.attributes),
@@ -80,13 +82,14 @@ export class SqliteCanonRepository {
     const result = this.database.raw
       .prepare(
         `
-        UPDATE canon_entities SET name = ?, aliases_json = ?, description = ?,
+        UPDATE canon_entities SET name = ?, world_scope_id = COALESCE(?, world_scope_id), aliases_json = ?, description = ?,
           attributes_json = ?, status = ?, updated_at = ?
         WHERE project_id = ? AND id = ?
       `,
       )
       .run(
         entity.name,
+        entity.worldScopeId ?? "",
         JSON.stringify(entity.aliases),
         entity.description,
         JSON.stringify(entity.attributes),
@@ -399,6 +402,7 @@ function mapEntity(row: EntityRow): CanonEntity {
     projectId: row.project_id,
     type: row.type,
     name: row.name,
+    ...(row.world_scope_id ? { worldScopeId: row.world_scope_id } : {}),
     aliases: parseStringArray(row.aliases_json),
     description: row.description,
     attributes: parseObject(row.attributes_json),

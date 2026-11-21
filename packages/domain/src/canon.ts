@@ -18,6 +18,8 @@ export interface CanonEntity {
   projectId: ProjectId;
   type: CanonEntityType;
   name: string;
+  /** Optional world/realm identity scope, not part of the displayed name. */
+  worldScopeId?: string;
   aliases: readonly string[];
   description: string | null;
   attributes: Readonly<Record<string, unknown>>;
@@ -50,6 +52,8 @@ export interface CreateCanonEntityInput {
   projectId: ProjectId;
   type: CanonEntityType;
   name: string;
+  /** Different world spaces may have separate people with exactly this name. */
+  worldScopeId?: string;
   aliases?: readonly string[];
   description?: string | null;
   attributes?: Readonly<Record<string, unknown>>;
@@ -73,6 +77,7 @@ export function createCanonEntity(input: CreateCanonEntityInput): CanonEntity {
     projectId: input.projectId,
     type: input.type,
     name,
+    ...(input.worldScopeId ? { worldScopeId: input.worldScopeId } : {}),
     aliases: aliases.filter((alias) => alias !== name),
     description: input.description?.trim() || null,
     attributes: input.attributes ?? {},

@@ -629,6 +629,7 @@ export function registerStoryRoutes(
       now: new Date().toISOString(),
       type: input.type,
       name: input.name,
+      ...(input.worldScopeId ? { worldScopeId: input.worldScopeId } : {}),
       aliases: input.aliases,
       description: input.description ?? null,
       attributes: input.attributes,

@@ -5,6 +5,7 @@ import {
   Compass,
   Cpu,
   LibraryBig,
+  Map,
   PenLine,
   Radar,
 
@@ -54,6 +55,17 @@ export const WORKSPACES: WorkspaceDef[] = [
     icon: Compass,
     blurb: "shell.nav.overviewBlurb",
     seal: "览",
+  },
+  {
+    id: "world",
+    path: "/projects/:projectId/world",
+    projectScoped: true,
+    label: "shell.nav.world",
+    en: "WORLD",
+    index: "W0",
+    icon: Map,
+    blurb: "shell.nav.worldBlurb",
+    seal: "界",
   },
   {
     id: "bible",

@@ -1,0 +1,53 @@
+name: World port one-branch formatting
+
+on:
+  push:
+    branches:
+      - feat/world-builder-w0-w1-mvp
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: world-port-format
+  cancel-in-progress: false
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: true
+          ref: feat/world-builder-w0-w1-mvp
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format only authored code and documents, not original research or vendored algorithms
+        run: npx prettier --write .
+      - name: Commit formatted changes to the same development branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing needs formatting"
+          else
+            git commit -m "style(world): format port integration without touching upstream research"
+            # A code-writing session may push while Prettier is working.
+            # Rebase the purely stylistic commit against the latest remote
+            # instead of failing on a routine non-fast-forward push.
+            for attempt in 1 2 3 4; do
+              git fetch origin feat/world-builder-w0-w1-mvp
+              git rebase origin/feat/world-builder-w0-w1-mvp
+              if git push origin HEAD:refs/heads/feat/world-builder-w0-w1-mvp; then
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "Unable to push formatted files after four attempts" >&2
+            exit 1
+          fi
