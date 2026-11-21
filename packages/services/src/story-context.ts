@@ -8,6 +8,7 @@ import {
   SqliteCanonRepository,
   SqliteContextReceiptRepository,
   WorldAtlasStoryContextBuilder,
+  worldAtlasSourcesForAccess,
   SqliteRetrievalRepository,
   SqliteStoryRepository,
   type NarrativeDatabase,
@@ -130,15 +131,19 @@ export class StoryContextPreviewService {
       ),
     );
 
-    const atlas = this.worldAtlas.build({
-      projectId: input.projectId,
-      entityIds: input.entityIds,
-    });
-    sources.push(
-      ...atlas.current,
-      ...atlas.reference,
-      ...atlas.referenceDetail,
-    );
+    // Context Preview must obey the same authority boundary as production.
+    // Character/reader previews cannot inherit author-level Project Reality or
+    // full mother-world Atlas prose merely because the database contains it.
+    if (
+      input.access.audience === "author" ||
+      input.access.audience === "omniscient"
+    ) {
+      const atlas = this.worldAtlas.build({
+        projectId: input.projectId,
+        entityIds: input.entityIds,
+      });
+      sources.push(...worldAtlasSourcesForAccess(atlas, "author"));
+    }
 
     for (const hit of this.retrieval.search(input.projectId, input.query, {
       entityIds: input.entityIds,
