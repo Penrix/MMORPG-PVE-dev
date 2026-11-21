@@ -454,7 +454,11 @@ export class SqliteSourceCorpusRepository {
         AND presence.active=0
     )`);
     if (options.kind) {
-      if (isLegacySourceKind(options.kind)) {
+      if (options.kind === "other") {
+        clauses.push(
+          "r.kind='other' AND json_extract(r.raw_json,'$.atlasCardKind') IS NULL",
+        );
+      } else if (isLegacySourceKind(options.kind)) {
         clauses.push("r.kind=?");
         args.push(options.kind);
       } else {
