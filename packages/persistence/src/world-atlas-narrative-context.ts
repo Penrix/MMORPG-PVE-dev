@@ -1,13 +1,15 @@
 import type { ContextSource } from "@narralume/context";
 import { worldAtlasNarrativePriority } from "@narralume/contracts";
+import type { NarrativeDatabase } from "./database.js";
 import {
   SqliteProjectRealityRepository,
-  SqliteSourceCorpusRepository,
-  SqliteUnifiedSourceWorldRepository,
-  type NarrativeDatabase,
   type ProjectRealityView,
+} from "./project-reality-repository.js";
+import { SqliteSourceCorpusRepository } from "./source-corpus-repository.js";
+import {
+  SqliteUnifiedSourceWorldRepository,
   type SourceWorldCard,
-} from "@narralume/persistence";
+} from "./unified-source-world-repository.js";
 
 export interface WorldAtlasNarrativeContextRequest {
   projectId: string;
