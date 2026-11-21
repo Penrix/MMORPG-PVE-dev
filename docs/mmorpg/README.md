@@ -7,6 +7,7 @@
 第二模块已经收敛为 **Source World Markdown Card + typed relations + Project Reality**。当前任务不是重写小说流程，而是让 NarraLume 既有 Novel Studio 正式消费这套结构，并继续使用原有 settlement 单一写入口。第一模块不在本分支范围内。
 
 - **第三模块当前合同：[17 Novel Studio 接入 World Atlas / Project Reality](17-module3-world-atlas-integration.md)**。定义 Project Reality / Source Atlas 权威层、POV 认知边界、Chapter / Co-create / Assistant 接线和 settlement 单写原则。
+- **第三模块故事核心：[18 Story Runtime Core](18-story-runtime-core.md)**。冻结 Reality → Character Observation → independent Action → World Arbitration → speculative delta → Narrative Director / Horizon Rehearsal 的核心；NarraLume 原生 Chapter Pipeline 保留为正文生产下半段。
 - **第二模块轻量核心：[13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)**。Source World 卡片正文是真相，typed links 是关系，索引可重建。
 
 - **最新且最高优先级：[13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)**。后续 Source World 开发先读此文；若与 10～12 的旧设计复杂度冲突，以 13 为准。\n- **世界内容语言：[14 World Atlas 世界内容框架](14-world-atlas-content-framework-v01.md)**。v0.1～v0.7 是 Content Schema，不是 SQL Schema；十个 World Family 是并排的内容覆盖轴。\n- **叙事重心：[15 People-Centered Narrative Axis](15-people-centered-narrative-axis.md)**。人物是默认图谱展开、检索和 LLM Context 的中心，但不改数据库层级；两条轴共享同一批 Card + Typed Edge。
