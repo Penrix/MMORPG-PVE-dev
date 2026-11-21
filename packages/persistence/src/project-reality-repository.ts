@@ -13,6 +13,10 @@ import {
   SqliteWorldEncyclopediaRepository,
   type WorldEntityDossier,
 } from "./world-encyclopedia-repository.js";
+import {
+  SqliteUnifiedSourceWorldRepository,
+  type SourceWorldCard,
+} from "./unified-source-world-repository.js";
 
 export type RealityFacet =
   | "claim"
@@ -64,12 +68,18 @@ export interface RealitySourceReference {
   link: ProjectSourceIdentity;
   dossier: MotherWorldDossier;
 }
+export interface RealitySourceAtlasReference {
+  link: ProjectSourceIdentity;
+  card: SourceWorldCard;
+}
 export interface ProjectRealityView {
   entity: CanonEntity;
   projectId: string;
   asOfSequence: number | null;
   branchId: string | null;
-  /** The source wiki is always a reference, not a claim about Project future. */
+  /** Lightweight World Atlas cards are the preferred Source World baseline. */
+  sourceAtlasReferences: RealitySourceAtlasReference[];
+  /** Legacy specialist dossier is retained only as compatibility/reference detail. */
   sourceReferences: RealitySourceReference[];
   /** More than one confirmed source counterpart needs explicit selection. */
   ambiguousSourceBaseline: boolean;
@@ -126,6 +136,51 @@ const slot = (
 /** Deterministic reference facets, without inventing any source-world facts.
  * The original complete dossier remains available in sourceReferences.
  */
+function sourceAtlasSlots(card: SourceWorldCard): RealitySlot[] {
+  const corpusId = card.record.corpusId;
+  const sourceKey = card.record.sourceKey;
+  const out: RealitySlot[] = [
+    slot("state", "description", card.record.summary, corpusId, sourceKey),
+    slot("state", "source_record", card.record.raw, corpusId, sourceKey),
+    slot(
+      "lore",
+      "card",
+      {
+        kind: card.record.kind,
+        name: card.record.name,
+        content: card.content,
+      },
+      corpusId,
+      sourceKey,
+    ),
+  ];
+  for (const relation of card.relations) {
+    out.push(
+      slot(
+        "relationship",
+        JSON.stringify([
+          relation.direction,
+          relation.displayRelation,
+          relation.fromKey,
+          relation.toKey,
+        ]),
+        {
+          direction: relation.direction,
+          relation: relation.displayRelation,
+          fromKey: relation.fromKey,
+          toKey: relation.toKey,
+          otherName: relation.otherName,
+          otherKind: relation.otherKind,
+          sourceNote: relation.sourceNote,
+        },
+        corpusId,
+        sourceKey,
+      ),
+    );
+  }
+  return out;
+}
+
 function sourceSlots(dossier: MotherWorldDossier): RealitySlot[] {
   const c = dossier.record.corpusId;
   const k = dossier.record.sourceKey;
@@ -204,12 +259,14 @@ export class SqliteProjectRealityRepository {
   private readonly canon: SqliteCanonRepository;
   private readonly worlds: SqliteProjectWorldRepository;
   private readonly source: SqliteMotherWorldEncyclopediaRepository;
+  private readonly atlas: SqliteUnifiedSourceWorldRepository;
   private readonly project: SqliteWorldEncyclopediaRepository;
 
   constructor(private readonly db: NarrativeDatabase) {
     this.canon = new SqliteCanonRepository(db);
     this.worlds = new SqliteProjectWorldRepository(db);
     this.source = new SqliteMotherWorldEncyclopediaRepository(db);
+    this.atlas = new SqliteUnifiedSourceWorldRepository(db);
     this.project = new SqliteWorldEncyclopediaRepository(db);
   }
 
@@ -394,6 +451,7 @@ export class SqliteProjectRealityRepository {
       )
       .all(projectId) as Array<{ corpus_id: string }>;
     const enabled = new Set(linked.map((x) => x.corpus_id));
+    const sourceAtlasReferences: RealitySourceAtlasReference[] = [];
     const sourceReferences: RealitySourceReference[] = [];
     const unique = new Set<string>();
     for (const link of accepted) {
@@ -401,15 +459,22 @@ export class SqliteProjectRealityRepository {
       const id = JSON.stringify([link.corpusId, link.sourceKey]);
       if (unique.has(id)) continue;
       unique.add(id);
+      const card = this.atlas.getCardByCorpus(link.corpusId, link.sourceKey);
+      if (card) sourceAtlasReferences.push({ link, card });
       const dossier = this.source.getDossier(link.corpusId, link.sourceKey);
       if (dossier) sourceReferences.push({ link, dossier });
     }
-    const ambiguousSourceBaseline = sourceReferences.length > 1;
-    // Do not merge competing authoritatively distinct source records.
+    const ambiguousSourceBaseline = unique.size > 1;
+    // Lightweight Atlas card is the preferred Source World truth. The old
+    // specialist dossier is only a fallback for material not yet migrated.
     const effective = new Map<string, RealitySlot>();
-    if (sourceReferences.length === 1)
+    if (sourceAtlasReferences.length === 1 && !ambiguousSourceBaseline) {
+      for (const part of sourceAtlasSlots(sourceAtlasReferences[0]!.card))
+        effective.set(keyFor(part.facet, part.slotKey), part);
+    } else if (sourceAtlasReferences.length === 0 && sourceReferences.length === 1) {
       for (const part of sourceSlots(sourceReferences[0]!.dossier))
         effective.set(keyFor(part.facet, part.slotKey), part);
+    }
 
     const historical = asOfSequence !== null;
     const currentProjectDossier = historical
@@ -433,6 +498,18 @@ export class SqliteProjectRealityRepository {
           value: entries.map((f) =>
             f.objectEntityId ? { objectEntityId: f.objectEntityId } : f.value,
           ),
+          origin: "project",
+          revisionId: null,
+          sourceCorpusId: null,
+          sourceKey: null,
+        });
+      // relationship_events remains the native truth written by Novel Studio.
+      // Project Reality only projects it into the same typed relationship view.
+      for (const relation of currentProjectDossier.network)
+        effective.set(keyFor("relationship", relation.id), {
+          facet: "relationship",
+          slotKey: relation.id,
+          value: relation,
           origin: "project",
           revisionId: null,
           sourceCorpusId: null,
@@ -466,6 +543,7 @@ export class SqliteProjectRealityRepository {
       projectId,
       asOfSequence,
       branchId,
+      sourceAtlasReferences,
       sourceReferences,
       ambiguousSourceBaseline,
       effectiveSlots: [...effective.values()].sort((a, b) =>
