@@ -11,7 +11,7 @@ import {
   Save,
   Search,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { ErrorNote } from "../components/error-note";
 import { PageBand } from "../components/page-band";
@@ -90,40 +90,33 @@ export function WorldAtlasWorkspace() {
     queryFn: ({ signal }) => listAtlasWorlds(signal),
   });
 
-  useEffect(() => {
-    if (!worldId && worlds.data?.length) setWorldId(worlds.data[0]!.id);
-  }, [worldId, worlds.data]);
+  const activeWorldId = worldId ?? worlds.data?.[0]?.id ?? null;
 
   const cards = useQuery({
-    queryKey: ["atlas", worldId, "cards", query, kind],
-    enabled: Boolean(worldId),
+    queryKey: ["atlas", activeWorldId, "cards", query, kind],
+    enabled: Boolean(activeWorldId),
     queryFn: ({ signal }) =>
       listAtlasCards(
-        worldId!,
+        activeWorldId!,
         { q: query, ...(kind ? { kind } : {}), limit: 200 },
         signal,
       ),
   });
 
+  const activeSelectedKey = selectedKey ?? cards.data?.[0]?.sourceKey ?? null;
+
   const card = useQuery({
-    queryKey: ["atlas", worldId, "card", selectedKey],
-    enabled: Boolean(worldId && selectedKey),
-    queryFn: ({ signal }) => getAtlasCard(worldId!, selectedKey!, signal),
+    queryKey: ["atlas", activeWorldId, "card", activeSelectedKey],
+    enabled: Boolean(activeWorldId && activeSelectedKey),
+    queryFn: ({ signal }) =>
+      getAtlasCard(activeWorldId!, activeSelectedKey!, signal),
   });
 
-  useEffect(() => {
-    if (card.data) {
-      setDraft(draftFromCard(card.data));
-      setUnresolved([]);
-    }
-  }, [card.data]);
-
-  useEffect(() => {
-    if (!selectedKey && cards.data?.length) setSelectedKey(cards.data[0]!.sourceKey);
-  }, [cards.data, selectedKey]);
-
-  const currentWorld = worlds.data?.find((world) => world.id === worldId) ?? null;
+  const currentWorld =
+    worlds.data?.find((world) => world.id === activeWorldId) ?? null;
   const currentCard = card.data ?? null;
+  const activeDraft =
+    draft ?? (currentCard ? draftFromCard(currentCard) : null);
 
   const createWorld = useMutation({
     mutationFn: async () => {
@@ -157,27 +150,27 @@ export function WorldAtlasWorkspace() {
       if (!payload.name) throw new Error("卡片名称不能为空");
       if (!payload.content.trim()) throw new Error("卡片正文不能为空");
       return value.isNew
-        ? createAtlasCard(worldId!, { entityKey: value.entityKey, ...payload })
-        : updateAtlasCard(worldId!, value.entityKey, payload);
+        ? createAtlasCard(activeWorldId!, { entityKey: value.entityKey, ...payload })
+        : updateAtlasCard(activeWorldId!, value.entityKey, payload);
     },
     onSuccess: async (result) => {
       setUnresolved(result.unresolvedLinks);
       setSelectedKey(result.card.record.sourceKey);
       setDraft(draftFromCard(result.card));
-      await queryClient.invalidateQueries({ queryKey: ["atlas", worldId, "cards"] });
+      await queryClient.invalidateQueries({ queryKey: ["atlas", activeWorldId, "cards"] });
       queryClient.setQueryData(
-        ["atlas", worldId, "card", result.card.record.sourceKey],
+        ["atlas", activeWorldId, "card", result.card.record.sourceKey],
         result.card,
       );
     },
   });
 
   const reindex = useMutation({
-    mutationFn: () => reindexAtlasCard(worldId!, selectedKey!),
+    mutationFn: () => reindexAtlasCard(activeWorldId!, activeSelectedKey!),
     onSuccess: (result) => {
       setUnresolved(result.unresolvedLinks);
       queryClient.setQueryData(
-        ["atlas", worldId, "card", result.card.record.sourceKey],
+        ["atlas", activeWorldId, "card", result.card.record.sourceKey],
         result.card,
       );
     },
@@ -208,6 +201,8 @@ export function WorldAtlasWorkspace() {
 
   const openRelation = (relation: NonNullable<typeof currentCard>["relations"][number]) => {
     setSelectedKey(relation.direction === "out" ? relation.toKey : relation.fromKey);
+    setDraft(null);
+    setUnresolved([]);
   };
 
   return (
@@ -273,7 +268,7 @@ export function WorldAtlasWorkspace() {
                 key={world.id}
                 type="button"
                 className="world-atlas__world"
-                aria-pressed={world.id === worldId}
+                aria-pressed={world.id === activeWorldId}
                 onClick={() => selectWorld(world.id)}
               >
                 <strong>{world.name}</strong>
@@ -293,7 +288,7 @@ export function WorldAtlasWorkspace() {
               <small>世界卡片</small>
               <h2>{currentWorld?.name ?? "Cards"}</h2>
             </div>
-            <button className="btn btn--primary" type="button" disabled={!worldId} onClick={newCard}>
+            <button className="btn btn--primary" type="button" disabled={!activeWorldId} onClick={newCard}>
               <Plus size={14} /> 新卡片
             </button>
           </div>
@@ -313,9 +308,9 @@ export function WorldAtlasWorkspace() {
               <button
                 type="button"
                 key={entry.sourceKey}
-                aria-pressed={entry.sourceKey === selectedKey}
+                aria-pressed={entry.sourceKey === activeSelectedKey}
                 className="world-atlas__card-row"
-                onClick={() => setSelectedKey(entry.sourceKey)}
+                onClick={() => { setSelectedKey(entry.sourceKey); setDraft(null); setUnresolved([]); }}
               >
                 <span className="world-atlas__kind">{KINDS.find((item) => item.value === entry.kind)?.label ?? entry.kind}</span>
                 <strong>{entry.name}</strong>
@@ -327,15 +322,15 @@ export function WorldAtlasWorkspace() {
         </section>
 
         <main className="world-atlas__editor">
-          {draft ? (
+          {activeDraft ? (
             <>
               <div className="world-atlas__section-head">
                 <div>
-                  <small>{draft.isNew ? "新建卡片" : draft.entityKey}</small>
-                  <h2>{draft.name || "未命名卡片"}</h2>
+                  <small>{activeDraft.isNew ? "新建卡片" : activeDraft.entityKey}</small>
+                  <h2>{activeDraft.name || "未命名卡片"}</h2>
                 </div>
                 <div className="world-atlas__actions">
-                  {!draft.isNew ? (
+                  {!activeDraft.isNew ? (
                     <button
                       className="btn"
                       type="button"
@@ -349,8 +344,8 @@ export function WorldAtlasWorkspace() {
                   <button
                     className="btn btn--primary"
                     type="button"
-                    disabled={!worldId || saveCard.isPending}
-                    onClick={() => saveCard.mutate(draft)}
+                    disabled={!activeWorldId || saveCard.isPending}
+                    onClick={() => saveCard.mutate(activeDraft)}
                   >
                     <Save size={14} /> {saveCard.isPending ? "保存中…" : "保存卡片"}
                   </button>
@@ -358,19 +353,19 @@ export function WorldAtlasWorkspace() {
               </div>
 
               <div className="world-atlas__meta">
-                {draft.isNew ? (
+                {activeDraft.isNew ? (
                   <label>
                     卡片 ID
-                    <input value={draft.entityKey} onChange={(event) => setDraft({ ...draft, entityKey: event.target.value })} />
+                    <input value={activeDraft.entityKey} onChange={(event) => setDraft({ ...activeDraft, entityKey: event.target.value })} />
                   </label>
                 ) : null}
                 <label>
                   名称
-                  <input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
+                  <input value={activeDraft.name} onChange={(event) => setDraft({ ...activeDraft, name: event.target.value })} />
                 </label>
                 <label>
                   类型
-                  <select value={draft.kind} onChange={(event) => setDraft({ ...draft, kind: event.target.value as AtlasSourceKind })}>
+                  <select value={activeDraft.kind} onChange={(event) => setDraft({ ...activeDraft, kind: event.target.value as AtlasSourceKind })}>
                     {KINDS.filter((entry) => entry.value).map((entry) => (
                       <option key={entry.value} value={entry.value}>{entry.label}</option>
                     ))}
@@ -379,8 +374,8 @@ export function WorldAtlasWorkspace() {
                 <label className="world-atlas__aliases">
                   别名
                   <input
-                    value={draft.aliases}
-                    onChange={(event) => setDraft({ ...draft, aliases: event.target.value })}
+                    value={activeDraft.aliases}
+                    onChange={(event) => setDraft({ ...activeDraft, aliases: event.target.value })}
                     placeholder="多个别名用、或逗号分隔"
                   />
                 </label>
@@ -393,8 +388,8 @@ export function WorldAtlasWorkspace() {
 
               <textarea
                 className="world-atlas__markdown"
-                value={draft.content}
-                onChange={(event) => setDraft({ ...draft, content: event.target.value })}
+                value={activeDraft.content}
+                onChange={(event) => setDraft({ ...activeDraft, content: event.target.value })}
                 spellCheck={false}
                 aria-label="世界卡片 Markdown"
               />
@@ -408,7 +403,7 @@ export function WorldAtlasWorkspace() {
                 </div>
               ) : null}
 
-              {!draft.isNew && currentCard ? (
+              {!activeDraft.isNew && currentCard ? (
                 <section className="world-atlas__relations">
                   <div className="world-atlas__relations-title">
                     <Network size={17} />
