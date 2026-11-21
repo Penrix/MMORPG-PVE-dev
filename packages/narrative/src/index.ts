@@ -32,3 +32,6 @@ export * from "./world-pack-workers.js";
 export * from "./story-runtime.js";
 export * from "./vendor/novel-studio/character-agent-protocol.js";
 export * from "./story-runtime-workers.js";
+
+export * from "./expectation-runtime.js";
+export * from "./expectation-runtime-workers.js";
