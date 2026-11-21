@@ -347,6 +347,59 @@ World Atlas Card + Typed Relation / Project Reality
 
 ---
 
+## 7.5 WorldPack 粗类型与 Atlas 逻辑类型
+
+NarraLume 旧 WorldPack / Canon 只认识六种粗类型：
+
+```text
+character / location / organization / item / rule / concept
+```
+
+但第二模块 World Atlas 已经拥有更细的世界语言：
+
+```text
+resource / information / position / ability / technology / work / event ...
+```
+
+因此第一模块采用**双层类型兼容**，而不是重建数据库：
+
+```text
+Atlas logical kind         WorldPack coarse staging type
+resource                → item
+work                    → item
+ability                 → rule
+information             → concept
+position / institution  → concept
+technology              → concept
+event / activity        → concept
+creature                → character
+```
+
+新生成的 WorldPack 节点必须同时携带：
+
+```text
+type       = 旧底座兼容类型
+atlasKind  = 真正的 World Atlas Card Type
+```
+
+例如：
+
+```json
+{
+  "type": "item",
+  "atlasKind": "resource",
+  "name": "查克拉金属"
+}
+```
+
+采用到 Project Reality 后，`atlasKind` 保存在 Canon attributes / world.content 中；下一轮 World Builder 再读取 Reality 时恢复该逻辑类型。
+
+旧 WorldPack 没有 `atlasKind` 仍然可以读取，但只保留粗粒度语义，不凭空猜它过去究竟是“信息”“职位”还是“技术”。
+
+> **这层兼容的目的正是让第一模块开始说第二模块的世界语言，同时不把 Content Schema 的成长错误翻译成 SQL/Canon Schema 重构。**
+
+---
+
 ## 8. 防重犯
 
 ```text
