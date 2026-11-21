@@ -89,7 +89,7 @@ import { StoryStatePacketBuilder } from "./story-state-packet.js";
 import {
   WorldAtlasStoryContextBuilder,
   worldAtlasSourcesForAccess,
-} from "./world-atlas-story-context.js";
+} from "@narralume/persistence";
 import {
   REVIEW_CONTRACT,
   ReviewResultSchema,
