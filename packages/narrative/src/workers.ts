@@ -86,7 +86,10 @@ import {
   promptInvariants,
 } from "@narralume/harness";
 import { StoryStatePacketBuilder } from "./story-state-packet.js";
-import { WorldAtlasStoryContextBuilder } from "./world-atlas-story-context.js";
+import {
+  WorldAtlasStoryContextBuilder,
+  worldAtlasSourcesForAccess,
+} from "./world-atlas-story-context.js";
 import {
   REVIEW_CONTRACT,
   ReviewResultSchema,
@@ -672,16 +675,15 @@ export class ChapterWorkerSuite {
       const characterBoundPurpose =
         statePacket === draftStoryStatePacket &&
         draftStoryStatePacket !== authorStoryStatePacket;
+      const atlasAccess = authorPurpose
+        ? "author"
+        : characterBoundPurpose
+          ? "character"
+          : "narrative";
       const purposeSources = [
         ...sources,
         ...entitySources(statePacket === authorStoryStatePacket),
-        // Preserve the existing POV/knowledge boundary. Author-side steps can
-        // inspect the complete current Reality and the mother-world reference.
-        // A character-bound draft/revision relies on StoryStatePacket instead
-        // of receiving omniscient Project Reality slots.
-        ...(!characterBoundPurpose ? worldAtlasContext.current : []),
-        ...(!characterBoundPurpose ? worldAtlasContext.reference : []),
-        ...(authorPurpose ? worldAtlasContext.referenceDetail : []),
+        ...worldAtlasSourcesForAccess(worldAtlasContext, atlasAccess),
         ...statePacket.sources,
       ];
       const purposeInventoryDigest = sha256(
