@@ -198,8 +198,10 @@ function hasWorkshopOutput(
   );
   const resources = new Set(
     current.nodes
-      .filter(
-        (n) => n.type === "item" || n.type === "concept" || n.type === "rule",
+      .filter((n) =>
+        ["resource", "item", "work", "ability", "rule", "technology"].includes(
+          worldPackAtlasKind(n),
+        ),
       )
       .map((n) => n.localId),
   );
@@ -263,7 +265,7 @@ function hasWorkshopOutput(
   if (workshop === "power")
     return current.nodes.some(
       (n) =>
-        n.type === "rule" &&
+        ["ability", "rule", "technology"].includes(worldPackAtlasKind(n)) &&
         (added.some((x) => x.localId === n.localId) ||
           edges.some((e) => e.fromRef === n.localId || e.toRef === n.localId)),
     );
