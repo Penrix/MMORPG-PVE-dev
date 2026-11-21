@@ -42,7 +42,7 @@
 
 - GitHub Fork：[`Penrix/MMORPG-PVE-dev`](https://github.com/Penrix/MMORPG-PVE-dev)，**当前公开**。
 - 原 NarraLume 正文生成、版本、审阅、知识、Canon 和状态管理保持不变。
-- 旧版只是提示词/Canonical候选接线原型；现在已经新增**独立WorldPack生成链、SQLite包级候选、引用校验、原子采纳和世界图查询代码**，但尚未完成CI或真实模型验收。其中部分第三方机制已实际移植 MIT 原始源码，且投入运行路径，详见 [05 移植记录](05-actual-upstream-ports.md)；完整引擎尚待续迁。
+- 旧版只是提示词/Canonical候选接线原型；现在已经有**独立 WorldPack 生产链、候选审阅、引用校验、原子采纳和世界图查询代码**。本轮正在把它重新解释并改造成 **World Atlas Content Producer**：共享 Production Crosswalk、Atlas 缺口审计、People-centered work order 和缺口驱动的开放 workshop 队列已经进入代码，但仍需本分支 CI 与实际模型验收。
 - 本目录文档属于设计与实现指导，**不是**已通过模型/CI 验收的功能声明。
 - 完整 v0.1～v0.7 七个独立研究版本已在用户明确公开授权下收入 [research](research/README.md)；旧 Atlas 在原仓库。原文不能被运行时摘录或简要指南替换。
 
