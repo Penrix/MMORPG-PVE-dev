@@ -44,7 +44,7 @@ describe("World Atlas content framework API", () => {
     expect(framework.json().version).toBe("0.1");
     expect(framework.json().narrativeAxis.centerKind).toBe("character");
     expect(framework.json().narrativeAxis.databaseRule).toContain(
-      "not a new Database Schema",
+      "不是新的 Database Schema",
     );
     expect(
       framework.json().contentFamilies.map((entry: { id: string }) => entry.id),
