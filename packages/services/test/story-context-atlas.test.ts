@@ -25,7 +25,7 @@ afterEach(() => {
 
 function setup() {
   db = new NodeNarrativeDatabase();
-  expect(db.migrate()).toBe(54);
+  expect(db.migrate()).toBe(55);
 
   new SqliteProjectRepository(db).insert(
     createProject({ id: "p1", title: "火影同人", now }),
