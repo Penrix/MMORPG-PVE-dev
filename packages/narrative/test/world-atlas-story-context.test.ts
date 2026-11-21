@@ -13,7 +13,10 @@ import {
 import { NodeNarrativeDatabase } from "@narralume/persistence/node";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { WorldAtlasStoryContextBuilder } from "../src/world-atlas-story-context.js";
+import {
+  WorldAtlasStoryContextBuilder,
+  worldAtlasSourcesForAccess,
+} from "../src/world-atlas-story-context.js";
 
 const now = "2026-11-21T10:00:00.000Z";
 let db: NodeNarrativeDatabase;
@@ -144,6 +147,60 @@ describe("Module 3 World Atlas context adapter", () => {
       entities: 1,
       ambiguousSourceBaselines: 0,
     });
+  });
+
+  it("enforces author, narrative, and character Atlas access without leaking full source cards", () => {
+    const context = {
+      current: [
+        {
+          id: "current",
+          kind: "canon" as const,
+          label: "current",
+          content: "PROJECT-SECRET",
+          authority: "confirmed" as const,
+          priority: 1,
+          sourceType: "project_reality",
+        },
+      ],
+      reference: [
+        {
+          id: "reference",
+          kind: "canon" as const,
+          label: "reference",
+          content: "SOURCE-BASELINE",
+          authority: "reference" as const,
+          priority: 1,
+          sourceType: "source_world_atlas",
+        },
+      ],
+      referenceDetail: [
+        {
+          id: "detail",
+          kind: "canon" as const,
+          label: "detail",
+          content: "SOURCE-FUTURE",
+          authority: "reference" as const,
+          priority: 1,
+          sourceType: "source_world_card",
+        },
+      ],
+      counts: {
+        entities: 1,
+        projectSlots: 1,
+        referenceSlots: 2,
+        ambiguousSourceBaselines: 0,
+      },
+    };
+
+    expect(
+      worldAtlasSourcesForAccess(context, "author").map((source) => source.id),
+    ).toEqual(["current", "reference", "detail"]);
+    expect(
+      worldAtlasSourcesForAccess(context, "narrative").map(
+        (source) => source.id,
+      ),
+    ).toEqual(["current", "reference"]);
+    expect(worldAtlasSourcesForAccess(context, "character")).toEqual([]);
   });
 
   it("does not merge ambiguous source baselines into current Reality", () => {
