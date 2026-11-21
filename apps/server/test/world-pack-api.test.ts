@@ -471,14 +471,13 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
     expect(pack.status).toBe("draft");
     expect(pack.document.nodes).toHaveLength(5);
     expect(pack.document.activities).toHaveLength(2);
-    expect(pack.document.interactions).toHaveLength(3);
+    expect(pack.document.interactions).toHaveLength(0);
     expect(pack.document.links).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ relation: "operates" }),
         expect.objectContaining({ relation: "leads" }),
         expect.objectContaining({ relation: "owns" }),
         expect.objectContaining({ relation: "can_use" }),
-        expect.objectContaining({ relation: "enables" }),
       ]),
     );
     expect(pack.document.production?.engine).toBe("mmorpg-world-workshop-v1");
@@ -493,19 +492,15 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
       "economy",
       "events",
       "power",
-      "playability",
     ]);
-    // The graph already had a real organization→place route, so the open
-    // state machine correctly skips "social" instead of ticking a checklist.
+    // Existing typed relations already supply a social route and textual
+    // access/value describe usable world content. The open state machine does
+    // not invent extra social/action workshops merely to tick a checklist.
     expect(actualWorkshops).not.toContain("social");
+    expect(actualWorkshops).not.toContain("playability");
     expect(actualWorkshops.indexOf("events")).toBeLessThan(
       actualWorkshops.indexOf("power"),
     );
-    expect(pack.document.production?.playtestedPaths).toContainEqual([
-      "public_arrival",
-      "buy_resource",
-      "invest_resource",
-    ]);
     const checkpointCount = db.raw
       .prepare(
         "SELECT COUNT(*) AS n FROM checkpoints WHERE run_id=? AND kind='world.production'",
