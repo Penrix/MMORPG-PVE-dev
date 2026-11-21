@@ -2,21 +2,44 @@
 
 > 这是基于 [NarraLume](https://github.com/abligail/narralume) 的小说世界与长篇创作系统开发仓库。原版用户指南、数据库、写作流程、测试与许可**继续有效**；本目录只记录 MMORPG-PVE 新业务的决策和修正，不宣称已有功能已完成。
 
-## 2026-11-21 当前任务：第二模块 World Atlas
+## 2026-11-21 当前任务：第三模块接入当前 World Atlas
 
-**第一模块世界设计暂时停止开发。** 第二模块已经重新收敛：原生母体世界不是大型百科/知识图谱工程，而是 **可编辑世界卡片 + typed wiki links + 可重建关系索引/图谱**。NarraLume 底座和 SQLite 不更换；正文后形成的动态 Reality 继续由原有 Canon / Timeline / settlement 链承担。
+第二模块的底座已经收敛为 **Markdown 世界卡片 + typed relations + 可重建索引/图谱 + Project Reality**。当前任务不是重做 Novel Studio，而是让 NarraLume 原有写作链真正使用这套第二模块结构。
 
-- **最新且最高优先级：[13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)**。后续 Source World 开发先读此文；若与 10～12 的旧设计复杂度冲突，以 13 为准。\n- **世界内容语言：[14 World Atlas 世界内容框架](14-world-atlas-content-framework-v01.md)**。v0.1～v0.7 是 Content Schema，不是 SQL Schema；十个 World Family 是并排的内容覆盖轴。\n- **叙事重心：[15 People-Centered Narrative Axis](15-people-centered-narrative-axis.md)**。人物是默认图谱展开、检索和 LLM Context 的中心，但不改数据库层级；两条轴共享同一批 Card + Typed Edge。
-
-- **历史实现参考：[12 原生母体专业世界百科](12-original-world-encyclopedia.md)**。053/054 已落地结构保留，但不再把大量专项表视为当前 World Atlas 完成度中心；当前优先卡片编辑、typed links、反向关系和图谱。
-- **最新认知：[11 世界 Fork/Diff 与人物内核恒定](11-world-fork-diff-character-invariants.md)**。原生母体是参考基线，项目 Canon 是持续改写的 Fork；人格锚点稳定，经历与现实状态可因故事改变。Migration 051 的第一版数据库映射与差异查询见本页。
-- **必读：[10 已确认认知及历史错误禁令](10-module2-cognition-and-error-guardrails.md)**。此文记录母体/项目/跨世界/穿越/高价人物等历次误解，未来任务先读，不能凭旧记忆重新争论。
-- **全库需求：[08 v0.1～v0.7 数据库 Crosswalk](08-world-database-v01-v07-crosswalk.md)**。七版是世界内容要求，不是七个单独 Prompt。
+- **第三模块接入合同：[17 Novel Studio ↔ World Atlas](17-novel-studio-world-atlas-integration.md)**。Source World Atlas 以 `reference` 进入作者侧写作上下文，Project Reality 以 `confirmed` 进入；正文结算继续写原生 Canon / Timeline / Relationship，再由 Project Reality 投影，禁止双写第二份 Atlas。
+- **存储底座：[13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)**。卡片正文是真相，typed links 写母体关系，索引可重建。
+- **世界内容语言：[14 World Atlas 世界内容框架](14-world-atlas-content-framework-v01.md)**。十个 World Family 是内容覆盖轴，不是 SQL Schema。
+- **叙事重心：[15 People-Centered Narrative Axis](15-people-centered-narrative-axis.md)**。人物中心影响检索和上下文优先级，不改变数据库层级。
+- **必读纠错：[10 已确认认知及历史错误禁令](10-module2-cognition-and-error-guardrails.md)**。Source World 与 Project Reality 永远分开，项目剧情不能污染母体资料。
+- **历史实现参考：[12 原生母体专业世界百科](12-original-world-encyclopedia.md)**。053/054 保留为兼容/历史能力，但 Novel Studio 新接线优先读取轻量 Atlas Card。
 - **已经存在：[09 火影原生母体导入](09-naruto-source-corpus-import.md)** 和 Migration 049，不得再造第二份 Source Corpus。
-- **本轮补强：Migration 050** 将项目人物 ↔ 来源人物、世界区域、事件时空坐标、跨世界/时间旅行对应到 NarraLume **同一项目 Canon**。楼兰的时间分支必须作者明确决定；不是穿越自动创建。
-- **工程真值**：Migration / API / 自动测试成功、真实来源导入、已核实世界事实、真实小说回访是四种不同验收。任何一项未通过要明确报告。
 
-## 当前先读这四份
+当前接口：
+
+~~~text
+Source World Atlas (reference)
+             ┐
+             ├─→ Novel Studio author context
+Project Reality (confirmed)
+             ┘
+                    │
+                    ▼
+               正文 / review
+                    │
+                    ▼
+              chapter.settle
+                    │
+        Canon / Relationship / Timeline
+                    │
+                    ▼
+             Project Reality
+                    │
+                    └─→ 下一章
+~~~
+
+第三模块不增加 Novel-Studio-only world tables。POV / Reader knowledge 继续服从原有 StoryStatePacket 权限，不能因为数据库知道就让人物也知道。
+
+## 当前先读这五份
 
 | 文件                                                                  | 解决的问题                                                                                                        |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
