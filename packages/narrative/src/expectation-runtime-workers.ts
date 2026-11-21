@@ -5,6 +5,7 @@ import {
   type NarrativeAllocationBatch,
   type NarrativeAllocationDecisionDraft,
   type NarrativeCandidate,
+  type WorldArbitrationReceipt,
 } from "@narralume/contracts";
 import type {
   NarrativeRun,
@@ -15,7 +16,10 @@ import type { JsonSchemaContract } from "@narralume/llm";
 
 import type { NarrativeModelClient } from "./model-client.js";
 import { zodValidator } from "./schemas.js";
-import { finalizeNarrativeAllocationBatch } from "./expectation-runtime.js";
+import {
+  finalizeNarrativeAllocationBatch,
+  narrativeCandidatesFromArbitration,
+} from "./expectation-runtime.js";
 
 const NarrativeAllocationOutputItemSchema = z.object({
   candidateId: z.string().min(1),
@@ -69,6 +73,28 @@ export interface ExpectationRuntimeModelResult<T> {
  */
 export class ExpectationNarrativeService {
   constructor(private readonly model: NarrativeModelClient) {}
+
+  async allocateArbitrationReaderTime(
+    run: NarrativeRun,
+    step: NarrativeRunStep,
+    state: ExpectationState,
+    receipt: WorldArbitrationReceipt,
+    signal: AbortSignal,
+  ): Promise<ExpectationRuntimeModelResult<NarrativeAllocationBatch>> {
+    if (
+      receipt.projectId !== state.projectId ||
+      receipt.projectId !== run.projectId
+    ) {
+      throw new Error("story_runtime.expectation.arbitration_project_mismatch");
+    }
+    const candidates = narrativeCandidatesFromArbitration(receipt);
+    return this.allocateReaderTime(
+      run,
+      step,
+      { state, candidates },
+      signal,
+    );
+  }
 
   async allocateReaderTime(
     run: NarrativeRun,
