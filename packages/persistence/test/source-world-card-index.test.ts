@@ -108,7 +108,9 @@ describe("World Atlas lightweight cards and typed wiki links", () => {
     ]);
 
     const kakashi = worlds.getCard("naruto", "character:kakashi");
-    expect(kakashi?.relations.map((r) => [r.displayRelation, r.otherName])).toEqual(
+    expect(
+      kakashi?.relations.map((r) => [r.displayRelation, r.otherName]),
+    ).toEqual(
       expect.arrayContaining([
         ["学生", "漩涡鸣人"],
         ["老师", "波风水门"],
@@ -150,7 +152,10 @@ describe("World Atlas lightweight cards and typed wiki links", () => {
     );
     expect(worlds.reindexCard("naruto", "character:kakashi")).toEqual([]);
     expect(worlds.getCard("naruto", "character:minato")?.relations[0]).toEqual(
-      expect.objectContaining({ displayRelation: "学生", otherName: "旗木卡卡西" }),
+      expect.objectContaining({
+        displayRelation: "学生",
+        otherName: "旗木卡卡西",
+      }),
     );
   });
 });

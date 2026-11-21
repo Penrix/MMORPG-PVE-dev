@@ -242,7 +242,10 @@ export class SqliteSourceCorpusRepository {
    * wins; otherwise exact name/alias matching is used. This is deliberately a
    * lookup helper, not an identity-merging rule.
    */
-  findRecordByReference(corpusId: string, reference: string): SourceRecord | null {
+  findRecordByReference(
+    corpusId: string,
+    reference: string,
+  ): SourceRecord | null {
     const ref = reference.trim();
     if (!ref) return null;
     const exactKey = this.getRecord(corpusId, ref);
@@ -306,12 +309,12 @@ export class SqliteSourceCorpusRepository {
     `,
       )
       .all(sourceKey, sourceKey, corpusId, sourceKey, sourceKey) as Array<
-        SourceRelation & {
-          otherName: string;
-          otherKind: SourceKind;
-          direction: "out" | "in";
-        }
-      >;
+      SourceRelation & {
+        otherName: string;
+        otherKind: SourceKind;
+        direction: "out" | "in";
+      }
+    >;
     return rows.map((row) => ({
       ...row,
       displayRelation:

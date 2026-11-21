@@ -284,7 +284,9 @@ export class SqliteUnifiedSourceWorldRepository {
     if (!world) return null;
     const dossier = this.wiki.getDossier(world.canonicalCorpusId, entityKey);
     if (!dossier) return null;
-    const primary = dossier.lore.find((section) => section.sectionKey === "card");
+    const primary = dossier.lore.find(
+      (section) => section.sectionKey === "card",
+    );
     const content =
       primary?.content ??
       dossier.lore
@@ -317,11 +319,18 @@ export class SqliteUnifiedSourceWorldRepository {
     const world = this.getWorld(input.worldId);
     if (!world) throw Error("source.world.not_found");
     if (!input.name.trim()) throw Error("source.world.card.name_required");
-    if (!input.content.trim()) throw Error("source.world.card.content_required");
+    if (!input.content.trim())
+      throw Error("source.world.card.content_required");
 
-    const existing = this.sources.getRecord(world.canonicalCorpusId, input.entityKey);
+    const existing = this.sources.getRecord(
+      world.canonicalCorpusId,
+      input.entityKey,
+    );
     const summary = input.content
-      .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, target: string, label?: string) => label ?? target)
+      .replace(
+        /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,
+        (_m, target: string, label?: string) => label ?? target,
+      )
       .replace(/[#*_>\`]/g, "")
       .replace(/\s+/g, " ")
       .trim()
@@ -370,7 +379,8 @@ export class SqliteUnifiedSourceWorldRepository {
   ): Array<{ relation: string; target: string }> {
     const world = this.getWorld(worldId);
     if (!world) throw Error("source.world.not_found");
-    const card = content === undefined ? this.getCard(worldId, entityKey) : null;
+    const card =
+      content === undefined ? this.getCard(worldId, entityKey) : null;
     const markdown = content ?? card?.content;
     if (markdown === undefined) throw Error("source.world.card.not_found");
 
