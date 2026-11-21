@@ -1,0 +1,46 @@
+name: Temporary World Builder Atlas formatter
+
+on:
+  push:
+    branches:
+      - feat/world-builder-atlas-production
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: feat/world-builder-atlas-production
+          persist-credentials: true
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: >
+          npx prettier --write
+          AGENTS.md
+          docs/mmorpg/README.md
+          docs/mmorpg/16-world-builder-from-world-atlas.md
+          packages/contracts/src/index.ts
+          packages/contracts/src/world-builder-atlas.ts
+          packages/contracts/test/world-builder-atlas.test.ts
+          packages/narrative/src/world-production-engine.ts
+          packages/narrative/src/world-production-runner.ts
+          packages/narrative/src/world-pack-workers.ts
+          packages/narrative/src/world-design-policy.ts
+          packages/narrative/test/world-production-engine.test.ts
+          apps/web/src/workspaces/world-builder.tsx
+      - name: Commit formatted files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add AGENTS.md docs/mmorpg/README.md docs/mmorpg/16-world-builder-from-world-atlas.md packages/contracts/src/index.ts packages/contracts/src/world-builder-atlas.ts packages/contracts/test/world-builder-atlas.test.ts packages/narrative/src/world-production-engine.ts packages/narrative/src/world-production-runner.ts packages/narrative/src/world-pack-workers.ts packages/narrative/src/world-design-policy.ts packages/narrative/test/world-production-engine.test.ts apps/web/src/workspaces/world-builder.tsx
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "style(world-builder): format Atlas-derived production changes"
+          git push origin HEAD:refs/heads/feat/world-builder-atlas-production
