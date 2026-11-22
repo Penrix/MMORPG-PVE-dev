@@ -139,13 +139,23 @@ export function finalizeCharacterActionProposal(
     }
   }
 
+  const resourceClaims = normalizedStrings(parsed.resourceClaims);
+  const availableResources = new Set(resources);
+  for (const claim of resourceClaims) {
+    if (!availableResources.has(claim)) {
+      throw new Error(
+        `story_runtime.proposal.unavailable_resource_claim:${claim}`,
+      );
+    }
+  }
+
   const withoutDigest = {
     ...parsed,
     resources,
     availableOptions,
     rejectedOptions,
     knowledgeRefs,
-    resourceClaims: normalizedStrings(parsed.resourceClaims),
+    resourceClaims,
     constraints: normalizedStrings(parsed.constraints),
     contingencies: normalizedStrings(parsed.contingencies),
     expectedConsequences: normalizedStrings(parsed.expectedConsequences),
