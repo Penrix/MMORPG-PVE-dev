@@ -47,7 +47,7 @@ const ArbitrationResolutionOutputSchema = z.object({
   outcome: z.enum(["success", "partial", "blocked"]),
   immediateResult: z.string().min(1),
   stateAfter: z.string().min(1),
-  butterflyEffects: z.array(ButterflyEffectOutputSchema).min(1).max(20),
+  butterflyEffects: z.array(ButterflyEffectOutputSchema).max(20),
   conflictIds: z.array(z.string().min(1)).max(20),
 });
 
@@ -213,6 +213,16 @@ export class StoryRuntimeAgentService {
     if (run.projectId !== request.projectId || request.proposals.length === 0) {
       throw new Error("story_runtime.arbiter.invalid_request");
     }
+    if (
+      request.proposals.some(
+        (proposal) =>
+          proposal.projectId !== request.projectId ||
+          proposal.generationId !== request.generationId ||
+          proposal.round !== request.round,
+      )
+    ) {
+      throw new Error("story_runtime.arbiter.proposal_cycle_mismatch");
+    }
     const proposalByAgent = new Map(
       request.proposals.map((proposal) => [proposal.agentId, proposal]),
     );
@@ -267,7 +277,11 @@ export class StoryRuntimeAgentService {
       },
       WORLD_ARBITRATION_CONTRACT,
       zodValidator(WorldArbitrationOutputSchema, (value) =>
-        arbitrationOutputIssues(value, proposalByAgent),
+        arbitrationOutputIssues(
+          value,
+          proposalByAgent,
+          request.protagonistCharacterId ?? null,
+        ),
       ),
       signal,
     );
@@ -343,6 +357,7 @@ export class StoryRuntimeAgentService {
 function arbitrationOutputIssues(
   value: WorldArbitrationOutput,
   proposals: ReadonlyMap<string, CharacterActionProposal>,
+  protagonistCharacterId: string | null,
 ): string[] {
   const issues: string[] = [];
   const seenAgents = new Set<string>();
@@ -399,6 +414,14 @@ function arbitrationOutputIssues(
     value.conflicts.some((conflict) => !conflict.resolved)
   ) {
     issues.push("finalized arbitration cannot contain unresolved conflicts");
+  }
+  if (
+    value.protagonistProjection &&
+    value.protagonistProjection.characterId !== protagonistCharacterId
+  ) {
+    issues.push(
+      `protagonistProjection.characterId must equal requested protagonist ${protagonistCharacterId ?? "null"}`,
+    );
   }
   return issues;
 }
