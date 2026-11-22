@@ -812,12 +812,59 @@ export const StoryUnitCampPositionSchema = z.enum([
 ]);
 export type StoryUnitCampPosition = z.infer<typeof StoryUnitCampPositionSchema>;
 
+export const StoryUpgradeStepSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  targetGain: z.string().min(1),
+  gate: z.string().min(1),
+  targetCircle: z.string().min(1),
+});
+export type StoryUpgradeStep = z.infer<typeof StoryUpgradeStepSchema>;
+
+export const StoryUpgradeLedgerSchema = z.object({
+  protagonistEntityId: z.string().min(1),
+  road: z.string().min(1),
+  currentStepId: z.string().min(1),
+  currentPosition: z.string().min(1),
+  stageGoal: z.string().min(1),
+  settlementTarget: z.string().min(1),
+  steps: z.array(StoryUpgradeStepSchema).min(1),
+});
+export type StoryUpgradeLedger = z.infer<typeof StoryUpgradeLedgerSchema>;
+
+export const StoryStakeStateSchema = z.enum([
+  "seeded",
+  "committed",
+  "escalating",
+  "ripe",
+  "settled",
+]);
+export type StoryStakeState = z.infer<typeof StoryStakeStateSchema>;
+
+export const StoryStakeLedgerEntrySchema = z.object({
+  id: z.string().min(1),
+  entityId: z.string().min(1),
+  currentBelief: z.string().min(1),
+  currentInterest: z.string().min(1),
+  stakeAction: z.string().min(1),
+  stakeAssets: z.array(z.string().min(1)).min(1),
+  commitmentCost: z.string().min(1),
+  escalationPlan: z.string().min(1),
+  payoffReaction: z.string().min(1),
+  settlementChange: z.string().min(1),
+  state: StoryStakeStateSchema,
+});
+export type StoryStakeLedgerEntry = z.infer<
+  typeof StoryStakeLedgerEntrySchema
+>;
+
 export const StoryUnitCampMemberSchema = z.object({
   entityId: z.string().min(1),
   camp: StoryUnitCampPositionSchema,
   currentGoal: z.string().min(1),
   storyRole: z.string().min(1),
   currentBelief: z.string().min(1),
+  currentInterest: z.string().min(1),
 });
 export type StoryUnitCampMember = z.infer<typeof StoryUnitCampMemberSchema>;
 
@@ -887,6 +934,7 @@ export const StoryUnitEventDesignSchema = z.object({
   castPoolEntityIds: z.array(z.string().min(1)).min(1),
   activeSeedEntityIds: z.array(z.string().min(1)).min(1),
   actorPressures: z.array(StoryUnitActorPressureSchema).min(1),
+  stakeEntryIds: z.array(z.string().min(1)).min(1),
   reactionTargetEntityIds: z.array(z.string().min(1)),
   informationReleaseSteps: z.array(z.number().int().positive()),
   phaseTargets: z.array(StoryNodePhaseTargetSchema).min(1),
@@ -992,13 +1040,18 @@ export const StoryUnitDesignSchema = z.object({
   groundingSurfaceRefs: z.array(z.string().min(1)),
   storyProblem: z.string().min(1),
   worldGaps: z.array(StoryWorldGapSchema),
+  upgradeLedger: StoryUpgradeLedgerSchema,
   campNetwork: z.array(StoryUnitCampMemberSchema),
+  stakeLedger: z.array(StoryStakeLedgerEntrySchema),
   reactionTargets: z.array(StoryUnitReactionTargetSchema),
   campTransitions: z.array(StoryUnitCampTransitionSchema),
   appearanceOrderEntityIds: z.array(z.string().min(1)),
   informationRelease: z.array(StoryUnitInformationReleaseSchema),
   events: z.array(StoryUnitEventDesignSchema),
-  mustPreserveAgentAutonomy: z.literal(true),
+  directorAuthority: z.literal("author-defined-story-line"),
+  characterExecutionRule: z.literal(
+    "characterization-constrained-performance",
+  ),
   digest: z.string().min(1),
 });
 export type StoryUnitDesign = z.infer<typeof StoryUnitDesignSchema>;
