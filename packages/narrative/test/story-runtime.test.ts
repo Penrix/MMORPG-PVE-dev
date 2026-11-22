@@ -199,6 +199,23 @@ function storyUnitDesignFixture(): StoryUnitDesign {
     groundingSurfaceRefs: ["surface:hero-location"],
     storyProblem: "Hero must decide how to leave before the gate closes",
     worldGaps: [],
+    upgradeLedger: {
+      protagonistEntityId: "hero",
+      road: "escape the harbor and advance to the next circle",
+      currentStepId: "step:escape",
+      currentPosition: "trapped inside the harbor",
+      stageGoal: "leave before the gate closes",
+      settlementTarget: "reach the next safe area with the key retained",
+      steps: [
+        {
+          id: "step:escape",
+          title: "Escape the harbor",
+          targetGain: "freedom of movement",
+          gate: "the side gate is closing",
+          targetCircle: "outside harbor",
+        },
+      ],
+    },
     campNetwork: [
       {
         entityId: "hero",
@@ -206,8 +223,10 @@ function storyUnitDesignFixture(): StoryUnitDesign {
         currentGoal: "leave the harbor",
         storyRole: "protagonist action source",
         currentBelief: "the side gate may still be usable",
+        currentInterest: "escape before the harbor closes",
       },
     ],
+    stakeLedger: [],
     reactionTargets: [],
     campTransitions: [],
     appearanceOrderEntityIds: ["hero"],
@@ -227,6 +246,7 @@ function storyUnitDesignFixture(): StoryUnitDesign {
             pressure: "the gate is closing",
           },
         ],
+        stakeEntryIds: [],
         reactionTargetEntityIds: [],
         informationReleaseSteps: [],
         phaseTargets: [
@@ -245,7 +265,8 @@ function storyUnitDesignFixture(): StoryUnitDesign {
         readerExpectation: "whether Hero can leave in time",
       },
     ],
-    mustPreserveAgentAutonomy: true,
+    directorAuthority: "author-defined-story-line",
+    characterExecutionRule: "characterization-constrained-performance",
     digest: "story-unit:1",
   };
 }
@@ -350,6 +371,9 @@ describe("Module 3 Story Runtime core", () => {
     expect(current.storyUnitDesignDigest).toBe("story-unit:1");
     expect(current.storyUnitEventId).toBe("event:gate");
     expect(current.goalEvidenceRefs).toEqual(["hero-goal"]);
+    expect(current.authoredStoryFunction).toBe("protagonist action source");
+    expect(current.authoredDirection).toContain("escape");
+    expect(current.authoredStakeIds).toEqual([]);
     expect(current.locationEvidenceRefs).toEqual(["public-location"]);
     expect(current.resources).toEqual(["hero-key"]);
     expect(current.knownFacts.map((item) => item.id)).toContain(
