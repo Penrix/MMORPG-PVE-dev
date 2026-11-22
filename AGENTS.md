@@ -2,7 +2,15 @@
 
 > **REPOSITORY IDENTITY GUARDRAIL (2026-11-22): the active NarraLume engineering repository is `Penrix/MMORPG-PVE-dev`. `Penrix/MMORPG-PVE` is a legacy prototype/history repository and MUST NOT receive current Module 1/2/3 implementation work. A wrong-repo Module-3 Draft PR was archived on 2026-11-22. Before any write, verify repository + active branch/PR.**
 
-**For any coding or architecture task in this fork, read [docs/mmorpg/README.md](docs/mmorpg/README.md) and its linked architecture / reuse / audit / implementation files first.** This repository is a NarraLume-based development fork, not a from-scratch rewrite.
+**For any coding or architecture task in this fork, read [docs/mmorpg/CURRENT.md](docs/mmorpg/CURRENT.md) FIRST, then the current authority document for the target module.** `README.md` is navigation; old audit / implementation / history files do not regain authority merely because they contain more detail. This repository is a NarraLume-based development fork, not a from-scratch rewrite.
+
+## DOCUMENT AUTHORITY GUARDRAIL (2026-11-22)
+
+**Document status is explicit.** Follow `docs/mmorpg/CURRENT.md`:
+- CURRENT AUTHORITY overrides CURRENT SUPPORT;
+- CURRENT SUPPORT overrides IMPLEMENTATION / HISTORY;
+- SUPERSEDED documents may supply historical facts or migration evidence but cannot define current business semantics;
+- for Module 3, `23-module3-upgrade-stake-director.md` overrides conflicting Agent-autonomy, Opportunity-pipeline, or “simulation first” wording in 18/19/20.
 
 ## ACTIVE SCOPE AND MANDATORY SEMANTIC GUARDRAIL (2026-11-20)
 
