@@ -6,6 +6,7 @@
 
 第二模块已经收敛为 **Source World Markdown Card + typed relations + Project Reality**。当前任务不是重写小说流程，而是让 NarraLume 既有 Novel Studio 正式消费这套结构，并继续使用原有 settlement 单一写入口。第一模块不在本分支范围内。
 
+- **第一模块生产合同：[16 World Builder ← World Atlas](16-world-builder-from-world-atlas.md)**。World Builder 持续生产 Atlas Card / Typed Relation / 当前事务候选，并根据真实图结构缺口决定下一轮制作；这是第三模块 Object Field 的上游内容来源。
 - **第三模块当前合同：[17 Novel Studio 接入 World Atlas / Project Reality](17-module3-world-atlas-integration.md)**。定义 Project Reality / Source Atlas 权威层、POV 认知边界、Chapter / Co-create / Assistant 接线和 settlement 单写原则。
 - **第三模块故事核心：[18 Story Runtime Core](18-story-runtime-core.md)**。冻结 Reality → Character Observation → independent Action → World Arbitration → speculative delta → Narrative Director / Horizon Rehearsal 的核心；NarraLume 原生 Chapter Pipeline 保留为正文生产下半段。
 - **第三模块第二层：[19 Expectation / Narrative Runtime](19-expectation-narrative-runtime.md)**。定义“什么值得写 / Reader Time 投在哪里”：Reader需求 → 稀缺性 → 世界/圈层固有认知 → 主角优势 → 期待差 → 铺垫/人物下注 → 打破认知 → 三阵营反应 → 真实权益与下一笔期待。禁止用精彩度分数、临时震惊或单个NPC随手belief替代。
@@ -45,7 +46,7 @@
 
 - GitHub Fork：[`Penrix/MMORPG-PVE-dev`](https://github.com/Penrix/MMORPG-PVE-dev)，**当前公开，也是唯一正式 NarraLume 工程开发仓**。`Penrix/MMORPG-PVE` 为历史原型仓，不再接受当前三模块正式实现。
 - 原 NarraLume 正文生成、版本、审阅、知识、Canon 和状态管理保持不变。
-- 旧版只是提示词/Canonical候选接线原型；现在已经新增**独立WorldPack生成链、SQLite包级候选、引用校验、原子采纳和世界图查询代码**，但尚未完成CI或真实模型验收。其中部分第三方机制已实际移植 MIT 原始源码，且投入运行路径，详见 [05 移植记录](05-actual-upstream-ports.md)；完整引擎尚待续迁。
+- World Builder 已有**独立 WorldPack 生产链、候选审阅、引用校验、原子采纳和世界图查询代码**，并在 PR #4 演进为缺口驱动的 World Atlas Content Producer；第三模块在其对象输出之上构建 Object Field。两条线的最终整体验收以当前 stacked PR CI 为准。
 - 本目录文档属于设计与实现指导，**不是**已通过模型/CI 验收的功能声明。
 - 完整 v0.1～v0.7 七个独立研究版本已在用户明确公开授权下收入 [research](research/README.md)；旧 Atlas 在原仓库。原文不能被运行时摘录或简要指南替换。
 
