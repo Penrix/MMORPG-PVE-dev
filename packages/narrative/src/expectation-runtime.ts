@@ -258,6 +258,10 @@ function allocationReferenceSets(state: ExpectationState) {
     beliefIds: new Set(state.establishedBeliefs.map((item) => item.id)),
     threadIds: new Set(state.threads.map((item) => item.id)),
     threadById: new Map(state.threads.map((item) => [item.id, item])),
+    reactionEntityIds: new Set([
+      ...state.establishedBeliefs.flatMap((item) => item.holderEntityIds),
+      ...state.threads.flatMap((item) => item.reactionTargetEntityIds),
+    ]),
   };
 }
 
@@ -294,6 +298,11 @@ export function finalizeNarrativeAllocationDecision(
   requireRefs("established_belief", parsed.reinforceBeliefIds, refs.beliefIds);
   requireRefs("established_belief", parsed.widenGapBeliefIds, refs.beliefIds);
   requireRefs("expectation_thread", parsed.payoffThreadIds, refs.threadIds);
+  requireRefs(
+    "reaction_target_entity",
+    parsed.reactionTargetEntityIds,
+    refs.reactionEntityIds,
+  );
 
   if (parsed.action === "skip" && parsed.readerTime !== "none") {
     throw new Error("story_runtime.expectation.skip_requires_no_reader_time");
@@ -335,6 +344,7 @@ export function finalizeNarrativeAllocationDecision(
     if (parsed.payoffThreadIds.length === 0) {
       throw new Error("story_runtime.expectation.payoff_requires_thread");
     }
+    const payoffReactionTargets = new Set<string>();
     for (const threadId of parsed.payoffThreadIds) {
       const thread = refs.threadById.get(threadId);
       if (!thread || !["ripe", "payoff"].includes(thread.phase)) {
@@ -342,7 +352,15 @@ export function finalizeNarrativeAllocationDecision(
           `story_runtime.expectation.payoff_thread_not_ripe:${threadId}`,
         );
       }
+      for (const entityId of thread.reactionTargetEntityIds) {
+        payoffReactionTargets.add(entityId);
+      }
     }
+    requireRefs(
+      "payoff_reaction_target",
+      parsed.reactionTargetEntityIds,
+      payoffReactionTargets,
+    );
   } else if (parsed.payoffThreadIds.length > 0) {
     throw new Error("story_runtime.expectation.nonpayoff_cannot_settle_thread");
   }
