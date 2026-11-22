@@ -364,7 +364,6 @@ export function finalizeStoryUnitDesign(
     parsed.objectAnchorIds.length === 0 ||
     parsed.groundingSurfaceRefs.length === 0 ||
     parsed.campNetwork.length === 0 ||
-    parsed.stakeLedger.length === 0 ||
     parsed.events.length === 0
   ) {
     throw new Error("story_authoring.ready_story_unit_incomplete");
