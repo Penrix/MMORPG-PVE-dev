@@ -15,6 +15,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type {
   CharacterActionProposal,
+  StoryUnitDesign,
   WorldArbitrationContext,
 } from "@narralume/contracts";
 
@@ -185,17 +186,90 @@ beforeEach(() => {
 
 afterEach(() => database.close());
 
+function storyUnitDesignFixture(): StoryUnitDesign {
+  return {
+    version: "story-unit-design.v1",
+    authority: "speculative",
+    status: "READY",
+    projectId: "p1",
+    objectFieldDigest: "field:gate",
+    sourceSeedIds: [],
+    expectationDesignDigest: "expectation:gate",
+    objectAnchorIds: ["object:hero"],
+    groundingSurfaceRefs: ["surface:hero-location"],
+    storyProblem: "Hero must decide how to leave before the gate closes",
+    worldGaps: [],
+    campNetwork: [
+      {
+        entityId: "hero",
+        camp: "友方",
+        currentGoal: "leave the harbor",
+        storyRole: "protagonist action source",
+        currentBelief: "the side gate may still be usable",
+      },
+    ],
+    reactionTargets: [],
+    campTransitions: [],
+    appearanceOrderEntityIds: ["hero"],
+    informationRelease: [],
+    events: [
+      {
+        id: "event:gate",
+        title: "Closing side gate",
+        purpose: "force a concrete choice",
+        castPoolEntityIds: ["hero"],
+        activeSeedEntityIds: ["hero"],
+        actorPressures: [
+          {
+            entityId: "hero",
+            pressure: "the gate is closing",
+          },
+        ],
+        observableStart: "the gate begins to close",
+        expectedChange: "Hero chooses a real action",
+        readerExpectation: "whether Hero can leave in time",
+      },
+    ],
+    mustPreserveAgentAutonomy: true,
+    digest: "story-unit:1",
+  };
+}
+
+function worldContextFixture(
+  design: StoryUnitDesign = storyUnitDesignFixture(),
+): WorldArbitrationContext {
+  return {
+    version: "world-arbitration-context.v1",
+    authority: "speculative",
+    projectId: "p1",
+    storyUnitDesignDigest: design.digest,
+    storyUnitEventId: "event:gate",
+    realityFingerprint: "reality:event:gate",
+    surfaces: [
+      {
+        entityId: "hero",
+        name: "Hero",
+        kind: "character",
+        facet: "state",
+        slotKey: "location",
+        value: "harbor",
+        sourceId: "world-reality:hero",
+      },
+    ],
+    digest: "world-context:gate",
+  };
+}
+
 function observation() {
+  const design = storyUnitDesignFixture();
   return new CharacterObservationBuilder(database).build({
     projectId: "p1",
     characterId: "hero",
     generationId: "generation-1",
-    storyUnitDesignDigest: "story-unit:1",
-    storyUnitEventId: "event:gate",
-    realityFingerprint: "reality:event:gate",
+    storyUnitDesign: design,
+    worldContext: worldContextFixture(design),
     targetOutlineNodeId: "chapter-1",
     goalEvidenceRefs: ["hero-goal"],
-    pressure: "the gate is closing",
     resourceEvidenceRefs: ["hero-key"],
   });
 }
@@ -243,25 +317,13 @@ function proposal() {
 function arbitrationContextFor(
   proposal: CharacterActionProposal,
 ): WorldArbitrationContext {
+  const context = worldContextFixture();
   return {
-    version: "world-arbitration-context.v1",
-    authority: "speculative",
+    ...context,
     projectId: proposal.projectId,
     storyUnitDesignDigest: proposal.storyUnitDesignDigest,
     storyUnitEventId: proposal.storyUnitEventId,
     realityFingerprint: proposal.realityFingerprint,
-    surfaces: [
-      {
-        entityId: "hero",
-        name: "Hero",
-        kind: "character",
-        facet: "state",
-        slotKey: "location",
-        value: "harbor",
-        sourceId: "world-reality:hero",
-      },
-    ],
-    digest: "world-context:gate",
   };
 }
 
@@ -300,12 +362,10 @@ describe("Module 3 Story Runtime core", () => {
         projectId: "p1",
         characterId: "hero",
         generationId: "generation-1",
-        storyUnitDesignDigest: "story-unit:1",
-        storyUnitEventId: "event:gate",
-        realityFingerprint: "reality:event:gate",
+        storyUnitDesign: storyUnitDesignFixture(),
+        worldContext: worldContextFixture(),
         targetOutlineNodeId: "chapter-1",
         goalEvidenceRefs: ["secret-identity"],
-        pressure: "the gate is closing",
         resourceEvidenceRefs: ["hero-key"],
       }),
     ).toThrow(
@@ -317,12 +377,10 @@ describe("Module 3 Story Runtime core", () => {
         projectId: "p1",
         characterId: "hero",
         generationId: "generation-1",
-        storyUnitDesignDigest: "story-unit:1",
-        storyUnitEventId: "event:gate",
-        realityFingerprint: "reality:event:gate",
+        storyUnitDesign: storyUnitDesignFixture(),
+        worldContext: worldContextFixture(),
         targetOutlineNodeId: "chapter-1",
         goalEvidenceRefs: ["hero-goal"],
-        pressure: "the gate is closing",
         resourceEvidenceRefs: ["invented-key"],
       }),
     ).toThrow(
