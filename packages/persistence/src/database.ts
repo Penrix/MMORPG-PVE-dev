@@ -137,8 +137,7 @@ const MIGRATIONS: readonly Migration[] = [
   migration056,
 ];
 
-export const LATEST_MIGRATION_VERSION =
-  MIGRATIONS.at(-1)?.version ?? 0;
+export const LATEST_MIGRATION_VERSION = MIGRATIONS.at(-1)?.version ?? 0;
 
 interface MigrationRow {
   version: number;
