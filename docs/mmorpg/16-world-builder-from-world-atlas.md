@@ -1,5 +1,7 @@
 # 第一模块｜从 World Atlas 反推 World Builder（2026-11-21）
 
+> **STATUS: CURRENT AUTHORITY / MODULE 1.** 当前固定：World Builder = World Atlas Content Producer。第一模块创造世界里真实存在的人、地、组织、力量、资产、活动、价格与入口，并把它们接入人物社会网络；不为第三模块临时预写剧情。
+
 > **本文件是第一模块当前最高优先级工程合同。**
 >
 > 第二模块已经确定：
