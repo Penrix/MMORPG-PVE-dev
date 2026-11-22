@@ -270,6 +270,59 @@ describe("StoryRuntimeAgentService", () => {
     expect(result.value.authority).toBe("speculative");
   });
 
+  it("rejects a protagonist projection for the wrong character", async () => {
+    const hero = proposalFor(observation("hero", "Hero"));
+    const model: NarrativeModelClient = {
+      text: vi.fn(),
+      structured: vi.fn(
+        async (_run, _step, _purpose, _request, _contract, validate) => {
+          const checked = validate({
+            resolutions: [
+              {
+                agentId: "character:hero",
+                actionOrder: 1,
+                outcome: "success",
+                immediateResult: "Hero leaves",
+                stateAfter: "Hero is outside",
+                butterflyEffects: [],
+                conflictIds: [],
+              },
+            ],
+            conflicts: [],
+            hardContractStatus: "feasible",
+            hardContractConflicts: [],
+            protagonistProjection: {
+              characterId: "rival",
+              planConstraints: ["wrong character"],
+              causalChain: ["wrong projection"],
+            },
+            finalized: true,
+          });
+          if (!checked.success) throw new Error(checked.issues.join("; "));
+          throw new Error("unexpected validation success");
+        },
+      ),
+    };
+
+    await expect(
+      new StoryRuntimeAgentService(model).arbitrateWorld(
+        run,
+        step,
+        {
+          projectId: "p1",
+          generationId: "g1",
+          round: 1,
+          proposals: [hero],
+          operationalWorldContext: "Harbor",
+          protagonistCharacterId: "hero",
+        },
+        new AbortController().signal,
+      ),
+    ).rejects.toThrow(
+      "protagonistProjection.characterId must equal requested protagonist hero",
+    );
+  });
+
   it("rejects an arbitration model output that omits an active character", async () => {
     const hero = proposalFor(observation("hero", "Hero"));
     const rival = proposalFor(observation("rival", "Rival"));
