@@ -124,6 +124,35 @@ describe("Module 3 World Atlas context adapter", () => {
         now,
       }),
     );
+    db.raw
+      .prepare(
+        `
+        INSERT INTO world_capability_profiles(
+          entity_id,project_id,power_mode,mechanism,actual_actions,
+          effective_scope,activation_conditions,countermeasures,
+          knowledge_or_training,social_effects,source_type,updated_at
+        ) VALUES ('hero','p1','supernatural','异常查克拉控制',
+          '以基础忍术完成超常精度控制','病房内可测试',
+          '需要主动结印和查克拉','仍受身体状态限制',
+          '当前已掌握基础控制','专业忍者会重新估值',
+          'project_reality',?)
+      `,
+      )
+      .run(now);
+    db.raw
+      .prepare(
+        `
+        INSERT INTO world_value_appraisals(
+          id,project_id,subject_entity_id,evaluator_entity_id,value_kind,
+          value_basis,scarcity,access_path,future_use,status,
+          source_type,source_note,created_at
+        ) VALUES ('hero-value','p1','hero',NULL,'talent',
+          '异常控制能力','普通伤员极少出现',
+          '需要专业复核','可能进入更高价任务体系','available',
+          'project_reality','当前项目估值',?)
+      `,
+      )
+      .run(now);
 
     const context = new WorldAtlasStoryContextBuilder(db).build({
       projectId: "p1",
@@ -136,6 +165,8 @@ describe("Module 3 World Atlas context adapter", () => {
       sourceType: "project_reality",
     });
     expect(context.current[0]!.content).toContain("木叶医院");
+    expect(context.current[0]!.content).toContain("异常查克拉控制");
+    expect(context.current[0]!.content).toContain("普通伤员极少出现");
 
     expect(context.reference).toHaveLength(1);
     expect(context.reference[0]).toMatchObject({
@@ -158,6 +189,22 @@ describe("Module 3 World Atlas context adapter", () => {
     expect(
       context.objects[0]!.surfaces.some(
         (surface) => surface.authority === "confirmed",
+      ),
+    ).toBe(true);
+    expect(
+      context.objects[0]!.surfaces.some(
+        (surface) =>
+          surface.authority === "confirmed" &&
+          surface.facet === "ability" &&
+          surface.slotKey === "profile",
+      ),
+    ).toBe(true);
+    expect(
+      context.objects[0]!.surfaces.some(
+        (surface) =>
+          surface.authority === "confirmed" &&
+          surface.facet === "value" &&
+          surface.slotKey === "appraisal:hero-value",
       ),
     ).toBe(true);
     expect(
