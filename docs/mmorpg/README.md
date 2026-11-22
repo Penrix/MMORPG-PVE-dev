@@ -1,10 +1,12 @@
 # MMORPG-PVE 开发资料导航
 
+> **NO-CONTEXT START HERE：先读 [CURRENT.md](CURRENT.md)。** 它是当前文档权威地图，明确哪些文件是 CURRENT AUTHORITY、哪些只是实现参考、哪些已经 SUPERSEDED。**任何旧文档与 CURRENT.md / 当前模块权威文件冲突时，旧文档没有裁决权。**
+
 > 这是基于 [NarraLume](https://github.com/abligail/narralume) 的小说世界与长篇创作系统开发仓库。原版用户指南、数据库、写作流程、测试与许可**继续有效**；本目录只记录 MMORPG-PVE 新业务的决策和修正，不宣称已有功能已完成。
 
-## 2026-11-22 当前整合线：World Builder Atlas → Object-Grounded Writers' Room
+## 2026-11-22 当前整合线：World Builder Atlas → Upgrade/Stake Story Director → NarraLume Production
 
-第二模块已经收敛为 **Source World Markdown Card + typed relations + Project Reality**。PR #5 现在同时承接已验证的 World Builder → Atlas 生产基线与第三模块 Novel Studio / Story Runtime：第一模块持续生产真实世界对象，第二模块保存和查询，第三模块把这些对象变成 Object Field 后再做创意搜索、编剧与 Reality Runtime。当前主动开发焦点仍是第三模块；第一模块只在明确的 `worldGap` 或接口缺陷要求时继续修改。
+当前三模块已经收敛为同一条长期小说闭环：**第一模块生产世界内容；第二模块保存 Source World 并维护 Project Reality；第三模块直接面对第二模块已有的人物网，沿 Upgrade Ladder 用讲师的稀缺/固有认知/三阵营/信息差/配角下注主动设计故事，再交 NarraLume 生产正文并通过 Settlement 写回 Reality。** 第一模块只在真实世界缺口出现时继续增量制作，不为剧情功能临时捏 NPC。
 
 - **第一模块生产合同：[16 World Builder ← World Atlas](16-world-builder-from-world-atlas.md)**。World Builder 持续生产 Atlas Card / Typed Relation / 当前事务候选，并根据真实图结构缺口决定下一轮制作；这是第三模块 Object Field 的上游内容来源。
 - **第三模块当前合同：[17 Novel Studio 接入 World Atlas / Project Reality](17-module3-world-atlas-integration.md)**。定义 Project Reality / Source Atlas 权威层、POV 认知边界、Chapter / Co-create / Assistant 接线和 settlement 单写原则。
@@ -26,7 +28,7 @@
 - **本轮补强：Migration 050** 将项目人物 ↔ 来源人物、世界区域、事件时空坐标、跨世界/时间旅行对应到 NarraLume **同一项目 Canon**。楼兰的时间分支必须作者明确决定；不是穿越自动创建。
 - **工程真值**：Migration / API / 自动测试成功、真实来源导入、已核实世界事实、真实小说回访是四种不同验收。任何一项未通过要明确报告。
 
-## 当前先读这五份
+## 实现 / 历史入口（理解当前架构前先读 CURRENT.md）
 
 | 文件                                                                   | 解决的问题                                                                                                        |
 | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
