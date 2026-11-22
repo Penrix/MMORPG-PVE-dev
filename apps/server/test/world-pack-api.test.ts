@@ -543,9 +543,7 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
         ),
     ).toEqual(
       expect.arrayContaining(
-        stagedCurrentLinks.map(
-          (link: { relation: string }) => link.relation,
-        ),
+        stagedCurrentLinks.map((link: { relation: string }) => link.relation),
       ),
     );
     expect(
