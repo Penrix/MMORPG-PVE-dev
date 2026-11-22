@@ -311,12 +311,32 @@ export class StoryAuthoringService {
       throw new Error("story_authoring.invalid_story_unit_request");
     }
 
+    if (
+      request.sourceSearch &&
+      (request.sourceSearch.projectId !== request.field.projectId ||
+        request.sourceSearch.scale !== "S03")
+    ) {
+      throw new Error("story_authoring.source_search_not_bound");
+    }
+
     const availableSeedIds = new Set(
       request.sourceSearch?.seeds.map((seed) => seed.id) ?? [],
+    );
+    const currentObjectIds = new Set(
+      request.field.objects.map((object) => object.id),
     );
     for (const seedId of request.sourceSeedIds) {
       if (!availableSeedIds.has(seedId)) {
         throw new Error(`story_authoring.unknown_source_seed:${seedId}`);
+      }
+      const seed = request.sourceSearch?.seeds.find(
+        (candidate) => candidate.id === seedId,
+      );
+      if (
+        !seed ||
+        seed.anchorObjectIds.some((objectId) => !currentObjectIds.has(objectId))
+      ) {
+        throw new Error(`story_authoring.stale_source_seed:${seedId}`);
       }
     }
 
