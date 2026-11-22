@@ -852,12 +852,21 @@ export type StoryUnitInformationRelease = z.infer<
   typeof StoryUnitInformationReleaseSchema
 >;
 
+export const StoryUnitActorPressureSchema = z.object({
+  entityId: z.string().min(1),
+  pressure: z.string().min(1),
+});
+export type StoryUnitActorPressure = z.infer<
+  typeof StoryUnitActorPressureSchema
+>;
+
 export const StoryUnitEventDesignSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   purpose: z.string().min(1),
   castPoolEntityIds: z.array(z.string().min(1)).min(1),
   activeSeedEntityIds: z.array(z.string().min(1)).min(1),
+  actorPressures: z.array(StoryUnitActorPressureSchema).min(1),
   observableStart: z.string().min(1),
   expectedChange: z.string().min(1),
   readerExpectation: z.string().min(1),
