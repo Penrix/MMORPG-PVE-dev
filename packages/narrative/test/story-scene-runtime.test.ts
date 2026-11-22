@@ -19,6 +19,23 @@ function storyUnit(): StoryUnitDesign {
     groundingSurfaceRefs: ["surface:xiuxin", "surface:medic"],
     storyProblem: "让秀信的异常第一次进入可信专业识货链",
     worldGaps: [],
+    upgradeLedger: {
+      protagonistEntityId: "xiuxin",
+      road: "从医院低位伤员进入木叶高价任务圈",
+      currentStepId: "step:professional-reprice",
+      currentPosition: "普通重伤忍者",
+      stageGoal: "让异常能力获得第一层专业重新估值",
+      settlementTarget: "获得更高任务圈入口",
+      steps: [
+        {
+          id: "step:professional-reprice",
+          title: "专业重新估值",
+          targetGain: "专业评级与任务价值",
+          gate: "打破普通伤员固有认知",
+          targetCircle: "医疗与任务审核圈",
+        },
+      ],
+    },
     campNetwork: [
       {
         entityId: "xiuxin",
@@ -57,7 +74,7 @@ function storyUnit(): StoryUnitDesign {
         entityId: "medic",
         before: "按普通伤员估值",
         during: "看到异常后自行判断",
-        after: "目标是重新估值，不强迫具体反应",
+        after: "由医疗忍者亲自改判秀信的专业价值，并改变后续处理",
       },
     ],
     campTransitions: [],
@@ -90,6 +107,7 @@ function storyUnit(): StoryUnitDesign {
             pressure: "眼前恢复结果开始超出普通伤员流程",
           },
         ],
+        stakeEntryIds: ["stake:medic-rating"],
         reactionTargetEntityIds: ["medic"],
         informationReleaseSteps: [1],
         phaseTargets: [
