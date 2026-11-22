@@ -149,6 +149,16 @@ describe("Module 3 World Atlas context adapter", () => {
     );
     expect(context.reference[0]!.content).not.toContain("原著未来会离开木叶");
 
+    expect(context.objects).toHaveLength(1);
+    expect(context.objects[0]).toMatchObject({
+      entityId: "hero",
+      name: "秀信",
+      kind: "character",
+    });
+    expect(context.objects[0]!.surfaces.some((surface) => surface.authority === "confirmed")).toBe(true);
+    expect(context.objects[0]!.surfaces.some((surface) => surface.authority === "reference")).toBe(true);
+    expect(JSON.stringify(context.objects[0])).not.toContain("原著未来会离开木叶");
+
     expect(context.referenceDetail).toHaveLength(1);
     expect(context.referenceDetail[0]!.content).toContain("原著未来会离开木叶");
     expect(context.referenceDetail[0]!.content).toContain(
@@ -195,6 +205,7 @@ describe("Module 3 World Atlas context adapter", () => {
           sourceType: "source_world_card",
         },
       ],
+      objects: [],
       counts: {
         entities: 1,
         projectSlots: 1,
