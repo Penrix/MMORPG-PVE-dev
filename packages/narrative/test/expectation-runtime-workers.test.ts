@@ -90,6 +90,9 @@ function candidate(id: string, summary: string): NarrativeCandidate {
     id,
     projectId: "p1",
     generationId: "g1",
+    storyUnitDesignDigest: "story-unit:expectation",
+    storyUnitEventId: "event:recognition",
+    realityFingerprint: "r1",
     source: "world_initiative",
     authority: "speculative",
     summary,
@@ -280,6 +283,10 @@ describe("ExpectationNarrativeService", () => {
       projectId: "p1",
       generationId: "g1",
       round: 1,
+      storyUnitDesignDigest: "story-unit:expectation",
+      storyUnitEventId: "event:recognition",
+      realityFingerprint: "r1",
+      worldContextDigest: "world-context:r1",
       proposalDigests: ["proposal:xiuxin"],
       resolutions: [
         {
