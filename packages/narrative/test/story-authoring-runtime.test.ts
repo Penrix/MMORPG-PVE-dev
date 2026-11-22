@@ -195,6 +195,23 @@ describe("object-grounded story authoring runtime", () => {
     expect(built.digest).toBeTruthy();
   });
 
+  it("changes a surface ref when the underlying Reality value changes", () => {
+    const objectField = field("S03");
+    const object = objectField.objects.find(
+      (item) => item.id === "object:xiuxin",
+    )!;
+    const surface = object.surfaces.find(
+      (item) => item.slotKey === "location",
+    )!;
+    const before = storyObjectSurfaceRef(object.id, surface);
+    const after = storyObjectSurfaceRef(object.id, {
+      ...surface,
+      value: "前线营地",
+    });
+
+    expect(after).not.toBe(before);
+  });
+
   it("rejects a World Atlas context from another project", () => {
     expect(() =>
       storyObjectFieldFromWorldContext({
