@@ -14,6 +14,8 @@
 
 **PEOPLE-CENTERED NARRATIVE AXIS (2026-11-21): read [15-people-centered-narrative-axis.md](docs/mmorpg/15-people-centered-narrative-axis.md).** The ten World Families remain parallel as the content-coverage axis. People-centered is an orthogonal narrative axis that changes graph expansion, retrieval and LLM-context priority, **not** the SQL hierarchy or card storage model. Keep the same Card + Typed Edge graph; prefer concrete people when expanding non-person world content, without inventing NPCs where none exist.
 
+**WORLD BUILDER → ATLAS PRODUCTION CONTRACT (2026-11-21): read [16-world-builder-from-world-atlas.md](docs/mmorpg/16-world-builder-from-world-atlas.md).** First-module generation must name the Atlas cards/relations it is producing. Creating a node is not completion; connect it into the world graph. WorldPack is a candidate/staging batch, not a competing world ontology.
+
 **MODULE-3 WORLD ATLAS ADAPTER (2026-11-21): read [17-module3-world-atlas-integration.md](docs/mmorpg/17-module3-world-atlas-integration.md).** Project Reality is current project truth; Source Atlas is immutable/reference baseline. Use `WorldAtlasStoryContextBuilder` rather than assembling a second world context in individual writing features. Author/narrative/character access are distinct. Settlement remains the single confirmed write path.
 
 
