@@ -224,6 +224,23 @@ function storyUnitOutputIssues(
         );
       }
     }
+    const pressureActors = new Set(
+      event.actorPressures.map((item) => item.entityId),
+    );
+    for (const entityId of event.castPoolEntityIds) {
+      if (!pressureActors.has(entityId)) {
+        issues.push(
+          `event ${event.id}: missing actorPressure for cast entity ${entityId}`,
+        );
+      }
+    }
+    for (const entityId of pressureActors) {
+      if (!cast.has(entityId)) {
+        issues.push(
+          `event ${event.id}: actorPressure entity ${entityId} is outside castPool`,
+        );
+      }
+    }
   }
   return issues;
 }
@@ -404,7 +421,7 @@ export class StoryAuthoringService {
           "Expectation Design 已经给出 Reader 需求、目标情绪、稀缺性方向、固有认知、主角优势、反应与收益方向。不得偷换这笔交易。",
           "三阵营首先是编剧工具：作者主动选择哪些真实人物承担压力、定价、连接、未来反应与阵营转化，但不能预写他们实际一定震惊、投靠、认输或降智。",
           "appearanceOrderEntityIds 与 informationRelease 负责谁先进入、Reader/人物分别何时知道什么。",
-          "events 是有顺序的 S05 事件设计。Cast Pool 是可能被卷入的人物池；Active Seed 是本事件第一轮真正行动/被触发的人。绝不能默认第一轮全员开机。",
+          "events 是有顺序的 S05 事件设计。Cast Pool 是可能被卷入的人物池；Active Seed 是本事件第一轮真正行动/被触发的人。绝不能默认第一轮全员开机。actorPressures 必须为 Cast Pool 每个人各写一条当前场面压力/刺激条件，它是编剧搭的戏台，不是替角色决定反应。",
           "S05 Character Agents 之后仍只按自己的 Observation / Goal / 利益行动；World Arbiter 决定 Reality 是否允许。S04 只能设计条件与目标，不能写死演员结果。",
           "如果当前对象不够支撑这出戏，status 必须返回 BLOCKED_WORLD_GAP，把缺口结构化写入 worldGaps，并用 productionHint 指向现有 World Builder workshop，events 为空；不要为了过 schema 凭空造人物、关系或事件。对象足够时返回 READY。",
         ].join("\n"),
