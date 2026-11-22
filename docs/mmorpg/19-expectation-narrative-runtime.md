@@ -1,5 +1,7 @@
 # 第三模块｜Expectation / Narrative Runtime（2026-11-22）
 
+> **2026-11-22 最新权限修正：Reader Time 的正式入口已经下移到 S06 Scene Expansion 之后。禁止 `WorldArbitrationReceipt → S07` 直连。讲师原稿的正式链是：S05一个问题节点 → S06多个场景 → S07分层释放信息差 / 提前种新期待 / 高潮后转移期待焦点。本文中“第一层运行后直接分配 Reader Time”的旧描述仅保留形成史，不再具有当前工程Authority。**
+
 > 本文件记录 2026-11-21 至 2026-11-22 连续讨论中形成的第二层 Story Runtime 认知。它是 `18-story-runtime-core.md` 的直接续篇与语义覆盖：第一层解决“世界里真实会发生什么”，第二层解决“这些真实发生/可能发生的东西里，什么值得进入 Reader Time，什么时候写，写多久，怎样铺垫与兑现”。
 
 ## 0. 一句话裁决
@@ -852,12 +854,14 @@ packages/narrative/src/expectation-runtime.ts
 
 packages/narrative/src/expectation-runtime-workers.ts
   ├─ ExpectationNarrativeService.designExpectation()
-  │  第二层先设计：Reader Need / Emotion → 稀缺 / 固有认知 / 优势 / 反应 / Gain
-  │  真实 structured model call，且只能引用给定 World / Reality evidence
-  ├─ ExpectationNarrativeService.allocateReaderTime()
-  │  第一层运行后再经营：skip / background / seed / charge / payoff
+  │  上游期待交易设计：Reader Need / Emotion → 稀缺 / 固有认知 / 优势 / 反应 / Gain
+  ├─ ExpectationNarrativeService.allocateSceneReaderTime()
+  │  正式 S07：只消费 S06 StorySceneExpansion
+  │  分层释放 / seed / charge / payoff / 焦点转移 / 章节切分
+  ├─ allocateReaderTime()
+  │  保留的低层通用 allocation helper，不是正式 S07 上游入口
   └─ allocateArbitrationReaderTime()
-     直接消费第一层 WorldArbitrationReceipt
+     明确抛错，禁止 WorldArbitrationReceipt 绕过 S06 直达 S07
 ```
 
 第一批宿主硬约束：
@@ -884,8 +888,9 @@ packages/narrative/src/expectation-runtime-workers.ts
 4. Expectation State 在章节 Settlement 后如何增量更新。
 5. 三阵营真实“下注”如何从人物行动 / 关系 / 资产变更自动提取。
 6. Reader Knowledge / Reader Feels 的显式状态投影。
-7. NarrativeAllocation → Story Move / Chapter Target → NarraLume Scene Plan 的正式接线。
-8. HorizonRehearsal 对 active Expectation Threads 的未来加价/兑现推演。
+7. StoryReaderTimePlan → S08 / NarraLume chapter production 的正式接线。
+8. 跨多个 S05 Node / S06 SceneExpansion 的 Reader Time 编排与 active Expectation Threads 连续维护。
+9. HorizonRehearsal 对 active Expectation Threads 的未来加价/兑现推演。
 
 因此当前实现准确定位：
 
