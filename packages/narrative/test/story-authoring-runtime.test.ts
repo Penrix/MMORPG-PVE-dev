@@ -130,6 +130,7 @@ describe("object-grounded story authoring runtime", () => {
       realityFingerprint: "reality:1",
       storyStateFingerprint: "story:1",
       context: {
+        projectId: "p1",
         current: [],
         reference: [],
         referenceDetail: [],
@@ -174,6 +175,7 @@ describe("object-grounded story authoring runtime", () => {
     const draft: StoryAuthoringSearchDraft = {
       version: "story-authoring-search.v1",
       authority: "speculative",
+      status: "READY",
       projectId: "p1",
       scale: "S03",
       objectFieldDigest: objectField.digest,
@@ -253,6 +255,7 @@ describe("object-grounded story authoring runtime", () => {
           scale: "S01",
           storyConcepts: [
             {
+              id: "concept:high-value-life",
               concept: "低位忍者凭特殊能力一路活进忍界高价圈层",
               objectIds: ["object:xiuxin", "object:sakumo"],
               life: "任务、高手、权力和关系不断升级",
@@ -261,6 +264,7 @@ describe("object-grounded story authoring runtime", () => {
           ],
           storyEngines: [
             {
+              id: "engine:repricing",
               engine: "能力资产不断解决更贵现实问题并换来新的社会入口",
               objectIds: ["object:xiuxin", "object:sakumo"],
               repeatablePlay: "不同任务、人物和规则给同一能力重新定价",
@@ -269,8 +273,8 @@ describe("object-grounded story authoring runtime", () => {
           ],
           conceptEngineLinks: [
             {
-              concept: "低位忍者凭特殊能力一路活进忍界高价圈层",
-              engine: "能力资产不断解决更贵现实问题并换来新的社会入口",
+              conceptId: "concept:high-value-life",
+              engineId: "engine:repricing",
               whySustainable: "Engine本身持续生产Concept中的生活",
             },
           ],
@@ -344,6 +348,7 @@ describe("object-grounded story authoring runtime", () => {
       {
         version: "story-unit-design.v1",
         authority: "speculative",
+        status: "READY",
         projectId: "p1",
         objectFieldDigest: objectField.digest,
         sourceSeedIds: ["seed:s03"],
@@ -434,5 +439,95 @@ describe("object-grounded story authoring runtime", () => {
         new Set(["seed:s03"]),
       ),
     ).toThrow("story_authoring.unknown_event_active_seed:sakumo");
+  });
+
+  it("allows S03 to stop on a real world gap instead of inventing a seed", () => {
+    const objectField = field("S03");
+    const result = finalizeStoryAuthoringSearch(
+      {
+        version: "story-authoring-search.v1",
+        authority: "speculative",
+        status: "BLOCKED_WORLD_GAP",
+        projectId: "p1",
+        scale: "S03",
+        objectFieldDigest: objectField.digest,
+        question: "这一阵子有什么值得玩？",
+        objectFocus: [],
+        seeds: [],
+        worldGaps: ["缺少医疗复核权限对应的具体人物或组织对象"],
+        scaleResult: {
+          scale: "S03",
+          periodFocus: "病房期",
+          opportunityField: [],
+          storyMovements: [],
+        },
+      },
+      objectField,
+    );
+    expect(result.status).toBe("BLOCKED_WORLD_GAP");
+    expect(result.seeds).toEqual([]);
+  });
+
+  it("rejects S04 design when Expectation fingerprints are stale", () => {
+    const objectField = field("S04");
+    const exp = {
+      ...expectation(),
+      realityFingerprint: "old-reality",
+    };
+    expect(() =>
+      finalizeStoryUnitDesign(
+        {
+          version: "story-unit-design.v1",
+          authority: "speculative",
+          status: "BLOCKED_WORLD_GAP",
+          projectId: "p1",
+          objectFieldDigest: objectField.digest,
+          sourceSeedIds: [],
+          expectationDesignDigest: exp.digest,
+          objectAnchorIds: [],
+          storyProblem: "等待刷新",
+          worldGaps: ["Expectation 已过期"],
+          campNetwork: [],
+          reactionTargets: [],
+          campTransitions: [],
+          appearanceOrderEntityIds: [],
+          informationRelease: [],
+          events: [],
+          mustPreserveAgentAutonomy: true,
+        },
+        objectField,
+        exp,
+      ),
+    ).toThrow("story_authoring.story_unit_not_bound");
+  });
+
+  it("rejects S04 finalization against an S03 Object Field", () => {
+    const objectField = field("S03");
+    const exp = expectation();
+    expect(() =>
+      finalizeStoryUnitDesign(
+        {
+          version: "story-unit-design.v1",
+          authority: "speculative",
+          status: "BLOCKED_WORLD_GAP",
+          projectId: "p1",
+          objectFieldDigest: objectField.digest,
+          sourceSeedIds: [],
+          expectationDesignDigest: exp.digest,
+          objectAnchorIds: [],
+          storyProblem: "错误尺度",
+          worldGaps: ["必须重新取得 S04 Object Field"],
+          campNetwork: [],
+          reactionTargets: [],
+          campTransitions: [],
+          appearanceOrderEntityIds: [],
+          informationRelease: [],
+          events: [],
+          mustPreserveAgentAutonomy: true,
+        },
+        objectField,
+        exp,
+      ),
+    ).toThrow("story_authoring.story_unit_not_bound");
   });
 });
