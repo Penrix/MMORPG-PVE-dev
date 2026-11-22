@@ -159,6 +159,9 @@ describe("StoryAuthoringService", () => {
           expect(purpose).toBe("story-object-grounded-search");
           const serialized = JSON.stringify(request);
           expect(serialized).toContain("所有想象和脑洞必须先有想象对象");
+          expect(serialized).toContain("S01/S02/S03 不是三台独立故事生成器");
+          expect(serialized).toContain("candidateNewObjects 必须为空");
+          expect(serialized).toContain("step:professional-reprice");
           expect(serialized).toContain("object:xiuxin");
           expect(serialized).toContain("world-reality:medic");
           const checked = validate({
@@ -231,6 +234,7 @@ describe("StoryAuthoringService", () => {
       step,
       {
         field: objectField,
+        upgradeLedger: upgradeLedger(),
         request: "寻找当前这一阵子真正值得玩的故事机会",
         readerNeed: "看低位人物凭真实能力被重新估值",
         targetEmotion: "得意",
