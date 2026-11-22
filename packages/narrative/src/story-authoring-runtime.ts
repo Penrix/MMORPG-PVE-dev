@@ -34,6 +34,34 @@ function digest(value: unknown): string {
   return sha256Hex(stableJson(value));
 }
 
+export function storyObjectSurfaceRef(
+  objectId: string,
+  surface: {
+    sourceId: string;
+    facet: string;
+    slotKey: string;
+  },
+): string {
+  return `surface:${sha256Hex(
+    stableJson({
+      objectId,
+      sourceId: surface.sourceId,
+      facet: surface.facet,
+      slotKey: surface.slotKey,
+    }),
+  )}`;
+}
+
+function allowedStorySurfaceRefs(field: StoryObjectField): Set<string> {
+  return new Set(
+    field.objects.flatMap((object) =>
+      object.surfaces.map((surface) =>
+        storyObjectSurfaceRef(object.id, surface),
+      ),
+    ),
+  );
+}
+
 function requireUnique(label: string, values: readonly string[]): Set<string> {
   const set = new Set<string>();
   for (const value of values) {
@@ -211,6 +239,7 @@ export function finalizeStoryAuthoringSearch(
     throw new Error("story_authoring.search_not_bound_to_object_field");
   }
   const allowedObjectIds = new Set(field.objects.map((object) => object.id));
+  const allowedSurfaceRefs = allowedStorySurfaceRefs(field);
   requireUnique(
     "world_gap",
     parsed.worldGaps.map((gap) => gap.id),
@@ -255,9 +284,19 @@ export function finalizeStoryAuthoringSearch(
   }
   for (const [index, focus] of parsed.objectFocus.entries()) {
     requireRefs(`object_focus_${index}`, [focus.objectId], allowedObjectIds);
+    requireRefs(
+      `object_focus_surface_${index}`,
+      focus.surfaceRefs,
+      allowedSurfaceRefs,
+    );
   }
   for (const [index, seed] of parsed.seeds.entries()) {
     requireRefs(`seed_anchor_${index}`, seed.anchorObjectIds, allowedObjectIds);
+    requireRefs(
+      `seed_surface_${index}`,
+      seed.groundingSurfaceRefs,
+      allowedSurfaceRefs,
+    );
   }
   validateScaleResult(parsed, allowedObjectIds);
 
@@ -307,6 +346,7 @@ export function finalizeStoryUnitDesign(
     }
   } else if (
     parsed.objectAnchorIds.length === 0 ||
+    parsed.groundingSurfaceRefs.length === 0 ||
     parsed.campNetwork.length === 0 ||
     parsed.events.length === 0
   ) {
@@ -315,6 +355,7 @@ export function finalizeStoryUnitDesign(
 
   const objectIds = new Set(field.objects.map((object) => object.id));
   const entityIds = new Set(field.objects.map((object) => object.entityId));
+  const surfaceRefs = allowedStorySurfaceRefs(field);
   requireUnique(
     "story_unit_world_gap",
     parsed.worldGaps.map((gap) => gap.id),
@@ -328,6 +369,12 @@ export function finalizeStoryUnitDesign(
   }
   requireUnique("story_unit_object_anchor", parsed.objectAnchorIds);
   requireRefs("story_unit_object_anchor", parsed.objectAnchorIds, objectIds);
+  requireUnique("story_unit_surface", parsed.groundingSurfaceRefs);
+  requireRefs(
+    "story_unit_surface",
+    parsed.groundingSurfaceRefs,
+    surfaceRefs,
+  );
   requireUnique("story_unit_source_seed", parsed.sourceSeedIds);
   if (parsed.sourceSeedIds.length > 0) {
     requireRefs(
