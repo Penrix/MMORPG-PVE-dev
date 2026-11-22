@@ -170,6 +170,48 @@ describe("object-grounded story authoring runtime", () => {
     expect(built.digest).toBeTruthy();
   });
 
+  it("rejects a World Atlas context from another project", () => {
+    expect(() =>
+      storyObjectFieldFromWorldContext({
+        projectId: "p1",
+        scale: "S03",
+        storyTimeLabel: "第三次忍界大战前后",
+        realityFingerprint: "reality:1",
+        storyStateFingerprint: "story:1",
+        context: {
+          projectId: "other-project",
+          current: [],
+          reference: [],
+          referenceDetail: [],
+          objects: [
+            {
+              entityId: "xiuxin",
+              name: "秀信",
+              kind: "character",
+              aliases: [],
+              surfaces: [
+                {
+                  authority: "confirmed",
+                  sourceId: "world-reality:xiuxin",
+                  facet: "state",
+                  slotKey: "location",
+                  value: "木叶医院",
+                },
+              ],
+              sourceRefs: ["world-reality:xiuxin"],
+            },
+          ],
+          counts: {
+            entities: 1,
+            projectSlots: 1,
+            referenceSlots: 0,
+            ambiguousSourceBaselines: 0,
+          },
+        },
+      }),
+    ).toThrow("story_authoring.world_context_project_mismatch");
+  });
+
   it("rejects Story Seeds that do not point back to the current Object Field", () => {
     const objectField = field("S03");
     const draft: StoryAuthoringSearchDraft = {
