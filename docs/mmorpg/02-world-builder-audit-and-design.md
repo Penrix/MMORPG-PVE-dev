@@ -1,5 +1,7 @@
 # 第一模块复盘：先前究竟写了什么，真正 World Builder 应该怎样改
 
+> **STATUS: IMPLEMENTATION HISTORY.** 本文用于保存早期 World Builder 审查与错误定性，不再定义当前第一模块。当前定义见 [16 World Builder ← World Atlas](16-world-builder-from-world-atlas.md)，第二模块输出合同见 13～15。
+
 > **审查结论（2026-11-20）**：最初的第一模块不是按对标项目世界生成架构开发完成，它只是**自写提示词 + React表单 + NarraLume原Canon候选机制**的接口原型。该结论描述的是旧版历史；**此后已新增独立的 WorldPack生成/存档/关系/采纳代码**，见 [04 当前实现](04-world-pack-implementation.md)。用户最关心的“真实活世界内容生产”尚未得到工程和实演证明。纠正要落实到实现方向，而不是往原提示词再加几句。
 
 ## A. 历史原型逐项定性（非当前版本）
