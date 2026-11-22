@@ -2,9 +2,9 @@
 
 > 这是基于 [NarraLume](https://github.com/abligail/narralume) 的小说世界与长篇创作系统开发仓库。原版用户指南、数据库、写作流程、测试与许可**继续有效**；本目录只记录 MMORPG-PVE 新业务的决策和修正，不宣称已有功能已完成。
 
-## 2026-11-21 当前任务：第三模块接入 World Atlas / Project Reality
+## 2026-11-22 当前整合线：World Builder Atlas → Object-Grounded Writers' Room
 
-第二模块已经收敛为 **Source World Markdown Card + typed relations + Project Reality**。当前任务不是重写小说流程，而是让 NarraLume 既有 Novel Studio 正式消费这套结构，并继续使用原有 settlement 单一写入口。第一模块不在本分支范围内。
+第二模块已经收敛为 **Source World Markdown Card + typed relations + Project Reality**。PR #5 现在同时承接已验证的 World Builder → Atlas 生产基线与第三模块 Novel Studio / Story Runtime：第一模块持续生产真实世界对象，第二模块保存和查询，第三模块把这些对象变成 Object Field 后再做创意搜索、编剧与 Reality Runtime。当前主动开发焦点仍是第三模块；第一模块只在明确的 `worldGap` 或接口缺陷要求时继续修改。
 
 - **第一模块生产合同：[16 World Builder ← World Atlas](16-world-builder-from-world-atlas.md)**。World Builder 持续生产 Atlas Card / Typed Relation / 当前事务候选，并根据真实图结构缺口决定下一轮制作；这是第三模块 Object Field 的上游内容来源。
 - **第三模块当前合同：[17 Novel Studio 接入 World Atlas / Project Reality](17-module3-world-atlas-integration.md)**。定义 Project Reality / Source Atlas 权威层、POV 认知边界、Chapter / Co-create / Assistant 接线和 settlement 单写原则。
@@ -46,7 +46,7 @@
 
 - GitHub Fork：[`Penrix/MMORPG-PVE-dev`](https://github.com/Penrix/MMORPG-PVE-dev)，**当前公开，也是唯一正式 NarraLume 工程开发仓**。`Penrix/MMORPG-PVE` 为历史原型仓，不再接受当前三模块正式实现。
 - 原 NarraLume 正文生成、版本、审阅、知识、Canon 和状态管理保持不变。
-- World Builder 已有**独立 WorldPack 生产链、候选审阅、引用校验、原子采纳和世界图查询代码**，并在 PR #4 演进为缺口驱动的 World Atlas Content Producer；第三模块在其对象输出之上构建 Object Field。两条线的最终整体验收以当前 stacked PR CI 为准。
+- World Builder 已有**独立 WorldPack 生产链、候选审阅、引用校验、原子采纳和世界图查询代码**，原 PR #4 的缺口驱动 World Atlas Content Producer 已吸收到 PR #5；PR #4 已关闭，避免两条兄弟分支长期漂移。第三模块直接在这套对象输出之上构建 Object Field。
 - 本目录文档属于设计与实现指导，**不是**已通过模型/CI 验收的功能声明。
 - 完整 v0.1～v0.7 七个独立研究版本已在用户明确公开授权下收入 [research](research/README.md)；旧 Atlas 在原仓库。原文不能被运行时摘录或简要指南替换。
 
