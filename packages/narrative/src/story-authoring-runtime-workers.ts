@@ -29,9 +29,10 @@ import {
 } from "./story-authoring-runtime.js";
 
 const StoryAuthoringSearchOutputSchema = z.object({
+  status: z.enum(["READY", "BLOCKED_WORLD_GAP"]),
   question: z.string().min(1),
   objectFocus: z.array(StoryObjectFocusSchema),
-  seeds: z.array(StoryOpportunitySeedSchema).min(1),
+  seeds: z.array(StoryOpportunitySeedSchema),
   worldGaps: z.array(z.string().min(1)),
   scaleResult: StoryScaleSearchResultSchema,
 });
@@ -46,15 +47,16 @@ const STORY_AUTHORING_SEARCH_CONTRACT: JsonSchemaContract = {
 };
 
 const StoryUnitDesignOutputSchema = z.object({
-  objectAnchorIds: z.array(z.string().min(1)).min(1),
+  status: z.enum(["READY", "BLOCKED_WORLD_GAP"]),
+  objectAnchorIds: z.array(z.string().min(1)),
   storyProblem: z.string().min(1),
   worldGaps: z.array(z.string().min(1)),
-  campNetwork: z.array(StoryUnitCampMemberSchema).min(1),
+  campNetwork: z.array(StoryUnitCampMemberSchema),
   reactionTargets: z.array(StoryUnitReactionTargetSchema),
   campTransitions: z.array(StoryUnitCampTransitionSchema),
   appearanceOrderEntityIds: z.array(z.string().min(1)),
   informationRelease: z.array(StoryUnitInformationReleaseSchema),
-  events: z.array(StoryUnitEventDesignSchema).min(1),
+  events: z.array(StoryUnitEventDesignSchema),
 });
 type StoryUnitDesignOutput = z.infer<typeof StoryUnitDesignOutputSchema>;
 
@@ -236,7 +238,7 @@ export class StoryAuthoringService {
           "禁止先想一个熟悉套路，再回来给套路贴世界名词。先看具体对象当前是谁、拥有什么、缺什么、和谁相连、什么规则给它定价，再做连接、交叉、对立、变奏、因果追踪或成熟故事迁移。",
           "每颗 Story Seed 的 anchorObjectIds 必须引用 Object Field 中真实 object.id。",
           "允许真实对象碰撞后长出新人物/机构/用途，但只能放 candidateNewObjects，status 必须是 CANDIDATE，不能冒充 Reality。",
-          "如果 Object Field 太薄，worldGaps 直接写出缺什么对象/关系/状态，需要 World Builder 补世界。不要用‘神秘高手/反派/美女/商会’占位补洞。",
+          "如果 Object Field 太薄，status 必须返回 BLOCKED_WORLD_GAP，worldGaps 直接写出缺什么对象/关系/状态，需要 World Builder 补世界。此时允许 seeds 与尺度结果为空，不要为了过 schema 用‘神秘高手/反派/美女/商会’占位补洞。",
           "M 方法只是搜索运动，不提供搜索对象。成熟故事材料只是 prior，不是本书 Reality。",
           "候选可以分叉、回返和失败；不要为了尽快交付而把第一条可行答案冒充完成。",
           scaleInstruction,
@@ -277,6 +279,7 @@ export class StoryAuthoringService {
       {
         version: "story-authoring-search.v1",
         authority: "speculative",
+        status: result.value.status,
         projectId: request.field.projectId,
         scale: request.field.scale as "S01" | "S02" | "S03",
         objectFieldDigest: request.field.digest,
@@ -358,7 +361,7 @@ export class StoryAuthoringService {
           "appearanceOrderEntityIds 与 informationRelease 负责谁先进入、Reader/人物分别何时知道什么。",
           "events 是有顺序的 S05 事件设计。Cast Pool 是可能被卷入的人物池；Active Seed 是本事件第一轮真正行动/被触发的人。绝不能默认第一轮全员开机。",
           "S05 Character Agents 之后仍只按自己的 Observation / Goal / 利益行动；World Arbiter 决定 Reality 是否允许。S04 只能设计条件与目标，不能写死演员结果。",
-          "如果当前对象不够支撑这出戏，把缺口写入 worldGaps，不要凭空造 Reality。",
+          "如果当前对象不够支撑这出戏，status 必须返回 BLOCKED_WORLD_GAP，把缺口写入 worldGaps，events 为空；不要为了过 schema 凭空造人物、关系或事件。对象足够时返回 READY。",
         ].join("\n"),
         messages: [
           {
@@ -392,6 +395,7 @@ export class StoryAuthoringService {
       {
         version: "story-unit-design.v1",
         authority: "speculative",
+        status: result.value.status,
         projectId: request.field.projectId,
         objectFieldDigest: request.field.digest,
         sourceSeedIds: [...request.sourceSeedIds],
