@@ -1,5 +1,7 @@
 # 第三模块｜Story Runtime Core（2026-11-21）
 
+> **2026-11-22 第三次语义纠正：本文件不再定义整个第三模块，也不再把 Agent / Arbiter 等同于 S05。最新层级先读 [21 S05 Story Node → S06 Scene Expansion](21-s05-story-node-s06-scene-expansion.md)。本文件以下协议现在只定义 S05 Story Node 内部的 Reality Rehearsal / Adjudication 能力。**
+
 > 本文件冻结第三模块新的核心方向。NarraLume 原生 Chapter Pipeline 继续负责正文生产、审阅、修订与 Settlement；本模块补上它原来薄弱的 Reality → Story → Outline 之间的故事运行时。
 
 ## 2026-11-22 第二层语义覆盖
@@ -20,24 +22,29 @@
 
 ## 0. 一句话裁决
 
-**第三模块的核心不再是“给 Chapter Goal 写正文”，而是：从 Project Reality 中恢复当前世界，让人物只依据自己可感知的 Reality 独立行动，由世界裁判结算多人行动，再由作者态 Narrative Director 按商业男频目标选择值得进入 Reader Time 的故事。**
-
-NarraLume 原生下半段继续保留：
+**第三模块的故事生产不是从 Agent Runtime 开始。上游先以 Object Field 为想象对象，经 S01—S03 找 Story Opportunity、S04 主动设计 Story Unit、S05 拆成“一个问题一个节点”；本文件的 Character Agent + World Arbiter 只在每个 S05 Node 内部负责 Reality rehearsal。通过现实约束的 Node 再由 S06 展开成多个 Scene，S07安排 Reader Time，S08进入正文。**
 
 ```text
-Story Runtime
-    ↓
-Story / Plot / Chapter Target
-    ↓
-NarraLume
-Scene Plan
-    ↓
-Draft
-    ↓
-Review / Revision
-    ↓
+Object Field
+↓
+S01 / S02 / S03
+↓
+S04 Story Unit
+↓
+S05 Story Node
+  └─ 本文件：CharacterObservation
+              → ActionProposal
+              → WorldArbitration
+              → speculative Reality
+↓
+S06 Multi-Scene Expansion
+↓
+S07 Reader Time
+↓
+S08 Manuscript
+↓
 Settlement
-    ↓
+↓
 Project Reality
 ```
 
@@ -90,7 +97,7 @@ AA 中三套历史研究保留为认知来源，不原样搬成运行 Prompt：
 
 任何未来实现都必须标记为 independent implementation / conceptual reference，不能写成 source port。
 
-## 2. 新第三模块的七个核心协议
+## 2. S05 Reality Rehearsal 的七个协议
 
 ```text
 World Atlas / Project Reality
@@ -268,9 +275,9 @@ TRPG 历史“三路径”升级为正式 runtime 语义：
 
 > 让世界中的人、组织、地点、能力、资产、信息真实存在并可查询。
 
-第三模块 Runtime 负责：
+S05 Node 内部的 Reality Rehearsal 负责：
 
-> 让这些人从自己的 Reality 出发真实行动。
+> 让被这个 Node 激活的人从自己的 Reality 出发真实行动，并判断作者设计是否仍可成立。
 
 People-centered 因此获得真正执行含义：
 
@@ -302,14 +309,16 @@ Story
 - commit/version
 - Canon / Relationship / Timeline / Knowledge
 
-第三模块新核心只补它原来最薄的部分：
+本文件这套 Agent / Arbiter 能力只补 S05 的“演真”部分：
 
 ```text
-Reality
+S05 Story Node
   ↓
-Story Runtime
+Reality Rehearsal
   ↓
-Story / Plot / Chapter Target
+S06 Scene Expansion
+  ↓
+S07 Reader Time
   ↓
 NarraLume Production
 ```
@@ -376,4 +385,4 @@ NarraLume Production
 
 最终裁决：
 
-> **Reality 决定“人物实际上会怎样行动”；Narrative Director 决定“哪些真实可能性值得被激活和演给 Reader 看”；Settlement 决定“正文最终真正发生了什么”。**
+> **作者在 S04 / S05 决定“这出故事和这个问题节点为什么值得写”；Character Agent + World Arbiter 只决定“节点条件下人物实际上会怎样行动、Reality是否允许”；S06决定“一个节点怎样展开成多个场景”；S07决定“Reader什么时候看到什么”；Settlement决定“正文最终真正发生了什么”。**
