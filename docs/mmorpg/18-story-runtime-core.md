@@ -1,5 +1,7 @@
 # 第三模块｜Story Runtime Core（2026-11-21）
 
+> **STATUS: CURRENT SUPPORT / NOT MODULE-3 AUTHORITY.** 本文只保留 S05 内部 Character Observation / characterization-constrained performance / World Arbitration 等 Reality rehearsal 实现。**第三模块总架构必须先读 [23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md)。** 任何“Agent 独立决策权高于编剧线”“世界先自跑再挑故事”的旧措辞均已失效。
+
 > **2026-11-22 第三次语义纠正：本文件不再定义整个第三模块，也不再把 Agent / Arbiter 等同于 S05。最新层级先读 [21 S05 Story Node → S06 Scene Expansion](21-s05-story-node-s06-scene-expansion.md)。本文件以下协议现在只定义 S05 Story Node 内部的 Reality Rehearsal / Adjudication 能力。**
 
 > 本文件冻结第三模块新的核心方向。NarraLume 原生 Chapter Pipeline 继续负责正文生产、审阅、修订与 Settlement；本模块补上它原来薄弱的 Reality → Story → Outline 之间的故事运行时。
