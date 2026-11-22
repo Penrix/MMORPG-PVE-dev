@@ -124,6 +124,7 @@ describe("StoryAuthoringService", () => {
           expect(serialized).toContain("object:xiuxin");
           expect(serialized).toContain("world-reality:medic");
           const checked = validate({
+            status: "READY",
             question: "病房期哪些对象值得继续玩？",
             objectFocus: [
               {
@@ -209,6 +210,7 @@ describe("StoryAuthoringService", () => {
     const sourceSearch = {
       version: "story-authoring-search.v1" as const,
       authority: "speculative" as const,
+      status: "READY" as const,
       projectId: "p1",
       scale: "S03" as const,
       objectFieldDigest: "prior-field",
@@ -256,6 +258,7 @@ describe("StoryAuthoringService", () => {
           expect(serialized).toContain("Cast Pool");
           expect(serialized).toContain("Active Seed");
           const checked = validate({
+            status: "READY",
             objectAnchorIds: ["object:xiuxin", "object:medic"],
             storyProblem: "让秀信的异常第一次进入可信专业识货链",
             worldGaps: [],
