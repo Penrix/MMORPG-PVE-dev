@@ -283,6 +283,9 @@ export function finalizeNarrativeAllocationDecision(
   ) {
     throw new Error("story_runtime.expectation.allocation_not_bound");
   }
+  if (candidate.realityFingerprint !== state.realityFingerprint) {
+    throw new Error("story_runtime.expectation.allocation_stale_reality");
+  }
 
   const refs = allocationReferenceSets(state);
   requireRefs(
