@@ -239,18 +239,41 @@ Prompt 固定：
 - arbitration 是 Reality constraint，不是 screenplay；
 - S07 保留全局 Reader Time 主权。
 
-## 6. 当前仍未完成
+## 6. S08 已接入现有 NarraLume Production
 
-本次修的是 S05 / S06 层级和第一条可执行 Scene Expansion，不代表第三模块完成。
+S07 之后已经新增第一条可执行 S08 bridge：
 
-后续仍需：
+```text
+S06 StorySceneExpansion
+→ S07 StoryReaderTimePlan
+→ S08 StoryChapterProductionHandoff
+→ chapter metadata
+→ NarraLume ChapterWorkerSuite
+```
+
+关键权限：
+
+- S06 Scene 是叙事场景设计；
+- NarraLume ScenePlan 只是正文生产清单；
+- 存在 locked handoff 时，`scene.plan` 确定性采用 handoff，**不再调用 LLM 二次编剧**；
+- `draft.generate` 只负责把已经锁定的 S06/S07 设计演成正文；
+- review / revision / settlement 继续复用 NarraLume 原生成熟链。
+
+详细见：
+
+`docs/mmorpg/22-s08-production-handoff.md`
+
+### 当前仍未完成
+
+这不代表第三模块完成。后续仍需：
 
 1. 正式宿主把 S04 Event → S05 observation / agent activation 接通；
 2. 多轮 Reality rehearsal 与 soft-route bent/broken 状态；
-3. S06 expansion 持久化 / author adoption；
-4. S07 已有 scene-based contract/service，下一步补跨Node连续编排与持久化；
-5. S08 production handoff；
-6. settlement 回写 Canon Reality。
+3. S06 / S07 持久化、author adoption 与 UI；
+4. 跨多个 S05 Node 的连续 S07 Reader Time 编排；
+5. 多 chapter boundary 自动生成连续 Production Handoff；
+6. 完整真实模型端到端验收；
+7. settlement 回写 Canon Reality 的全链实测。
 
 ## 7. 最短 Guardrail
 
