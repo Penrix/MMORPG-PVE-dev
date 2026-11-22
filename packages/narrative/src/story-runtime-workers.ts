@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   type CharacterActionProposal,
   type CharacterObservationPacket,
+  type WorldArbitrationContext,
   type WorldArbitrationReceipt,
   type WorldArbitrationConflictKind,
 } from "@narralume/contracts";
@@ -110,7 +111,7 @@ export interface WorldArbitrationModelRequest {
   generationId: string;
   round: number;
   proposals: readonly CharacterActionProposal[];
-  operationalWorldContext: string;
+  worldContext: WorldArbitrationContext;
   hardContracts?: readonly string[];
   protagonistCharacterId?: string | null;
 }
@@ -178,6 +179,9 @@ export class StoryRuntimeAgentService {
         characterId: observation.characterId,
         characterName: observation.characterName,
         observationDigest: observation.digest,
+        storyUnitDesignDigest: observation.storyUnitDesignDigest,
+        storyUnitEventId: observation.storyUnitEventId,
+        realityFingerprint: observation.realityFingerprint,
         location: observation.location,
         currentGoal: observation.currentGoal,
         pressure: observation.pressure,
@@ -211,7 +215,11 @@ export class StoryRuntimeAgentService {
     request: WorldArbitrationModelRequest,
     signal: AbortSignal,
   ): Promise<StoryRuntimeModelResult<WorldArbitrationReceipt>> {
-    if (run.projectId !== request.projectId || request.proposals.length === 0) {
+    if (
+      run.projectId !== request.projectId ||
+      request.proposals.length === 0 ||
+      request.worldContext.projectId !== request.projectId
+    ) {
       throw new Error("story_runtime.arbiter.invalid_request");
     }
     if (
@@ -219,7 +227,11 @@ export class StoryRuntimeAgentService {
         (proposal) =>
           proposal.projectId !== request.projectId ||
           proposal.generationId !== request.generationId ||
-          proposal.round !== request.round,
+          proposal.round !== request.round ||
+          proposal.storyUnitDesignDigest !==
+            request.worldContext.storyUnitDesignDigest ||
+          proposal.storyUnitEventId !== request.worldContext.storyUnitEventId ||
+          proposal.realityFingerprint !== request.worldContext.realityFingerprint,
       )
     ) {
       throw new Error("story_runtime.arbiter.proposal_cycle_mismatch");
@@ -235,7 +247,7 @@ export class StoryRuntimeAgentService {
       projectId: request.projectId,
       generationId: request.generationId,
       round: request.round,
-      operationalWorldContext: request.operationalWorldContext,
+      worldContext: request.worldContext,
       hardContracts: request.hardContracts ?? [],
       protagonistCharacterId: request.protagonistCharacterId ?? null,
       proposals: request.proposals.map((proposal) => ({
@@ -260,7 +272,7 @@ export class StoryRuntimeAgentService {
       {
         instructions: [
           "你是世界裁判，不是人物作者。所有 proposals 都是人物已经独立作出的意图。",
-          "你只能判断这些意图在当前 operationalWorldContext 下如何同时结算：成功、部分成功或受阻。",
+          "你只能依据 worldContext 中来自当前 Project Reality 的 confirmed surfaces，判断这些意图如何同时结算：成功、部分成功或受阻。worldContext 是 S04 当前 Event 的 Reality 投影，不允许自行补充世界规则、资源或空间条件。",
           "禁止替人物改主意。不要输出新的 decision / intendedAction；宿主会从原 Proposal 原样绑定。",
           "必须处理时间、地点、资源、规则、知识和行动碰撞。一个人物做不到，不等于他突然选择别的行动。",
           "resolution 必须覆盖每一个 agentId 且每人一次，actionOrder 不得重复。",
@@ -335,6 +347,10 @@ export class StoryRuntimeAgentService {
         projectId: request.projectId,
         generationId: request.generationId,
         round: request.round,
+        storyUnitDesignDigest: request.worldContext.storyUnitDesignDigest,
+        storyUnitEventId: request.worldContext.storyUnitEventId,
+        realityFingerprint: request.worldContext.realityFingerprint,
+        worldContextDigest: request.worldContext.digest,
         proposalDigests: request.proposals.map((proposal) => proposal.digest),
         resolutions,
         conflicts: output.conflicts,
