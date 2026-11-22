@@ -669,6 +669,7 @@ export const StoryOpportunitySeedSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   anchorObjectIds: z.array(z.string().min(1)).min(1),
+  groundingSurfaceRefs: z.array(z.string().min(1)).min(1),
   observation: z.string().min(1),
   searchMove: z.string().min(1),
   idea: z.string().min(1),
@@ -683,6 +684,7 @@ export type StoryOpportunitySeed = z.infer<typeof StoryOpportunitySeedSchema>;
 
 export const StoryObjectFocusSchema = z.object({
   objectId: z.string().min(1),
+  surfaceRefs: z.array(z.string().min(1)).min(1),
   whyNow: z.string().min(1),
   valuableSurface: z.string().min(1),
 });
@@ -871,6 +873,7 @@ export const StoryUnitDesignSchema = z.object({
   sourceSeedIds: z.array(z.string().min(1)),
   expectationDesignDigest: z.string().min(1),
   objectAnchorIds: z.array(z.string().min(1)),
+  groundingSurfaceRefs: z.array(z.string().min(1)),
   storyProblem: z.string().min(1),
   worldGaps: z.array(StoryWorldGapSchema),
   campNetwork: z.array(StoryUnitCampMemberSchema),
