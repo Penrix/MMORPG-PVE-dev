@@ -19,12 +19,13 @@ export interface CharacterObservationBuildRequest {
   projectId: string;
   characterId: string;
   generationId: string;
-  currentGoal: string;
+  storyUnitDesignDigest: string;
+  storyUnitEventId: string;
+  goalEvidenceRefs: readonly string[];
   pressure: string;
   round?: number;
   targetOutlineNodeId?: string | null;
-  location?: string | null;
-  resources?: readonly string[];
+  resourceEvidenceRefs?: readonly string[];
 }
 
 /**
@@ -166,11 +167,39 @@ export class CharacterObservationBuilder {
       },
     );
 
-    const inferredLocation =
-      request.location === undefined
-        ? locationFromVisibleFacts(snapshot.facts)
-        : request.location;
-    const resources = normalizeStrings(request.resources ?? []);
+    const visibleEvidence = new Map(
+      [
+        ...knownFacts,
+        ...relationships,
+        ...perceivedEvents,
+        ...memory,
+      ].map((item) => [item.id, item] as const),
+    );
+    const goalEvidenceRefs = normalizeStrings(request.goalEvidenceRefs);
+    if (goalEvidenceRefs.length === 0) {
+      throw new Error("story_runtime.observation.goal_evidence_required");
+    }
+    for (const ref of goalEvidenceRefs) {
+      if (!visibleEvidence.has(ref)) {
+        throw new Error(
+          `story_runtime.observation.goal_evidence_not_visible:${ref}`,
+        );
+      }
+    }
+    const currentGoal = goalEvidenceRefs
+      .map((ref) => visibleEvidence.get(ref)!.text)
+      .join(" ; ");
+
+    const resources = normalizeStrings(request.resourceEvidenceRefs ?? []);
+    for (const ref of resources) {
+      if (!visibleEvidence.has(ref)) {
+        throw new Error(
+          `story_runtime.observation.resource_evidence_not_visible:${ref}`,
+        );
+      }
+    }
+
+    const inferredLocation = locationFromVisibleFacts(snapshot.facts);
     const sourceIds = normalizeStrings(
       packet.sources.map((source) => source.id),
     );
@@ -197,17 +226,21 @@ export class CharacterObservationBuilder {
 
     const withoutDigest = CharacterObservationPacketDraftSchema.parse({
       version: "character-observation.v1",
-      authority: "confirmed",
+      authority: "speculative",
       projectId: request.projectId,
       generationId: request.generationId,
       round: request.round ?? 1,
+      storyUnitDesignDigest: request.storyUnitDesignDigest.trim(),
+      storyUnitEventId: request.storyUnitEventId.trim(),
       agentId: characterAgentId(request.characterId),
       characterId: request.characterId,
       characterName: character.name,
       targetOutlineNodeId: request.targetOutlineNodeId ?? null,
-      currentGoal: request.currentGoal.trim(),
+      currentGoal,
+      goalEvidenceRefs,
       pressure: request.pressure.trim(),
-      location: inferredLocation,
+      location: inferredLocation.value,
+      locationEvidenceRefs: inferredLocation.evidenceRefs,
       resources,
       relationships,
       knownFacts,
@@ -233,7 +266,7 @@ export function characterAgentId(characterId: string): string {
 
 function locationFromVisibleFacts(
   facts: ReturnType<StoryStatePacketBuilder["snapshot"]>["facts"],
-): string | null {
+): { value: string | null; evidenceRefs: string[] } {
   const predicates = new Set([
     "location",
     "current_location",
@@ -245,9 +278,11 @@ function locationFromVisibleFacts(
   for (const fact of [...facts].reverse()) {
     if (!predicates.has(fact.predicate.toLowerCase())) continue;
     const value = fact.objectEntityId ?? fact.value;
-    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "string" && value.trim()) {
+      return { value: value.trim(), evidenceRefs: [fact.id] };
+    }
   }
-  return null;
+  return { value: null, evidenceRefs: [] };
 }
 
 function evidence(input: {
