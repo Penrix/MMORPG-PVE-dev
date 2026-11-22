@@ -103,7 +103,29 @@ function candidate(
 
 function decision(
   candidateId: string,
-  overrides: Partial<NarrativeAllocationDecisionDraft> = {}
+  overrides: Partial<NarrativeAllocationDecisionDraft> = {},
+): NarrativeAllocationDecisionDraft {
+  return {
+    version: "narrative-allocation.v1",
+    authority: "speculative",
+    projectId: "p1",
+    candidateId,
+    action: "charge",
+    readerTime: "scene",
+    expectationThreadIds: ["thread:basic-ninjutsu"],
+    reasons: ["这个候选让相关人物继续依据旧常识行动并增加未来反应价格"],
+    deepenScarcityEvidenceIds: [],
+    reinforceBeliefIds: ["belief:basic-is-basic"],
+    widenGapBeliefIds: ["belief:basic-is-basic"],
+    embodimentTargets: ["让 Reader 看到普通医疗忍者为何真心认为这只是普通恢复"],
+    payoffThreadIds: [],
+    reactionTargetEntityIds: [],
+    retainedGainOpportunity: null,
+    mustPreserveReality: true,
+    mustNotRewriteIntent: true,
+    ...overrides,
+  };
+}
 
 function sceneExpansion(): StorySceneExpansion {
   return {
@@ -169,29 +191,6 @@ function sceneExpansion(): StorySceneExpansion {
       },
     ],
     digest: "scene-expansion:1",
-  };
-}
-,
-): NarrativeAllocationDecisionDraft {
-  return {
-    version: "narrative-allocation.v1",
-    authority: "speculative",
-    projectId: "p1",
-    candidateId,
-    action: "charge",
-    readerTime: "scene",
-    expectationThreadIds: ["thread:basic-ninjutsu"],
-    reasons: ["这个候选让相关人物继续依据旧常识行动并增加未来反应价格"],
-    deepenScarcityEvidenceIds: [],
-    reinforceBeliefIds: ["belief:basic-is-basic"],
-    widenGapBeliefIds: ["belief:basic-is-basic"],
-    embodimentTargets: ["让 Reader 看到普通医疗忍者为何真心认为这只是普通恢复"],
-    payoffThreadIds: [],
-    reactionTargetEntityIds: [],
-    retainedGainOpportunity: null,
-    mustPreserveReality: true,
-    mustNotRewriteIntent: true,
-    ...overrides,
   };
 }
 
