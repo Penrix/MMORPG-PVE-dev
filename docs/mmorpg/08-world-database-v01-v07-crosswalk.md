@@ -1,5 +1,7 @@
 # 第二模块｜NarraLume 世界数据库 v0.1～v0.7 需求交叉对照（2026-11-20）
 
+> **STATUS: SUPERSEDED DATA-MODEL INTERPRETATION / REQUIREMENTS EVIDENCE.** 本文仍可作为 v0.1～v0.7 需求与历史迁移的证据，但“把研究逐项数据库化”的解释已被 [13](13-world-atlas-lightweight-core.md) 与 [14](14-world-atlas-content-framework-v01.md) 覆盖。当前固定：v0.1～v0.7 是 **Content Schema**，不是继续增加专项 SQL 表的命令。
+
 > **2026-11-21 最新覆盖：** 本文保留为 v0.1～v0.7 → 旧数据库实现的历史 Crosswalk，但“不足就继续加专项 SQL 表”的路线已经停止。当前权威见 [13：World Atlas 轻量核心](13-world-atlas-lightweight-core.md) 与 [14：World Atlas 世界内容框架 v0.1](14-world-atlas-content-framework-v01.md)：七版研究现在作为 **Content Schema**，通过自由世界卡片、Card Type Registry、typed relations、模板提示和派生视图承载；只有无法由这套轻量模型表达的真实需求，才允许重新讨论数据结构。
 
 > 本轮暂停第一模块，先将用户的七版世界设计研究视为**第二模块需要能够容纳、关联、查询及维护的世界内容定义**。绝对不能把“有 JSON 可存”当成“数据库真正建成了这个世界”。
