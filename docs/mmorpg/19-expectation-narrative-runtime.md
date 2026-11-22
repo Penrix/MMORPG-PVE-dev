@@ -1,5 +1,7 @@
 # 第三模块｜Expectation / Narrative Runtime（2026-11-22）
 
+> **STATUS: CURRENT SUPPORT / PARTIALLY SUPERSEDED.** 稀缺、固有认知、期待差、Reader Time、payoff连续性仍有效；**人物线权限、下注与反应设计必须服从 [23](23-module3-upgrade-stake-director.md)**。禁止从本文恢复“作者不能预设震惊/投靠/误判/加注”或“Agent 可因理性自主否决商业人物线”的旧解释。
+
 > **2026-11-22 当前最高权限再纠正：Expectation Design 可以主动设计配角下注、Reaction / Payoff方向；具体演法再由人设、利益和可见Reality约束。旧的“第一层拥有角色选择上位权、第二层不得预定反应”的表述已经被 [23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md) supersede。World Arbiter只裁硬事实可行性，不裁商业男频人物线是否允许存在。**
 
 > **2026-11-22 最新权限修正：Reader Time 的正式入口已经下移到 S06 Scene Expansion 之后。禁止 `WorldArbitrationReceipt → S07` 直连。讲师原稿的正式链是：S05一个问题节点 → S06多个场景 → S07分层释放信息差 / 提前种新期待 / 高潮后转移期待焦点。本文中“第一层运行后直接分配 Reader Time”的旧描述仅保留形成史，不再具有当前工程Authority。**
