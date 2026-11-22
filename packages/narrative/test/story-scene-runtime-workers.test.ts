@@ -36,6 +36,30 @@ function storyUnit(): StoryUnitDesign {
     groundingSurfaceRefs: ["surface:xiuxin", "surface:medic"],
     storyProblem: "让异常第一次进入可信识货链",
     worldGaps: [],
+    upgradeLedger: {
+      protagonistEntityId: "xiuxin",
+      road: "从医院低位伤员进入木叶高价任务圈",
+      currentStepId: "step:professional-reprice",
+      currentPosition: "普通重伤忍者",
+      stageGoal: "让异常能力获得第一层专业重新估值",
+      settlementTarget: "获得更高任务圈入口",
+      steps: [
+        {
+          id: "step:professional-reprice",
+          title: "专业重新估值",
+          targetGain: "专业评级与任务价值",
+          gate: "打破普通伤员固有认知",
+          targetCircle: "医疗与任务审核圈",
+        },
+        {
+          id: "step:elite-mission",
+          title: "进入高价任务圈",
+          targetGain: "上忍级任务机会",
+          gate: "用专业评级换真实任务",
+          targetCircle: "上忍与高价任务圈",
+        },
+      ],
+    },
     campNetwork: [
       {
         entityId: "xiuxin",
@@ -43,6 +67,7 @@ function storyUnit(): StoryUnitDesign {
         currentGoal: "恢复",
         storyRole: "主角行动来源",
         currentBelief: "自己的训练有效",
+        currentInterest: "恢复并重新取得任务价值",
       },
       {
         entityId: "medic",
@@ -50,6 +75,22 @@ function storyUnit(): StoryUnitDesign {
         currentGoal: "按规则处理伤员",
         storyRole: "专业定价",
         currentBelief: "秀信只是普通伤员",
+        currentInterest: "维护专业判断和资源配置准确性",
+      },
+    ],
+    stakeLedger: [
+      {
+        id: "stake:medic-rating",
+        entityId: "medic",
+        currentBelief: "秀信只是普通伤员",
+        currentInterest: "维护专业判断和医疗资源配置",
+        stakeAction: "继续按普通伤员标准处理并给出专业评级",
+        stakeAssets: ["专业判断", "医疗资源配置"],
+        commitmentCost: "改判就等于承认此前估值不足",
+        escalationPlan: "异常持续时升级复核并留下记录",
+        payoffReaction: "亲自改判秀信价值并改变后续处理",
+        settlementChange: "秀信进入更高专业估值链",
+        state: "committed",
       },
     ],
     reactionTargets: [
@@ -84,6 +125,7 @@ function storyUnit(): StoryUnitDesign {
           { entityId: "xiuxin", pressure: "继续训练会暴露真实水平" },
           { entityId: "medic", pressure: "专业职责要求处理异常" },
         ],
+        stakeEntryIds: ["stake:medic-rating"],
         reactionTargetEntityIds: ["medic"],
         informationReleaseSteps: [1],
         phaseTargets: [
@@ -112,7 +154,8 @@ function storyUnit(): StoryUnitDesign {
         readerExpectation: "等待专业人物真实处理",
       },
     ],
-    mustPreserveAgentAutonomy: true,
+    directorAuthority: "author-defined-story-line",
+    characterExecutionRule: "characterization-constrained-performance",
     digest: "story-unit:digest",
   };
 }
