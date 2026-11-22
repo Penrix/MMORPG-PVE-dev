@@ -86,6 +86,9 @@ function candidate(
     id,
     projectId: "p1",
     generationId: "g1",
+    storyUnitDesignDigest: "story-unit:1",
+    storyUnitEventId: "event:1",
+    realityFingerprint: "reality-1",
     source,
     authority: "speculative",
     summary,
@@ -234,6 +237,10 @@ describe("Expectation / Narrative Runtime", () => {
       projectId: "p1",
       generationId: "g1",
       round: 1,
+      storyUnitDesignDigest: "story-unit:1",
+      storyUnitEventId: "event:1",
+      realityFingerprint: "reality-1",
+      worldContextDigest: "world-context:1",
       proposalDigests: ["proposal:xiuxin"],
       resolutions: [
         {
@@ -304,6 +311,22 @@ describe("Expectation / Narrative Runtime", () => {
         event,
       ),
     ).toThrow("story_runtime.expectation.charge_without_operation");
+  });
+
+  it("rejects Reader Time allocation when the candidate came from a newer Reality", () => {
+    const current = state();
+    const event = {
+      ...candidate("event:new-reality", "Reality 已经变化"),
+      realityFingerprint: "reality-2",
+    };
+
+    expect(() =>
+      finalizeNarrativeAllocationDecision(
+        decision(event.id),
+        current,
+        event,
+      ),
+    ).toThrow("story_runtime.expectation.allocation_stale_reality");
   });
 
   it("allows payoff only when an existing expectation thread is ripe", () => {
