@@ -857,9 +857,7 @@ export const StoryStakeLedgerEntrySchema = z.object({
   settlementChange: z.string().min(1),
   state: StoryStakeStateSchema,
 });
-export type StoryStakeLedgerEntry = z.infer<
-  typeof StoryStakeLedgerEntrySchema
->;
+export type StoryStakeLedgerEntry = z.infer<typeof StoryStakeLedgerEntrySchema>;
 
 export const StoryUnitCampMemberSchema = z.object({
   entityId: z.string().min(1),
@@ -1052,9 +1050,7 @@ export const StoryUnitDesignSchema = z.object({
   informationRelease: z.array(StoryUnitInformationReleaseSchema),
   events: z.array(StoryUnitEventDesignSchema),
   directorAuthority: z.literal("author-defined-story-line"),
-  characterExecutionRule: z.literal(
-    "characterization-constrained-performance",
-  ),
+  characterExecutionRule: z.literal("characterization-constrained-performance"),
   digest: z.string().min(1),
 });
 export type StoryUnitDesign = z.infer<typeof StoryUnitDesignSchema>;
