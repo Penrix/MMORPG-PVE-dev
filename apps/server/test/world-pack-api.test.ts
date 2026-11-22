@@ -527,7 +527,27 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
       url: `/api/projects/${projectId}/story-bible`,
     });
     expect(after.json().entities).toHaveLength(5);
-    expect(after.json().relationships).toHaveLength(6);
+    // Adoption must reflect what this deficiency-driven batch actually
+    // produced. Social/playability were intentionally not executed above,
+    // so old fixed-pipeline counts (6 relationships / 3 affordances) are
+    // not valid completion criteria.
+    const stagedCurrentLinks = pack.document.links.filter(
+      (link: { status: string }) => link.status === "current",
+    );
+    expect(after.json().relationships).toHaveLength(stagedCurrentLinks.length);
+    expect(
+      after
+        .json()
+        .relationships.map(
+          (relationship: { relation: string }) => relationship.relation,
+        ),
+    ).toEqual(
+      expect.arrayContaining(
+        stagedCurrentLinks.map(
+          (link: { relation: string }) => link.relation,
+        ),
+      ),
+    );
     expect(
       after
         .json()
@@ -544,7 +564,7 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
           (fact: { predicate: string }) =>
             fact.predicate === "world.affordance",
         ),
-    ).toHaveLength(3);
+    ).toHaveLength(pack.document.interactions?.length ?? 0);
     // This is the actual bridge into NarraLume's writing context:
     // all important world objects carry an adopted world.content fact.
     const canonRepo = new SqliteCanonRepository(db);
@@ -616,7 +636,7 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
     expect(stale.statusCode).toBe(409);
   });
 
-  it("permits W1 to explicitly reuse an adopted W0 entity and rejects duplicates", async () => {
+  it("permits W1 to reuse an adopted W0 entity while adding only explicit local content", async () => {
     const { app, projectId } = await setup();
     const w0 = await generate(app, projectId);
     await completeRun(app, projectId, w0.json().runId);
@@ -677,20 +697,62 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
         url: `/api/projects/${projectId}/world-packs`,
       })
     ).json();
+    const generatedW1 = packs[0];
+
+    // The open production state machine may stop after establishing/reusing
+    // the focused parent when the surrounding Reality already satisfies its
+    // structural coverage. Do not pretend objects from the test fixture were
+    // generated if they never entered the staged document. Explicitly add the
+    // local object we want this API test to adopt.
+    const edited: WorldPackDocument = structuredClone(generatedW1.document);
+    if (!edited.nodes.some((node) => node.localId === "river_relic")) {
+      edited.nodes.push({
+        ...baseDocument.nodes[3]!,
+        localId: "river_relic",
+        name: "河底禁制残图",
+        areaRef: "jade_market",
+        existingCanonId: null,
+      });
+      edited.links.push({
+        fromRef: "river_relic",
+        toRef: "jade_market",
+        relation: "found_in",
+        description: "残图出自玉澜坊市附近的古河道",
+        status: "current",
+      });
+    }
+    const saved = await app.inject({
+      method: "PUT",
+      url: `/api/projects/${projectId}/world-packs/${encodeURIComponent(generatedW1.id)}`,
+      payload: { expectedVersion: generatedW1.version, document: edited },
+    });
+    expect(saved.statusCode, saved.body).toBe(200);
+
     const result = await app.inject({
       method: "POST",
-      url: `/api/projects/${projectId}/world-packs/${encodeURIComponent(packs[0].id)}/adopt`,
-      payload: { expectedVersion: packs[0].version },
+      url: `/api/projects/${projectId}/world-packs/${encodeURIComponent(generatedW1.id)}/adopt`,
+      payload: { expectedVersion: saved.json().version },
     });
     expect(result.statusCode, result.body).toBe(200);
     expect(result.json().canonIds.jade_market).toBe(marketId);
+    expect(result.json().canonIds.river_relic).toBeTruthy();
     const bible = (
       await app.inject({
         method: "GET",
         url: `/api/projects/${projectId}/story-bible`,
       })
     ).json();
-    expect(bible.entities).toHaveLength(8);
+    expect(bible.entities).toHaveLength(6);
+    expect(
+      bible.entities.filter(
+        (entity: { name: string }) => entity.name === "玉澜坊市",
+      ),
+    ).toHaveLength(1);
+    expect(
+      bible.entities.filter(
+        (entity: { name: string }) => entity.name === "河底禁制残图",
+      ),
+    ).toHaveLength(1);
   });
   it("advances existing NPCs, closes old activities, and never silently revokes ownership", async () => {
     const { app, projectId } = await setup();
