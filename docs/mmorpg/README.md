@@ -8,6 +8,7 @@
 
 - **第一模块生产合同：[16 World Builder ← World Atlas](16-world-builder-from-world-atlas.md)**。World Builder 持续生产 Atlas Card / Typed Relation / 当前事务候选，并根据真实图结构缺口决定下一轮制作；这是第三模块 Object Field 的上游内容来源。
 - **第三模块当前合同：[17 Novel Studio 接入 World Atlas / Project Reality](17-module3-world-atlas-integration.md)**。定义 Project Reality / Source Atlas 权威层、POV 认知边界、Chapter / Co-create / Assistant 接线和 settlement 单写原则。
+- **第三模块最新核心：[23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md)**。当前最高优先级：第二模块已经提供世界和现成人物；第三模块沿既定升级路线，用讲师的稀缺/固有认知/三阵营/信息差/配角下注主动编故事。Upgrade Ledger负责写长，Stake Ledger与配角反应负责写爽；Agent只负责符合人设的具体演法，不得否决编剧线。
 - **第三模块故事核心：[18 Story Runtime Core](18-story-runtime-core.md)**。冻结 Reality → Character Observation → independent Action → World Arbitration → speculative delta → Narrative Director / Horizon Rehearsal 的核心；NarraLume 原生 Chapter Pipeline 保留为正文生产下半段。
 - **第三模块第二层：[19 Expectation / Narrative Runtime](19-expectation-narrative-runtime.md)**。定义“什么值得写 / Reader Time 投在哪里”：Reader需求 → 稀缺性 → 世界/圈层固有认知 → 主角优势 → 期待差 → 铺垫/人物下注 → 打破认知 → 三阵营反应 → 真实权益与下一笔期待。禁止用精彩度分数、临时震惊或单个NPC随手belief替代。
 - **第三模块编剧上游：[20 Object-Grounded Writers' Room](20-object-grounded-writers-room.md)**。冻结两个最新作者裁决：故事不是监控录像，S04必须先主动设计；所有想象先有对象，S01-S03必须从Module 2 Object Field上搜索，再形成Concept/Engine、Stage Opportunity、Story Opportunity/Seeds。包含2026-11-22错误仓库漂移的Guardrail。
