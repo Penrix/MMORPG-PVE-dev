@@ -1,5 +1,7 @@
 # 第三模块｜S05 Story Node → S06 Scene Expansion（2026-11-22）
 
+> **STATUS: CURRENT SUPPORT / DOWNSTREAM CONTRACT.** 本文定义当前有效的 S05 Story Node → S06 Scene Expansion，但上游人物线、下注、升级方向服从 [23](23-module3-upgrade-stake-director.md)。
+
 > 本文纠正此前把 Character Agent / World Arbiter 误当成 S05 本体、并因此制造 S05 → S06 人工断口的设计错误。上游仍遵守 [20 Object-Grounded Writers' Room](20-object-grounded-writers-room.md)。
 
 ## 1. 错误记录
