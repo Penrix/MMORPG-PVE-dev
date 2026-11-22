@@ -358,8 +358,8 @@ describe("Expectation / Narrative Runtime", () => {
       designReasons: ["先经营基础忍术上限这一固有认知，再让第一层人物自行行动"],
       realityFingerprint: "r1",
       storyStateFingerprint: "s1",
-      mustPreserveAgentAutonomy: true,
-      mustNotPredetermineOutcome: true,
+      directorMayDesignReactionPayoff: true,
+      mustGroundPerformanceInCharacterization: true,
     };
 
     const design = finalizeExpectationDesign(
@@ -370,7 +370,7 @@ describe("Expectation / Narrative Runtime", () => {
 
     expect(design.targetEmotion).toBe("得意与被识货");
     expect(design.activationEntityIds).toEqual(["medic", "sakumo"]);
-    expect(design.mustNotPredetermineOutcome).toBe(true);
+    expect(design.directorMayDesignReactionPayoff).toBe(true);
     expect(design.digest).toBeTruthy();
     expect(JSON.stringify(design)).not.toContain("scarcityScore");
   });
@@ -411,7 +411,8 @@ describe("Expectation / Narrative Runtime", () => {
         designReasons: ["让第一层优先观察最可能给期待加价的声部"],
         realityFingerprint: "r1",
         storyStateFingerprint: "s1",
-        mustPreserveAgentAutonomy: true,
+        directorAuthority: "author-defined-story-line",
+          characterExecutionRule: "characterization-constrained-performance",
         mustNotPredetermineOutcome: true,
       },
       new Set(["atlas:basic-limit", "reality:xiuxin-control"]),
