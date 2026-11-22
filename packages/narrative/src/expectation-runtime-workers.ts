@@ -116,12 +116,11 @@ export interface ExpectationRuntimeModelResult<T> {
 }
 
 /**
- * Layer-2 story selection.
+ * S07 Reader Time allocation over an already-authored S04/S05 Event.
  *
- * The model does not invent a replacement plot. It receives existing Reality
- * candidates plus active expectation threads and allocates Reader Time according
- * to scarcity, established cognition, Reader-visible advantage gap, embodiment,
- * stake, payoff and reaction value.
+ * The model does not choose random Reality events to become Story. S04 already
+ * authored the Event and S05 already realized it. This service only allocates
+ * Reader Time across the realized beats according to active expectation threads.
  */
 export class ExpectationNarrativeService {
   constructor(private readonly model: NarrativeModelClient) {}
@@ -237,7 +236,8 @@ export class ExpectationNarrativeService {
   ): Promise<ExpectationRuntimeModelResult<NarrativeAllocationBatch>> {
     if (
       receipt.projectId !== state.projectId ||
-      receipt.projectId !== run.projectId
+      receipt.projectId !== run.projectId ||
+      receipt.realityFingerprint !== state.realityFingerprint
     ) {
       throw new Error("story_runtime.expectation.arbitration_project_mismatch");
     }
@@ -255,8 +255,16 @@ export class ExpectationNarrativeService {
       run.projectId !== request.state.projectId ||
       request.candidates.length === 0 ||
       request.candidates.some(
-        (candidate) => candidate.projectId !== request.state.projectId,
-      )
+        (candidate) =>
+          candidate.projectId !== request.state.projectId ||
+          candidate.realityFingerprint !== request.state.realityFingerprint,
+      ) ||
+      new Set(
+        request.candidates.map(
+          (candidate) =>
+            `${candidate.storyUnitDesignDigest}:${candidate.storyUnitEventId}`,
+        ),
+      ).size !== 1
     ) {
       throw new Error("story_runtime.expectation.invalid_request");
     }
@@ -267,9 +275,9 @@ export class ExpectationNarrativeService {
       "story-expectation-narrative-plan",
       {
         instructions: [
-          "你是第二层 Expectation / Narrative Runtime，不是第一层世界裁判，也不是自由编剧情的编剧。",
-          "输入 candidates 已经来自 Reality Runtime。不得改写候选事实、不得替人物改主意、不得虚构候选之外已经发生的事件。",
-          "你的任务不是找“最大事件”或给精彩度打分，而是决定 Reader Time 应投在哪里。",
+          "你在 S07 Reader Time 层工作，不是世界裁判，也不是 S04 编剧室。",
+          "输入 candidates 全部属于同一个已经由 S04 设计、S05 实际演出的 Event。不得把随机 Reality 事件提升成新故事，不得改写候选事实、人物意图或事件边界。",
+          "你的任务只是决定这个已设计 Event 的真实 beats 要给 Reader 看多少、以什么节奏进入正文，以及当前期待在哪一拍 seed / charge / payoff。",
           "严格按当前 expectation state 判断：Reader 需求与目标情绪、稀缺性证据、世界/圈层/人物固有认知、主角真实优势、Reader 已知程度、人物已经在旧认知上做出的行动与下注。",
           "skip：与当前期待交易无关，不占正文。",
           "background：世界应继续发生，但只需提及或极短 beat。",
