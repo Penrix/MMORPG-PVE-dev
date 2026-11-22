@@ -321,11 +321,7 @@ describe("Expectation / Narrative Runtime", () => {
     };
 
     expect(() =>
-      finalizeNarrativeAllocationDecision(
-        decision(event.id),
-        current,
-        event,
-      ),
+      finalizeNarrativeAllocationDecision(decision(event.id), current, event),
     ).toThrow("story_runtime.expectation.allocation_stale_reality");
   });
 

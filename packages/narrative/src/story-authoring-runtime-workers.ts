@@ -147,7 +147,9 @@ function searchOutputIssues(
     }
     for (const surfaceRef of seed.groundingSurfaceRefs) {
       if (!allowedSurfaces.has(surfaceRef)) {
-        issues.push(`seed ${seed.id}: unknown groundingSurfaceRef ${surfaceRef}`);
+        issues.push(
+          `seed ${seed.id}: unknown groundingSurfaceRef ${surfaceRef}`,
+        );
       }
     }
   }
@@ -396,7 +398,9 @@ export class StoryAuthoringService {
       );
       if (
         !seed ||
-        seed.anchorObjectIds.some((objectId) => !currentObjectIds.has(objectId)) ||
+        seed.anchorObjectIds.some(
+          (objectId) => !currentObjectIds.has(objectId),
+        ) ||
         seed.groundingSurfaceRefs.some(
           (surfaceRef) => !currentSurfaceRefs.has(surfaceRef),
         )

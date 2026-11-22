@@ -381,11 +381,7 @@ export function finalizeStoryUnitDesign(
   requireUnique("story_unit_object_anchor", parsed.objectAnchorIds);
   requireRefs("story_unit_object_anchor", parsed.objectAnchorIds, objectIds);
   requireUnique("story_unit_surface", parsed.groundingSurfaceRefs);
-  requireRefs(
-    "story_unit_surface",
-    parsed.groundingSurfaceRefs,
-    surfaceRefs,
-  );
+  requireRefs("story_unit_surface", parsed.groundingSurfaceRefs, surfaceRefs);
   requireUnique("story_unit_source_seed", parsed.sourceSeedIds);
   if (parsed.sourceSeedIds.length > 0) {
     requireRefs(

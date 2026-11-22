@@ -365,9 +365,7 @@ describe("object-grounded story authoring runtime", () => {
         objectFocus: [
           {
             objectId: "object:sakumo",
-            surfaceRefs: [
-              surfaceRef(objectField, "object:sakumo", "military"),
-            ],
+            surfaceRefs: [surfaceRef(objectField, "object:sakumo", "military")],
             whyNow: "高价人物代表更贵的军事社会入口",
             valuableSurface: "高价任务、名望、识货与权限",
           },

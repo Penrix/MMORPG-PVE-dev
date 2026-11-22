@@ -140,9 +140,7 @@ describe("StoryAuthoringService", () => {
             objectFocus: [
               {
                 objectId: "object:medic",
-                surfaceRefs: [
-                  surfaceRef(objectField, "object:medic", "duty"),
-                ],
+                surfaceRefs: [surfaceRef(objectField, "object:medic", "duty")],
                 whyNow: "医疗忍者正在处理秀信",
                 valuableSurface: "专业认知与复核权限",
               },
