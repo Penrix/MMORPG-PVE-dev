@@ -167,6 +167,39 @@ S07 再拥有最终 Reader Time 主权：
 - 新期待何时提前种下；
 - 章节在哪里切。
 
+当前工程硬约束：
+
+```text
+WorldArbitrationReceipt
+        ↓
+S06 StorySceneExpansion
+        ↓
+S07 StoryReaderTimePlan
+```
+
+禁止：
+
+```text
+WorldArbitrationReceipt
+→ 直接 allocate Reader Time
+```
+
+正式 S07 每个 Scene 都必须有一次 Reader Time 决策；若 `payoff` 完成旧期待，必须至少满足其一：
+
+- `focusShiftThreadIds`：转移到已有下一条期待；
+- `nextExpectationSeed`：在旧期待完全平仓前已经种下新期待；
+- `terminalExpectationReason`：明确这是阶段/全书收束，允许暂时不接下一笔。
+
+这直接落实讲师原稿：
+
+```text
+制造信息差
+→ 分层释放
+→ 旧期待未完全满足前提前种新信息差
+→ 高潮兑现
+→ 转移期待焦点
+```
+
 ## 5. 当前工程实现
 
 ### Contracts
@@ -215,7 +248,7 @@ Prompt 固定：
 1. 正式宿主把 S04 Event → S05 observation / agent activation 接通；
 2. 多轮 Reality rehearsal 与 soft-route bent/broken 状态；
 3. S06 expansion 持久化 / author adoption；
-4. S07 Reader Time contract 与 service；
+4. S07 已有 scene-based contract/service，下一步补跨Node连续编排与持久化；
 5. S08 production handoff；
 6. settlement 回写 Canon Reality。
 
