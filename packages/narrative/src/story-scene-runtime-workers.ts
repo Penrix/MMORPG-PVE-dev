@@ -216,6 +216,7 @@ export class StorySceneExpansionService {
         storyUnitDesignDigest: request.storyUnit.digest,
         storyUnitEventId: event.id,
         arbitrationDigest: request.arbitration.digest,
+        realityFingerprint: request.arbitration.realityFingerprint,
         eventProblem: event.problem,
         scenes: result.value.scenes,
       },
