@@ -1,5 +1,7 @@
 # 第三模块｜Novel Studio 接入 World Atlas / Project Reality（2026-11-21）
 
+> **STATUS: CURRENT AUTHORITY / MODULE 2 ↔ MODULE 3 BOUNDARY.** 本文定义 Source World reference、Project Reality current truth、POV/知识边界以及 Settlement 单一确认写回。第三模块不能另造第二套 Reality。
+
 > 本文件定义第三模块与当前第二模块的读写合同。
 > Source World 是母体 reference；Project Reality 是当前项目事实；Novel Studio 不拥有第三套世界真相。
 
