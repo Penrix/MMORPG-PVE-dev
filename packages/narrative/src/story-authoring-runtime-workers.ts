@@ -27,6 +27,7 @@ import { zodValidator } from "./schemas.js";
 import {
   finalizeStoryAuthoringSearch,
   finalizeStoryUnitDesign,
+  storyObjectSurfaceRef,
 } from "./story-authoring-runtime.js";
 
 const StoryAuthoringSearchOutputSchema = z.object({
@@ -50,6 +51,7 @@ const STORY_AUTHORING_SEARCH_CONTRACT: JsonSchemaContract = {
 const StoryUnitDesignOutputSchema = z.object({
   status: z.enum(["READY", "BLOCKED_WORLD_GAP"]),
   objectAnchorIds: z.array(z.string().min(1)),
+  groundingSurfaceRefs: z.array(z.string().min(1)),
   storyProblem: z.string().min(1),
   worldGaps: z.array(StoryWorldGapSchema),
   campNetwork: z.array(StoryUnitCampMemberSchema),
@@ -101,7 +103,10 @@ function fieldObjectCatalog(field: StoryObjectField) {
     name: object.name,
     kind: object.kind,
     aliases: object.aliases,
-    surfaces: object.surfaces,
+    surfaces: object.surfaces.map((surface) => ({
+      ...surface,
+      ref: storyObjectSurfaceRef(object.id, surface),
+    })),
     sourceRefs: object.sourceRefs,
   }));
 }
@@ -112,6 +117,13 @@ function searchOutputIssues(
 ): string[] {
   const issues: string[] = [];
   const allowed = new Set(field.objects.map((object) => object.id));
+  const allowedSurfaces = new Set(
+    field.objects.flatMap((object) =>
+      object.surfaces.map((surface) =>
+        storyObjectSurfaceRef(object.id, surface),
+      ),
+    ),
+  );
   if (value.scaleResult.scale !== field.scale) {
     issues.push(
       `scaleResult.scale must equal field.scale (${field.scale}), got ${value.scaleResult.scale}`,
@@ -121,11 +133,21 @@ function searchOutputIssues(
     if (!allowed.has(focus.objectId)) {
       issues.push(`objectFocus: unknown objectId ${focus.objectId}`);
     }
+    for (const surfaceRef of focus.surfaceRefs) {
+      if (!allowedSurfaces.has(surfaceRef)) {
+        issues.push(`objectFocus: unknown surfaceRef ${surfaceRef}`);
+      }
+    }
   }
   for (const seed of value.seeds) {
     for (const objectId of seed.anchorObjectIds) {
       if (!allowed.has(objectId)) {
         issues.push(`seed ${seed.id}: unknown anchorObjectId ${objectId}`);
+      }
+    }
+    for (const surfaceRef of seed.groundingSurfaceRefs) {
+      if (!allowedSurfaces.has(surfaceRef)) {
+        issues.push(`seed ${seed.id}: unknown groundingSurfaceRef ${surfaceRef}`);
       }
     }
   }
@@ -138,6 +160,13 @@ function storyUnitOutputIssues(
 ): string[] {
   const issues: string[] = [];
   const allowedObjects = new Set(field.objects.map((object) => object.id));
+  const allowedSurfaces = new Set(
+    field.objects.flatMap((object) =>
+      object.surfaces.map((surface) =>
+        storyObjectSurfaceRef(object.id, surface),
+      ),
+    ),
+  );
   const allowedEntities = new Set(
     field.objects.map((object) => object.entityId),
   );
@@ -148,6 +177,11 @@ function storyUnitOutputIssues(
   for (const objectId of value.objectAnchorIds) {
     if (!allowedObjects.has(objectId)) {
       issues.push(`objectAnchorIds: unknown objectId ${objectId}`);
+    }
+  }
+  for (const surfaceRef of value.groundingSurfaceRefs) {
+    if (!allowedSurfaces.has(surfaceRef)) {
+      issues.push(`groundingSurfaceRefs: unknown surfaceRef ${surfaceRef}`);
     }
   }
   for (const member of value.campNetwork) {
@@ -237,7 +271,7 @@ export class StoryAuthoringService {
           "你在作者侧 Writers' Room 工作。所有想象和脑洞必须先有想象对象。",
           "输入 Object Field 来自 Module 2 的 Project Reality / Source Atlas 投影。它是想象底座，不是背景装饰。",
           "禁止先想一个熟悉套路，再回来给套路贴世界名词。先看具体对象当前是谁、拥有什么、缺什么、和谁相连、什么规则给它定价，再做连接、交叉、对立、变奏、因果追踪或成熟故事迁移。",
-          "每颗 Story Seed 的 anchorObjectIds 必须引用 Object Field 中真实 object.id。",
+          "每颗 Story Seed 的 anchorObjectIds 必须引用 Object Field 中真实 object.id，groundingSurfaceRefs 必须引用对象 surfaces 中提供的 ref。Observation 必须能从这些具体 surfaces 推出来，不能只借两个真名字编一条不存在的关系。",
           "允许真实对象碰撞后长出新人物/机构/用途，但只能放 candidateNewObjects，status 必须是 CANDIDATE，不能冒充 Reality。",
           "如果 Object Field 太薄，status 必须返回 BLOCKED_WORLD_GAP。worldGaps 必须结构化写出缺什么、锚在哪些已有对象、为什么缺，并用 productionHint 指向现有 World Builder workshop。此时允许 seeds 与尺度结果为空，不要为了过 schema 用‘神秘高手/反派/美女/商会’占位补洞。",
           "M 方法只是搜索运动，不提供搜索对象。成熟故事材料只是 prior，不是本书 Reality。",
@@ -336,9 +370,19 @@ export class StoryAuthoringService {
       const seed = request.sourceSearch?.seeds.find(
         (candidate) => candidate.id === seedId,
       );
+      const currentSurfaceRefs = new Set(
+        request.field.objects.flatMap((object) =>
+          object.surfaces.map((surface) =>
+            storyObjectSurfaceRef(object.id, surface),
+          ),
+        ),
+      );
       if (
         !seed ||
-        seed.anchorObjectIds.some((objectId) => !currentObjectIds.has(objectId))
+        seed.anchorObjectIds.some((objectId) => !currentObjectIds.has(objectId)) ||
+        seed.groundingSurfaceRefs.some(
+          (surfaceRef) => !currentSurfaceRefs.has(surfaceRef),
+        )
       ) {
         throw new Error(`story_authoring.stale_source_seed:${seedId}`);
       }
@@ -356,7 +400,7 @@ export class StoryAuthoringService {
       {
         instructions: [
           "你在 S04 Writers' Room 设计一出故事。小说不是世界自转后的监控录像，也不是让 Character Agents 随机生活后再捡精彩片段。",
-          "先从给定 Object Field 与已选 Story Seeds 选择具体对象，再设计为什么这些对象现在要撞在一起。",
+          "先从给定 Object Field 与已选 Story Seeds 选择具体对象，再设计为什么这些对象现在要撞在一起。READY 时 groundingSurfaceRefs 必须指出这出 Story 具体踩在哪些 Object surfaces 上，不能只引用对象名。",
           "Expectation Design 已经给出 Reader 需求、目标情绪、稀缺性方向、固有认知、主角优势、反应与收益方向。不得偷换这笔交易。",
           "三阵营首先是编剧工具：作者主动选择哪些真实人物承担压力、定价、连接、未来反应与阵营转化，但不能预写他们实际一定震惊、投靠、认输或降智。",
           "appearanceOrderEntityIds 与 informationRelease 负责谁先进入、Reader/人物分别何时知道什么。",
@@ -402,6 +446,7 @@ export class StoryAuthoringService {
         sourceSeedIds: [...request.sourceSeedIds],
         expectationDesignDigest: request.expectationDesign.digest,
         objectAnchorIds: result.value.objectAnchorIds,
+        groundingSurfaceRefs: result.value.groundingSurfaceRefs,
         storyProblem: result.value.storyProblem,
         worldGaps: result.value.worldGaps,
         campNetwork: result.value.campNetwork,
