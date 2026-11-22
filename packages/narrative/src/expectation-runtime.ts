@@ -6,6 +6,8 @@ import {
   NarrativeAllocationBatchSchema,
   NarrativeAllocationDecisionDraftSchema,
   NarrativeAllocationDecisionSchema,
+  StoryReaderTimePlanDraftSchema,
+  StoryReaderTimePlanSchema,
   type ExpectationDesign,
   type ExpectationDesignDraft,
   type ExpectationState,
@@ -14,6 +16,9 @@ import {
   type NarrativeAllocationDecision,
   type NarrativeAllocationDecisionDraft,
   type NarrativeCandidate,
+  type StoryReaderTimePlan,
+  type StoryReaderTimePlanDraft,
+  type StorySceneExpansion,
   type WorldArbitrationReceipt,
 } from "@narralume/contracts";
 import { sha256Hex } from "@narralume/domain";
@@ -485,3 +490,182 @@ export function narrativeCandidatesFromArbitration(
       originDigest: receipt.digest,
     }));
 }
+
+/**
+ * S07 Reader Time over already-authored S06 scenes.
+ *
+ * S07 decides presentation/release, not Reality and not Scene content. The
+ * lecturer rule is continuity of expectation: layer information, avoid paying
+ * every old expectation before a new one is seeded, and transfer focus after a
+ * payoff instead of leaving Reader Time empty.
+ */
+export function finalizeStoryReaderTimePlan(
+  draft: StoryReaderTimePlanDraft,
+  state: ExpectationState,
+  expansion: StorySceneExpansion,
+): StoryReaderTimePlan {
+  const parsed = StoryReaderTimePlanDraftSchema.parse(draft);
+  if (
+    parsed.projectId !== state.projectId ||
+    parsed.projectId !== expansion.projectId ||
+    parsed.expectationStateDigest !== state.digest ||
+    parsed.storySceneExpansionDigest !== expansion.digest ||
+    parsed.realityFingerprint !== state.realityFingerprint ||
+    parsed.realityFingerprint !== expansion.realityFingerprint
+  ) {
+    throw new Error("story_runtime.reader_time.not_bound");
+  }
+
+  const sceneIds = expansion.scenes.map((scene) => scene.id);
+  if (
+    parsed.sceneIds.length !== sceneIds.length ||
+    parsed.sceneIds.some((sceneId) => !sceneIds.includes(sceneId))
+  ) {
+    throw new Error("story_runtime.reader_time.scene_set_mismatch");
+  }
+
+  const decisionByScene = new Map(
+    parsed.decisions.map((decision) => [decision.sceneId, decision]),
+  );
+  if (
+    decisionByScene.size !== parsed.decisions.length ||
+    parsed.decisions.length !== sceneIds.length
+  ) {
+    throw new Error("story_runtime.reader_time.incomplete_scene_decisions");
+  }
+  for (const sceneId of sceneIds) {
+    if (!decisionByScene.has(sceneId)) {
+      throw new Error(
+        `story_runtime.reader_time.missing_scene_decision:${sceneId}`,
+      );
+    }
+  }
+
+  const orders = parsed.decisions
+    .map((decision) => decision.readerOrder)
+    .sort((left, right) => left - right);
+  if (
+    orders.some((order, index) => order !== index + 1) ||
+    new Set(orders).size !== orders.length
+  ) {
+    throw new Error("story_runtime.reader_time.invalid_reader_order");
+  }
+
+  const refs = allocationReferenceSets(state);
+  for (const decision of parsed.decisions) {
+    requireRefs(
+      "reader_time_expectation_thread",
+      decision.expectationThreadIds,
+      refs.threadIds,
+    );
+    requireRefs(
+      "reader_time_scarcity_evidence",
+      decision.deepenScarcityEvidenceIds,
+      refs.scarcityIds,
+    );
+    requireRefs(
+      "reader_time_established_belief",
+      decision.reinforceBeliefIds,
+      refs.beliefIds,
+    );
+    requireRefs(
+      "reader_time_established_belief",
+      decision.widenGapBeliefIds,
+      refs.beliefIds,
+    );
+    requireRefs(
+      "reader_time_payoff_thread",
+      decision.payoffThreadIds,
+      refs.threadIds,
+    );
+    requireRefs(
+      "reader_time_focus_shift_thread",
+      decision.focusShiftThreadIds,
+      refs.threadIds,
+    );
+    requireRefs(
+      "reader_time_reaction_target",
+      decision.reactionTargetEntityIds,
+      refs.reactionEntityIds,
+    );
+
+    if (decision.action === "skip" && decision.readerTime !== "none") {
+      throw new Error(
+        "story_runtime.reader_time.skip_requires_no_reader_time",
+      );
+    }
+    if (
+      decision.action === "background" &&
+      !["mention", "beat"].includes(decision.readerTime)
+    ) {
+      throw new Error(
+        "story_runtime.reader_time.background_reader_time_too_large",
+      );
+    }
+    if (
+      ["seed", "charge", "payoff"].includes(decision.action) &&
+      decision.readerTime === "none"
+    ) {
+      throw new Error(
+        "story_runtime.reader_time.story_action_requires_reader_time",
+      );
+    }
+    if (
+      ["seed", "charge", "payoff"].includes(decision.action) &&
+      decision.expectationThreadIds.length === 0
+    ) {
+      throw new Error(
+        "story_runtime.reader_time.story_action_requires_thread",
+      );
+    }
+
+    const operations =
+      decision.deepenScarcityEvidenceIds.length +
+      decision.reinforceBeliefIds.length +
+      decision.widenGapBeliefIds.length +
+      decision.embodimentTargets.length;
+    if (decision.action === "charge" && operations === 0) {
+      throw new Error("story_runtime.reader_time.charge_without_operation");
+    }
+
+    if (decision.action === "payoff") {
+      if (decision.payoffThreadIds.length === 0) {
+        throw new Error("story_runtime.reader_time.payoff_requires_thread");
+      }
+      for (const threadId of decision.payoffThreadIds) {
+        const thread = refs.threadById.get(threadId);
+        if (!thread || !["ripe", "payoff"].includes(thread.phase)) {
+          throw new Error(
+            `story_runtime.reader_time.payoff_thread_not_ripe:${threadId}`,
+          );
+        }
+      }
+      if (
+        decision.focusShiftThreadIds.length === 0 &&
+        decision.nextExpectationSeed === null &&
+        decision.terminalExpectationReason === null
+      ) {
+        throw new Error(
+          "story_runtime.reader_time.payoff_without_expectation_bridge",
+        );
+      }
+    } else {
+      if (decision.payoffThreadIds.length > 0) {
+        throw new Error(
+          "story_runtime.reader_time.nonpayoff_cannot_settle_thread",
+        );
+      }
+      if (decision.terminalExpectationReason !== null) {
+        throw new Error(
+          "story_runtime.reader_time.terminal_reason_requires_payoff",
+        );
+      }
+    }
+  }
+
+  return StoryReaderTimePlanSchema.parse({
+    ...parsed,
+    digest: digest(parsed),
+  });
+}
+
