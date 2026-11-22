@@ -204,6 +204,30 @@ export function finalizeStoryAuthoringSearch(
     "seed",
     parsed.seeds.map((seed) => seed.id),
   );
+  if (parsed.status === "BLOCKED_WORLD_GAP") {
+    if (parsed.worldGaps.length === 0) {
+      throw new Error("story_authoring.blocked_without_world_gap");
+    }
+  } else {
+    if (parsed.seeds.length === 0) {
+      throw new Error("story_authoring.ready_without_seed");
+    }
+    if (parsed.scaleResult.scale === "S01") {
+      if (
+        parsed.scaleResult.storyConcepts.length === 0 ||
+        parsed.scaleResult.storyEngines.length === 0 ||
+        parsed.scaleResult.conceptEngineLinks.length === 0
+      ) {
+        throw new Error("story_authoring.ready_s01_incomplete");
+      }
+    } else if (parsed.scaleResult.scale === "S02") {
+      if (parsed.scaleResult.stageOpportunities.length === 0) {
+        throw new Error("story_authoring.ready_s02_incomplete");
+      }
+    } else if (parsed.scaleResult.opportunityField.length === 0) {
+      throw new Error("story_authoring.ready_s03_incomplete");
+    }
+  }
   for (const [index, focus] of parsed.objectFocus.entries()) {
     requireRefs(`object_focus_${index}`, [focus.objectId], allowedObjectIds);
   }
@@ -247,6 +271,21 @@ export function finalizeStoryUnitDesign(
     expectationDesign.storyStateFingerprint !== field.storyStateFingerprint
   ) {
     throw new Error("story_authoring.story_unit_not_bound");
+  }
+
+  if (parsed.status === "BLOCKED_WORLD_GAP") {
+    if (parsed.worldGaps.length === 0) {
+      throw new Error("story_authoring.story_unit_blocked_without_world_gap");
+    }
+    if (parsed.events.length > 0) {
+      throw new Error("story_authoring.blocked_story_unit_has_events");
+    }
+  } else if (
+    parsed.objectAnchorIds.length === 0 ||
+    parsed.campNetwork.length === 0 ||
+    parsed.events.length === 0
+  ) {
+    throw new Error("story_authoring.ready_story_unit_incomplete");
   }
 
   const objectIds = new Set(field.objects.map((object) => object.id));
@@ -335,6 +374,9 @@ export function finalizeStoryUnitDesign(
 export function realityFocusFromStoryUnitDesign(
   design: StoryUnitDesign,
 ): StoryUnitRealityFocus {
+  if (design.status !== "READY" || design.events.length === 0) {
+    throw new Error("story_authoring.reality_focus_requires_ready_story_unit");
+  }
   const firstEvent = design.events[0]!;
   return {
     projectId: design.projectId,
