@@ -1,4 +1,9 @@
-import type { WorldPackDocument, WorldPackRequest } from "@narralume/contracts";
+import {
+  worldBuilderWorkshopForAtlasKind,
+  worldPackAtlasKind,
+  type WorldPackDocument,
+  type WorldPackRequest,
+} from "@narralume/contracts";
 import type { WorldWorkshop } from "./world-production-engine.js";
 
 /**
@@ -26,9 +31,9 @@ export function worldPowerMode(
     : "ordinary";
 }
 
-/** v0.2's ten world systems share one content-production framework.
- * A lens can be reused to deepen or revisit a specific world object;
- * they are NOT ten separate one-shot prompts or genre-specific pipelines.
+/** Historical v0.2 design lenses.
+ * These are NOT the ten World Atlas Families and NOT a mandatory runtime queue.
+ * Atlas Families describe content coverage; workshops are production operations.
  */
 export const WORLD_DESIGN_SYSTEMS = [
   "world-map",
@@ -60,9 +65,9 @@ export function powerDesignProducts(
   ];
 }
 
-/** The source may be history, IP, notes or original; the production queue
- * does not change. W0 establishes world-wide foundations; W1 inherits those
- * laws and expands locally without demanding duplicate public rules.
+/** Bootstrap hints for a fresh production batch.
+ * The runtime no longer executes this list as a fixed pipeline: after the
+ * first step, actual graph deficiencies choose what runs next.
  */
 export function initialWorldWorkshopOrder(
   request: WorldPackRequest,
@@ -115,13 +120,19 @@ export function resolveWorldDesignEntry(
       );
   if (candidates.length !== 1) return null;
   const node = candidates[0]!;
-  const typeMap: Record<typeof node.type, WorldWorkshop> = {
+  const atlasWorkshop = worldBuilderWorkshopForAtlasKind(
+    worldPackAtlasKind(node),
+  );
+  const legacyTypeMap: Record<typeof node.type, WorldWorkshop> = {
     location: "geography",
     organization: "factions",
     character: "people",
     item: "economy",
     rule: "power",
-    concept: "power",
+    concept: "social",
   };
-  return { workshop: typeMap[node.type], subjectRef: node.localId };
+  return {
+    workshop: atlasWorkshop ?? legacyTypeMap[node.type],
+    subjectRef: node.localId,
+  };
 }
