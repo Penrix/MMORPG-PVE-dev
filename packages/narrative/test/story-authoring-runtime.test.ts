@@ -223,6 +223,7 @@ describe("object-grounded story authoring runtime", () => {
       {
         version: "story-authoring-search.v1",
         authority: "speculative",
+        status: "READY",
         projectId: "p1",
         scale: "S01",
         objectFieldDigest: objectField.digest,
@@ -293,6 +294,7 @@ describe("object-grounded story authoring runtime", () => {
       {
         version: "story-authoring-search.v1",
         authority: "speculative",
+        status: "READY",
         projectId: "p1",
         scale: "S02",
         objectFieldDigest: objectField.digest,
