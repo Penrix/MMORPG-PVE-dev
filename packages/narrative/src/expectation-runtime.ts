@@ -438,11 +438,13 @@ export function finalizeNarrativeAllocationBatch(
 }
 
 /**
- * Bridge Layer 1 Reality Runtime into Layer 2 Expectation Runtime.
+ * Bridge one authored S04/S05 Event into S07 Reader Time allocation.
  *
- * Every finalized character resolution becomes one speculative NarrativeCandidate.
- * The candidate preserves what actually happened in the arbitration receipt; the
- * expectation layer may allocate Reader Time, but may not rewrite it.
+ * Every finalized character resolution becomes one speculative beat candidate
+ * within the already-authored Event. This bridge does NOT decide whether a
+ * random Reality event becomes Story. S04 already made that authorial choice.
+ * S07 may allocate Reader Time across the realized beats, but may not rewrite
+ * the event, the character intent, or the arbitration result.
  */
 export function narrativeCandidatesFromArbitration(
   receipt: WorldArbitrationReceipt,
@@ -457,6 +459,9 @@ export function narrativeCandidatesFromArbitration(
       id: `candidate:${receipt.digest}:${resolution.agentId}`,
       projectId: receipt.projectId,
       generationId: receipt.generationId,
+      storyUnitDesignDigest: receipt.storyUnitDesignDigest,
+      storyUnitEventId: receipt.storyUnitEventId,
+      realityFingerprint: receipt.realityFingerprint,
       source: "actor_initiative" as const,
       authority: "speculative" as const,
       summary: [
