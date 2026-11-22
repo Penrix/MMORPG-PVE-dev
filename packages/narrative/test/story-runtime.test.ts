@@ -13,6 +13,11 @@ import {
 import { NodeNarrativeDatabase } from "@narralume/persistence/node";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import type {
+  CharacterActionProposal,
+  WorldArbitrationContext,
+} from "@narralume/contracts";
+
 import {
   CharacterObservationBuilder,
   finalizeCharacterActionProposal,
@@ -209,6 +214,9 @@ function proposal() {
         characterId: "hero",
         characterName: "Hero",
         observationDigest: current.digest,
+        storyUnitDesignDigest: current.storyUnitDesignDigest,
+        storyUnitEventId: current.storyUnitEventId,
+        realityFingerprint: current.realityFingerprint,
         location: "harbor",
         currentGoal: current.currentGoal,
         pressure: "the gate is closing",
@@ -228,6 +236,31 @@ function proposal() {
       },
       current,
     ),
+  };
+}
+
+function arbitrationContextFor(
+  proposal: CharacterActionProposal,
+): WorldArbitrationContext {
+  return {
+    version: "world-arbitration-context.v1",
+    authority: "speculative",
+    projectId: proposal.projectId,
+    storyUnitDesignDigest: proposal.storyUnitDesignDigest,
+    storyUnitEventId: proposal.storyUnitEventId,
+    realityFingerprint: proposal.realityFingerprint,
+    surfaces: [
+      {
+        entityId: "hero",
+        name: "Hero",
+        kind: "character",
+        facet: "state",
+        slotKey: "location",
+        value: "harbor",
+        sourceId: "world-reality:hero",
+      },
+    ],
+    digest: "world-context:gate",
   };
 }
 
@@ -368,6 +401,55 @@ describe("Module 3 Story Runtime core", () => {
     );
   });
 
+  it("rejects arbitration when the world context belongs to another event", () => {
+    const { proposal: current } = proposal();
+    const context = {
+      ...arbitrationContextFor(current),
+      storyUnitEventId: "event:other",
+      digest: "world-context:other",
+    };
+    expect(() =>
+      finalizeWorldArbitrationReceipt(
+        {
+          version: "world-arbitration-receipt.v1",
+          authority: "speculative",
+          projectId: "p1",
+          generationId: "generation-1",
+          round: 1,
+          storyUnitDesignDigest: current.storyUnitDesignDigest,
+          storyUnitEventId: current.storyUnitEventId,
+          realityFingerprint: current.realityFingerprint,
+          worldContextDigest: context.digest,
+          proposalDigests: [current.digest],
+          resolutions: [
+            {
+              agentId: current.agentId,
+              characterId: current.characterId,
+              characterName: current.characterName,
+              proposalDigest: current.digest,
+              decision: current.decision,
+              intendedAction: current.intendedAction,
+              actionOrder: 1,
+              outcome: "blocked",
+              immediateResult: "no settlement",
+              stateAfter: "unchanged",
+              butterflyEffects: [],
+              conflictIds: [],
+            },
+          ],
+          conflicts: [],
+          hardContractStatus: "feasible",
+          hardContractConflicts: [],
+          protagonistProjection: null,
+          finalized: true,
+          generatedAt: now,
+        },
+        [current],
+        context,
+      ),
+    ).toThrow("story_runtime.arbitration.world_context_mismatch");
+  });
+
   it("allows a resolved action with no butterfly effect instead of forcing invention", () => {
     const { proposal: current } = proposal();
     const receipt = finalizeWorldArbitrationReceipt(
@@ -377,6 +459,10 @@ describe("Module 3 Story Runtime core", () => {
         projectId: "p1",
         generationId: "generation-1",
         round: 1,
+        storyUnitDesignDigest: current.storyUnitDesignDigest,
+        storyUnitEventId: current.storyUnitEventId,
+        realityFingerprint: current.realityFingerprint,
+        worldContextDigest: arbitrationContextFor(current).digest,
         proposalDigests: [current.digest],
         resolutions: [
           {
@@ -402,6 +488,7 @@ describe("Module 3 Story Runtime core", () => {
         generatedAt: now,
       },
       [current],
+      arbitrationContextFor(current),
     );
     expect(receipt.resolutions[0]!.butterflyEffects).toEqual([]);
   });
@@ -415,6 +502,10 @@ describe("Module 3 Story Runtime core", () => {
         projectId: "p1",
         generationId: "generation-1",
         round: 1,
+        storyUnitDesignDigest: current.storyUnitDesignDigest,
+        storyUnitEventId: current.storyUnitEventId,
+        realityFingerprint: current.realityFingerprint,
+        worldContextDigest: arbitrationContextFor(current).digest,
         proposalDigests: [current.digest],
         resolutions: [
           {
@@ -454,6 +545,7 @@ describe("Module 3 Story Runtime core", () => {
         generatedAt: now,
       },
       [current],
+      arbitrationContextFor(current),
     );
 
     const delta = speculativeRealityDeltaFromArbitration(receipt);
@@ -506,6 +598,7 @@ describe("Module 3 Story Runtime core", () => {
           generatedAt: now,
         },
         [current],
+        arbitrationContextFor(current),
       ),
     ).toThrow("story_runtime.arbitration.rewrites_character_intent");
   });
