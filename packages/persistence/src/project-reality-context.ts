@@ -136,7 +136,9 @@ export class WorldAtlasStoryContextBuilder {
         kind: view.entity.type,
         aliases: [...view.entity.aliases],
         surfaces: objectSurfaces,
-        sourceRefs: [...new Set(objectSurfaces.map((surface) => surface.sourceId))],
+        sourceRefs: [
+          ...new Set(objectSurfaces.map((surface) => surface.sourceId)),
+        ],
       });
       if (
         sourceIdentityAndRelations.length > 0 ||

@@ -137,24 +137,18 @@ function validateScaleResult(
   }
   if (draft.scaleResult.scale === "S01") {
     for (const [index, concept] of draft.scaleResult.storyConcepts.entries()) {
-      requireRefs(
-        `s01_concept_${index}`,
-        concept.objectIds,
-        allowedObjectIds,
-      );
+      requireRefs(`s01_concept_${index}`, concept.objectIds, allowedObjectIds);
     }
     for (const [index, engine] of draft.scaleResult.storyEngines.entries()) {
-      requireRefs(
-        `s01_engine_${index}`,
-        engine.objectIds,
-        allowedObjectIds,
-      );
+      requireRefs(`s01_engine_${index}`, engine.objectIds, allowedObjectIds);
     }
     return;
   }
   if (draft.scaleResult.scale === "S02") {
-    for (const [index, opportunity] of
-      draft.scaleResult.stageOpportunities.entries()) {
+    for (const [
+      index,
+      opportunity,
+    ] of draft.scaleResult.stageOpportunities.entries()) {
       requireRefs(
         `s02_stage_${index}`,
         opportunity.objectIds,
@@ -163,21 +157,18 @@ function validateScaleResult(
     }
     return;
   }
-  for (const [index, opportunity] of
-    draft.scaleResult.opportunityField.entries()) {
+  for (const [
+    index,
+    opportunity,
+  ] of draft.scaleResult.opportunityField.entries()) {
     requireRefs(
       `s03_opportunity_${index}`,
       opportunity.objectIds,
       allowedObjectIds,
     );
   }
-  for (const [index, movement] of
-    draft.scaleResult.storyMovements.entries()) {
-    requireRefs(
-      `s03_movement_${index}`,
-      movement.objectIds,
-      allowedObjectIds,
-    );
+  for (const [index, movement] of draft.scaleResult.storyMovements.entries()) {
+    requireRefs(`s03_movement_${index}`, movement.objectIds, allowedObjectIds);
   }
 }
 
@@ -199,18 +190,10 @@ export function finalizeStoryAuthoringSearch(
     parsed.seeds.map((seed) => seed.id),
   );
   for (const [index, focus] of parsed.objectFocus.entries()) {
-    requireRefs(
-      `object_focus_${index}`,
-      [focus.objectId],
-      allowedObjectIds,
-    );
+    requireRefs(`object_focus_${index}`, [focus.objectId], allowedObjectIds);
   }
   for (const [index, seed] of parsed.seeds.entries()) {
-    requireRefs(
-      `seed_anchor_${index}`,
-      seed.anchorObjectIds,
-      allowedObjectIds,
-    );
+    requireRefs(`seed_anchor_${index}`, seed.anchorObjectIds, allowedObjectIds);
   }
   validateScaleResult(parsed, allowedObjectIds);
 
@@ -252,7 +235,11 @@ export function finalizeStoryUnitDesign(
   const entityIds = new Set(field.objects.map((object) => object.entityId));
   requireRefs("story_unit_object_anchor", parsed.objectAnchorIds, objectIds);
   if (availableSeedIds.size > 0) {
-    requireRefs("story_unit_source_seed", parsed.sourceSeedIds, availableSeedIds);
+    requireRefs(
+      "story_unit_source_seed",
+      parsed.sourceSeedIds,
+      availableSeedIds,
+    );
   }
 
   const campEntityIds = requireUnique(

@@ -532,7 +532,6 @@ export type NarrativeAllocationBatch = z.infer<
   typeof NarrativeAllocationBatchSchema
 >;
 
-
 /**
  * Author-side object-grounded story search.
  *
@@ -731,9 +730,7 @@ export const StoryUnitCampPositionSchema = z.enum([
   "中立",
   "其他利益位置",
 ]);
-export type StoryUnitCampPosition = z.infer<
-  typeof StoryUnitCampPositionSchema
->;
+export type StoryUnitCampPosition = z.infer<typeof StoryUnitCampPositionSchema>;
 
 export const StoryUnitCampMemberSchema = z.object({
   entityId: z.string().min(1),

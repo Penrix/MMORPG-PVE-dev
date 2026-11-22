@@ -335,14 +335,14 @@ SpeculativeRealityDelta
 
 S04 与 S05 的边界：
 
-| S04 Writers' Room | S05 Reality Runtime |
-|---|---|
-| 设计为什么值得发生 | 决定实际能否发生 |
-| 选择人物和场面条件 | 人物按自己的 Goal / Observation 行动 |
-| 设计反应目标 | 不保证实际反应 |
-| 设计 Cast Pool / Active Seed | 只运行真实被激活的人 |
-| 设计信息释放 | 角色只能知道自己应知道的 |
-| 软未来路线 | Reality 可以撞坏它 |
+| S04 Writers' Room            | S05 Reality Runtime                  |
+| ---------------------------- | ------------------------------------ |
+| 设计为什么值得发生           | 决定实际能否发生                     |
+| 选择人物和场面条件           | 人物按自己的 Goal / Observation 行动 |
+| 设计反应目标                 | 不保证实际反应                       |
+| 设计 Cast Pool / Active Seed | 只运行真实被激活的人                 |
+| 设计信息释放                 | 角色只能知道自己应知道的             |
+| 软未来路线                   | Reality 可以撞坏它                   |
 
 当 Reality 撞坏软路线：
 

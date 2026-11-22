@@ -135,8 +135,12 @@ function storyUnitOutputIssues(
 ): string[] {
   const issues: string[] = [];
   const allowedObjects = new Set(field.objects.map((object) => object.id));
-  const allowedEntities = new Set(field.objects.map((object) => object.entityId));
-  const campEntities = new Set(value.campNetwork.map((member) => member.entityId));
+  const allowedEntities = new Set(
+    field.objects.map((object) => object.entityId),
+  );
+  const campEntities = new Set(
+    value.campNetwork.map((member) => member.entityId),
+  );
 
   for (const objectId of value.objectAnchorIds) {
     if (!allowedObjects.has(objectId)) {
@@ -173,9 +177,7 @@ function storyUnitOutputIssues(
     const cast = new Set(event.castPoolEntityIds);
     for (const entityId of event.castPoolEntityIds) {
       if (!allowedEntities.has(entityId)) {
-        issues.push(
-          `event ${event.id}: unknown castPool entityId ${entityId}`,
-        );
+        issues.push(`event ${event.id}: unknown castPool entityId ${entityId}`);
       }
     }
     for (const entityId of event.activeSeedEntityIds) {

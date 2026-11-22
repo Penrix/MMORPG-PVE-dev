@@ -1,7 +1,4 @@
-import type {
-  ExpectationDesign,
-  StoryObjectField,
-} from "@narralume/contracts";
+import type { ExpectationDesign, StoryObjectField } from "@narralume/contracts";
 import type {
   NarrativeRun,
   NarrativeRunStep,
