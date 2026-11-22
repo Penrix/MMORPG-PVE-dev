@@ -25,6 +25,7 @@ export interface WorldAtlasStoryObject {
 }
 
 export interface WorldAtlasStoryContext {
+  projectId: string;
   current: ContextSource[];
   reference: ContextSource[];
   referenceDetail: ContextSource[];
@@ -157,6 +158,7 @@ export class WorldAtlasStoryContextBuilder {
     }
 
     return {
+      projectId: request.projectId,
       current,
       reference,
       referenceDetail,
