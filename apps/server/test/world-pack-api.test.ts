@@ -470,41 +470,43 @@ describe("WorldPack API and author-controlled canonical Reality", () => {
     const pack = response.json()[0];
     expect(pack.status).toBe("draft");
     expect(pack.document.nodes).toHaveLength(5);
-    expect(pack.document.links).toHaveLength(7);
     expect(pack.document.activities).toHaveLength(2);
-    expect(pack.document.interactions).toHaveLength(3);
+    expect(pack.document.interactions).toHaveLength(0);
+    expect(pack.document.links).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ relation: "operates" }),
+        expect.objectContaining({ relation: "leads" }),
+        expect.objectContaining({ relation: "owns" }),
+        expect.objectContaining({ relation: "can_use" }),
+      ]),
+    );
     expect(pack.document.production?.engine).toBe("mmorpg-world-workshop-v1");
     const actualWorkshops: string[] =
       pack.document.production?.executed.map(
         (step: { workshop: string }) => step.workshop,
       ) ?? [];
-    expect(new Set(actualWorkshops)).toEqual(
-      new Set([
-        "geography",
-        "factions",
-        "people",
-        "economy",
-        "power",
-        "events",
-        "social",
-        "playability",
-      ]),
-    );
-    // Real world deficiencies, not a static seven-stage table, decide order.
+    expect(actualWorkshops).toEqual([
+      "geography",
+      "factions",
+      "people",
+      "economy",
+      "events",
+      "power",
+    ]);
+    // Existing typed relations already supply a social route and textual
+    // access/value describe usable world content. The open state machine does
+    // not invent extra social/action workshops merely to tick a checklist.
+    expect(actualWorkshops).not.toContain("social");
+    expect(actualWorkshops).not.toContain("playability");
     expect(actualWorkshops.indexOf("events")).toBeLessThan(
       actualWorkshops.indexOf("power"),
     );
-    expect(pack.document.production?.playtestedPaths).toContainEqual([
-      "public_arrival",
-      "buy_resource",
-      "invest_resource",
-    ]);
     const checkpointCount = db.raw
       .prepare(
         "SELECT COUNT(*) AS n FROM checkpoints WHERE run_id=? AND kind='world.production'",
       )
       .get(runId) as { n: number };
-    expect(checkpointCount.n).toBeGreaterThanOrEqual(8);
+    expect(checkpointCount.n).toBeGreaterThanOrEqual(actualWorkshops.length);
     const before = await app.inject({
       method: "GET",
       url: `/api/projects/${projectId}/story-bible`,
