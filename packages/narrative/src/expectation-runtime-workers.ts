@@ -1,12 +1,15 @@
 import { z } from "zod";
 
 import {
+  StoryReaderTimeSceneDecisionSchema,
   type ExpectationDesign,
   type ExpectationDesignEvidence,
   type ExpectationState,
   type NarrativeAllocationBatch,
   type NarrativeAllocationDecisionDraft,
   type NarrativeCandidate,
+  type StoryReaderTimePlan,
+  type StorySceneExpansion,
   type WorldArbitrationReceipt,
 } from "@narralume/contracts";
 import type {
@@ -21,7 +24,7 @@ import { zodValidator } from "./schemas.js";
 import {
   finalizeExpectationDesign,
   finalizeNarrativeAllocationBatch,
-  narrativeCandidatesFromArbitration,
+  finalizeStoryReaderTimePlan,
 } from "./expectation-runtime.js";
 
 const ExpectationDesignOutputSchema = z.object({
@@ -91,6 +94,18 @@ const NARRATIVE_ALLOCATION_CONTRACT: JsonSchemaContract = {
   schema: z.toJSONSchema(NarrativeAllocationOutputSchema),
 };
 
+
+const StoryReaderTimeOutputSchema = z.object({
+  decisions: z.array(StoryReaderTimeSceneDecisionSchema).min(1),
+});
+type StoryReaderTimeOutput = z.infer<typeof StoryReaderTimeOutputSchema>;
+
+const STORY_READER_TIME_CONTRACT: JsonSchemaContract = {
+  name: "story_scene_reader_time_plan",
+  strict: true,
+  schema: z.toJSONSchema(StoryReaderTimeOutputSchema),
+};
+
 export interface ExpectationDesignModelRequest {
   projectId: string;
   protagonistId: string;
@@ -104,6 +119,12 @@ export interface ExpectationDesignModelRequest {
 export interface ExpectationAllocationModelRequest {
   state: ExpectationState;
   candidates: readonly NarrativeCandidate[];
+}
+
+
+export interface StoryReaderTimeModelRequest {
+  state: ExpectationState;
+  sceneExpansion: StorySceneExpansion;
 }
 
 export interface ExpectationRuntimeModelResult<T> {
@@ -227,22 +248,97 @@ export class ExpectationNarrativeService {
     };
   }
 
-  async allocateArbitrationReaderTime(
+  async allocateSceneReaderTime(
     run: NarrativeRun,
     step: NarrativeRunStep,
-    state: ExpectationState,
-    receipt: WorldArbitrationReceipt,
+    request: StoryReaderTimeModelRequest,
     signal: AbortSignal,
-  ): Promise<ExpectationRuntimeModelResult<NarrativeAllocationBatch>> {
+  ): Promise<ExpectationRuntimeModelResult<StoryReaderTimePlan>> {
     if (
-      receipt.projectId !== state.projectId ||
-      receipt.projectId !== run.projectId ||
-      receipt.realityFingerprint !== state.realityFingerprint
+      run.projectId !== request.state.projectId ||
+      request.sceneExpansion.projectId !== request.state.projectId ||
+      request.sceneExpansion.realityFingerprint !==
+        request.state.realityFingerprint ||
+      request.sceneExpansion.scenes.length === 0
     ) {
-      throw new Error("story_runtime.expectation.arbitration_project_mismatch");
+      throw new Error("story_runtime.reader_time.invalid_request");
     }
-    const candidates = narrativeCandidatesFromArbitration(receipt);
-    return this.allocateReaderTime(run, step, { state, candidates }, signal);
+
+    const result = await this.model.structured(
+      run,
+      step,
+      "story-scene-reader-time-plan",
+      {
+        instructions: [
+          "你在 S07 Reader Time 层工作。输入已经经过 S04 编剧、S05 Reality Rehearsal、S06 Multi-Scene Expansion。禁止重新发明故事、人物行动或场景。",
+          "讲师原稿的节奏规则是：制造信息差；分层释放信息差；在旧期待完全满足前提前铺垫新的信息差；一个高潮兑现后，把注意力转移到预先存在或刚种下的新期待。",
+          "每个 S06 Scene 必须且只能有一个 decision。readerOrder 是 Reader 实际阅读顺序；可以控制展示顺序，但不能篡改 Scene 已经写明的现实因果、人物行动和 endState。",
+          "informationReleased 写 Reader 在这一拍真正获得什么；informationWithheld 写这一拍仍故意不让 Reader 完全知道什么。不要一次把所有信息差结清。",
+          "seed：种下新期待；charge：继续加深稀缺、固有认知、压力或认知差；payoff：兑现已成熟期待；background/skip：减少 Reader Time，但不能假装 Scene 没有在 Reality 中发生。",
+          "若 action=payoff，必须同时完成期待连续性桥接：focusShiftThreadIds 指向已经存在的下一期待，或 nextExpectationSeed 明确种下新期待。只有确实是阶段/全书收束时，才允许用 terminalExpectationReason 解释为什么可以暂时没有下一笔期待。",
+          "focusShiftThreadIds、payoffThreadIds、expectationThreadIds 只能引用 expectationState 中真实存在的 thread。",
+          "reactionTargetEntityIds 只能使用 expectation thread 已有反应目标，不能高潮后临时拉一群人震惊。",
+          "chapterBoundary 只决定 Reader Time 的切分，不改变 Reality Time。continue=不停章；soft_cut=可切场/节；chapter_end=章末。",
+          "Reader knows != Character knows。S07只能控制 Reader 获得什么，不能修改人物自己的 knowledge state。",
+          "Reader knows != Reader feels。重要情绪如果仍只是摘要，用 embodimentTargets 指出这一场应让 Reader 具体感受到什么。",
+        ].join("\n"),
+        messages: [
+          {
+            role: "user",
+            content: JSON.stringify(
+              {
+                expectationState: request.state,
+                sceneExpansion: request.sceneExpansion,
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+        reasoningEffort: "high",
+      },
+      STORY_READER_TIME_CONTRACT,
+      zodValidator(StoryReaderTimeOutputSchema, (value) =>
+        readerTimeOutputIssues(value, request.sceneExpansion),
+      ),
+      signal,
+    );
+
+    const value = finalizeStoryReaderTimePlan(
+      {
+        version: "story-reader-time-plan.v1",
+        authority: "speculative",
+        projectId: request.state.projectId,
+        expectationStateDigest: request.state.digest,
+        storySceneExpansionDigest: request.sceneExpansion.digest,
+        realityFingerprint: request.sceneExpansion.realityFingerprint,
+        sceneIds: request.sceneExpansion.scenes.map((scene) => scene.id),
+        decisions: result.value.decisions,
+      },
+      request.state,
+      request.sceneExpansion,
+    );
+
+    return {
+      value,
+      usage: result.usage,
+      generation: { mode: result.mode, attempts: result.attempts },
+    };
+  }
+
+  /**
+   * Deprecated guardrail: Reader Time may not bypass S06 Scene Expansion.
+   */
+  async allocateArbitrationReaderTime(
+    _run: NarrativeRun,
+    _step: NarrativeRunStep,
+    _state: ExpectationState,
+    _receipt: WorldArbitrationReceipt,
+    _signal: AbortSignal,
+  ): Promise<ExpectationRuntimeModelResult<NarrativeAllocationBatch>> {
+    throw new Error(
+      "story_runtime.reader_time.direct_arbitration_bypass_forbidden",
+    );
   }
 
   async allocateReaderTime(
@@ -344,6 +440,39 @@ export class ExpectationNarrativeService {
       generation: { mode: result.mode, attempts: result.attempts },
     };
   }
+}
+
+function readerTimeOutputIssues(
+  value: StoryReaderTimeOutput,
+  expansion: StorySceneExpansion,
+): string[] {
+  const issues: string[] = [];
+  const allowed = new Set(expansion.scenes.map((scene) => scene.id));
+  const seen = new Set<string>();
+  const orders = new Set<number>();
+
+  for (const decision of value.decisions) {
+    if (!allowed.has(decision.sceneId)) {
+      issues.push(`decisions: unknown sceneId ${decision.sceneId}`);
+    }
+    if (seen.has(decision.sceneId)) {
+      issues.push(`decisions: duplicate sceneId ${decision.sceneId}`);
+    }
+    seen.add(decision.sceneId);
+    if (orders.has(decision.readerOrder)) {
+      issues.push(
+        `decisions: duplicate readerOrder ${decision.readerOrder}`,
+      );
+    }
+    orders.add(decision.readerOrder);
+  }
+
+  for (const scene of expansion.scenes) {
+    if (!seen.has(scene.id)) {
+      issues.push(`decisions: missing sceneId ${scene.id}`);
+    }
+  }
+  return issues;
 }
 
 function allocationOutputIssues(
