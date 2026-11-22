@@ -326,6 +326,8 @@ describe("StoryAuthoringService", () => {
                 id: "event:recovery-test",
                 title: "恢复测试",
                 purpose: "让异常进入专业见证",
+                problem: "秀信的异常恢复表现是否会改变医疗忍者对他的专业估值",
+                storyPressure: "普通伤员认知与眼前异常结果开始正面冲突",
                 castPoolEntityIds: ["xiuxin", "medic"],
                 activeSeedEntityIds: ["xiuxin"],
                 actorPressures: [
@@ -338,6 +340,29 @@ describe("StoryAuthoringService", () => {
                     pressure: "按医疗职责处理眼前出现的异常恢复表现",
                   },
                 ],
+                reactionTargetEntityIds: ["medic"],
+                informationReleaseSteps: [1],
+                phaseTargets: [
+                  {
+                    phase: "before",
+                    entityIds: ["xiuxin", "medic"],
+                    authorIntent: "先让普通伤员流程与恢复压力成立",
+                    expectationMovement: "加深 Reader 对专业固有认知的把握",
+                  },
+                  {
+                    phase: "during",
+                    entityIds: ["xiuxin", "medic"],
+                    authorIntent: "让异常表现真正进入专业观察",
+                    expectationMovement: "把认知差推到眼前",
+                  },
+                  {
+                    phase: "after",
+                    entityIds: ["medic"],
+                    authorIntent: "承接重新估值与后续传播可能",
+                    expectationMovement: "留下更高层识货链的下一笔期待",
+                  },
+                ],
+                realityQuestion: "按当前医疗规则与人物认知，医疗忍者实际会怎样处理这个异常",
                 observableStart: "秀信开始训练",
                 expectedChange: "产生可被 Reality 裁决的新事实",
                 readerExpectation: "等医疗忍者真实处理异常",
