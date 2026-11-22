@@ -328,6 +328,16 @@ describe("StoryAuthoringService", () => {
                 purpose: "让异常进入专业见证",
                 castPoolEntityIds: ["xiuxin", "medic"],
                 activeSeedEntityIds: ["xiuxin"],
+                actorPressures: [
+                  {
+                    entityId: "xiuxin",
+                    pressure: "恢复期内必须判断当前身体能否承受继续训练",
+                  },
+                  {
+                    entityId: "medic",
+                    pressure: "按医疗职责处理眼前出现的异常恢复表现",
+                  },
+                ],
                 observableStart: "秀信开始训练",
                 expectedChange: "产生可被 Reality 裁决的新事实",
                 readerExpectation: "等医疗忍者真实处理异常",
