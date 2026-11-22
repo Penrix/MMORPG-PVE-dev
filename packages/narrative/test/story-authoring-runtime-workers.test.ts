@@ -117,8 +117,8 @@ function expectation(): ExpectationDesign {
     designReasons: ["先让专业旧认知成立"],
     realityFingerprint: "r1",
     storyStateFingerprint: "s1",
-    mustPreserveAgentAutonomy: true,
-    mustNotPredetermineOutcome: true,
+    directorMayDesignReactionPayoff: true,
+    mustGroundPerformanceInCharacterization: true,
   });
 }
 
