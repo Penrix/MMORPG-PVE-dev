@@ -26,6 +26,7 @@ function storyUnit(): StoryUnitDesign {
         currentGoal: "恢复",
         storyRole: "主角行动来源",
         currentBelief: "自己的训练有效",
+        currentInterest: "恢复并重新取得任务价值",
       },
       {
         entityId: "medic",
@@ -33,6 +34,22 @@ function storyUnit(): StoryUnitDesign {
         currentGoal: "按规则处理伤员",
         storyRole: "专业定价",
         currentBelief: "秀信只是普通伤员",
+        currentInterest: "维护专业判断和资源配置准确性",
+      },
+    ],
+    stakeLedger: [
+      {
+        id: "stake:medic-rating",
+        entityId: "medic",
+        currentBelief: "秀信只是普通伤员",
+        currentInterest: "维护专业判断和医疗资源配置",
+        stakeAction: "继续按普通伤员标准处理并给出专业评级",
+        stakeAssets: ["专业判断", "医疗资源配置"],
+        commitmentCost: "改判就等于承认此前估值不足",
+        escalationPlan: "异常持续时升级复核并留下记录",
+        payoffReaction: "亲自改判秀信价值并改变后续处理",
+        settlementChange: "秀信进入更高专业估值链",
+        state: "committed",
       },
     ],
     reactionTargets: [
@@ -101,7 +118,8 @@ function storyUnit(): StoryUnitDesign {
         readerExpectation: "等待专业人物如何真实处理异常",
       },
     ],
-    mustPreserveAgentAutonomy: true,
+    directorAuthority: "author-defined-story-line",
+    characterExecutionRule: "characterization-constrained-performance",
     digest: "story-unit:digest",
   };
 }
