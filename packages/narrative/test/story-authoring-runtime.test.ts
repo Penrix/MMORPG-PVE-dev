@@ -141,8 +141,8 @@ function expectation(): ExpectationDesign {
     designReasons: ["这条认知差能把基础术的异常价值抬高"],
     realityFingerprint: "reality:1",
     storyStateFingerprint: "story:1",
-    mustPreserveAgentAutonomy: true,
-    mustNotPredetermineOutcome: true,
+    directorMayDesignReactionPayoff: true,
+    mustGroundPerformanceInCharacterization: true,
   });
 }
 
@@ -762,7 +762,8 @@ describe("object-grounded story authoring runtime", () => {
           appearanceOrderEntityIds: [],
           informationRelease: [],
           events: [],
-          mustPreserveAgentAutonomy: true,
+          directorAuthority: "author-defined-story-line",
+          characterExecutionRule: "characterization-constrained-performance",
         },
         objectField,
         exp,
@@ -805,7 +806,8 @@ describe("object-grounded story authoring runtime", () => {
           appearanceOrderEntityIds: [],
           informationRelease: [],
           events: [],
-          mustPreserveAgentAutonomy: true,
+          directorAuthority: "author-defined-story-line",
+          characterExecutionRule: "characterization-constrained-performance",
         },
         objectField,
         exp,
