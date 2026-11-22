@@ -1,5 +1,7 @@
 # 第二模块｜已确认认知与错误纠正（2026-11-20）
 
+> **STATUS: CURRENT SUPPORT / ERROR GUARDRAILS.** 本文保留 Module 2 的已确认纠错与禁令；若其中历史实现方案与 13～15 冲突，服从 13～15，但错误禁令继续有效。
+
 > **2026-11-21 最新覆盖：** Source World / World Atlas 的当前实现边界已经进一步收敛，请先读 [13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)。原生母体当前只以“世界卡片 + typed links + 可重建关系索引/图谱”为核心；本文涉及 Project Reality、跨世界、时间与历史真值的内容继续有效，但不得反向要求 Source World 实现同等复杂度。
 
 > **状态：工程约束；本文件用于防止后续开发和跨窗口协作把已经纠正的理解恢复为熟悉但错误的默认设计。**
