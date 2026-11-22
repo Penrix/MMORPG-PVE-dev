@@ -1,5 +1,7 @@
 # 第三模块｜Expectation / Narrative Runtime（2026-11-22）
 
+> **2026-11-22 当前最高权限再纠正：Expectation Design 可以主动设计配角下注、Reaction / Payoff方向；具体演法再由人设、利益和可见Reality约束。旧的“第一层拥有角色选择上位权、第二层不得预定反应”的表述已经被 [23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md) supersede。World Arbiter只裁硬事实可行性，不裁商业男频人物线是否允许存在。**
+
 > **2026-11-22 最新权限修正：Reader Time 的正式入口已经下移到 S06 Scene Expansion 之后。禁止 `WorldArbitrationReceipt → S07` 直连。讲师原稿的正式链是：S05一个问题节点 → S06多个场景 → S07分层释放信息差 / 提前种新期待 / 高潮后转移期待焦点。本文中“第一层运行后直接分配 Reader Time”的旧描述仅保留形成史，不再具有当前工程Authority。**
 
 > 本文件记录 2026-11-21 至 2026-11-22 连续讨论中形成的第二层 Story Runtime 认知。它是 `18-story-runtime-core.md` 的直接续篇与语义覆盖：第一层解决“世界里真实会发生什么”，第二层解决“这些真实发生/可能发生的东西里，什么值得进入 Reader Time，什么时候写，写多久，怎样铺垫与兑现”。
@@ -89,20 +91,20 @@ Reader 当前需求 / 主线情绪
 
 ### 因果顺序
 
-第二层先设计，不代表第二层可以预写剧情结果。
+第二层先设计，而且可以明确设计商业男频需要的角色下注与Payoff方向。不能预写的是“已经发生的Canon事实”，不是不能设计剧情。
 
-真正发生什么，仍由第一层裁决：
+真正的权限分工是：
 
 ```text
 Expectation Design
         ↓
 Reality Runtime
         ↓
-人物基于自身 Observation / Goal / 利益独立行动
+人物在作者已定人物线内，基于自身 Observation / Goal / 利益选择具体演法
         ↓
-World Arbitration
+World Arbitration 检查硬事实可行性
         ↓
-真实/模拟结果
+speculative result
         ↓
 Expectation Runtime 再决定：
 继续 seed / charge / payoff / reprice
@@ -118,12 +120,14 @@ Expectation Runtime 再决定：
 - 预期值得收割的反应；
 - 期望留下的 Reality Gain。
 
-第二层**不能**设计：
+第二层可以设计：
 
-- “卡卡西这一轮必须来医院”；
-- “朔茂必须识货”；
-- “敌人必须犯错”；
-- “某个角色必须按照作者想要的方向行动”。
+- 哪些现成人物应该卷进这条故事线；
+- 哪个人基于什么固有认知下注；
+- 谁继续误判、谁加注、谁承担未来识货/后悔/投靠/破防等Payoff；
+- 人物线怎样通过 Before / During / After 被铺垫和结算。
+
+但具体动作、对白和演法必须符合人设、利益、已知信息与硬 Reality。
 
 如果第一层真实运行得到的结果与原 Expectation Design 不同：
 
