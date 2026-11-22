@@ -1,0 +1,59 @@
+name: TEMP format story authoring
+
+on:
+  push:
+    branches:
+      - feat/module3-world-atlas-integration
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: feat/module3-world-atlas-integration
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format current story-authoring change set
+        run: |
+          npx prettier --write \
+            AGENTS.md \
+            docs/mmorpg/README.md \
+            docs/mmorpg/20-object-grounded-writers-room.md \
+            packages/contracts/src/story-runtime.ts \
+            packages/persistence/src/project-reality-context.ts \
+            packages/narrative/src/index.ts \
+            packages/narrative/src/story-authoring-runtime.ts \
+            packages/narrative/src/story-authoring-runtime-workers.ts \
+            packages/narrative/test/world-atlas-story-context.test.ts \
+            packages/narrative/test/story-authoring-runtime.test.ts \
+            packages/narrative/test/story-authoring-runtime-workers.test.ts
+      - name: Commit formatting only
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            AGENTS.md \
+            docs/mmorpg/README.md \
+            docs/mmorpg/20-object-grounded-writers-room.md \
+            packages/contracts/src/story-runtime.ts \
+            packages/persistence/src/project-reality-context.ts \
+            packages/narrative/src/index.ts \
+            packages/narrative/src/story-authoring-runtime.ts \
+            packages/narrative/src/story-authoring-runtime-workers.ts \
+            packages/narrative/test/world-atlas-story-context.test.ts \
+            packages/narrative/test/story-authoring-runtime.test.ts \
+            packages/narrative/test/story-authoring-runtime-workers.test.ts
+          git commit -m "style: format object-grounded story authoring"
+          git push origin HEAD:feat/module3-world-atlas-integration
