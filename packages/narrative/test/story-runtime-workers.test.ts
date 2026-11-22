@@ -8,7 +8,10 @@ import {
   StoryRuntimeAgentService,
   finalizeCharacterActionProposal,
 } from "../src/index.js";
-import type { CharacterObservationPacket } from "@narralume/contracts";
+import type {
+  CharacterObservationPacket,
+  WorldArbitrationContext,
+} from "@narralume/contracts";
 import { describe, expect, it, vi } from "vitest";
 
 const usage: RunBudgetUsage = {
@@ -57,7 +60,7 @@ function observation(
     perceivedEvents: [],
     memory: [],
     storyStateFingerprint: `story-${characterId}`,
-    realityFingerprint: `reality-${characterId}`,
+    realityFingerprint: "reality:event:gate",
     sourceIds: ["story-state"],
     digest: `observation-${characterId}`,
   };
@@ -75,6 +78,9 @@ function proposalFor(current: CharacterObservationPacket) {
       characterId: current.characterId,
       characterName: current.characterName,
       observationDigest: current.digest,
+      storyUnitDesignDigest: current.storyUnitDesignDigest,
+      storyUnitEventId: current.storyUnitEventId,
+      realityFingerprint: current.realityFingerprint,
       location: current.location,
       currentGoal: current.currentGoal,
       pressure: current.pressure,
@@ -94,6 +100,31 @@ function proposalFor(current: CharacterObservationPacket) {
     },
     current,
   );
+}
+
+function worldContextFor(
+  proposal: ReturnType<typeof proposalFor>,
+): WorldArbitrationContext {
+  return {
+    version: "world-arbitration-context.v1",
+    authority: "speculative",
+    projectId: proposal.projectId,
+    storyUnitDesignDigest: proposal.storyUnitDesignDigest,
+    storyUnitEventId: proposal.storyUnitEventId,
+    realityFingerprint: proposal.realityFingerprint,
+    surfaces: [
+      {
+        entityId: "hero",
+        name: "Hero",
+        kind: "character",
+        facet: "state",
+        slotKey: "location",
+        value: "harbor",
+        sourceId: "world-reality:hero",
+      },
+    ],
+    digest: "world-context:gate",
+  };
 }
 
 describe("StoryRuntimeAgentService", () => {
@@ -156,6 +187,9 @@ describe("StoryRuntimeAgentService", () => {
         characterId: "rival",
         characterName: "Rival",
         observationDigest: rivalObservation.digest,
+        storyUnitDesignDigest: rivalObservation.storyUnitDesignDigest,
+        storyUnitEventId: rivalObservation.storyUnitEventId,
+        realityFingerprint: rivalObservation.realityFingerprint,
         location: "harbor",
         currentGoal: rivalObservation.currentGoal,
         pressure: rivalObservation.pressure,
@@ -256,8 +290,7 @@ describe("StoryRuntimeAgentService", () => {
         generationId: "g1",
         round: 1,
         proposals: [hero, rival],
-        operationalWorldContext:
-          "One side gate. Hero and Rival are both at the harbor.",
+        worldContext: worldContextFor(hero),
         protagonistCharacterId: "hero",
       },
       new AbortController().signal,
@@ -317,7 +350,7 @@ describe("StoryRuntimeAgentService", () => {
           generationId: "g1",
           round: 1,
           proposals: [hero],
-          operationalWorldContext: "Harbor",
+          worldContext: worldContextFor(hero),
           protagonistCharacterId: "hero",
         },
         new AbortController().signal,
@@ -374,7 +407,7 @@ describe("StoryRuntimeAgentService", () => {
           generationId: "g1",
           round: 1,
           proposals: [hero, rival],
-          operationalWorldContext: "Harbor",
+          worldContext: worldContextFor(hero),
         },
         new AbortController().signal,
       ),
