@@ -11,6 +11,7 @@ import {
   type WorldPackDocument,
   type WorldPackLink,
   type WorldPackNode,
+  type StoryWorldGap,
   type WorldPackRequest,
 } from "@narralume/contracts";
 
@@ -143,6 +144,40 @@ function order(
     peopleQuestions: atlasTarget.peopleQuestions,
     completionRule: atlasTarget.completionRule,
   };
+}
+
+/**
+ * Convert a structured story-side world gap into the existing World Builder
+ * work-order language. This does not auto-adopt new world content; it only
+ * routes the missing object/relation/state back to the proper production
+ * workshop.
+ */
+export function worldWorkOrderFromStoryGap(
+  gap: StoryWorldGap,
+  doc: WorldPackDocument,
+): WorldWorkOrder {
+  const anchorCanonIds = gap.anchorObjectIds.map((id) =>
+    id.startsWith("object:") ? id.slice("object:".length) : id,
+  );
+  const anchorNode = doc.nodes.find(
+    (node) =>
+      anchorCanonIds.includes(node.localId) ||
+      (node.existingCanonId !== null &&
+        anchorCanonIds.includes(node.existingCanonId)),
+  );
+  return order(
+    gap.productionHint,
+    anchorNode?.localId ?? null,
+    doc,
+    `Story world gap ${gap.id}: ${gap.reason}`,
+    [
+      gap.need,
+      `gapKind=${gap.kind}`,
+      gap.anchorObjectIds.length > 0
+        ? `anchorObjects=${gap.anchorObjectIds.join(",")}`
+        : "anchorObjects=none",
+    ],
+  );
 }
 
 function relationMatches(relation: string, pattern: RegExp): boolean {
