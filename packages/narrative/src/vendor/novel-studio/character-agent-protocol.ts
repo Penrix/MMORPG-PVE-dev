@@ -29,6 +29,7 @@ import {
   type CharacterActionProposalDraft,
   type CharacterObservationPacket,
   type SpeculativeRealityDelta,
+  type WorldArbitrationContext,
   type WorldArbitrationReceipt,
   type WorldArbitrationReceiptDraft,
 } from "@narralume/contracts";
@@ -178,6 +179,7 @@ function sameStringSet(left: readonly string[], right: readonly string[]): boole
 export function finalizeWorldArbitrationReceipt(
   draft: WorldArbitrationReceiptDraft,
   proposals: readonly CharacterActionProposal[],
+  worldContext: WorldArbitrationContext,
 ): WorldArbitrationReceipt {
   const parsed = WorldArbitrationReceiptDraftSchema.parse(draft);
   if (proposals.length === 0) {
@@ -197,6 +199,21 @@ export function finalizeWorldArbitrationReceipt(
     !rounds.has(parsed.round)
   ) {
     throw new Error("story_runtime.arbitration.proposal_cycle_mismatch");
+  }
+  if (
+    worldContext.projectId !== parsed.projectId ||
+    worldContext.storyUnitDesignDigest !== parsed.storyUnitDesignDigest ||
+    worldContext.storyUnitEventId !== parsed.storyUnitEventId ||
+    worldContext.realityFingerprint !== parsed.realityFingerprint ||
+    worldContext.digest !== parsed.worldContextDigest ||
+    proposals.some(
+      (proposal) =>
+        proposal.storyUnitDesignDigest !== parsed.storyUnitDesignDigest ||
+        proposal.storyUnitEventId !== parsed.storyUnitEventId ||
+        proposal.realityFingerprint !== parsed.realityFingerprint,
+    )
+  ) {
+    throw new Error("story_runtime.arbitration.world_context_mismatch");
   }
 
   const byAgent = new Map(
