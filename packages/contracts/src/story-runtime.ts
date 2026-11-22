@@ -860,18 +860,80 @@ export type StoryUnitActorPressure = z.infer<
   typeof StoryUnitActorPressureSchema
 >;
 
+export const StoryNodePhaseSchema = z.enum(["before", "during", "after"]);
+export type StoryNodePhase = z.infer<typeof StoryNodePhaseSchema>;
+
+export const StoryNodePhaseTargetSchema = z.object({
+  phase: StoryNodePhaseSchema,
+  entityIds: z.array(z.string().min(1)).min(1),
+  authorIntent: z.string().min(1),
+  expectationMovement: z.string().min(1),
+});
+export type StoryNodePhaseTarget = z.infer<typeof StoryNodePhaseTargetSchema>;
+
+/**
+ * S05 Story Node.
+ *
+ * The event is an authored problem-node that can expand into multiple S06
+ * scenes. Character Agent + World Arbiter are a Reality rehearsal inside this
+ * node; they are not the definition of S05 itself.
+ */
 export const StoryUnitEventDesignSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   purpose: z.string().min(1),
+  problem: z.string().min(1),
+  storyPressure: z.string().min(1),
   castPoolEntityIds: z.array(z.string().min(1)).min(1),
   activeSeedEntityIds: z.array(z.string().min(1)).min(1),
   actorPressures: z.array(StoryUnitActorPressureSchema).min(1),
+  reactionTargetEntityIds: z.array(z.string().min(1)),
+  informationReleaseSteps: z.array(z.number().int().positive()),
+  phaseTargets: z.array(StoryNodePhaseTargetSchema).min(1),
+  realityQuestion: z.string().min(1),
   observableStart: z.string().min(1),
   expectedChange: z.string().min(1),
   readerExpectation: z.string().min(1),
 });
 export type StoryUnitEventDesign = z.infer<typeof StoryUnitEventDesignSchema>;
+
+export const StoryScenePlanSchema = z.object({
+  id: z.string().min(1),
+  order: z.number().int().positive(),
+  phase: StoryNodePhaseSchema,
+  title: z.string().min(1),
+  participantEntityIds: z.array(z.string().min(1)).min(1),
+  locationObjectId: z.string().min(1).nullable(),
+  localProblem: z.string().min(1),
+  pressure: z.string().min(1),
+  observableStart: z.string().min(1),
+  interaction: z.string().min(1),
+  informationMove: z.string().min(1),
+  expectationMove: z.string().min(1),
+  projectedRealityUse: z.string().min(1),
+  endState: z.string().min(1),
+  nextSceneCause: z.string().min(1).nullable(),
+});
+export type StoryScenePlan = z.infer<typeof StoryScenePlanSchema>;
+
+export const StorySceneExpansionSchema = z.object({
+  version: z.literal("story-scene-expansion.v1"),
+  authority: z.literal("speculative"),
+  projectId: z.string().min(1),
+  storyUnitDesignDigest: z.string().min(1),
+  storyUnitEventId: z.string().min(1),
+  arbitrationDigest: z.string().min(1),
+  eventProblem: z.string().min(1),
+  scenes: z.array(StoryScenePlanSchema).min(1),
+  digest: z.string().min(1),
+});
+export type StorySceneExpansion = z.infer<typeof StorySceneExpansionSchema>;
+export const StorySceneExpansionDraftSchema = StorySceneExpansionSchema.omit({
+  digest: true,
+});
+export type StorySceneExpansionDraft = z.infer<
+  typeof StorySceneExpansionDraftSchema
+>;
 
 export const StoryUnitDesignSchema = z.object({
   version: z.literal("story-unit-design.v1"),
