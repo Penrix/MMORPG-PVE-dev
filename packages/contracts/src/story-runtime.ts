@@ -923,6 +923,7 @@ export const StorySceneExpansionSchema = z.object({
   storyUnitDesignDigest: z.string().min(1),
   storyUnitEventId: z.string().min(1),
   arbitrationDigest: z.string().min(1),
+  realityFingerprint: z.string().min(1),
   eventProblem: z.string().min(1),
   scenes: z.array(StoryScenePlanSchema).min(1),
   digest: z.string().min(1),
@@ -933,6 +934,51 @@ export const StorySceneExpansionDraftSchema = StorySceneExpansionSchema.omit({
 });
 export type StorySceneExpansionDraft = z.infer<
   typeof StorySceneExpansionDraftSchema
+>;
+
+
+export const StoryReaderTimeSceneDecisionSchema = z.object({
+  sceneId: z.string().min(1),
+  readerOrder: z.number().int().positive(),
+  action: NarrativeAllocationActionSchema,
+  readerTime: ReaderTimeAllocationSchema,
+  expectationThreadIds: z.array(z.string().min(1)),
+  reasons: z.array(z.string().min(1)).min(1),
+  deepenScarcityEvidenceIds: z.array(z.string().min(1)),
+  reinforceBeliefIds: z.array(z.string().min(1)),
+  widenGapBeliefIds: z.array(z.string().min(1)),
+  embodimentTargets: z.array(z.string().min(1)),
+  payoffThreadIds: z.array(z.string().min(1)),
+  reactionTargetEntityIds: z.array(z.string().min(1)),
+  retainedGainOpportunity: z.string().min(1).nullable(),
+  informationReleased: z.string().min(1),
+  informationWithheld: z.string().min(1),
+  focusShiftThreadIds: z.array(z.string().min(1)),
+  nextExpectationSeed: z.string().min(1).nullable(),
+  terminalExpectationReason: z.string().min(1).nullable(),
+  chapterBoundary: z.enum(["continue", "soft_cut", "chapter_end"]),
+});
+export type StoryReaderTimeSceneDecision = z.infer<
+  typeof StoryReaderTimeSceneDecisionSchema
+>;
+
+export const StoryReaderTimePlanSchema = z.object({
+  version: z.literal("story-reader-time-plan.v1"),
+  authority: z.literal("speculative"),
+  projectId: z.string().min(1),
+  expectationStateDigest: z.string().min(1),
+  storySceneExpansionDigest: z.string().min(1),
+  realityFingerprint: z.string().min(1),
+  sceneIds: z.array(z.string().min(1)).min(1),
+  decisions: z.array(StoryReaderTimeSceneDecisionSchema).min(1),
+  digest: z.string().min(1),
+});
+export type StoryReaderTimePlan = z.infer<typeof StoryReaderTimePlanSchema>;
+export const StoryReaderTimePlanDraftSchema = StoryReaderTimePlanSchema.omit({
+  digest: true,
+});
+export type StoryReaderTimePlanDraft = z.infer<
+  typeof StoryReaderTimePlanDraftSchema
 >;
 
 export const StoryUnitDesignSchema = z.object({
