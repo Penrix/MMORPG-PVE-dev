@@ -91,6 +91,32 @@ beforeEach(() => {
   );
   canon.insertFact(
     createCanonFact({
+      id: "hero-goal",
+      projectId: "p1",
+      subjectId: "hero",
+      predicate: "current_goal",
+      value: "leave the harbor",
+      knowledgeScope: "omniscient",
+      authority: "confirmed",
+      sourceType: "test",
+      now,
+    }),
+  );
+  canon.insertFact(
+    createCanonFact({
+      id: "hero-key",
+      projectId: "p1",
+      subjectId: "hero",
+      predicate: "has_resource",
+      value: "side-gate key",
+      knowledgeScope: "omniscient",
+      authority: "confirmed",
+      sourceType: "test",
+      now,
+    }),
+  );
+  canon.insertFact(
+    createCanonFact({
       id: "secret-identity",
       projectId: "p1",
       subjectId: "rival",
@@ -159,10 +185,12 @@ function observation() {
     projectId: "p1",
     characterId: "hero",
     generationId: "generation-1",
+    storyUnitDesignDigest: "story-unit:1",
+    storyUnitEventId: "event:gate",
     targetOutlineNodeId: "chapter-1",
-    currentGoal: "leave the harbor",
+    goalEvidenceRefs: ["hero-goal"],
     pressure: "the gate is closing",
-    resources: ["key"],
+    resourceEvidenceRefs: ["hero-key"],
   });
 }
 
@@ -182,9 +210,9 @@ function proposal() {
         characterName: "Hero",
         observationDigest: current.digest,
         location: "harbor",
-        currentGoal: "leave the harbor",
+        currentGoal: current.currentGoal,
         pressure: "the gate is closing",
-        resources: ["key"],
+        resources: ["hero-key"],
         availableOptions: ["wait", "use the key"],
         rejectedOptions: ["wait"],
         decision: "use the key",
@@ -192,7 +220,7 @@ function proposal() {
         intendedAction: "unlock the side gate and leave",
         actionDuration: "five minutes",
         knowledgeRefs: ["public-location", "visible-event"],
-        resourceClaims: ["key"],
+        resourceClaims: ["hero-key"],
         constraints: ["do not reveal the key to Rival"],
         contingencies: ["hide if the patrol arrives"],
         expectedConsequences: ["leave the harbor"],
@@ -207,6 +235,12 @@ describe("Module 3 Story Runtime core", () => {
   it("builds a subjective observation without author-secret leakage", () => {
     const current = observation();
     expect(current.location).toBe("harbor");
+    expect(current.authority).toBe("speculative");
+    expect(current.storyUnitDesignDigest).toBe("story-unit:1");
+    expect(current.storyUnitEventId).toBe("event:gate");
+    expect(current.goalEvidenceRefs).toEqual(["hero-goal"]);
+    expect(current.locationEvidenceRefs).toEqual(["public-location"]);
+    expect(current.resources).toEqual(["hero-key"]);
     expect(current.knownFacts.map((item) => item.id)).toContain(
       "public-location",
     );
@@ -226,6 +260,40 @@ describe("Module 3 Story Runtime core", () => {
     expect(current.realityFingerprint).toBeTruthy();
   });
 
+  it("rejects actor state that is not grounded in visible evidence", () => {
+    expect(() =>
+      new CharacterObservationBuilder(database).build({
+        projectId: "p1",
+        characterId: "hero",
+        generationId: "generation-1",
+        storyUnitDesignDigest: "story-unit:1",
+        storyUnitEventId: "event:gate",
+        targetOutlineNodeId: "chapter-1",
+        goalEvidenceRefs: ["secret-identity"],
+        pressure: "the gate is closing",
+        resourceEvidenceRefs: ["hero-key"],
+      }),
+    ).toThrow(
+      "story_runtime.observation.goal_evidence_not_visible:secret-identity",
+    );
+
+    expect(() =>
+      new CharacterObservationBuilder(database).build({
+        projectId: "p1",
+        characterId: "hero",
+        generationId: "generation-1",
+        storyUnitDesignDigest: "story-unit:1",
+        storyUnitEventId: "event:gate",
+        targetOutlineNodeId: "chapter-1",
+        goalEvidenceRefs: ["hero-goal"],
+        pressure: "the gate is closing",
+        resourceEvidenceRefs: ["invented-key"],
+      }),
+    ).toThrow(
+      "story_runtime.observation.resource_evidence_not_visible:invented-key",
+    );
+  });
+
   it("rejects a character proposal that cites unavailable knowledge", () => {
     const current = observation();
     expect(() =>
@@ -241,9 +309,9 @@ describe("Module 3 Story Runtime core", () => {
           characterName: "Hero",
           observationDigest: current.digest,
           location: "harbor",
-          currentGoal: "leave the harbor",
+          currentGoal: current.currentGoal,
           pressure: "the gate is closing",
-          resources: ["key"],
+          resources: ["hero-key"],
           availableOptions: ["wait", "use the key"],
           rejectedOptions: ["wait"],
           decision: "use the key",
@@ -251,7 +319,7 @@ describe("Module 3 Story Runtime core", () => {
           intendedAction: "unlock the side gate and leave",
           actionDuration: "five minutes",
           knowledgeRefs: ["secret-identity"],
-          resourceClaims: ["key"],
+          resourceClaims: ["hero-key"],
           constraints: [],
           contingencies: [],
           expectedConsequences: ["leave the harbor"],
@@ -277,9 +345,9 @@ describe("Module 3 Story Runtime core", () => {
           characterName: "Hero",
           observationDigest: current.digest,
           location: "harbor",
-          currentGoal: "leave the harbor",
+          currentGoal: current.currentGoal,
           pressure: "the gate is closing",
-          resources: ["key"],
+          resources: ["hero-key"],
           availableOptions: ["wait", "use the key"],
           rejectedOptions: ["wait"],
           decision: "use the key",
