@@ -592,7 +592,7 @@ describe("object-grounded story authoring runtime", () => {
             entityId: "medic",
             before: "按普通伤员估值",
             during: "如果看到异常，应由本人按专业Reality判断",
-            after: "目标是形成重新估值，但不强迫具体反应",
+            after: "医疗忍者亲自重新估值秀信，并改变后续专业处理",
           },
         ],
         campTransitions: [],
