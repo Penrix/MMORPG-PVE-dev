@@ -74,6 +74,7 @@ const STORY_UNIT_DESIGN_CONTRACT: JsonSchemaContract = {
 
 export interface StoryAuthoringSearchModelRequest {
   field: StoryObjectField;
+  upgradeLedger: StoryUpgradeLedger;
   request: string;
   readerNeed: string;
   targetEmotion: string;
@@ -310,6 +311,10 @@ export class StoryAuthoringService {
       run.projectId !== request.field.projectId ||
       !["S01", "S02", "S03"].includes(request.field.scale) ||
       request.field.objects.length === 0 ||
+      !request.field.objects.some(
+        (object) =>
+          object.entityId === request.upgradeLedger.protagonistEntityId,
+      ) ||
       request.request.trim().length === 0 ||
       request.readerNeed.trim().length === 0 ||
       request.targetEmotion.trim().length === 0
@@ -319,10 +324,10 @@ export class StoryAuthoringService {
 
     const scaleInstruction =
       request.field.scale === "S01"
-        ? "S01必须同时形成 Story Concept 与 Story Engine，并解释 Engine 如何持续生产这种人生。不要提前排大卷。"
+        ? "S01只是长程视角：围绕既定 Upgrade Ledger 看这条 Road 为什么能持续、哪些现有人物/圈层/资源会成为后续价格阶梯。不要把它当成另一台从零生成 Story Concept 的机器。"
         : request.field.scale === "S02"
-          ? "S02必须从 Current S0 和当前可达对象寻找真正的新生活 / Stage Opportunity。不要把父层目标拆成办事步骤。"
-          : "S03必须形成这一阵子的 Story Opportunity Field 与仍在运动的 Story Movement，再给出可交 S04 的 Story Seeds。不要直接写完整 S04。";
+          ? "S02只是当前阶段视角：围绕 upgradeLedger.currentStepId / stageGoal，看现有人物网如何给这一层升级定价、设门槛、提供入口。不要脱离升级路线另造一条人生。"
+          : "S03只是当前故事视角：围绕当前 stageGoal，从现成人物的认知、利益、关系、正在做的事中寻找可下注、可碰撞、可结算的 Story Seed。不要凭空造新人物，也不要直接写完整 S04。";
 
     const result = await this.model.structured(
       run,
@@ -334,9 +339,10 @@ export class StoryAuthoringService {
           "输入 Object Field 来自 Module 2 的 Project Reality / Source Atlas 投影。它是想象底座，不是背景装饰。",
           "禁止先想一个熟悉套路，再回来给套路贴世界名词。先看具体对象当前是谁、拥有什么、缺什么、和谁相连、什么规则给它定价，再做连接、交叉、对立、变奏、因果追踪或成熟故事迁移。",
           "每颗 Story Seed 的 anchorObjectIds 必须引用 Object Field 中真实 object.id，groundingSurfaceRefs 必须引用对象 surfaces 中提供的 ref。Observation 必须能从这些具体 surfaces 推出来，不能只借两个真名字编一条不存在的关系。",
-          "允许真实对象碰撞后长出新人物/机构/用途，但只能放 candidateNewObjects，status 必须是 CANDIDATE，不能冒充 Reality。",
+          "第三模块不负责捏人或补世界。candidateNewObjects 必须为空。若当前 Story 真正缺人物、关系、制度、组织、资源或入口，写入 worldGaps，回 Module 1 / World Builder 生产后再继续。尤其禁止为了‘需要一个识货人/反派/妹妹位’临时造功能NPC。",
           "如果 Object Field 太薄，status 必须返回 BLOCKED_WORLD_GAP。worldGaps 必须结构化写出缺什么、锚在哪些已有对象、为什么缺，并用 productionHint 指向现有 World Builder workshop。此时允许 seeds 与尺度结果为空，不要为了过 schema 用‘神秘高手/反派/美女/商会’占位补洞。",
           "M 方法只是搜索运动，不提供搜索对象。成熟故事材料只是 prior，不是本书 Reality。",
+          "S01/S02/S03 不是三台独立故事生成器，而是同一条 Upgrade Ledger 的长程 / 当前阶段 / 当前故事三个观察尺度。所有结果必须服务同一条 Road。",
           "候选可以分叉、回返和失败；不要为了尽快交付而把第一条可行答案冒充完成。",
           scaleInstruction,
         ].join("\n"),
@@ -350,6 +356,7 @@ export class StoryAuthoringService {
                 readerNeed: request.readerNeed,
                 targetEmotion: request.targetEmotion,
                 protagonistProfile: request.protagonistProfile,
+                upgradeLedger: request.upgradeLedger,
                 objectField: {
                   digest: request.field.digest,
                   storyTimeLabel: request.field.storyTimeLabel,
