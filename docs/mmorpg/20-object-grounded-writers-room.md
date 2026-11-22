@@ -1,5 +1,7 @@
 # 第三模块｜Object-Grounded Writers' Room（2026-11-22）
 
+> **STATUS: CURRENT SUPPORT / SEARCH FRAMING PARTIALLY SUPERSEDED.** “故事不是监控录像”“想象必须先有 Module-2 世界对象”仍是硬规则；但旧的 S01/S02/S03 Opportunity 流水线不再是第三模块主发动机。当前固定：S01/S02/S03 只是同一 Upgrade Ledger 的长程 / 阶段 / 当前故事视角，真正故事发动机见 [23](23-module3-upgrade-stake-director.md)。
+
 > 本文件记录 2026-11-22 的两次作者级纠正，并给出在 NarraLume 正式工程中的实现边界。它覆盖此前把“世界自转后挑精彩事件”当故事生成核心、以及把“自由脑洞”当创作起点的错误路径。
 
 ## AUTHOR VERBATIM 1｜故事不是纪录片
