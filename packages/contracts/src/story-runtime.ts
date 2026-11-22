@@ -371,8 +371,8 @@ export const ExpectationDesignSchema = z.object({
   designReasons: z.array(z.string().min(1)).min(1),
   realityFingerprint: z.string().min(1),
   storyStateFingerprint: z.string().min(1),
-  mustPreserveAgentAutonomy: z.literal(true),
-  mustNotPredetermineOutcome: z.literal(true),
+  directorMayDesignReactionPayoff: z.literal(true),
+  mustGroundPerformanceInCharacterization: z.literal(true),
   digest: z.string().min(1),
 });
 export type ExpectationDesign = z.infer<typeof ExpectationDesignSchema>;
