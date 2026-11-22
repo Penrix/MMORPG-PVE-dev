@@ -11,6 +11,7 @@ import {
   StoryAuthoringService,
   finalizeExpectationDesign,
   finalizeStoryObjectField,
+  storyObjectSurfaceRef,
 } from "../src/index.js";
 
 const usage: RunBudgetUsage = {
@@ -71,6 +72,16 @@ function field(scale: StoryObjectField["scale"]): StoryObjectField {
   });
 }
 
+function surfaceRef(
+  currentField: StoryObjectField,
+  objectId: string,
+  slotKey: string,
+): string {
+  const object = currentField.objects.find((item) => item.id === objectId)!;
+  const surface = object.surfaces.find((item) => item.slotKey === slotKey)!;
+  return storyObjectSurfaceRef(object.id, surface);
+}
+
 function expectation(): ExpectationDesign {
   return finalizeExpectationDesign({
     version: "expectation-design.v1",
@@ -129,6 +140,9 @@ describe("StoryAuthoringService", () => {
             objectFocus: [
               {
                 objectId: "object:medic",
+                surfaceRefs: [
+                  surfaceRef(objectField, "object:medic", "duty"),
+                ],
                 whyNow: "医疗忍者正在处理秀信",
                 valuableSurface: "专业认知与复核权限",
               },
@@ -138,6 +152,10 @@ describe("StoryAuthoringService", () => {
                 id: "seed:recheck",
                 title: "专业复核把异常变贵",
                 anchorObjectIds: ["object:xiuxin", "object:medic"],
+                groundingSurfaceRefs: [
+                  surfaceRef(objectField, "object:xiuxin", "location"),
+                  surfaceRef(objectField, "object:medic", "duty"),
+                ],
                 observation: "秀信与医疗忍者已经处于同一现实处理链",
                 searchMove: "把能力异常与专业复核权限交叉",
                 idea: "异常不靠随机高手，而先进入可信专业识货链",
@@ -221,6 +239,10 @@ describe("StoryAuthoringService", () => {
           id: "seed:recheck",
           title: "专业复核",
           anchorObjectIds: ["object:xiuxin", "object:medic"],
+          groundingSurfaceRefs: [
+            surfaceRef(objectField, "object:xiuxin", "location"),
+            surfaceRef(objectField, "object:medic", "duty"),
+          ],
           observation: "两人正在同一医疗流程",
           searchMove: "能力异常 × 专业复核",
           idea: "先进入可信识货链",
@@ -260,6 +282,10 @@ describe("StoryAuthoringService", () => {
           const checked = validate({
             status: "READY",
             objectAnchorIds: ["object:xiuxin", "object:medic"],
+            groundingSurfaceRefs: [
+              surfaceRef(objectField, "object:xiuxin", "location"),
+              surfaceRef(objectField, "object:medic", "duty"),
+            ],
             storyProblem: "让秀信的异常第一次进入可信专业识货链",
             worldGaps: [],
             campNetwork: [
