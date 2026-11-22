@@ -606,6 +606,7 @@ export function finalizeStorySceneExpansion(
     parsed.scenes.map((scene) => String(scene.order)),
   );
   const castPool = new Set(event.castPoolEntityIds);
+  const objectAnchors = new Set(storyUnit.objectAnchorIds);
   for (let index = 0; index < parsed.scenes.length; index += 1) {
     const scene = parsed.scenes[index]!;
     if (index > 0 && scene.order <= parsed.scenes[index - 1]!.order) {
@@ -620,6 +621,14 @@ export function finalizeStorySceneExpansion(
       scene.participantEntityIds,
       castPool,
     );
+    if (
+      scene.locationObjectId !== null &&
+      !objectAnchors.has(scene.locationObjectId)
+    ) {
+      throw new Error(
+        `story_scene.unknown_location_object:${scene.id}:${scene.locationObjectId}`,
+      );
+    }
     if (index < parsed.scenes.length - 1 && scene.nextSceneCause === null) {
       throw new Error(`story_scene.missing_next_scene_cause:${scene.id}`);
     }
