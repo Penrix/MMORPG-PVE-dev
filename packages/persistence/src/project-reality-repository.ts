@@ -172,18 +172,10 @@ function currentProjectStructureSlots(
     out.push(projectSlot("standing", `stance:${item.id}`, item));
   }
 
-  // Standing rows are appraisals over time. Expose only the latest accepted
-  // appraisal per evaluator + dimension as the current standing surface.
-  const latestStanding = new Map<string, (typeof dossier.standings)[number]>();
-  for (const item of dossier.standings) {
-    latestStanding.set(
-      JSON.stringify([item.evaluator_entity_id, item.dimension]),
-      item,
-    );
-  }
-  for (const item of latestStanding.values()) {
-    out.push(projectSlot("standing", `standing:${item.id}`, item));
-  }
+  // world_standings.world_time is intentionally free text and describes a
+  // historical appraisal moment. Until Module 2 has a cutoff-aware temporal
+  // resolver, do not guess "current standing" from SQL lexical ordering.
+  // The rows remain queryable in WorldEntityDossier as historical evidence.
 
   for (const item of dossier.powerChannels) {
     out.push(projectSlot("organization", `power_channel:${item.id}`, item));
