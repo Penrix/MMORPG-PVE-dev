@@ -175,6 +175,12 @@ function storyUnitOutputIssues(
   const campEntities = new Set(
     value.campNetwork.map((member) => member.entityId),
   );
+  const reactionTargetEntities = new Set(
+    value.reactionTargets.map((target) => target.entityId),
+  );
+  const informationSteps = new Set(
+    value.informationRelease.map((item) => item.step),
+  );
 
   for (const objectId of value.objectAnchorIds) {
     if (!allowedObjects.has(objectId)) {
@@ -241,6 +247,41 @@ function storyUnitOutputIssues(
         issues.push(
           `event ${event.id}: actorPressure entity ${entityId} is outside castPool`,
         );
+      }
+    }
+    for (const entityId of event.reactionTargetEntityIds) {
+      if (!reactionTargetEntities.has(entityId)) {
+        issues.push(
+          `event ${event.id}: reaction target ${entityId} has no S04 reactionTarget`,
+        );
+      }
+      if (!cast.has(entityId)) {
+        issues.push(
+          `event ${event.id}: reaction target ${entityId} is outside castPool`,
+        );
+      }
+    }
+    for (const step of event.informationReleaseSteps) {
+      if (!informationSteps.has(step)) {
+        issues.push(
+          `event ${event.id}: unknown informationRelease step ${step}`,
+        );
+      }
+    }
+    const phaseNames = new Set<string>();
+    for (const target of event.phaseTargets) {
+      if (phaseNames.has(target.phase)) {
+        issues.push(
+          `event ${event.id}: duplicate phaseTarget ${target.phase}`,
+        );
+      }
+      phaseNames.add(target.phase);
+      for (const entityId of target.entityIds) {
+        if (!cast.has(entityId)) {
+          issues.push(
+            `event ${event.id}: phase ${target.phase} entity ${entityId} is outside castPool`,
+          );
+        }
       }
     }
   }
@@ -425,8 +466,11 @@ export class StoryAuthoringService {
           "Expectation Design 已经给出 Reader 需求、目标情绪、稀缺性方向、固有认知、主角优势、反应与收益方向。不得偷换这笔交易。",
           "三阵营首先是编剧工具：作者主动选择哪些真实人物承担压力、定价、连接、未来反应与阵营转化，但不能预写他们实际一定震惊、投靠、认输或降智。",
           "appearanceOrderEntityIds 与 informationRelease 负责谁先进入、Reader/人物分别何时知道什么。",
-          "events 是有顺序的 S05 事件设计。Cast Pool 是可能被卷入的人物池；Active Seed 是本事件第一轮真正行动/被触发的人。绝不能默认第一轮全员开机。actorPressures 必须为 Cast Pool 每个人各写一条当前场面压力/刺激条件，它是编剧搭的戏台，不是替角色决定反应。",
-          "S05 Character Agents 之后仍只按自己的 Observation / Goal / 利益行动；World Arbiter 决定 Reality 是否允许。S04 只能设计条件与目标，不能写死演员结果。",
+          "events 是有顺序的 S05 Story Node，不是 Agent 模拟结果。每个 Node 必须只有一个清楚的 problem：主线化为节点，每个节点一个问题，这个问题之后会在 S06 影响多个场景。",
+          "每个 S05 Node 要写 storyPressure、realityQuestion、readerExpectation；用 phaseTargets 明确 before / during / after 哪些人物线要被展开，用 reactionTargetEntityIds 关联 S04 已设计的反应目标，用 informationReleaseSteps 关联这一节点承接的信息释放步骤。",
+          "Cast Pool 是这个 Node 可能卷入的人物池；Active Seed 是 Reality Rehearsal 第一轮真正行动/被触发的人。绝不能默认第一轮全员开机。actorPressures 必须为 Cast Pool 每个人各写一条当前场面压力/刺激条件，它是编剧搭的戏台，不是替角色决定反应。",
+          "Character Agent + World Arbiter 只是 S05 Node 内部的 Reality Rehearsal / Adjudication 子程序，不是 S05 本体，也不是场景生成算法。它们只回答人物实际会不会这么做、Reality 是否允许；若撞坏 soft route，就回 S05/S04 改未来，不改演员。",
+          "S06 会把通过 Reality 约束的一个 Node 展开为多个 Scene，所以这里不要把 event 写成单一场景摘要，也不要提前把 scene 数量压成一个动作结果。",
           "如果当前对象不够支撑这出戏，status 必须返回 BLOCKED_WORLD_GAP，把缺口结构化写入 worldGaps，并用 productionHint 指向现有 World Builder workshop，events 为空；不要为了过 schema 凭空造人物、关系或事件。对象足够时返回 READY。",
         ].join("\n"),
         messages: [
