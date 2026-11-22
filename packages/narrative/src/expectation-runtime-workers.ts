@@ -335,6 +335,11 @@ export class ExpectationNarrativeService {
     _receipt: WorldArbitrationReceipt,
     _signal: AbortSignal,
   ): Promise<ExpectationRuntimeModelResult<NarrativeAllocationBatch>> {
+    void _run;
+    void _step;
+    void _state;
+    void _receipt;
+    void _signal;
     throw new Error(
       "story_runtime.reader_time.direct_arbitration_bypass_forbidden",
     );
