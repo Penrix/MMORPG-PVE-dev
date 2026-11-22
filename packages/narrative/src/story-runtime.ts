@@ -13,7 +13,6 @@ import { sha256Hex } from "@narralume/domain";
 import {
   SqliteCanonRepository,
   SqliteNarrativeStateRepository,
-  SqliteProjectRealityRepository,
   SqliteStoryRepository,
   type NarrativeDatabase,
 } from "@narralume/persistence";
@@ -88,6 +87,7 @@ export interface CharacterObservationBuildRequest {
   generationId: string;
   storyUnitDesignDigest: string;
   storyUnitEventId: string;
+  realityFingerprint: string;
   goalEvidenceRefs: readonly string[];
   pressure: string;
   round?: number;
@@ -108,7 +108,6 @@ export class CharacterObservationBuilder {
   private readonly state: SqliteNarrativeStateRepository;
   private readonly story: SqliteStoryRepository;
   private readonly storyState: StoryStatePacketBuilder;
-  private readonly reality: SqliteProjectRealityRepository;
 
   constructor(database: NarrativeDatabase) {
     this.canon = new SqliteCanonRepository(database);
@@ -123,7 +122,6 @@ export class CharacterObservationBuilder {
       this.state,
       this.story,
     );
-    this.reality = new SqliteProjectRealityRepository(database);
   }
 
   build(request: CharacterObservationBuildRequest): CharacterObservationPacket {
@@ -151,11 +149,6 @@ export class CharacterObservationBuilder {
       ...stateRequest,
       focalEntityIds: [request.characterId],
     });
-    const reality = this.reality.getEntityReality(
-      request.projectId,
-      request.characterId,
-    );
-
     const knownFacts: CharacterObservationEvidence[] = snapshot.facts.map(
       (fact) =>
         evidence({
@@ -271,26 +264,6 @@ export class CharacterObservationBuilder {
       packet.sources.map((source) => source.id),
     );
 
-    const realityFingerprint = sha256Hex(
-      stableJson({
-        entity: {
-          id: reality.entity.id,
-          type: reality.entity.type,
-          name: reality.entity.name,
-          status: reality.entity.status,
-        },
-        slots: reality.effectiveSlots.map((slot) => ({
-          facet: slot.facet,
-          slotKey: slot.slotKey,
-          value: slot.value,
-          origin: slot.origin,
-          revisionId: slot.revisionId,
-          sourceCorpusId: slot.sourceCorpusId,
-          sourceKey: slot.sourceKey,
-        })),
-      }),
-    );
-
     const withoutDigest = CharacterObservationPacketDraftSchema.parse({
       version: "character-observation.v1",
       authority: "speculative",
@@ -314,7 +287,7 @@ export class CharacterObservationBuilder {
       perceivedEvents,
       memory,
       storyStateFingerprint: packet.fingerprint,
-      realityFingerprint,
+      realityFingerprint: request.realityFingerprint.trim(),
       sourceIds,
     });
 
