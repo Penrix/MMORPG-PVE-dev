@@ -7,10 +7,28 @@ import {
   type RealitySlot,
 } from "./project-reality-repository.js";
 
+export interface WorldAtlasStoryObjectSurface {
+  authority: "confirmed" | "reference";
+  sourceId: string;
+  facet: string;
+  slotKey: string;
+  value: unknown;
+}
+
+export interface WorldAtlasStoryObject {
+  entityId: string;
+  name: string;
+  kind: string;
+  aliases: string[];
+  surfaces: WorldAtlasStoryObjectSurface[];
+  sourceRefs: string[];
+}
+
 export interface WorldAtlasStoryContext {
   current: ContextSource[];
   reference: ContextSource[];
   referenceDetail: ContextSource[];
+  objects: WorldAtlasStoryObject[];
   counts: {
     entities: number;
     projectSlots: number;
@@ -57,6 +75,7 @@ export class WorldAtlasStoryContextBuilder {
     const current: ContextSource[] = [];
     const reference: ContextSource[] = [];
     const referenceDetail: ContextSource[] = [];
+    const objects: WorldAtlasStoryObject[] = [];
     let projectSlots = 0;
     let referenceSlots = 0;
     let ambiguousSourceBaselines = 0;
@@ -78,6 +97,47 @@ export class WorldAtlasStoryContextBuilder {
       const sourceIdentityAndRelations = source
         .filter((slot) => !(slot.facet === "lore" && slot.slotKey === "card"))
         .sort(compareNarrativeReferenceSlots);
+
+      const objectSurfaces: WorldAtlasStoryObjectSurface[] = [
+        ...project.map((slot) => ({
+          authority: "confirmed" as const,
+          sourceId: `world-reality:${view.entity.id}`,
+          facet: slot.facet,
+          slotKey: slot.slotKey,
+          value: slot.value,
+        })),
+        ...sourceIdentityAndRelations.map((slot) => ({
+          authority: "reference" as const,
+          sourceId: `world-source-baseline:${view.entity.id}`,
+          facet: slot.facet,
+          slotKey: slot.slotKey,
+          value: slot.value,
+        })),
+      ];
+      // Even an entity with no current slot is still a concrete project object.
+      // Identity is a usable imagination surface; full source-card prose is
+      // intentionally excluded because it may contain mother-world future.
+      if (objectSurfaces.length === 0) {
+        objectSurfaces.push({
+          authority: "confirmed",
+          sourceId: `world-reality:${view.entity.id}`,
+          facet: "identity",
+          slotKey: "entity",
+          value: {
+            id: view.entity.id,
+            name: view.entity.name,
+            type: view.entity.type,
+          },
+        });
+      }
+      objects.push({
+        entityId: view.entity.id,
+        name: view.entity.name,
+        kind: view.entity.type,
+        aliases: [...view.entity.aliases],
+        surfaces: objectSurfaces,
+        sourceRefs: [...new Set(objectSurfaces.map((surface) => surface.sourceId))],
+      });
       if (
         sourceIdentityAndRelations.length > 0 ||
         view.ambiguousSourceBaseline ||
@@ -98,6 +158,7 @@ export class WorldAtlasStoryContextBuilder {
       current,
       reference,
       referenceDetail,
+      objects,
       counts: {
         entities: new Set(request.entityIds).size,
         projectSlots,
