@@ -122,6 +122,33 @@ function expectation(): ExpectationDesign {
   });
 }
 
+function upgradeLedger() {
+  return {
+    protagonistEntityId: "xiuxin",
+    road: "从医院低位伤员进入木叶高价任务圈",
+    currentStepId: "step:professional-reprice",
+    currentPosition: "普通重伤忍者",
+    stageGoal: "让异常能力获得第一层专业重新估值",
+    settlementTarget: "拿到更高任务圈入口",
+    steps: [
+      {
+        id: "step:professional-reprice",
+        title: "专业重新估值",
+        targetGain: "医疗与任务体系的新评级",
+        gate: "先打破普通伤员的固有认知",
+        targetCircle: "医疗与任务审核圈",
+      },
+      {
+        id: "step:elite-mission",
+        title: "进入高价任务圈",
+        targetGain: "上忍级任务机会",
+        gate: "用第一层评级换真实任务",
+        targetCircle: "上忍与高价任务圈",
+      },
+    ],
+  };
+}
+
 describe("StoryAuthoringService", () => {
   it("searches S03 only on concrete Object Field objects", async () => {
     const objectField = field("S03");
@@ -277,6 +304,9 @@ describe("StoryAuthoringService", () => {
           expect(serialized).toContain("小说不是世界自转后的监控录像");
           expect(serialized).toContain("Cast Pool");
           expect(serialized).toContain("Active Seed");
+          expect(serialized).toContain("配角反应是爽点");
+          expect(serialized).toContain("stakeLedger");
+          expect(serialized).toContain("Upgrade Ledger");
           const checked = validate({
             status: "READY",
             objectAnchorIds: ["object:xiuxin", "object:medic"],
@@ -293,6 +323,7 @@ describe("StoryAuthoringService", () => {
                 currentGoal: "恢复",
                 storyRole: "主角行动来源",
                 currentBelief: "自己的训练有效",
+                currentInterest: "恢复战斗力并重新获得任务价值",
               },
               {
                 entityId: "medic",
@@ -300,6 +331,22 @@ describe("StoryAuthoringService", () => {
                 currentGoal: "按规则处理伤员",
                 storyRole: "专业定价",
                 currentBelief: "秀信是普通伤员",
+                currentInterest: "维护自己的专业判断与资源配置准确性",
+              },
+            ],
+            stakeLedger: [
+              {
+                id: "stake:medic-rating",
+                entityId: "medic",
+                currentBelief: "秀信是普通伤员",
+                currentInterest: "维护专业判断与医疗资源配置",
+                stakeAction: "继续按普通伤员标准处理并给出专业评级",
+                stakeAssets: ["专业判断", "资源配置"],
+                commitmentCost: "改判意味着承认此前估值不足",
+                escalationPlan: "异常持续时进行更严格复核并留下记录",
+                payoffReaction: "亲自改判秀信的专业价值",
+                settlementChange: "秀信获得第一层可信专业估值",
+                state: "committed",
               },
             ],
             reactionTargets: [
@@ -340,6 +387,7 @@ describe("StoryAuthoringService", () => {
                     pressure: "按医疗职责处理眼前出现的异常恢复表现",
                   },
                 ],
+                stakeEntryIds: ["stake:medic-rating"],
                 reactionTargetEntityIds: ["medic"],
                 informationReleaseSteps: [1],
                 phaseTargets: [
@@ -389,13 +437,15 @@ describe("StoryAuthoringService", () => {
         sourceSearch,
         sourceSeedIds: ["seed:recheck"],
         expectationDesign: exp,
+        upgradeLedger: upgradeLedger(),
         request: "把这颗机会编成第一出真正值得看的故事",
       },
       new AbortController().signal,
     );
 
     expect(result.value.events[0]!.activeSeedEntityIds).toEqual(["xiuxin"]);
-    expect(result.value.mustPreserveAgentAutonomy).toBe(true);
+    expect(result.value.directorAuthority).toBe("author-defined-story-line");
+    expect(result.value.stakeLedger[0]?.stakeAction).toContain("普通伤员");
     expect(result.value.authority).toBe("speculative");
   });
 });
