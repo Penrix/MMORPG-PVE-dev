@@ -137,11 +137,12 @@ export interface ExpectationRuntimeModelResult<T> {
 }
 
 /**
- * S07 Reader Time allocation over an already-authored S04/S05 Event.
+ * Expectation design + S07 Reader Time.
  *
- * The model does not choose random Reality events to become Story. S04 already
- * authored the Event and S05 already realized it. This service only allocates
- * Reader Time across the realized beats according to active expectation threads.
+ * The official S07 path is S06 StorySceneExpansion → StoryReaderTimePlan.
+ * Raw arbitration is intentionally forbidden from bypassing Scene Expansion.
+ * The generic candidate allocator remains a lower-level compatibility helper,
+ * not the current S07 orchestration entry.
  */
 export class ExpectationNarrativeService {
   constructor(private readonly model: NarrativeModelClient) {}
