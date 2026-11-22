@@ -145,6 +145,11 @@ function searchOutputIssues(
     }
   }
   for (const seed of value.seeds) {
+    if (seed.candidateNewObjects.length > 0) {
+      issues.push(
+        `seed ${seed.id}: candidateNewObjects must be empty; report a worldGap instead`,
+      );
+    }
     for (const objectId of seed.anchorObjectIds) {
       if (!allowed.has(objectId)) {
         issues.push(`seed ${seed.id}: unknown anchorObjectId ${objectId}`);
@@ -180,6 +185,16 @@ function storyUnitOutputIssues(
   const campEntities = new Set(
     value.campNetwork.map((member) => member.entityId),
   );
+  const stakeIds = new Set(value.stakeLedger.map((entry) => entry.id));
+  const stakesByEntity = new Map<string, string[]>();
+  for (const entry of value.stakeLedger) {
+    if (!allowedEntities.has(entry.entityId)) {
+      issues.push(`stakeLedger: unknown entityId ${entry.entityId}`);
+    }
+    const ids = stakesByEntity.get(entry.entityId) ?? [];
+    ids.push(entry.id);
+    stakesByEntity.set(entry.entityId, ids);
+  }
   const reactionTargetEntities = new Set(
     value.reactionTargets.map((target) => target.entityId),
   );
@@ -203,6 +218,11 @@ function storyUnitOutputIssues(
     }
   }
   for (const target of value.reactionTargets) {
+    if (!stakesByEntity.has(target.entityId)) {
+      issues.push(
+        `reactionTargets: entity ${target.entityId} has no priced stake`,
+      );
+    }
     if (!campEntities.has(target.entityId)) {
       issues.push(
         `reactionTargets: entity ${target.entityId} is not in campNetwork`,
@@ -240,6 +260,17 @@ function storyUnitOutputIssues(
     const pressureActors = new Set(
       event.actorPressures.map((item) => item.entityId),
     );
+    for (const stakeId of event.stakeEntryIds) {
+      if (!stakeIds.has(stakeId)) {
+        issues.push(`event ${event.id}: unknown stakeEntryId ${stakeId}`);
+      }
+      const stake = value.stakeLedger.find((entry) => entry.id === stakeId);
+      if (stake && !cast.has(stake.entityId)) {
+        issues.push(
+          `event ${event.id}: stake ${stakeId} belongs to ${stake.entityId} outside castPool`,
+        );
+      }
+    }
     for (const entityId of event.castPoolEntityIds) {
       if (!pressureActors.has(entityId)) {
         issues.push(
@@ -255,6 +286,15 @@ function storyUnitOutputIssues(
       }
     }
     for (const entityId of event.reactionTargetEntityIds) {
+      const activeStakeIds = new Set(event.stakeEntryIds);
+      const priced = (stakesByEntity.get(entityId) ?? []).some((stakeId) =>
+        activeStakeIds.has(stakeId),
+      );
+      if (!priced) {
+        issues.push(
+          `event ${event.id}: reaction target ${entityId} has no active stake`,
+        );
+      }
       if (!reactionTargetEntities.has(entityId)) {
         issues.push(
           `event ${event.id}: reaction target ${entityId} has no S04 reactionTarget`,
