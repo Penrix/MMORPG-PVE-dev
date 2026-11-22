@@ -452,9 +452,29 @@ export function finalizeStoryUnitDesign(
   for (const event of parsed.events) {
     requireUnique(`event_cast_${event.id}`, event.castPoolEntityIds);
     requireUnique(`event_active_seed_${event.id}`, event.activeSeedEntityIds);
+    requireUnique(
+      `event_pressure_${event.id}`,
+      event.actorPressures.map((item) => item.entityId),
+    );
     requireRefs("event_cast", event.castPoolEntityIds, entityIds);
     const castPool = new Set(event.castPoolEntityIds);
     requireRefs("event_active_seed", event.activeSeedEntityIds, castPool);
+    requireRefs(
+      "event_pressure_actor",
+      event.actorPressures.map((item) => item.entityId),
+      castPool,
+    );
+    if (
+      event.actorPressures.length !== event.castPoolEntityIds.length ||
+      event.castPoolEntityIds.some(
+        (entityId) =>
+          !event.actorPressures.some((item) => item.entityId === entityId),
+      )
+    ) {
+      throw new Error(
+        `story_authoring.event_pressure_missing_cast_member:${event.id}`,
+      );
+    }
   }
 
   return StoryUnitDesignSchema.parse({
