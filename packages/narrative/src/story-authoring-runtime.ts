@@ -583,6 +583,7 @@ export function finalizeStorySceneExpansion(
     parsed.projectId !== storyUnit.projectId ||
     parsed.storyUnitDesignDigest !== storyUnit.digest ||
     parsed.arbitrationDigest !== arbitration.digest ||
+    parsed.realityFingerprint !== arbitration.realityFingerprint ||
     arbitration.projectId !== storyUnit.projectId ||
     arbitration.storyUnitDesignDigest !== storyUnit.digest ||
     arbitration.storyUnitEventId !== event.id
