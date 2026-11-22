@@ -212,6 +212,17 @@ export function finalizeStoryAuthoringSearch(
   }
   const allowedObjectIds = new Set(field.objects.map((object) => object.id));
   requireUnique(
+    "world_gap",
+    parsed.worldGaps.map((gap) => gap.id),
+  );
+  for (const [index, gap] of parsed.worldGaps.entries()) {
+    requireRefs(
+      `world_gap_anchor_${index}`,
+      gap.anchorObjectIds,
+      allowedObjectIds,
+    );
+  }
+  requireUnique(
     "seed",
     parsed.seeds.map((seed) => seed.id),
   );
@@ -306,6 +317,17 @@ export function finalizeStoryUnitDesign(
 
   const objectIds = new Set(field.objects.map((object) => object.id));
   const entityIds = new Set(field.objects.map((object) => object.entityId));
+  requireUnique(
+    "story_unit_world_gap",
+    parsed.worldGaps.map((gap) => gap.id),
+  );
+  for (const [index, gap] of parsed.worldGaps.entries()) {
+    requireRefs(
+      `story_unit_world_gap_anchor_${index}`,
+      gap.anchorObjectIds,
+      objectIds,
+    );
+  }
   requireUnique("story_unit_object_anchor", parsed.objectAnchorIds);
   requireRefs("story_unit_object_anchor", parsed.objectAnchorIds, objectIds);
   requireUnique("story_unit_source_seed", parsed.sourceSeedIds);
