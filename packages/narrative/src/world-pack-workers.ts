@@ -1,4 +1,8 @@
 import {
+  WORLD_ATLAS_CARD_TYPES,
+  WORLD_BUILDER_ATLAS_CONTRACT,
+  WORLD_BUILDER_ATLAS_CROSSWALK,
+  WORLD_PACK_ATLAS_KIND_COARSE_TYPE,
   WorldPackDocumentSchema,
   type WorldPackDocument,
   WorldPackRequestSchema,
@@ -60,6 +64,7 @@ const NODE_SCHEMA = {
     "localId",
     "existingCanonId",
     "type",
+    "atlasKind",
     "name",
     "description",
     "areaRef",
@@ -87,6 +92,12 @@ const NODE_SCHEMA = {
         "rule",
         "concept",
       ],
+    },
+    atlasKind: {
+      type: "string",
+      enum: WORLD_ATLAS_CARD_TYPES.map((entry) => entry.kind),
+      description:
+        "True logical World Atlas card kind. Must match the legacy coarse type through atlasKindCoarseTypeMap.",
     },
     name: txt("Specific named world object"),
     description: txt(
@@ -423,20 +434,23 @@ function makePrompt(
       id: event.id,
       description: event.description,
     })),
+    atlasProductionContract: WORLD_BUILDER_ATLAS_CONTRACT,
+    atlasProductionCrosswalk: WORLD_BUILDER_ATLAS_CROSSWALK,
+    atlasKindCoarseTypeMap: WORLD_PACK_ATLAS_KIND_COARSE_TYPE,
     productionIntent:
       input.intent === "advance"
         ? "本轮是世界自主推进。基于现存人物/组织/关系/活动继续做决定，不为换地图重置现实。既有人物要用 existingCanonId 复用，不重新发明同名角色；可以生成新的关系变化、未完成事务、结束的旧事务与新进入世界的人。注意以现在世界时间推进 NPC 的独立生活，而不是写男主章纲。"
         : "本轮是世界内容生产。创作完整的地图和社会生活，留足不同人物自己行动和男主未来进入的空间。",
     worldMethod: [
-      "不是章节编剧：先制造男主不存在时就能自行运作的现实。写具体有价值的人、地、物、机构、力量和当前正在做的事。",
+      "不是章节编剧：World Builder 的输出目标是 World Atlas 候选内容，不是一篇世界观。生产稳定对象、typed relations、当前事务和可进入/可争取的现实连接。",
       "W0 从世界大局生成区域、不同社会系统、真实权力机构、价格与流通路径，不能整个世界只围绕男主职业；W1 在已确认W0之下根据类型文×时间地点×稀缺性打开一个区域、行业或圈层。",
-      "一轮产出成套互相关联的世界对象：场所、势力、NPC、宝物/资格/权利、社会门槛、独立事务。不能只交单项列表或政治经济目录。W0 建议12-30个具体对象、8-20条有效关系、至少4项人物独立事务；W1建议8-25个具体对象。已有材料充足或范围狭小时可相应调整，不能仅凑数量。",
-      "每个人和组织都有自己的目标和当前行动；Resource要有实际持有人、争取者、使用价值与取得路径；关系边具体说明谁控制/引荐/竞争/交易，而不是单一好感条。",
+      "一轮产出成套互相关联的世界对象：场所、势力、人物、宝物/资格/权利、社会门槛、独立事务。不能只交单项列表或政治经济目录。节点被命名不等于完成，必须尽量接入真实关系网；数量只用于防止过薄，不得为了凑数制造孤立卡片。",
+      "People-centered 是叙事生产优先级，不是数据库层级。人物和组织要有自己的目标与当前行动；非人物内容要优先追问谁拥有、控制、掌握、知道、引荐、争夺、使用或交易。确实非人的环境内容不强造NPC。",
       "对于玄幻，考虑功法、境界、丹药、法器、宗门、家族、坊市、朝廷的力量与高价资源。对于历史/现代，力量表现为真实授权、资本、产业、身份、名望与社会关系，仍要形成真正昂贵的男性人生可能性。",
       "以当前已确认世界为Reality。使用给出的已存在实体ID请写 existingCanonId 或 canon:ID；新增节点使用唯一 localId。全部图引用必须能由本包或现有Canon解析；不要捏造数据库ID。",
       "不同身份要分开：当前正在行动 ongoing、尚有可能的 potential、已经结束的 ended。ended 要沿用先前事实记录的 activityLocalId；不能把未来可能发生的事冒充历史事件。历史/原著仅凭模型记忆不能冒称已核实，历史未来不能当当前现实。",
       "用户如果给了已确定的高价目标，应帮助它获得社会共识、稀缺条件和真实人物的争取行为，而不是偷偷改选更普通目标。取得资源后应有真实资产、身份、关系或能力权益并能进一步利用。",
-      "给出足够丰富且具体的对象描述、人物实际动作和跨系统连接。输出所有 nodes/links/activities 是同一个互相引用的世界包，不是分七轮的泛用Canon修改候选。",
+      "给出足够丰富且具体的对象描述、人物实际动作和跨系统连接。WorldPack 只是本轮候选生产批次的 staging envelope；最终世界语言是 World Atlas 的 Card + Typed Edge，不要发展一套与 Atlas 竞争的本体论。",
       "发展轴 dimensionSignals 要来自具体行为反复产生的真实影响，频率和后果权重是观察依据，不是新创造修炼限制/天赋代价的许可；WorldForge引擎会按阈值追踪它们。",
       "possibleHistoricalCauses 是 WorldForge 从旧已确认事件中推荐的前因候选，不等于已确立的因果事实；须依据对象和行动判断，不能直接强行连接。",
       "witnessedHistory 是SNEQ按每个NPC实际参与的事件独立计算的知情范围，不等于所有人都知道作者视角的Timeline。NPC后续行动以本人当前真实所知为起点；没有传播记录的秘密不能凭模型全知直接传播。",
