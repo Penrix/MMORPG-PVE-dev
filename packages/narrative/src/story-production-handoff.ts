@@ -7,6 +7,7 @@ import type {
   StorySceneExpansion,
   StoryScenePlan as AuthoredStoryScenePlan,
 } from "@narralume/contracts";
+import type { SqliteStoryRepository } from "@narralume/persistence";
 import { z } from "zod";
 
 import { ScenePlanSchema, type ScenePlan } from "./schemas.js";
@@ -263,4 +264,55 @@ export function parseStoryChapterProductionHandoff(
 ): StoryChapterProductionHandoff | null {
   const parsed = StoryChapterProductionHandoffSchema.safeParse(value);
   return parsed.success ? parsed.data : null;
+}
+
+
+/**
+ * Attach an already-built S08 production handoff to a concrete chapter node.
+ *
+ * This is an explicit staging step. It does not create prose and does not
+ * settle Reality. ChapterWorkerSuite will consume the handoff as locked input.
+ */
+export function stageStoryChapterProductionHandoff(
+  story: SqliteStoryRepository,
+  chapterId: string,
+  handoff: StoryChapterProductionHandoff,
+  updatedAt: string,
+) {
+  const chapter = story.requireOutlineNode(handoff.projectId, chapterId);
+  if (chapter.kind !== "chapter") {
+    throw new Error("story_production.target_not_chapter");
+  }
+  if (chapter.title !== handoff.chapterTitle) {
+    throw new Error("story_production.chapter_title_mismatch");
+  }
+  if (
+    handoff.povEntityId !== null &&
+    chapter.povEntityId !== null &&
+    handoff.povEntityId !== chapter.povEntityId
+  ) {
+    throw new Error("story_production.pov_mismatch");
+  }
+
+  const existingPlanned = Array.isArray(chapter.metadata.plannedEntityIds)
+    ? chapter.metadata.plannedEntityIds.filter(
+        (value): value is string => typeof value === "string",
+      )
+    : [];
+
+  return story.updateOutlineDetails(
+    handoff.projectId,
+    chapterId,
+    {
+      povEntityId: handoff.povEntityId ?? chapter.povEntityId,
+      metadata: {
+        ...chapter.metadata,
+        plannedEntityIds: [
+          ...new Set([...existingPlanned, ...handoff.plannedEntityIds]),
+        ],
+        storyProductionHandoff: handoff,
+      },
+    },
+    updatedAt,
+  );
 }
