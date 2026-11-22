@@ -100,6 +100,21 @@ export class WorldAtlasStoryContextBuilder {
         .sort(compareNarrativeReferenceSlots);
 
       const objectSurfaces: WorldAtlasStoryObjectSurface[] = [
+        // Canon entity identity is always current Project Reality, even when
+        // the entity has no project-authored slots yet. Keeping it explicit
+        // prevents timeboxed S02-S04 Object Fields from collapsing when a
+        // legacy Source record contains only reference surfaces.
+        {
+          authority: "confirmed" as const,
+          sourceId: `world-reality:${view.entity.id}`,
+          facet: "identity",
+          slotKey: "entity",
+          value: {
+            id: view.entity.id,
+            name: view.entity.name,
+            type: view.entity.type,
+          },
+        },
         ...project.map((slot) => ({
           authority: "confirmed" as const,
           sourceId: `world-reality:${view.entity.id}`,
@@ -115,22 +130,6 @@ export class WorldAtlasStoryContextBuilder {
           value: slot.value,
         })),
       ];
-      // Even an entity with no current slot is still a concrete project object.
-      // Identity is a usable imagination surface; full source-card prose is
-      // intentionally excluded because it may contain mother-world future.
-      if (objectSurfaces.length === 0) {
-        objectSurfaces.push({
-          authority: "confirmed",
-          sourceId: `world-reality:${view.entity.id}`,
-          facet: "identity",
-          slotKey: "entity",
-          value: {
-            id: view.entity.id,
-            name: view.entity.name,
-            type: view.entity.type,
-          },
-        });
-      }
       objects.push({
         entityId: view.entity.id,
         name: view.entity.name,
