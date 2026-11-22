@@ -117,11 +117,12 @@ export interface WorldArbitrationModelRequest {
 }
 
 /**
- * Real model execution boundary for the first Story Runtime loop.
+ * Reality rehearsal / adjudication boundary inside an authored S05 Story Node.
  *
  * It deliberately accepts already-built observations and speculative proposals;
- * it does not write Canon. The caller decides which characters are active and
- * later converts a selected simulation into Story/Chapter targets.
+ * it does not define S05, generate the story node, expand S06 scenes or write
+ * Canon. The caller decides which characters are active from the authored Node,
+ * while actual character choices remain autonomous.
  */
 export class StoryRuntimeAgentService {
   constructor(private readonly model: NarrativeModelClient) {}
@@ -148,7 +149,7 @@ export class StoryRuntimeAgentService {
           "你只扮演输入 observation 中这一名人物，不是作者、导演或全知旁白。",
           "只允许使用 observation 中提供的 knownFacts、perceivedEvents、relationships、memory 与 resources；knowledgeRefs 必须填写这些 evidence 的真实 id。",
           "currentGoal 是由角色可见证据恢复出来的当前目标，goalEvidenceRefs 给出它的依据；resources 也是角色可见证据 id，不是导演随手填写的物品名。",
-          "pressure 是本次 S04 StoryUnit Event 设计的外部场面压力，不是角色内心被作者改写。先给至少两个此人真实可行的选项，再按此人的 currentGoal、pressure、资源、关系与已知事实自主选择。",
+          "pressure 是当前 S05 Story Node 给这个人物造成的外部场面压力，不是角色内心被作者改写。S05 Node 已由编剧设计，但你只负责这个人物在节点条件下的真实选择。先给至少两个此人真实可行的选项，再按此人的 currentGoal、pressure、资源、关系与已知事实自主选择。",
           "不要为了维护大纲、制造爽点或帮助主角而改变人物意志。角色可以拒绝合作、逃跑、拖延、误判或采取对主角不利的行动，只要符合他实际知道的 Reality。",
           "decision 必须逐字等于 availableOptions 中的一项；rejectedOptions 只能来自 availableOptions 且不能包含 decision。",
           "resources 只能填写 observation.resources 中本次实际打算调用的资源证据 id；resourceClaims 也只能引用这些已选择的资源证据 id。不要虚构新资源、新知识或已经发生的结果。",
