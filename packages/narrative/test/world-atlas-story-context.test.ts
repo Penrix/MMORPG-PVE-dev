@@ -182,6 +182,7 @@ describe("Module 3 World Atlas context adapter", () => {
 
   it("enforces author, narrative, and character Atlas access without leaking full source cards", () => {
     const context = {
+      projectId: "p1",
       current: [
         {
           id: "current",
