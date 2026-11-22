@@ -275,7 +275,9 @@ export function finalizeStoryUnitDesign(
 
   if (parsed.status === "BLOCKED_WORLD_GAP") {
     if (parsed.worldGaps.length === 0) {
-      throw new Error("story_authoring.story_unit_blocked_without_world_gap");
+      throw new Error(
+        "story_authoring.story_unit_blocked_without_world_gap",
+      );
     }
     if (parsed.events.length > 0) {
       throw new Error("story_authoring.blocked_story_unit_has_events");
@@ -359,7 +361,10 @@ export function finalizeStoryUnitDesign(
   );
   for (const event of parsed.events) {
     requireUnique(`event_cast_${event.id}`, event.castPoolEntityIds);
-    requireUnique(`event_active_seed_${event.id}`, event.activeSeedEntityIds);
+    requireUnique(
+      `event_active_seed_${event.id}`,
+      event.activeSeedEntityIds,
+    );
     requireRefs("event_cast", event.castPoolEntityIds, entityIds);
     const castPool = new Set(event.castPoolEntityIds);
     requireRefs("event_active_seed", event.activeSeedEntityIds, castPool);
