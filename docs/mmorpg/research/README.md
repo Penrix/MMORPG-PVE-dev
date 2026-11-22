@@ -1,5 +1,8 @@
 # MMORPG-PVE 世界设计研究｜v0.1～v0.7 独立母本
 
+> **STATUS: SOURCE RESEARCH / MOTHERBOOK.** 本目录保存 v0.1～v0.7 原始研究与演化证据，**不是当前工程 Authority**。当前解释固定为：v0.1～v0.7 提供世界内容与制作认知；[14](../14-world-atlas-content-framework-v01.md) 将其解释为 Content Schema，[16](../16-world-builder-from-world-atlas.md) 决定当前 World Builder 怎样把这些认知生产成 Atlas 内容。不得直接从旧母本恢复已被后续纠正的数据库或 Story Runtime 架构。
+
+
 > 全部从用户本人 Library 的独立文档重新读取后原文保存。**各版本不是v0.7的七个标题**，也不是“只把最早和最新两篇保存一下”。本目录的原文在格式化检查中受 `.prettierignore` 保护，避免源码管理工具默默重排历史母本。
 
 ## 七个版本及其新能力
