@@ -12,6 +12,7 @@ import {
   finalizeStoryUnitDesign,
   realityFocusFromStoryUnitDesign,
   storyObjectFieldFromWorldContext,
+  storyObjectSurfaceRef,
 } from "../src/story-authoring-runtime.js";
 import { finalizeExpectationDesign } from "../src/expectation-runtime.js";
 
@@ -66,19 +67,43 @@ function field(scale: StoryObjectField["scale"] = "S03"): StoryObjectField {
         kind: "character",
         aliases: ["木叶白牙"],
         surfaces: [
-          {
-            authority: "reference",
-            sourceId: "world-source-baseline:sakumo",
-            facet: "relationship",
-            slotKey: "military",
-            value: "木叶高价军事人物",
-          },
+          scale === "S01"
+            ? {
+                authority: "reference",
+                sourceId: "world-source-baseline:sakumo",
+                facet: "relationship",
+                slotKey: "military",
+                value: "木叶高价军事人物",
+              }
+            : {
+                authority: "reference",
+                sourceId: "world-source-baseline:sakumo",
+                facet: "state",
+                slotKey: "source_identity",
+                value: {
+                  id: "sakumo",
+                  name: "旗木朔茂",
+                  type: "character",
+                },
+              },
         ],
         sourceRefs: ["world-source-baseline:sakumo"],
       },
     ],
   };
   return finalizeStoryObjectField(draft);
+}
+
+function surfaceRef(
+  currentField: StoryObjectField,
+  objectId: string,
+  slotKey?: string,
+): string {
+  const object = currentField.objects.find((item) => item.id === objectId)!;
+  const surface = slotKey
+    ? object.surfaces.find((item) => item.slotKey === slotKey)!
+    : object.surfaces[0]!;
+  return storyObjectSurfaceRef(object.id, surface);
 }
 
 function expectation(): ExpectationDesign {
@@ -228,6 +253,9 @@ describe("object-grounded story authoring runtime", () => {
           id: "seed:bad",
           title: "神秘长老突然识货",
           anchorObjectIds: ["object:mystery-elder"],
+          groundingSurfaceRefs: [
+            surfaceRef(objectField, "object:xiuxin", "location"),
+          ],
           observation: "空气里没有这个对象",
           searchMove: "硬塞一个识货人",
           idea: "神秘长老出现",
@@ -259,6 +287,53 @@ describe("object-grounded story authoring runtime", () => {
     );
   });
 
+  it("rejects a seed that names real objects but cites an invented surface", () => {
+    const objectField = field("S03");
+    const draft: StoryAuthoringSearchDraft = {
+      version: "story-authoring-search.v1",
+      authority: "speculative",
+      status: "READY",
+      projectId: "p1",
+      scale: "S03",
+      objectFieldDigest: objectField.digest,
+      question: "两个人之间有什么值得玩的关系？",
+      objectFocus: [],
+      seeds: [
+        {
+          id: "seed:fake-debt",
+          title: "并不存在的人情债",
+          anchorObjectIds: ["object:xiuxin", "object:medic"],
+          groundingSurfaceRefs: ["surface:invented-debt"],
+          observation: "医疗忍者欠秀信父亲一个人情",
+          searchMove: "凭空补关系",
+          idea: "靠不存在的人情债推动剧情",
+          protagonistHook: "秀信被特殊照顾",
+          readerValue: "虚假便利",
+          newRelationOrChange: "凭空关系",
+          candidateNewObjects: [],
+          nextQuestion: "不应进入下游",
+          status: "CANDIDATE",
+        },
+      ],
+      worldGaps: [],
+      scaleResult: {
+        scale: "S03",
+        periodFocus: "病房期",
+        opportunityField: [
+          {
+            objectIds: ["object:xiuxin", "object:medic"],
+            opportunity: "测试 grounding",
+            whyAlive: "两个对象都真实存在",
+          },
+        ],
+        storyMovements: [],
+      },
+    };
+    expect(() => finalizeStoryAuthoringSearch(draft, objectField)).toThrow(
+      "story_authoring.unknown_seed_surface_0:surface:invented-debt",
+    );
+  });
+
   it("keeps S01 Concept x Engine as a distinct scale result", () => {
     const objectField = field("S01");
     const result = finalizeStoryAuthoringSearch(
@@ -273,6 +348,9 @@ describe("object-grounded story authoring runtime", () => {
         objectFocus: [
           {
             objectId: "object:sakumo",
+            surfaceRefs: [
+              surfaceRef(objectField, "object:sakumo", "military"),
+            ],
             whyNow: "高价人物代表更贵的军事社会入口",
             valuableSurface: "高价任务、名望、识货与权限",
           },
@@ -282,6 +360,10 @@ describe("object-grounded story authoring runtime", () => {
             id: "seed:recognition-engine",
             title: "能力不断换来更贵入口",
             anchorObjectIds: ["object:xiuxin", "object:sakumo"],
+            groundingSurfaceRefs: [
+              surfaceRef(objectField, "object:xiuxin", "location"),
+              surfaceRef(objectField, "object:sakumo", "military"),
+            ],
             observation: "低位人物和高价军事人物存在价格差",
             searchMove: "把能力资产与圈层入口建立可重复接口",
             idea: "每次真实能力兑现都留下更高任务入口",
@@ -347,6 +429,10 @@ describe("object-grounded story authoring runtime", () => {
             id: "seed:stage",
             title: "进入更高价任务圈",
             anchorObjectIds: ["object:xiuxin", "object:sakumo"],
+            groundingSurfaceRefs: [
+              surfaceRef(objectField, "object:xiuxin", "location"),
+              surfaceRef(objectField, "object:sakumo", "source_identity"),
+            ],
             observation: "秀信仍是低位人物，高价军事人物代表新的任务入口",
             searchMove: "寻找现实资格变化而不是列办事步骤",
             idea: "异常能力被任务体系重新估值",
@@ -398,6 +484,10 @@ describe("object-grounded story authoring runtime", () => {
         sourceSeedIds: ["seed:s03"],
         expectationDesignDigest: exp.digest,
         objectAnchorIds: ["object:xiuxin", "object:medic", "object:sakumo"],
+        groundingSurfaceRefs: [
+          surfaceRef(objectField, "object:xiuxin", "location"),
+          surfaceRef(objectField, "object:medic", "duty"),
+        ],
         storyProblem: "让基础忍术的异常价值第一次进入可信识货链",
         worldGaps: [],
         campNetwork: [
@@ -539,6 +629,7 @@ describe("object-grounded story authoring runtime", () => {
           sourceSeedIds: [],
           expectationDesignDigest: exp.digest,
           objectAnchorIds: [],
+          groundingSurfaceRefs: [],
           storyProblem: "等待刷新",
           worldGaps: [
             {
@@ -579,6 +670,7 @@ describe("object-grounded story authoring runtime", () => {
           sourceSeedIds: [],
           expectationDesignDigest: exp.digest,
           objectAnchorIds: [],
+          groundingSurfaceRefs: [],
           storyProblem: "错误尺度",
           worldGaps: [
             {
