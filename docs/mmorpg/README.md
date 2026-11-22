@@ -12,6 +12,7 @@
 - **第三模块第二层：[19 Expectation / Narrative Runtime](19-expectation-narrative-runtime.md)**。定义“什么值得写 / Reader Time 投在哪里”：Reader需求 → 稀缺性 → 世界/圈层固有认知 → 主角优势 → 期待差 → 铺垫/人物下注 → 打破认知 → 三阵营反应 → 真实权益与下一笔期待。禁止用精彩度分数、临时震惊或单个NPC随手belief替代。
 - **第三模块编剧上游：[20 Object-Grounded Writers' Room](20-object-grounded-writers-room.md)**。冻结两个最新作者裁决：故事不是监控录像，S04必须先主动设计；所有想象先有对象，S01-S03必须从Module 2 Object Field上搜索，再形成Concept/Engine、Stage Opportunity、Story Opportunity/Seeds。包含2026-11-22错误仓库漂移的Guardrail。
 - **第三模块节点到场景：[21 S05 Story Node → S06 Scene Expansion](21-s05-story-node-s06-scene-expansion.md)**。纠正旧定义：S05本体是一个具体问题节点，Character Agent / World Arbiter只是节点内部Reality rehearsal；S06按讲师原稿把一个Node展开成多个before/during/after场景，S07保留Reader Time主权。
+- **第三模块正文交接：[22 S08 Production Handoff](22-s08-production-handoff.md)**。S06/S07锁定后，确定性转换为NarraLume生产清单；有locked handoff时原生 `scene.plan` 不再调用模型二次编剧，`draft.generate` 只负责正文演奏，review/revision/settlement继续复用原链。
 - **第二模块轻量核心：[13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)**。Source World 卡片正文是真相，typed links 是关系，索引可重建。
 
 - **最新且最高优先级：[13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)**。后续 Source World 开发先读此文；若与 10～12 的旧设计复杂度冲突，以 13 为准。\n- **世界内容语言：[14 World Atlas 世界内容框架](14-world-atlas-content-framework-v01.md)**。v0.1～v0.7 是 Content Schema，不是 SQL Schema；十个 World Family 是并排的内容覆盖轴。\n- **叙事重心：[15 People-Centered Narrative Axis](15-people-centered-narrative-axis.md)**。人物是默认图谱展开、检索和 LLM Context 的中心，但不改数据库层级；两条轴共享同一批 Card + Typed Edge。
