@@ -3,6 +3,7 @@ import type {
   ExpectationState,
   NarrativeAllocationDecisionDraft,
   NarrativeCandidate,
+  StorySceneExpansion,
   WorldArbitrationReceipt,
 } from "@narralume/contracts";
 import { describe, expect, it } from "vitest";
@@ -12,6 +13,7 @@ import {
   finalizeExpectationState,
   finalizeNarrativeAllocationBatch,
   finalizeNarrativeAllocationDecision,
+  finalizeStoryReaderTimePlan,
   realityFocusFromExpectationDesign,
   narrativeCandidatesFromArbitration,
 } from "../src/expectation-runtime.js";
@@ -101,7 +103,75 @@ function candidate(
 
 function decision(
   candidateId: string,
-  overrides: Partial<NarrativeAllocationDecisionDraft> = {},
+  overrides: Partial<NarrativeAllocationDecisionDraft> = {}
+
+function sceneExpansion(): StorySceneExpansion {
+  return {
+    version: "story-scene-expansion.v1",
+    authority: "speculative",
+    projectId: "p1",
+    storyUnitDesignDigest: "story-unit:1",
+    storyUnitEventId: "event:1",
+    arbitrationDigest: "arbiter:1",
+    realityFingerprint: "reality-1",
+    eventProblem: "医疗忍者如何重新估值秀信的异常表现",
+    scenes: [
+      {
+        id: "scene:before",
+        order: 1,
+        phase: "before",
+        title: "普通流程",
+        participantEntityIds: ["xiuxin", "medic"],
+        locationObjectId: null,
+        localProblem: "秀信仍按普通伤员流程被处理",
+        pressure: "旧认知继续限制他的价值",
+        observableStart: "医疗忍者按常规复核",
+        interaction: "秀信继续训练，医疗忍者观察",
+        informationMove: "Reader知道优势，医疗忍者尚未确认",
+        expectationMove: "继续加深认知差",
+        projectedRealityUse: "使用已仲裁的训练行为",
+        endState: "异常开始进入专业观察",
+        nextSceneCause: "训练结果开始偏离普通标准",
+      },
+      {
+        id: "scene:during",
+        order: 2,
+        phase: "during",
+        title: "异常确认",
+        participantEntityIds: ["xiuxin", "medic"],
+        locationObjectId: null,
+        localProblem: "医疗忍者必须确认异常是否真实",
+        pressure: "常识与直接观察冲突",
+        observableStart: "异常控制结果出现",
+        interaction: "医疗忍者复核并排除误差",
+        informationMove: "医疗忍者从未知变成确认",
+        expectationMove: "期待进入兑现边缘",
+        projectedRealityUse: "严格使用仲裁确认的结果",
+        endState: "第一层专业认知被打破",
+        nextSceneCause: "确认后必须决定如何处理秀信",
+      },
+      {
+        id: "scene:after",
+        order: 3,
+        phase: "after",
+        title: "重新估值",
+        participantEntityIds: ["medic"],
+        locationObjectId: null,
+        localProblem: "确认异常后如何处理",
+        pressure: "旧流程已不足以解释新事实",
+        observableStart: "复核结果成立",
+        interaction: "医疗忍者重新安排后续处理",
+        informationMove: "第一层反应兑现，更高层仍未知",
+        expectationMove: "局部平仓，同时准备更高层识货",
+        projectedRealityUse: "承接仲裁后的状态",
+        endState: "新的专业处理位置形成",
+        nextSceneCause: null,
+      },
+    ],
+    digest: "scene-expansion:1",
+  };
+}
+,
 ): NarrativeAllocationDecisionDraft {
   return {
     version: "narrative-allocation.v1",
@@ -126,6 +196,138 @@ function decision(
 }
 
 describe("Expectation / Narrative Runtime", () => {
+
+  it("allocates S07 over S06 scenes and bridges payoff into the next expectation", () => {
+    const current = state("ripe");
+    const expansion = sceneExpansion();
+    const result = finalizeStoryReaderTimePlan(
+      {
+        version: "story-reader-time-plan.v1",
+        authority: "speculative",
+        projectId: "p1",
+        expectationStateDigest: current.digest,
+        storySceneExpansionDigest: expansion.digest,
+        realityFingerprint: "reality-1",
+        sceneIds: expansion.scenes.map((scene) => scene.id),
+        decisions: [
+          {
+            sceneId: "scene:before",
+            readerOrder: 1,
+            action: "charge",
+            readerTime: "scene",
+            expectationThreadIds: ["thread:basic-ninjutsu"],
+            reasons: ["先让 Reader 看到旧常识仍在现实流程中生效"],
+            deepenScarcityEvidenceIds: [],
+            reinforceBeliefIds: ["belief:basic-is-basic"],
+            widenGapBeliefIds: ["belief:basic-is-basic"],
+            embodimentTargets: ["让普通伤员流程具体可感"],
+            payoffThreadIds: [],
+            reactionTargetEntityIds: [],
+            retainedGainOpportunity: null,
+            informationReleased: "Reader看见医疗体系仍按普通伤员处理",
+            informationWithheld: "医疗忍者尚未确认秀信异常的真正价格",
+            focusShiftThreadIds: [],
+            nextExpectationSeed: null,
+            terminalExpectationReason: null,
+            chapterBoundary: "continue",
+          },
+          {
+            sceneId: "scene:during",
+            readerOrder: 2,
+            action: "charge",
+            readerTime: "scene",
+            expectationThreadIds: ["thread:basic-ninjutsu"],
+            reasons: ["把认知差推到兑现边缘但不一次结清"],
+            deepenScarcityEvidenceIds: [],
+            reinforceBeliefIds: [],
+            widenGapBeliefIds: ["belief:basic-is-basic"],
+            embodimentTargets: ["让专业复核过程体现异常有多反常"],
+            payoffThreadIds: [],
+            reactionTargetEntityIds: [],
+            retainedGainOpportunity: null,
+            informationReleased: "Reader看到医疗忍者开始确认异常",
+            informationWithheld: "更高层人物仍不知道秀信的价值",
+            focusShiftThreadIds: [],
+            nextExpectationSeed: "谁会成为下一层真正高价的识货人",
+            terminalExpectationReason: null,
+            chapterBoundary: "soft_cut",
+          },
+          {
+            sceneId: "scene:after",
+            readerOrder: 3,
+            action: "payoff",
+            readerTime: "scene",
+            expectationThreadIds: ["thread:basic-ninjutsu"],
+            reasons: ["兑现第一层专业重新估值，同时把焦点抬向更高层"],
+            deepenScarcityEvidenceIds: [],
+            reinforceBeliefIds: [],
+            widenGapBeliefIds: [],
+            embodimentTargets: ["让重新估值通过实际处理变化被Reader感到"],
+            payoffThreadIds: ["thread:basic-ninjutsu"],
+            reactionTargetEntityIds: ["medic"],
+            retainedGainOpportunity: "新的专业处理位置与更高层传播入口",
+            informationReleased: "医疗忍者的第一层重新估值兑现",
+            informationWithheld: "更高层是否识货仍未兑现",
+            focusShiftThreadIds: [],
+            nextExpectationSeed: "异常记录进入更高层后的第二次重新估值",
+            terminalExpectationReason: null,
+            chapterBoundary: "chapter_end",
+          },
+        ],
+      },
+      current,
+      expansion,
+    );
+
+    expect(result.decisions).toHaveLength(3);
+    expect(result.decisions[2]?.action).toBe("payoff");
+    expect(result.decisions[2]?.nextExpectationSeed).toContain("更高层");
+  });
+
+  it("rejects a payoff that empties Reader expectation without a bridge", () => {
+    const current = state("ripe");
+    const expansion = sceneExpansion();
+    expect(() =>
+      finalizeStoryReaderTimePlan(
+        {
+          version: "story-reader-time-plan.v1",
+          authority: "speculative",
+          projectId: "p1",
+          expectationStateDigest: current.digest,
+          storySceneExpansionDigest: expansion.digest,
+          realityFingerprint: "reality-1",
+          sceneIds: expansion.scenes.map((scene) => scene.id),
+          decisions: expansion.scenes.map((scene, index) => ({
+            sceneId: scene.id,
+            readerOrder: index + 1,
+            action: index === 2 ? "payoff" : "background",
+            readerTime: index === 2 ? "scene" : "mention",
+            expectationThreadIds:
+              index === 2 ? ["thread:basic-ninjutsu"] : [],
+            reasons: ["测试期待连续性"],
+            deepenScarcityEvidenceIds: [],
+            reinforceBeliefIds: [],
+            widenGapBeliefIds: [],
+            embodimentTargets: [],
+            payoffThreadIds:
+              index === 2 ? ["thread:basic-ninjutsu"] : [],
+            reactionTargetEntityIds: index === 2 ? ["medic"] : [],
+            retainedGainOpportunity: null,
+            informationReleased: "当前场信息",
+            informationWithheld: "仍有未释放信息",
+            focusShiftThreadIds: [],
+            nextExpectationSeed: null,
+            terminalExpectationReason: null,
+            chapterBoundary: index === 2 ? "chapter_end" : "continue",
+          })),
+        },
+        current,
+        expansion,
+      ),
+    ).toThrow("story_runtime.reader_time.payoff_without_expectation_bridge");
+  });
+
+
   it("designs the expectation transaction before Reality simulation without scripting character outcomes", () => {
     const draft: ExpectationDesignDraft = {
       version: "expectation-design.v1",
