@@ -364,6 +364,7 @@ export function finalizeStoryUnitDesign(
     parsed.objectAnchorIds.length === 0 ||
     parsed.groundingSurfaceRefs.length === 0 ||
     parsed.campNetwork.length === 0 ||
+    parsed.stakeLedger.length === 0 ||
     parsed.events.length === 0
   ) {
     throw new Error("story_authoring.ready_story_unit_incomplete");
@@ -372,6 +373,16 @@ export function finalizeStoryUnitDesign(
   const objectIds = new Set(field.objects.map((object) => object.id));
   const entityIds = new Set(field.objects.map((object) => object.entityId));
   const surfaceRefs = allowedStorySurfaceRefs(field);
+  if (!entityIds.has(parsed.upgradeLedger.protagonistEntityId)) {
+    throw new Error("story_authoring.upgrade_protagonist_not_in_object_field");
+  }
+  const upgradeStepIds = requireUnique(
+    "upgrade_step",
+    parsed.upgradeLedger.steps.map((step) => step.id),
+  );
+  if (!upgradeStepIds.has(parsed.upgradeLedger.currentStepId)) {
+    throw new Error("story_authoring.upgrade_current_step_unknown");
+  }
   requireUnique(
     "story_unit_world_gap",
     parsed.worldGaps.map((gap) => gap.id),
@@ -405,11 +416,48 @@ export function finalizeStoryUnitDesign(
     parsed.campNetwork.map((member) => member.entityId),
     entityIds,
   );
+  if (!campEntityIds.has(parsed.upgradeLedger.protagonistEntityId)) {
+    throw new Error("story_authoring.protagonist_not_in_camp_network");
+  }
+
+  const stakeEntryIds = requireUnique(
+    "stake_entry",
+    parsed.stakeLedger.map((entry) => entry.id),
+  );
+  requireRefs(
+    "stake_entity",
+    parsed.stakeLedger.map((entry) => entry.entityId),
+    campEntityIds,
+  );
+  const stakeEntriesByEntity = new Map<string, string[]>();
+  for (const entry of parsed.stakeLedger) {
+    const ids = stakeEntriesByEntity.get(entry.entityId) ?? [];
+    ids.push(entry.id);
+    stakeEntriesByEntity.set(entry.entityId, ids);
+  }
+  for (const member of parsed.campNetwork) {
+    if (
+      member.entityId !== parsed.upgradeLedger.protagonistEntityId &&
+      !stakeEntriesByEntity.has(member.entityId)
+    ) {
+      throw new Error(
+        `story_authoring.camp_member_without_stake:${member.entityId}`,
+      );
+    }
+  }
+
   requireRefs(
     "reaction_target",
     parsed.reactionTargets.map((target) => target.entityId),
     campEntityIds,
   );
+  for (const target of parsed.reactionTargets) {
+    if (!stakeEntriesByEntity.has(target.entityId)) {
+      throw new Error(
+        `story_authoring.reaction_target_without_stake:${target.entityId}`,
+      );
+    }
+  }
   requireRefs(
     "camp_transition",
     parsed.campTransitions.map((transition) => transition.entityId),
@@ -466,6 +514,8 @@ export function finalizeStoryUnitDesign(
       `event_pressure_${event.id}`,
       event.actorPressures.map((item) => item.entityId),
     );
+    requireUnique(`event_stake_${event.id}`, event.stakeEntryIds);
+    requireRefs("event_stake", event.stakeEntryIds, stakeEntryIds);
     requireRefs("event_cast", event.castPoolEntityIds, entityIds);
     const castPool = new Set(event.castPoolEntityIds);
     requireRefs("event_active_seed", event.activeSeedEntityIds, castPool);
@@ -485,6 +535,14 @@ export function finalizeStoryUnitDesign(
         `story_authoring.event_pressure_missing_cast_member:${event.id}`,
       );
     }
+    for (const stakeId of event.stakeEntryIds) {
+      const stake = parsed.stakeLedger.find((entry) => entry.id === stakeId);
+      if (!stake || !castPool.has(stake.entityId)) {
+        throw new Error(
+          `story_authoring.event_stake_outside_cast:${event.id}:${stakeId}`,
+        );
+      }
+    }
 
     requireUnique(
       `event_reaction_target_${event.id}`,
@@ -500,6 +558,17 @@ export function finalizeStoryUnitDesign(
       event.reactionTargetEntityIds,
       castPool,
     );
+    for (const entityId of event.reactionTargetEntityIds) {
+      const activeStakeIds = new Set(event.stakeEntryIds);
+      const priced = (stakeEntriesByEntity.get(entityId) ?? []).some((id) =>
+        activeStakeIds.has(id),
+      );
+      if (!priced) {
+        throw new Error(
+          `story_authoring.event_reaction_without_active_stake:${event.id}:${entityId}`,
+        );
+      }
+    }
 
     requireUnique(
       `event_information_step_${event.id}`,
