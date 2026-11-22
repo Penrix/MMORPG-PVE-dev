@@ -146,7 +146,7 @@ describe("Module 3 World Atlas context adapter", () => {
           id,project_id,subject_entity_id,evaluator_entity_id,value_kind,
           value_basis,scarcity,access_path,future_use,status,
           source_type,source_note,created_at
-        ) VALUES ('hero-value','p1','hero',NULL,'talent',
+        ) VALUES ('hero-value','p1','hero',NULL,'ability',
           '异常控制能力','普通伤员极少出现',
           '需要专业复核','可能进入更高价任务体系','available',
           'project_reality','当前项目估值',?)
