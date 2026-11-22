@@ -40,6 +40,7 @@ export function storyObjectSurfaceRef(
     sourceId: string;
     facet: string;
     slotKey: string;
+    value: unknown;
   },
 ): string {
   return `surface:${sha256Hex(
@@ -48,6 +49,7 @@ export function storyObjectSurfaceRef(
       sourceId: surface.sourceId,
       facet: surface.facet,
       slotKey: surface.slotKey,
+      value: surface.value,
     }),
   )}`;
 }
