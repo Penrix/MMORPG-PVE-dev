@@ -9,11 +9,13 @@ import {
   StoryUnitEventDesignSchema,
   StoryUnitInformationReleaseSchema,
   StoryUnitReactionTargetSchema,
+  StoryStakeLedgerEntrySchema,
   StoryWorldGapSchema,
   type ExpectationDesign,
   type StoryAuthoringSearch,
   type StoryObjectField,
   type StoryUnitDesign,
+  type StoryUpgradeLedger,
 } from "@narralume/contracts";
 import type {
   NarrativeRun,
@@ -55,6 +57,7 @@ const StoryUnitDesignOutputSchema = z.object({
   storyProblem: z.string().min(1),
   worldGaps: z.array(StoryWorldGapSchema),
   campNetwork: z.array(StoryUnitCampMemberSchema),
+  stakeLedger: z.array(StoryStakeLedgerEntrySchema),
   reactionTargets: z.array(StoryUnitReactionTargetSchema),
   campTransitions: z.array(StoryUnitCampTransitionSchema),
   appearanceOrderEntityIds: z.array(z.string().min(1)),
@@ -84,6 +87,7 @@ export interface StoryUnitDesignModelRequest {
   sourceSearch: StoryAuthoringSearch | null;
   sourceSeedIds: readonly string[];
   expectationDesign: ExpectationDesign;
+  upgradeLedger: StoryUpgradeLedger;
   request: string;
 }
 
@@ -402,6 +406,10 @@ export class StoryAuthoringService {
       run.projectId !== request.field.projectId ||
       request.field.scale !== "S04" ||
       request.expectationDesign.projectId !== request.field.projectId ||
+      !request.field.objects.some(
+        (object) =>
+          object.entityId === request.upgradeLedger.protagonistEntityId,
+      ) ||
       request.request.trim().length === 0
     ) {
       throw new Error("story_authoring.invalid_story_unit_request");
@@ -461,13 +469,16 @@ export class StoryAuthoringService {
         instructions: [
           "你在 S04 Writers' Room 设计一出故事。小说不是世界自转后的监控录像，也不是让 Character Agents 随机生活后再捡精彩片段。",
           "先从给定 Object Field 与已选 Story Seeds 选择具体对象，再设计为什么这些对象现在要撞在一起。READY 时 groundingSurfaceRefs 必须指出这出 Story 具体踩在哪些 Object surfaces 上，不能只引用对象名。",
+          "Upgrade Ledger 是这部长篇已经确定的升级路线与当前阶段，不是本轮临时脑洞。StoryUnit 必须服务 currentStepId / stageGoal / settlementTarget，不能等一次互动结束后再问‘下一故事自然长什么’。",
           "Expectation Design 已经给出 Reader 需求、目标情绪、稀缺性方向、固有认知、主角优势、反应与收益方向。不得偷换这笔交易。",
-          "三阵营首先是编剧工具：作者主动选择哪些真实人物承担压力、定价、连接、未来反应与阵营转化，但不能预写他们实际一定震惊、投靠、认输或降智。",
+          "三阵营首先是编剧工具：只从 Object Field 中已经存在的人物划分当前友方/敌方/中立/其他利益位置。禁止为了‘需要一个识货人/反派/妹妹位’在第三模块临时造功能NPC。",
+          "配角反应是爽点，但反应必须先定价。stakeLedger 是核心：每个关键配角先写 currentBelief/currentInterest，再写他因此做出的 stakeAction、压上的 stakeAssets、撤退成本、后续怎样加注，最后才设计 payoffReaction 与 settlementChange。不是只写‘他觉得主角不行’。",
+          "作者/Director可以主动设计震惊、投靠、后悔、误判、犯蠢、变脸、效忠等反应方向。要求不是‘人物不能被作者设计’，而是铺垫、固有认知、利益、人设与下注成立。",
           "appearanceOrderEntityIds 与 informationRelease 负责谁先进入、Reader/人物分别何时知道什么。",
           "events 是有顺序的 S05 Story Node，不是 Agent 模拟结果。每个 Node 必须只有一个清楚的 problem：主线化为节点，每个节点一个问题，这个问题之后会在 S06 影响多个场景。",
           "每个 S05 Node 要写 storyPressure、realityQuestion、readerExpectation；用 phaseTargets 明确 before / during / after 哪些人物线要被展开，用 reactionTargetEntityIds 关联 S04 已设计的反应目标，用 informationReleaseSteps 关联这一节点承接的信息释放步骤。",
-          "Cast Pool 是这个 Node 可能卷入的人物池；Active Seed 是 Reality Rehearsal 第一轮真正行动/被触发的人。绝不能默认第一轮全员开机。actorPressures 必须为 Cast Pool 每个人各写一条当前场面压力/刺激条件，它是编剧搭的戏台，不是替角色决定反应。",
-          "Character Agent + World Arbiter 只是 S05 Node 内部的 Reality Rehearsal / Adjudication 子程序，不是 S05 本体，也不是场景生成算法。它们只回答人物实际会不会这么做、Reality 是否允许；若撞坏 soft route，就回 S05/S04 改未来，不改演员。",
+          "Cast Pool 是这个 Node 可能卷入的人物池；Active Seed 是第一轮真正被激活的人。actorPressures 为 Cast Pool 每个人写当前刺激条件；stakeEntryIds 必须指向本 Node 正在推进/加注/结算的 Stake Ledger 项。",
+          "Character Model + World Arbiter 只是 S05 Node 内部的演法与硬事实检查，不拥有上位编剧权。Director 已经决定人物线的戏剧方向；Character Model 要在这一方向内寻找最符合人设、利益、既有认知与可见 Reality 的具体行动/表达。只有时间、地点、资源、知识、规则等硬事实冲突才允许判定当前演法不可执行，再回 S05 调整演法，而不是取消这条商业男频人物线。",
           "S06 会把通过 Reality 约束的一个 Node 展开为多个 Scene，所以这里不要把 event 写成单一场景摘要，也不要提前把 scene 数量压成一个动作结果。",
           "如果当前对象不够支撑这出戏，status 必须返回 BLOCKED_WORLD_GAP，把缺口结构化写入 worldGaps，并用 productionHint 指向现有 World Builder workshop，events 为空；不要为了过 schema 凭空造人物、关系或事件。对象足够时返回 READY。",
         ].join("\n"),
@@ -483,6 +494,7 @@ export class StoryAuthoringService {
                   objects: fieldObjectCatalog(request.field),
                 },
                 selectedSeeds,
+                upgradeLedger: request.upgradeLedger,
                 expectationDesign: request.expectationDesign,
               },
               null,
@@ -512,13 +524,16 @@ export class StoryAuthoringService {
         groundingSurfaceRefs: result.value.groundingSurfaceRefs,
         storyProblem: result.value.storyProblem,
         worldGaps: result.value.worldGaps,
+        upgradeLedger: request.upgradeLedger,
         campNetwork: result.value.campNetwork,
+        stakeLedger: result.value.stakeLedger,
         reactionTargets: result.value.reactionTargets,
         campTransitions: result.value.campTransitions,
         appearanceOrderEntityIds: result.value.appearanceOrderEntityIds,
         informationRelease: result.value.informationRelease,
         events: result.value.events,
-        mustPreserveAgentAutonomy: true,
+        directorAuthority: "author-defined-story-line",
+        characterExecutionRule: "characterization-constrained-performance",
       },
       request.field,
       request.expectationDesign,
