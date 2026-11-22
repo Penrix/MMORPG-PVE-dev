@@ -262,6 +262,82 @@ describe("Module 3 Story Runtime core", () => {
     ).toThrow("story_runtime.proposal.unavailable_knowledge:secret-identity");
   });
 
+  it("rejects a resource claim that is not in the character's available resources", () => {
+    const current = observation();
+    expect(() =>
+      finalizeCharacterActionProposal(
+        {
+          version: "character-action-proposal.v1",
+          authority: "speculative",
+          projectId: "p1",
+          generationId: "generation-1",
+          round: 1,
+          agentId: current.agentId,
+          characterId: "hero",
+          characterName: "Hero",
+          observationDigest: current.digest,
+          location: "harbor",
+          currentGoal: "leave the harbor",
+          pressure: "the gate is closing",
+          resources: ["key"],
+          availableOptions: ["wait", "use the key"],
+          rejectedOptions: ["wait"],
+          decision: "use the key",
+          decisionReason: "the gate is closing",
+          intendedAction: "unlock the side gate",
+          actionDuration: "five minutes",
+          knowledgeRefs: ["public-location"],
+          resourceClaims: ["nuclear-weapon"],
+          constraints: [],
+          contingencies: [],
+          expectedConsequences: [],
+          submittedAt: now,
+        },
+        current,
+      ),
+    ).toThrow(
+      "story_runtime.proposal.unavailable_resource_claim:nuclear-weapon",
+    );
+  });
+
+  it("allows a resolved action with no butterfly effect instead of forcing invention", () => {
+    const { proposal: current } = proposal();
+    const receipt = finalizeWorldArbitrationReceipt(
+      {
+        version: "world-arbitration-receipt.v1",
+        authority: "speculative",
+        projectId: "p1",
+        generationId: "generation-1",
+        round: 1,
+        proposalDigests: [current.digest],
+        resolutions: [
+          {
+            agentId: current.agentId,
+            characterId: current.characterId,
+            characterName: current.characterName,
+            proposalDigest: current.digest,
+            decision: current.decision,
+            intendedAction: current.intendedAction,
+            actionOrder: 1,
+            outcome: "blocked",
+            immediateResult: "the lock does not move",
+            stateAfter: "Hero remains where he is",
+            butterflyEffects: [],
+            conflictIds: [],
+          },
+        ],
+        conflicts: [],
+        hardContractStatus: "feasible",
+        hardContractConflicts: [],
+        protagonistProjection: null,
+        finalized: true,
+        generatedAt: now,
+      },
+      [current],
+    );
+    expect(receipt.resolutions[0]!.butterflyEffects).toEqual([]);
+  });
+
   it("binds arbitration to original character intent and keeps its delta speculative", () => {
     const { proposal: current } = proposal();
     const receipt = finalizeWorldArbitrationReceipt(
