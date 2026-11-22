@@ -9,6 +9,7 @@
 - **第三模块当前合同：[17 Novel Studio 接入 World Atlas / Project Reality](17-module3-world-atlas-integration.md)**。定义 Project Reality / Source Atlas 权威层、POV 认知边界、Chapter / Co-create / Assistant 接线和 settlement 单写原则。
 - **第三模块故事核心：[18 Story Runtime Core](18-story-runtime-core.md)**。冻结 Reality → Character Observation → independent Action → World Arbitration → speculative delta → Narrative Director / Horizon Rehearsal 的核心；NarraLume 原生 Chapter Pipeline 保留为正文生产下半段。
 - **第三模块第二层：[19 Expectation / Narrative Runtime](19-expectation-narrative-runtime.md)**。定义“什么值得写 / Reader Time 投在哪里”：Reader需求 → 稀缺性 → 世界/圈层固有认知 → 主角优势 → 期待差 → 铺垫/人物下注 → 打破认知 → 三阵营反应 → 真实权益与下一笔期待。禁止用精彩度分数、临时震惊或单个NPC随手belief替代。
+- **第三模块编剧上游：[20 Object-Grounded Writers' Room](20-object-grounded-writers-room.md)**。冻结两个最新作者裁决：故事不是监控录像，S04必须先主动设计；所有想象先有对象，S01-S03必须从Module 2 Object Field上搜索，再形成Concept/Engine、Stage Opportunity、Story Opportunity/Seeds。包含2026-11-22错误仓库漂移的Guardrail。
 - **第二模块轻量核心：[13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)**。Source World 卡片正文是真相，typed links 是关系，索引可重建。
 
 - **最新且最高优先级：[13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)**。后续 Source World 开发先读此文；若与 10～12 的旧设计复杂度冲突，以 13 为准。\n- **世界内容语言：[14 World Atlas 世界内容框架](14-world-atlas-content-framework-v01.md)**。v0.1～v0.7 是 Content Schema，不是 SQL Schema；十个 World Family 是并排的内容覆盖轴。\n- **叙事重心：[15 People-Centered Narrative Axis](15-people-centered-narrative-axis.md)**。人物是默认图谱展开、检索和 LLM Context 的中心，但不改数据库层级；两条轴共享同一批 Card + Typed Edge。
@@ -42,7 +43,7 @@
 
 ## 当前状态
 
-- GitHub Fork：[`Penrix/MMORPG-PVE-dev`](https://github.com/Penrix/MMORPG-PVE-dev)，**当前公开**。
+- GitHub Fork：[`Penrix/MMORPG-PVE-dev`](https://github.com/Penrix/MMORPG-PVE-dev)，**当前公开，也是唯一正式 NarraLume 工程开发仓**。`Penrix/MMORPG-PVE` 为历史原型仓，不再接受当前三模块正式实现。
 - 原 NarraLume 正文生成、版本、审阅、知识、Canon 和状态管理保持不变。
 - 旧版只是提示词/Canonical候选接线原型；现在已经新增**独立WorldPack生成链、SQLite包级候选、引用校验、原子采纳和世界图查询代码**，但尚未完成CI或真实模型验收。其中部分第三方机制已实际移植 MIT 原始源码，且投入运行路径，详见 [05 移植记录](05-actual-upstream-ports.md)；完整引擎尚待续迁。
 - 本目录文档属于设计与实现指导，**不是**已通过模型/CI 验收的功能声明。
