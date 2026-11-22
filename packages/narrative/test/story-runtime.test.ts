@@ -192,6 +192,7 @@ function observation() {
     generationId: "generation-1",
     storyUnitDesignDigest: "story-unit:1",
     storyUnitEventId: "event:gate",
+    realityFingerprint: "reality:event:gate",
     targetOutlineNodeId: "chapter-1",
     goalEvidenceRefs: ["hero-goal"],
     pressure: "the gate is closing",
