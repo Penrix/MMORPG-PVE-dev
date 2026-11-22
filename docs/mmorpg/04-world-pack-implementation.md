@@ -1,5 +1,7 @@
 # 第一模块 WorldPack｜2026-11-20 实际代码交付记录
 
+> **STATUS: IMPLEMENTATION HISTORY / CODE MAP.** 本文记录 WorldPack 阶段真实代码与当时验收状态；其中“尚未通过 CI”“当前主流程”等时点性描述只代表 2026-11-20。当前 Module 1 业务定义见 [16](16-world-builder-from-world-atlas.md)，最新工程状态看当前 PR / CI。
+
 > 状态：**已提交源码和端到端模拟模型的测试用例；尚未通过 Node 24 构建、GitHub Actions 或真实模型内容验收。**  
 > 前版“七轮单项 Canon 候选”是接口原型，不再是当前主流程。本文记录这次真正添加的内容与源码位置，避免将“设计计划”与“已实现功能”混为一谈。
 
