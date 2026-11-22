@@ -193,10 +193,6 @@ export function finalizeStoryAuthoringSearch(
   ) {
     throw new Error("story_authoring.search_not_bound_to_object_field");
   }
-  if (parsed.scale === "S04") {
-    throw new Error("story_authoring.s04_uses_story_unit_design");
-  }
-
   const allowedObjectIds = new Set(field.objects.map((object) => object.id));
   requireUnique(
     "seed",
