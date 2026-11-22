@@ -1,7 +1,4 @@
-import {
-  createOutlineNode,
-  createProject,
-} from "@narralume/domain";
+import { createOutlineNode, createProject } from "@narralume/domain";
 import {
   SqliteProjectRepository,
   SqliteStoryRepository,
@@ -175,9 +172,10 @@ describe("StoryChapterProductionHandoff", () => {
       "scene:reader-first",
       "scene:reality-first",
     ]);
-    expect(
-      handoff.lockedScenePlan.scenes.map((scene) => scene.title),
-    ).toEqual(["重新估值", "旧认知继续生效"]);
+    expect(handoff.lockedScenePlan.scenes.map((scene) => scene.title)).toEqual([
+      "重新估值",
+      "旧认知继续生效",
+    ]);
     expect(
       handoff.lockedScenePlan.scenes.reduce(
         (sum, scene) => sum + scene.targetCharacters,

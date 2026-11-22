@@ -254,7 +254,6 @@ describe("ChapterWorkerSuite", () => {
     expect(JSON.stringify(context)).toContain("下一次熄灯还会夺走谁");
   });
 
-
   it("persists attributed accounts, suspicions and unresolved questions with the committed source version", async () => {
     const manuscript =
       "林昼踏进灯塔。\n\n父亲说：“我一年前没能救起河坝边的孩子。”\n\n林昼怀疑护士拿过刀片，但归家的碎片还没有解释。";

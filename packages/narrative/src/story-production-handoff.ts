@@ -71,9 +71,7 @@ const READER_TIME_WEIGHT: Record<
 };
 
 function digest(value: unknown): string {
-  return createHash("sha256")
-    .update(JSON.stringify(value))
-    .digest("hex");
+  return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
 
 function visibleDecisions(
@@ -188,7 +186,9 @@ export function buildStoryChapterProductionHandoff(
     readerTimePlan.storySceneExpansionDigest !== expansion.digest ||
     readerTimePlan.realityFingerprint !== expansion.realityFingerprint
   ) {
-    throw new Error("story_production.reader_time_not_bound_to_scene_expansion");
+    throw new Error(
+      "story_production.reader_time_not_bound_to_scene_expansion",
+    );
   }
 
   const decisions = visibleDecisions(readerTimePlan);
@@ -265,7 +265,6 @@ export function parseStoryChapterProductionHandoff(
   const parsed = StoryChapterProductionHandoffSchema.safeParse(value);
   return parsed.success ? parsed.data : null;
 }
-
 
 /**
  * Attach an already-built S08 production handoff to a concrete chapter node.
