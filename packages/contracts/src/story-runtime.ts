@@ -626,6 +626,35 @@ export const StoryObjectFieldDraftSchema = StoryObjectFieldSchema.omit({
 });
 export type StoryObjectFieldDraft = z.infer<typeof StoryObjectFieldDraftSchema>;
 
+export const StoryWorldGapSchema = z.object({
+  id: z.string().min(1),
+  kind: z.enum([
+    "missing_object",
+    "missing_relation",
+    "missing_state",
+    "missing_rule",
+    "missing_access",
+    "missing_value",
+    "missing_activity",
+  ]),
+  anchorObjectIds: z.array(z.string().min(1)),
+  need: z.string().min(1),
+  reason: z.string().min(1),
+  productionHint: z.enum([
+    "geography",
+    "factions",
+    "people",
+    "economy",
+    "power",
+    "events",
+    "social",
+    "playability",
+    "living",
+  ]),
+  status: z.literal("OPEN"),
+});
+export type StoryWorldGap = z.infer<typeof StoryWorldGapSchema>;
+
 export const StoryCandidateNewObjectSchema = z.object({
   label: z.string().min(1),
   kind: z.string().min(1),
@@ -761,7 +790,7 @@ export const StoryAuthoringSearchSchema = z.object({
   question: z.string().min(1),
   objectFocus: z.array(StoryObjectFocusSchema),
   seeds: z.array(StoryOpportunitySeedSchema),
-  worldGaps: z.array(z.string().min(1)),
+  worldGaps: z.array(StoryWorldGapSchema),
   scaleResult: StoryScaleSearchResultSchema,
   digest: z.string().min(1),
 });
@@ -843,7 +872,7 @@ export const StoryUnitDesignSchema = z.object({
   expectationDesignDigest: z.string().min(1),
   objectAnchorIds: z.array(z.string().min(1)),
   storyProblem: z.string().min(1),
-  worldGaps: z.array(z.string().min(1)),
+  worldGaps: z.array(StoryWorldGapSchema),
   campNetwork: z.array(StoryUnitCampMemberSchema),
   reactionTargets: z.array(StoryUnitReactionTargetSchema),
   campTransitions: z.array(StoryUnitCampTransitionSchema),
