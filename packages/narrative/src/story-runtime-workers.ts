@@ -361,6 +361,7 @@ export class StoryRuntimeAgentService {
         generatedAt: new Date().toISOString(),
       },
       request.proposals,
+      request.worldContext,
     );
 
     return {
