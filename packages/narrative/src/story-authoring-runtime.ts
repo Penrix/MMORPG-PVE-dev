@@ -73,6 +73,9 @@ export interface StoryObjectFieldFromWorldContextInput {
 export function storyObjectFieldFromWorldContext(
   input: StoryObjectFieldFromWorldContextInput,
 ): StoryObjectField {
+  if (input.context.projectId !== input.projectId) {
+    throw new Error("story_authoring.world_context_project_mismatch");
+  }
   const draft: StoryObjectFieldDraft = {
     version: "story-object-field.v1",
     authority: "speculative",
@@ -136,11 +139,23 @@ function validateScaleResult(
     throw new Error("story_authoring.scale_result_mismatch");
   }
   if (draft.scaleResult.scale === "S01") {
+    const conceptIds = requireUnique(
+      "s01_concept",
+      draft.scaleResult.storyConcepts.map((concept) => concept.id),
+    );
+    const engineIds = requireUnique(
+      "s01_engine",
+      draft.scaleResult.storyEngines.map((engine) => engine.id),
+    );
     for (const [index, concept] of draft.scaleResult.storyConcepts.entries()) {
       requireRefs(`s01_concept_${index}`, concept.objectIds, allowedObjectIds);
     }
     for (const [index, engine] of draft.scaleResult.storyEngines.entries()) {
       requireRefs(`s01_engine_${index}`, engine.objectIds, allowedObjectIds);
+    }
+    for (const [index, link] of draft.scaleResult.conceptEngineLinks.entries()) {
+      requireRefs(`s01_link_concept_${index}`, [link.conceptId], conceptIds);
+      requireRefs(`s01_link_engine_${index}`, [link.engineId], engineIds);
     }
     return;
   }
@@ -223,18 +238,23 @@ export function finalizeStoryUnitDesign(
 ): StoryUnitDesign {
   const parsed = StoryUnitDesignDraftSchema.parse(draft);
   if (
+    field.scale !== "S04" ||
     parsed.projectId !== field.projectId ||
     parsed.projectId !== expectationDesign.projectId ||
     parsed.objectFieldDigest !== field.digest ||
-    parsed.expectationDesignDigest !== expectationDesign.digest
+    parsed.expectationDesignDigest !== expectationDesign.digest ||
+    expectationDesign.realityFingerprint !== field.realityFingerprint ||
+    expectationDesign.storyStateFingerprint !== field.storyStateFingerprint
   ) {
     throw new Error("story_authoring.story_unit_not_bound");
   }
 
   const objectIds = new Set(field.objects.map((object) => object.id));
   const entityIds = new Set(field.objects.map((object) => object.entityId));
+  requireUnique("story_unit_object_anchor", parsed.objectAnchorIds);
   requireRefs("story_unit_object_anchor", parsed.objectAnchorIds, objectIds);
-  if (availableSeedIds.size > 0) {
+  requireUnique("story_unit_source_seed", parsed.sourceSeedIds);
+  if (parsed.sourceSeedIds.length > 0) {
     requireRefs(
       "story_unit_source_seed",
       parsed.sourceSeedIds,
@@ -261,17 +281,46 @@ export function finalizeStoryUnitDesign(
     parsed.campTransitions.map((transition) => transition.entityId),
     campEntityIds,
   );
+  requireUnique("appearance_entity", parsed.appearanceOrderEntityIds);
   requireRefs(
     "appearance_entity",
     parsed.appearanceOrderEntityIds,
     campEntityIds,
   );
 
+  const informationSteps = parsed.informationRelease.map((item) =>
+    String(item.step),
+  );
+  requireUnique("information_step", informationSteps);
+  for (let index = 1; index < parsed.informationRelease.length; index += 1) {
+    if (
+      parsed.informationRelease[index]!.step <=
+      parsed.informationRelease[index - 1]!.step
+    ) {
+      throw new Error("story_authoring.information_steps_not_ascending");
+    }
+  }
+
+  const campState = new Map(
+    parsed.campNetwork.map((member) => [member.entityId, member.camp] as const),
+  );
+  for (const transition of parsed.campTransitions) {
+    const current = campState.get(transition.entityId);
+    if (current !== transition.from) {
+      throw new Error(
+        `story_authoring.camp_transition_from_mismatch:${transition.entityId}`,
+      );
+    }
+    campState.set(transition.entityId, transition.to);
+  }
+
   requireUnique(
     "story_event",
     parsed.events.map((event) => event.id),
   );
   for (const event of parsed.events) {
+    requireUnique(`event_cast_${event.id}`, event.castPoolEntityIds);
+    requireUnique(`event_active_seed_${event.id}`, event.activeSeedEntityIds);
     requireRefs("event_cast", event.castPoolEntityIds, entityIds);
     const castPool = new Set(event.castPoolEntityIds);
     requireRefs("event_active_seed", event.activeSeedEntityIds, castPool);
