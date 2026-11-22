@@ -10,6 +10,7 @@ import {
 } from "../src/index.js";
 import type {
   NarrativeCandidate,
+  StorySceneExpansion,
   WorldArbitrationReceipt,
 } from "@narralume/contracts";
 import { describe, expect, it, vi } from "vitest";
@@ -102,6 +103,57 @@ function candidate(id: string, summary: string): NarrativeCandidate {
     originDigest: null,
   };
 }
+
+function sceneExpansion(): StorySceneExpansion {
+  return {
+    version: "story-scene-expansion.v1",
+    authority: "speculative",
+    projectId: "p1",
+    storyUnitDesignDigest: "story-unit:expectation",
+    storyUnitEventId: "event:recognition",
+    arbitrationDigest: "arbiter:scene",
+    realityFingerprint: "r1",
+    eventProblem: "医疗忍者如何处理秀信的异常表现",
+    scenes: [
+      {
+        id: "scene:ordinary",
+        order: 1,
+        phase: "before",
+        title: "普通流程",
+        participantEntityIds: ["xiuxin", "medic"],
+        locationObjectId: null,
+        localProblem: "旧流程仍把秀信当普通伤员",
+        pressure: "Reader知道优势但人物仍按旧认知行动",
+        observableStart: "医疗忍者按常规复核",
+        interaction: "秀信训练，医疗忍者观察",
+        informationMove: "医疗忍者尚未确认异常",
+        expectationMove: "继续加深认知差",
+        projectedRealityUse: "使用S05已确认的训练行为",
+        endState: "异常开始进入观察",
+        nextSceneCause: "训练结果开始偏离普通标准",
+      },
+      {
+        id: "scene:confirm",
+        order: 2,
+        phase: "during",
+        title: "专业确认",
+        participantEntityIds: ["xiuxin", "medic"],
+        locationObjectId: null,
+        localProblem: "专业常识与直接观察冲突",
+        pressure: "必须重新判断秀信",
+        observableStart: "异常结果出现",
+        interaction: "医疗忍者复核",
+        informationMove: "医疗忍者开始确认异常",
+        expectationMove: "第一层期待进入兑现边缘",
+        projectedRealityUse: "严格使用S05仲裁结果",
+        endState: "异常被专业确认",
+        nextSceneCause: null,
+      },
+    ],
+    digest: "scene-expansion:reader-time",
+  };
+}
+
 
 describe("ExpectationNarrativeService", () => {
   it("designs an expectation transaction before Layer 1 without scripting character decisions", async () => {
@@ -275,77 +327,61 @@ describe("ExpectationNarrativeService", () => {
     expect(result.value.authority).toBe("speculative");
   });
 
-  it("accepts a finalized WorldArbitrationReceipt directly from layer 1", async () => {
+  it("allocates S07 only after S06 scenes and applies lecturer continuity rules", async () => {
     const state = expectationState();
-    const receipt: WorldArbitrationReceipt = {
-      version: "world-arbitration-receipt.v1",
-      authority: "speculative",
-      projectId: "p1",
-      generationId: "g1",
-      round: 1,
-      storyUnitDesignDigest: "story-unit:expectation",
-      storyUnitEventId: "event:recognition",
-      realityFingerprint: "r1",
-      worldContextDigest: "world-context:r1",
-      proposalDigests: ["proposal:xiuxin"],
-      resolutions: [
-        {
-          agentId: "character:xiuxin",
-          characterId: "xiuxin",
-          characterName: "秀信",
-          proposalDigest: "proposal:xiuxin",
-          decision: "测试基础忍术",
-          intendedAction: "测试基础忍术控制",
-          actionOrder: 1,
-          outcome: "success",
-          immediateResult: "医疗忍者注意到异常控制",
-          stateAfter: "秀信仍在病房，异常第一次被见证",
-          butterflyEffects: [
-            {
-              effect: "医疗记录可能上报",
-              transmissionPath: "换班记录",
-              arrivalHorizon: 1,
-              protagonistImpact: "更高层人物可能注意到秀信",
-            },
-          ],
-          conflictIds: [],
-        },
-      ],
-      conflicts: [],
-      hardContractStatus: "feasible",
-      hardContractConflicts: [],
-      protagonistProjection: null,
-      finalized: true,
-      generatedAt: null,
-      digest: "arbiter:direct",
-    };
-
+    const expansion = sceneExpansion();
     const model: NarrativeModelClient = {
       text: vi.fn(),
       structured: vi.fn(
-        async (_run, _step, _purpose, request, _contract, validate) => {
+        async (_run, _step, purpose, request, _contract, validate) => {
+          expect(purpose).toBe("story-scene-reader-time-plan");
           const serialized = JSON.stringify(request);
-          expect(serialized).toContain(
-            "candidate:arbiter:direct:character:xiuxin",
-          );
-          expect(serialized).toContain("医疗忍者注意到异常控制");
+          expect(serialized).toContain("分层释放信息差");
+          expect(serialized).toContain("旧期待完全满足前");
+          expect(serialized).toContain("scene:ordinary");
           const checked = validate({
             decisions: [
               {
-                candidateId: "candidate:arbiter:direct:character:xiuxin",
+                sceneId: "scene:ordinary",
+                readerOrder: 1,
                 action: "charge",
                 readerTime: "scene",
                 expectationThreadIds: ["thread:recognition"],
-                reasons: ["真实行动继续给基础忍术的固有认知加价"],
+                reasons: ["先让旧常识继续在现实流程里生效"],
                 deepenScarcityEvidenceIds: [],
                 reinforceBeliefIds: ["belief:limit"],
                 widenGapBeliefIds: ["belief:limit"],
-                embodimentTargets: [
-                  "让 Reader 看见医疗体系为何先按普通情况处理",
-                ],
+                embodimentTargets: ["让Reader具体感到普通流程为何合理"],
                 payoffThreadIds: [],
                 reactionTargetEntityIds: [],
                 retainedGainOpportunity: null,
+                informationReleased: "Reader看到医疗忍者仍按普通流程判断",
+                informationWithheld: "专业确认尚未完成",
+                focusShiftThreadIds: [],
+                nextExpectationSeed: null,
+                terminalExpectationReason: null,
+                chapterBoundary: "continue",
+              },
+              {
+                sceneId: "scene:confirm",
+                readerOrder: 2,
+                action: "seed",
+                readerTime: "scene",
+                expectationThreadIds: ["thread:recognition"],
+                reasons: ["在第一层认知即将被打破时提前种下更高层识货期待"],
+                deepenScarcityEvidenceIds: [],
+                reinforceBeliefIds: [],
+                widenGapBeliefIds: [],
+                embodimentTargets: ["让Reader看到确认异常后的现实变化"],
+                payoffThreadIds: [],
+                reactionTargetEntityIds: [],
+                retainedGainOpportunity: null,
+                informationReleased: "医疗忍者开始确认异常",
+                informationWithheld: "更高层人物尚未知情",
+                focusShiftThreadIds: [],
+                nextExpectationSeed: "更高层人物何时看到这份异常记录",
+                terminalExpectationReason: null,
+                chapterBoundary: "chapter_end",
               },
             ],
           });
@@ -362,17 +398,59 @@ describe("ExpectationNarrativeService", () => {
 
     const result = await new ExpectationNarrativeService(
       model,
-    ).allocateArbitrationReaderTime(
+    ).allocateSceneReaderTime(
       run,
       step,
-      state,
-      receipt,
+      { state, sceneExpansion: expansion },
       new AbortController().signal,
     );
 
-    expect(result.value.selectedCandidateIds).toEqual([
-      "candidate:arbiter:direct:character:xiuxin",
+    expect(result.value.sceneIds).toEqual([
+      "scene:ordinary",
+      "scene:confirm",
     ]);
+    expect(result.value.decisions[1]?.nextExpectationSeed).toContain("更高层");
+  });
+
+  it("forbids the old S05 arbitration directly into S07 bypass", async () => {
+    const state = expectationState();
+    const receipt: WorldArbitrationReceipt = {
+      version: "world-arbitration-receipt.v1",
+      authority: "speculative",
+      projectId: "p1",
+      generationId: "g1",
+      round: 1,
+      storyUnitDesignDigest: "story-unit:expectation",
+      storyUnitEventId: "event:recognition",
+      realityFingerprint: "r1",
+      worldContextDigest: "world-context:r1",
+      proposalDigests: ["proposal:xiuxin"],
+      resolutions: [],
+      conflicts: [],
+      hardContractStatus: "feasible",
+      hardContractConflicts: [],
+      protagonistProjection: null,
+      finalized: true,
+      generatedAt: null,
+      digest: "arbiter:direct",
+    };
+    const model: NarrativeModelClient = {
+      text: vi.fn(),
+      structured: vi.fn(),
+    };
+
+    await expect(
+      new ExpectationNarrativeService(model).allocateArbitrationReaderTime(
+        run,
+        step,
+        state,
+        receipt,
+        new AbortController().signal,
+      ),
+    ).rejects.toThrow(
+      "story_runtime.reader_time.direct_arbitration_bypass_forbidden",
+    );
+    expect(model.structured).not.toHaveBeenCalled();
   });
 
   it("requires a decision for every Reality candidate", async () => {
