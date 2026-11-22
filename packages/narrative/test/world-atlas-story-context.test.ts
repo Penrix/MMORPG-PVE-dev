@@ -17,6 +17,7 @@ import {
   WorldAtlasStoryContextBuilder,
   worldAtlasSourcesForAccess,
 } from "@narralume/persistence";
+import { storyObjectFieldFromWorldContext } from "../src/story-authoring-runtime.js";
 
 const now = "2026-11-21T10:00:00.000Z";
 let db: NodeNarrativeDatabase;
@@ -281,6 +282,87 @@ describe("Module 3 World Atlas context adapter", () => {
       ),
     ).toEqual(["current", "reference"]);
     expect(worldAtlasSourcesForAccess(context, "character")).toEqual([]);
+  });
+
+  it("keeps a confirmed project identity surface when legacy Source data is not timeboxed", () => {
+    const sources = new SqliteSourceCorpusRepository(db);
+    const canon = new SqliteCanonRepository(db);
+    const projectWorld = new SqliteProjectWorldRepository(db);
+
+    sources.upsertCorpus({
+      id: "legacy:naruto",
+      title: "Legacy Naruto",
+      sourceUrl: "https://example.test/legacy-naruto",
+      rightsNotice: "test",
+      importer: "fixture",
+      metadata: {},
+      importedAt: now,
+    });
+    sources.upsertRecord({
+      corpusId: "legacy:naruto",
+      sourceKey: "hero-source",
+      kind: "character",
+      name: "秀信",
+      aliases: [],
+      summary: "只有旧版 summary/raw，没有 curated Atlas card",
+      raw: { status: "legacy-reference-only" },
+      sourceUrl: "https://example.test/legacy-naruto/hero",
+      originCollection: "fixture",
+      importedAt: now,
+    });
+    sources.bindProject("p1", "legacy:naruto");
+
+    canon.insertEntity(
+      createCanonEntity({
+        id: "hero",
+        projectId: "p1",
+        type: "character",
+        name: "秀信",
+        now,
+      }),
+    );
+    projectWorld.linkSourceEntity({
+      projectId: "p1",
+      entityId: "hero",
+      corpusId: "legacy:naruto",
+      sourceKey: "hero-source",
+      linkKind: "counterpart",
+      confidence: 1,
+      sourceNote: "legacy source compatibility",
+      createdAt: now,
+    });
+
+    const context = new WorldAtlasStoryContextBuilder(db).build({
+      projectId: "p1",
+      entityIds: ["hero"],
+    });
+    expect(
+      context.objects[0]?.surfaces.some(
+        (surface) =>
+          surface.authority === "confirmed" &&
+          surface.facet === "identity" &&
+          surface.slotKey === "entity",
+      ),
+    ).toBe(true);
+
+    const field = storyObjectFieldFromWorldContext({
+      projectId: "p1",
+      scale: "S03",
+      storyTimeLabel: "当前",
+      realityFingerprint: "reality:legacy",
+      storyStateFingerprint: "story:legacy",
+      context,
+    });
+    expect(field.objects).toHaveLength(1);
+    expect(field.objects[0]?.surfaces).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          authority: "confirmed",
+          facet: "identity",
+          slotKey: "entity",
+        }),
+      ]),
+    );
   });
 
   it("does not merge ambiguous source baselines into current Reality", () => {
