@@ -644,9 +644,9 @@ export type S01ConceptEngineLink = z.infer<typeof S01ConceptEngineLinkSchema>;
 
 export const S01StorySearchResultSchema = z.object({
   scale: z.literal("S01"),
-  storyConcepts: z.array(S01StoryConceptCandidateSchema).min(1),
-  storyEngines: z.array(S01StoryEngineCandidateSchema).min(1),
-  conceptEngineLinks: z.array(S01ConceptEngineLinkSchema).min(1),
+  storyConcepts: z.array(S01StoryConceptCandidateSchema),
+  storyEngines: z.array(S01StoryEngineCandidateSchema),
+  conceptEngineLinks: z.array(S01ConceptEngineLinkSchema),
 });
 export type S01StorySearchResult = z.infer<typeof S01StorySearchResultSchema>;
 
@@ -665,7 +665,7 @@ export type S02StageOpportunity = z.infer<typeof S02StageOpportunitySchema>;
 export const S02StorySearchResultSchema = z.object({
   scale: z.literal("S02"),
   currentS0: z.string().min(1),
-  stageOpportunities: z.array(S02StageOpportunitySchema).min(1),
+  stageOpportunities: z.array(S02StageOpportunitySchema),
 });
 export type S02StorySearchResult = z.infer<typeof S02StorySearchResultSchema>;
 
@@ -691,7 +691,7 @@ export type S03StoryMovement = z.infer<typeof S03StoryMovementSchema>;
 export const S03StorySearchResultSchema = z.object({
   scale: z.literal("S03"),
   periodFocus: z.string().min(1),
-  opportunityField: z.array(S03OpportunityFieldItemSchema).min(1),
+  opportunityField: z.array(S03OpportunityFieldItemSchema),
   storyMovements: z.array(S03StoryMovementSchema),
 });
 export type S03StorySearchResult = z.infer<typeof S03StorySearchResultSchema>;
@@ -708,12 +708,13 @@ export type StoryScaleSearchResult = z.infer<
 export const StoryAuthoringSearchSchema = z.object({
   version: z.literal("story-authoring-search.v1"),
   authority: z.literal("speculative"),
+  status: z.enum(["READY", "BLOCKED_WORLD_GAP"]),
   projectId: z.string().min(1),
   scale: z.enum(["S01", "S02", "S03"]),
   objectFieldDigest: z.string().min(1),
   question: z.string().min(1),
   objectFocus: z.array(StoryObjectFocusSchema),
-  seeds: z.array(StoryOpportunitySeedSchema).min(1),
+  seeds: z.array(StoryOpportunitySeedSchema),
   worldGaps: z.array(z.string().min(1)),
   scaleResult: StoryScaleSearchResultSchema,
   digest: z.string().min(1),
@@ -789,19 +790,20 @@ export type StoryUnitEventDesign = z.infer<typeof StoryUnitEventDesignSchema>;
 export const StoryUnitDesignSchema = z.object({
   version: z.literal("story-unit-design.v1"),
   authority: z.literal("speculative"),
+  status: z.enum(["READY", "BLOCKED_WORLD_GAP"]),
   projectId: z.string().min(1),
   objectFieldDigest: z.string().min(1),
   sourceSeedIds: z.array(z.string().min(1)),
   expectationDesignDigest: z.string().min(1),
-  objectAnchorIds: z.array(z.string().min(1)).min(1),
+  objectAnchorIds: z.array(z.string().min(1)),
   storyProblem: z.string().min(1),
   worldGaps: z.array(z.string().min(1)),
-  campNetwork: z.array(StoryUnitCampMemberSchema).min(1),
+  campNetwork: z.array(StoryUnitCampMemberSchema),
   reactionTargets: z.array(StoryUnitReactionTargetSchema),
   campTransitions: z.array(StoryUnitCampTransitionSchema),
   appearanceOrderEntityIds: z.array(z.string().min(1)),
   informationRelease: z.array(StoryUnitInformationReleaseSchema),
-  events: z.array(StoryUnitEventDesignSchema).min(1),
+  events: z.array(StoryUnitEventDesignSchema),
   mustPreserveAgentAutonomy: z.literal(true),
   digest: z.string().min(1),
 });
