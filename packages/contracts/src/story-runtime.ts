@@ -85,6 +85,9 @@ export const CharacterActionProposalSchema = z.object({
   characterId: z.string().min(1),
   characterName: z.string().min(1),
   observationDigest: z.string().min(1),
+  storyUnitDesignDigest: z.string().min(1),
+  storyUnitEventId: z.string().min(1),
+  realityFingerprint: z.string().min(1),
   location: z.string().min(1).nullable(),
   currentGoal: z.string().min(1),
   pressure: z.string().min(1),
@@ -110,6 +113,38 @@ export const CharacterActionProposalDraftSchema =
   CharacterActionProposalSchema.omit({ digest: true });
 export type CharacterActionProposalDraft = z.infer<
   typeof CharacterActionProposalDraftSchema
+>;
+
+export const WorldArbitrationContextSurfaceSchema = z.object({
+  entityId: z.string().min(1),
+  name: z.string().min(1),
+  kind: z.string().min(1),
+  facet: z.string().min(1),
+  slotKey: z.string().min(1),
+  value: z.unknown(),
+  sourceId: z.string().min(1),
+});
+export type WorldArbitrationContextSurface = z.infer<
+  typeof WorldArbitrationContextSurfaceSchema
+>;
+
+export const WorldArbitrationContextSchema = z.object({
+  version: z.literal("world-arbitration-context.v1"),
+  authority: z.literal("speculative"),
+  projectId: z.string().min(1),
+  storyUnitDesignDigest: z.string().min(1),
+  storyUnitEventId: z.string().min(1),
+  realityFingerprint: z.string().min(1),
+  surfaces: z.array(WorldArbitrationContextSurfaceSchema).min(1),
+  digest: z.string().min(1),
+});
+export type WorldArbitrationContext = z.infer<
+  typeof WorldArbitrationContextSchema
+>;
+export const WorldArbitrationContextDraftSchema =
+  WorldArbitrationContextSchema.omit({ digest: true });
+export type WorldArbitrationContextDraft = z.infer<
+  typeof WorldArbitrationContextDraftSchema
 >;
 
 export const WorldArbitrationConflictKindSchema = z.enum([
@@ -177,6 +212,10 @@ export const WorldArbitrationReceiptSchema = z.object({
   projectId: z.string().min(1),
   generationId: z.string().min(1),
   round: z.number().int().positive(),
+  storyUnitDesignDigest: z.string().min(1),
+  storyUnitEventId: z.string().min(1),
+  realityFingerprint: z.string().min(1),
+  worldContextDigest: z.string().min(1),
   proposalDigests: z.array(z.string().min(1)).min(1),
   resolutions: z.array(CharacterDecisionResolutionSchema).min(1),
   conflicts: z.array(WorldArbitrationConflictSchema),
