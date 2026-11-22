@@ -52,12 +52,14 @@ S01-S03 Object-grounded Story Search
 Story Seed / Opportunity
           ↓
 S04 Writers' Room
-主动把选中的对象设计成一出 Story
+主动把选中的对象设计成一出 Story Unit
           ↓
-S05 Reality Runtime
-Character Agent + World Arbiter 把事件演真
+S05 Story Node
+一个具体问题节点
+  └─ Character Agent + World Arbiter
+     只在节点内部做 Reality Rehearsal
           ↓
-S06 Scene
+S06 Multi-Scene Expansion
           ↓
 S07 Reader Time
           ↓
@@ -317,42 +319,46 @@ Active Seed
 
 ---
 
-## 6. S05 才是 Reality Runtime
+## 6. S05 是 Story Node；Reality Runtime 是节点内部子程序
 
-S05 复用现有 NarraLume Story Runtime：
+此前本文件把“Character Agent + World Arbiter”直接等同于 S05，本次已被讲师原稿复核推翻。
+
+正确：
 
 ```text
-Story Unit Event
-↓
+S05 Story Node
+= 一个具体问题
++ 人物线交叉
++ story pressure
++ before / during / after targets
++ information-release links
++ Reader expectation
+        ↓
+Reality Rehearsal
 CharacterObservation
-↓
-Independent CharacterActionProposal
-↓
-WorldArbitration
-↓
-SpeculativeRealityDelta
+→ CharacterActionProposal
+→ WorldArbitration
+→ speculative Reality
+        ↓
+feasible → S06
+broken   → 回 S05/S04 改尚未发生的未来
 ```
 
-S04 与 S05 的边界：
-
-| S04 Writers' Room            | S05 Reality Runtime                  |
-| ---------------------------- | ------------------------------------ |
-| 设计为什么值得发生           | 决定实际能否发生                     |
-| 选择人物和场面条件           | 人物按自己的 Goal / Observation 行动 |
-| 设计反应目标                 | 不保证实际反应                       |
-| 设计 Cast Pool / Active Seed | 只运行真实被激活的人                 |
-| 设计信息释放                 | 角色只能知道自己应知道的             |
-| 软未来路线                   | Reality 可以撞坏它                   |
-
-当 Reality 撞坏软路线：
+讲师原稿给出的“主线化而为无数节点，每个节点都有一个问题，这个问题影响多个场景”直接定义了 S05 → S06：
 
 ```text
-人物真实行动
-→ 原设计失效
-→ 回 Writers' Room 重写尚未发生的未来
-→ 不改演员
-→ 不改已经发生的 Reality
+S05 一个问题节点
+↓
+S06 多个具体场景
+↓
+每场继续施加压力、移动信息、改变期待
 ```
+
+Character Agent 保留人物自主性，World Arbiter保留Reality裁决权，但二者都不是细纲生成算法。
+
+详细见：
+
+`docs/mmorpg/21-s05-story-node-s06-scene-expansion.md`
 
 ---
 
