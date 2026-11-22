@@ -52,6 +52,12 @@ function observation(
     currentGoal: evidence[0]!.text,
     goalEvidenceRefs: [`${characterId}:fact`],
     pressure: "the gate is closing",
+    authoredStoryFunction: "perform the authored gate-pressure line",
+    authoredStakeIds: characterId === "rival" ? ["stake:rival"] : [],
+    authoredDirection:
+      characterId === "rival"
+        ? "misjudge Hero, commit to blocking the side gate, and escalate in character"
+        : "complete the authored escape line in a characterization-consistent way",
     location: "harbor",
     locationEvidenceRefs: [`${characterId}:fact`],
     resources: [`${characterId}:fact`],
@@ -135,7 +141,10 @@ describe("StoryRuntimeAgentService", () => {
       structured: vi.fn(
         async (_run, _step, purpose, request, _contract, validate) => {
           expect(purpose).toBe("story-character-action-plan");
-          expect(JSON.stringify(request)).toContain("Hero");
+          const serialized = JSON.stringify(request);
+          expect(serialized).toContain("Hero");
+          expect(serialized).toContain("authoredStoryFunction");
+          expect(serialized).toContain("不是来决定");
           const checked = validate({
             resources: [`${current.characterId}:fact`],
             availableOptions: ["wait", "use the key"],
