@@ -236,8 +236,8 @@ describe("ExpectationNarrativeService", () => {
     );
 
     expect(result.value.activationEntityIds).toEqual(["medic", "sakumo"]);
-    expect(result.value.mustPreserveAgentAutonomy).toBe(true);
-    expect(result.value.mustNotPredetermineOutcome).toBe(true);
+    expect(result.value.directorMayDesignReactionPayoff).toBe(true);
+    expect(result.value.mustGroundPerformanceInCharacterization).toBe(true);
     expect(result.value.targetOutcome).toContain("重新估值");
   });
 
