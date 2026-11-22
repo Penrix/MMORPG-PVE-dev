@@ -159,6 +159,15 @@ export function finalizeStoryObjectField(
           `story_authoring.surface_without_source:${object.id}:${surface.sourceId}`,
         );
       }
+      if (
+        parsed.scale !== "S01" &&
+        surface.authority === "reference" &&
+        !(surface.facet === "state" && surface.slotKey === "source_identity")
+      ) {
+        throw new Error(
+          `story_authoring.untimeboxed_reference_surface:${object.id}:${surface.facet}:${surface.slotKey}`,
+        );
+      }
     }
   }
   return StoryObjectFieldSchema.parse({
