@@ -52,7 +52,6 @@ Module 3：这些已经存在的人接下来演什么故事？
 
 | 模块 | 文档 | 当前权威 |
 | --- | --- | --- |
-| 全局 | [README](README.md) | 当前导航，但最终权威仍按本表分层 |
 | Module 2 | [13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md) | Source World 怎样保存：Card + typed links + derived index |
 | Module 2 | [14 World Atlas Content Framework](14-world-atlas-content-framework-v01.md) | 世界应该有什么；v0.1～v0.7 是 Content Schema，不是 SQL Schema |
 | Module 2 | [15 People-Centered Narrative Axis](15-people-centered-narrative-axis.md) | 人是默认叙事展开中心，其他世界对象通过人与人 / 人与世界关系进入故事 |
@@ -104,6 +103,7 @@ Upgrade Ladder
 | [06 WorldForge Full Engine Port](06-worldforge-full-engine-port.md) | WorldForge 移植记录 |
 | [07 Executable World Workshops](07-executable-world-workshops.md) | 世界制作状态机/工作坊实现记录 |
 | [09 Naruto Source Corpus Import](09-naruto-source-corpus-import.md) | 火影 Source Corpus 导入实现记录 |
+| [research/README](research/README.md) | v0.1～v0.7 原始研究母本索引；Source Material，不是工程 Authority |
 
 这些实现如果与 13～17、23 的业务定义冲突，应**适配当前业务定义**，不能拿旧实现反证新认知。
 
