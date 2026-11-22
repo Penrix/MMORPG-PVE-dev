@@ -146,6 +146,33 @@ function expectation(): ExpectationDesign {
   });
 }
 
+function upgradeLedger() {
+  return {
+    protagonistEntityId: "xiuxin",
+    road: "从重伤低位忍者进入木叶高价任务与高手圈",
+    currentStepId: "step:hospital-recognition",
+    currentPosition: "木叶医院中的普通重伤忍者",
+    stageGoal: "让异常能力获得第一层专业定价并重新取得任务价值",
+    settlementTarget: "获得更高任务圈可继续调用的真实入口",
+    steps: [
+      {
+        id: "step:hospital-recognition",
+        title: "医院重新估值",
+        targetGain: "专业评级与任务价值",
+        gate: "先让医疗体系承认异常不是普通恢复",
+        targetCircle: "医疗忍者与任务审核圈",
+      },
+      {
+        id: "step:elite-mission",
+        title: "进入高价任务圈",
+        targetGain: "更高风险任务与上忍级人物关系",
+        gate: "用已获得的专业估值换取真实任务机会",
+        targetCircle: "上忍与木叶任务体系",
+      },
+    ],
+  };
+}
+
 describe("object-grounded story authoring runtime", () => {
   it("builds an imagination Object Field from Module-2 context objects", () => {
     const built = storyObjectFieldFromWorldContext({
@@ -505,6 +532,7 @@ describe("object-grounded story authoring runtime", () => {
         ],
         storyProblem: "让基础忍术的异常价值第一次进入可信识货链",
         worldGaps: [],
+        upgradeLedger: upgradeLedger(),
         campNetwork: [
           {
             entityId: "xiuxin",
@@ -512,6 +540,7 @@ describe("object-grounded story authoring runtime", () => {
             currentGoal: "恢复并重新获得任务价值",
             storyRole: "主角实际行动来源",
             currentBelief: "自己的控制能力能够继续开发",
+            currentInterest: "恢复战斗力并重新获得任务与身份价值",
           },
           {
             entityId: "medic",
@@ -519,6 +548,7 @@ describe("object-grounded story authoring runtime", () => {
             currentGoal: "按医疗规则处理伤员",
             storyRole: "专业固有认知与第一见证人",
             currentBelief: "普通伤员不会靠基础术出现上忍级价值",
+            currentInterest: "按专业规则准确判断伤员并维护自己的专业判断",
           },
           {
             entityId: "sakumo",
@@ -526,6 +556,35 @@ describe("object-grounded story authoring runtime", () => {
             currentGoal: "完成自己的军事事务",
             storyRole: "未来更高价格的识货对象",
             currentBelief: "尚未见到秀信当前异常",
+            currentInterest: "只关注真正值得进入高价军事圈的人和能力",
+          },
+        ],
+        stakeLedger: [
+          {
+            id: "stake:medic-rating",
+            entityId: "medic",
+            currentBelief: "普通伤员不会靠基础术出现上忍级价值",
+            currentInterest: "维护专业判断和医疗资源分配的准确性",
+            stakeAction: "继续按普通伤员标准安排秀信的复核与资源",
+            stakeAssets: ["专业判断", "医疗资源配置"],
+            commitmentCost: "一旦公开重新评级，就等于承认此前估值不足",
+            escalationPlan: "若异常持续出现，就进行更严格的专业复核并留下记录",
+            payoffReaction: "亲自改判秀信的专业价值并改变后续处理",
+            settlementChange: "秀信从普通伤员进入更高专业估值链",
+            state: "committed",
+          },
+          {
+            id: "stake:sakumo-future",
+            entityId: "sakumo",
+            currentBelief: "尚未见到秀信当前异常",
+            currentInterest: "只把注意力给真正具有战场价值的忍者",
+            stakeAction: "暂不介入，把注意力留给已经被专业体系证明的异常",
+            stakeAssets: ["注意力", "未来高价任务入口"],
+            commitmentCost: "过早关注普通伤员会浪费高价军事人物的判断资源",
+            escalationPlan: "等医疗体系产生可信异常记录后再亲自判断",
+            payoffReaction: "在更高价格层重新定价秀信",
+            settlementChange: "为下一阶段进入高价任务圈留下人物入口",
+            state: "seeded",
           },
         ],
         reactionTargets: [
@@ -566,6 +625,7 @@ describe("object-grounded story authoring runtime", () => {
                 pressure: "眼前恢复结果开始超出普通伤员流程",
               },
             ],
+            stakeEntryIds: ["stake:medic-rating"],
             reactionTargetEntityIds: ["medic"],
             informationReleaseSteps: [1],
             phaseTargets: [
@@ -595,7 +655,8 @@ describe("object-grounded story authoring runtime", () => {
             readerExpectation: "等待专业人物如何真实处理异常",
           },
         ],
-        mustPreserveAgentAutonomy: true,
+        directorAuthority: "author-defined-story-line",
+        characterExecutionRule: "characterization-constrained-performance",
       },
       objectField,
       exp,
@@ -693,7 +754,9 @@ describe("object-grounded story authoring runtime", () => {
               status: "OPEN",
             },
           ],
+          upgradeLedger: upgradeLedger(),
           campNetwork: [],
+          stakeLedger: [],
           reactionTargets: [],
           campTransitions: [],
           appearanceOrderEntityIds: [],
@@ -734,7 +797,9 @@ describe("object-grounded story authoring runtime", () => {
               status: "OPEN",
             },
           ],
+          upgradeLedger: upgradeLedger(),
           campNetwork: [],
+          stakeLedger: [],
           reactionTargets: [],
           campTransitions: [],
           appearanceOrderEntityIds: [],
