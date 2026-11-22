@@ -208,6 +208,9 @@ export function finalizeStoryAuthoringSearch(
     if (parsed.worldGaps.length === 0) {
       throw new Error("story_authoring.blocked_without_world_gap");
     }
+    if (parsed.seeds.length > 0) {
+      throw new Error("story_authoring.blocked_search_has_seeds");
+    }
   } else {
     if (parsed.seeds.length === 0) {
       throw new Error("story_authoring.ready_without_seed");
