@@ -588,7 +588,8 @@ describe("object-grounded story authoring runtime", () => {
                 expectationMovement: "留下更高层识货链的下一笔期待",
               },
             ],
-            realityQuestion: "按当前医疗规则与人物认知，医疗忍者实际会怎样处理这个异常",
+            realityQuestion:
+              "按当前医疗规则与人物认知，医疗忍者实际会怎样处理这个异常",
             observableStart: "秀信开始恢复训练",
             expectedChange: "至少产生可被Reality裁决的新事实",
             readerExpectation: "等待专业人物如何真实处理异常",

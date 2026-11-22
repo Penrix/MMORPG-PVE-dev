@@ -271,9 +271,7 @@ function storyUnitOutputIssues(
     const phaseNames = new Set<string>();
     for (const target of event.phaseTargets) {
       if (phaseNames.has(target.phase)) {
-        issues.push(
-          `event ${event.id}: duplicate phaseTarget ${target.phase}`,
-        );
+        issues.push(`event ${event.id}: duplicate phaseTarget ${target.phase}`);
       }
       phaseNames.add(target.phase);
       for (const entityId of target.entityIds) {

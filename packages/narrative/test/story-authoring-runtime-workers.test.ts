@@ -362,7 +362,8 @@ describe("StoryAuthoringService", () => {
                     expectationMovement: "留下更高层识货链的下一笔期待",
                   },
                 ],
-                realityQuestion: "按当前医疗规则与人物认知，医疗忍者实际会怎样处理这个异常",
+                realityQuestion:
+                  "按当前医疗规则与人物认知，医疗忍者实际会怎样处理这个异常",
                 observableStart: "秀信开始训练",
                 expectedChange: "产生可被 Reality 裁决的新事实",
                 readerExpectation: "等医疗忍者真实处理异常",

@@ -98,9 +98,7 @@ function outputIssues(
           scene.participantEntityIds.includes(entityId),
         )
       ) {
-        issues.push(
-          `phase ${target.phase}: entity ${entityId} never appears`,
-        );
+        issues.push(`phase ${target.phase}: entity ${entityId} never appears`);
       }
     }
   }

@@ -555,7 +555,6 @@ export function realityFocusFromStoryUnitDesign(
   };
 }
 
-
 /**
  * Finalize S06 scene expansion for one S05 Story Node.
  *
@@ -612,10 +611,7 @@ export function finalizeStorySceneExpansion(
     if (index > 0 && scene.order <= parsed.scenes[index - 1]!.order) {
       throw new Error("story_scene.order_not_ascending");
     }
-    requireUnique(
-      `scene_participant_${scene.id}`,
-      scene.participantEntityIds,
-    );
+    requireUnique(`scene_participant_${scene.id}`, scene.participantEntityIds);
     requireRefs(
       `scene_participant_${scene.id}`,
       scene.participantEntityIds,

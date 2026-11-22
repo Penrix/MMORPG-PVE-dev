@@ -168,8 +168,7 @@ describe("S06 story scene expansion", () => {
         storyUnitDesignDigest: "story-unit:digest",
         storyUnitEventId: "event:recovery-test",
         arbitrationDigest: "arbitration:digest",
-        eventProblem:
-          "秀信的异常恢复表现是否会改变医疗忍者对他的专业估值",
+        eventProblem: "秀信的异常恢复表现是否会改变医疗忍者对他的专业估值",
         scenes: [
           {
             id: "scene:before",
@@ -218,7 +217,8 @@ describe("S06 story scene expansion", () => {
             interaction: "医疗忍者根据专业职责重新安排后续处理",
             informationMove: "Reader看到第一层重新估值，但更高层仍未知情",
             expectationMove: "本节点局部兑现，同时留下向上识货链的新期待",
-            projectedRealityUse: "不改写仲裁，只展开医疗忍者已确认异常后的现实后果",
+            projectedRealityUse:
+              "不改写仲裁，只展开医疗忍者已确认异常后的现实后果",
             endState: "秀信获得新的专业处理位置",
             nextSceneCause: null,
           },
@@ -248,8 +248,7 @@ describe("S06 story scene expansion", () => {
           storyUnitDesignDigest: unit.digest,
           storyUnitEventId: "event:recovery-test",
           arbitrationDigest: "arbitration:digest",
-          eventProblem:
-            "秀信的异常恢复表现是否会改变医疗忍者对他的专业估值",
+          eventProblem: "秀信的异常恢复表现是否会改变医疗忍者对他的专业估值",
           scenes: [
             {
               id: "scene:during",
@@ -286,8 +285,7 @@ describe("S06 story scene expansion", () => {
           storyUnitDesignDigest: "story-unit:digest",
           storyUnitEventId: "event:recovery-test",
           arbitrationDigest: "arbitration:broken",
-          eventProblem:
-            "秀信的异常恢复表现是否会改变医疗忍者对他的专业估值",
+          eventProblem: "秀信的异常恢复表现是否会改变医疗忍者对他的专业估值",
           scenes: [
             {
               id: "scene:invalid",

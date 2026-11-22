@@ -234,10 +234,12 @@ function storyUnitDesignFixture(): StoryUnitDesign {
             phase: "during",
             entityIds: ["hero"],
             authorIntent: "force the decision under visible time pressure",
-            expectationMovement: "move the escape question toward a real choice",
+            expectationMovement:
+              "move the escape question toward a real choice",
           },
         ],
-        realityQuestion: "what does Hero actually choose with the visible gate and available key",
+        realityQuestion:
+          "what does Hero actually choose with the visible gate and available key",
         observableStart: "the gate begins to close",
         expectedChange: "Hero chooses a real action",
         readerExpectation: "whether Hero can leave in time",
