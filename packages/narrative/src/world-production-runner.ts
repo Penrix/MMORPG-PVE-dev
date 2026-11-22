@@ -1,5 +1,8 @@
 import {
+  WORLD_BUILDER_ATLAS_CONTRACT,
   WorldPackDocumentSchema,
+  worldBuilderAtlasTarget,
+  worldPackAtlasKind,
   type WorldPackDocument,
   type WorldPackRequest,
 } from "@narralume/contracts";
@@ -44,14 +47,10 @@ function addUsage(a: RunBudgetUsage, b: RunBudgetUsage): RunBudgetUsage {
   };
 }
 
-/** Not a list of cards: these are separate workshops that actually build an
- * interlocking live-world graph. The specific subject and expansion targets
- * are chosen after every workshop from the produced world, never by the model.
- * v0.2 §§3,8 and v0.5 content-production mechanics are the design source.
+/** Bootstrap hints only. They are not a mandatory pipeline.
+ * After the first real object exists, the graph/audit chooses the next work.
  */
-function requiredWorkshops(request: WorldPackRequest): WorldWorkshop[] {
-  // One world design method for every source: the program always builds an
-  // actual world. History/IP provenance never selects a simplified path.
+function bootstrapWorkshops(request: WorldPackRequest): WorldWorkshop[] {
   return [...initialWorldWorkshopOrder(request)];
 }
 
@@ -65,8 +64,10 @@ function subjectFor(
   const org = doc.nodes.find((n) => n.type === "organization");
   const npc = doc.nodes.find((n) => n.type === "character");
   const zone = doc.nodes.find((n) => n.type === "location");
-  const resource = doc.nodes.find(
-    (n) => n.type === "item" || n.type === "rule" || n.type === "concept",
+  const resource = doc.nodes.find((n) =>
+    ["resource", "item", "work", "ability", "rule", "technology"].includes(
+      worldPackAtlasKind(n),
+    ),
   );
   if (workshop === "factions" || workshop === "social")
     return zone?.localId ?? null;
@@ -157,6 +158,7 @@ function workOrder(
     },
   };
   const spec = workshops[workshop];
+  const atlasTarget = worldBuilderAtlasTarget(workshop);
   return {
     workshop,
     subjectRef: ref,
@@ -164,6 +166,10 @@ function workOrder(
     reason: spec.reason,
     deliverables:
       workshop === "power" ? powerDesignProducts(request) : spec.products,
+    targetFamilies: atlasTarget.families,
+    suggestedCardKinds: atlasTarget.cardKinds,
+    peopleQuestions: atlasTarget.peopleQuestions,
+    completionRule: atlasTarget.completionRule,
   };
 }
 
@@ -192,8 +198,10 @@ function hasWorkshopOutput(
   );
   const resources = new Set(
     current.nodes
-      .filter(
-        (n) => n.type === "item" || n.type === "concept" || n.type === "rule",
+      .filter((n) =>
+        ["resource", "item", "work", "ability", "rule", "technology"].includes(
+          worldPackAtlasKind(n),
+        ),
       )
       .map((n) => n.localId),
   );
@@ -257,7 +265,7 @@ function hasWorkshopOutput(
   if (workshop === "power")
     return current.nodes.some(
       (n) =>
-        n.type === "rule" &&
+        ["ability", "rule", "technology"].includes(worldPackAtlasKind(n)) &&
         (added.some((x) => x.localId === n.localId) ||
           edges.some((e) => e.fromRef === n.localId || e.toRef === n.localId)),
     );
@@ -305,10 +313,9 @@ export interface WorldWorkshopRun {
 }
 
 /**
- * Each mandatory workshop must produce a new world object/link/action.
- * Failure is explicit. The engine never marks a world playable because the
- * model claimed it "has completed all modules" in narrative text.
- * Repeatedly re-check the graph and send the NEXT actual work order.
+ * Each selected workshop must produce a real object/link/action contribution.
+ * Selection is deficiency-driven, can repeat the same workshop, and stops
+ * when blocking graph gaps are gone. The model never marks modules complete.
  */
 export async function runWorldWorkshops(args: {
   run: NarrativeRun;
@@ -331,36 +338,27 @@ export async function runWorldWorkshops(args: {
   ];
   const existingWorld = args.existingWorld ?? emptyWorldDocument();
   const view = () => previewProductionReality(existingWorld, state);
-  const workshops = requiredWorkshops(args.request);
-  // A W1 request can open an already-known rule or unusual resource directly.
-  // Do not suppress that branch merely because the shared W0 already
-  // produced its foundational power system.
-  const requestedSubject = resolveWorldDesignEntry(args.request, view());
-  if (requestedSubject && !workshops.includes(requestedSubject.workshop))
-    workshops.unshift(requestedSubject.workshop);
-  // Additional focused iterations are chosen from actual shortcomings of
-  // the world graph, not a model-authored generic TODO or number of cards.
-  const maxExtra = 6;
-  const completedWorkshops = new Set<WorldWorkshop>(
-    steps.map((s) => s.workshop),
-  );
-  for (let index = steps.length; index < workshops.length + maxExtra; index++) {
-    const gap = playtestWorld(view(), args.request).next;
-    const unfinished = workshops.find((w) => !completedWorkshops.has(w));
-    const requestedEntry =
-      index === 0 ? resolveWorldDesignEntry(args.request, view()) : null;
-    // An actual newly exposed deficit may move ahead of the old work queue.
-    // Every core workshop still runs; no model may declare one unnecessary.
+  const bootstrap = bootstrapWorkshops(args.request);
+  // The queue is deliberately open: a workshop may repeat if the same real
+  // deficiency remains, and unrelated workshops are not executed merely to
+  // tick a checklist. The bootstrap list is only a fallback for an otherwise
+  // undiagnosable empty start.
+  const maxSteps = 16;
+  for (let index = steps.length; index < maxSteps; index++) {
+    const check = playtestWorld(view(), args.request);
+    const firstStep = steps.length === 0 && index === 0;
+    const requestedEntry = firstStep
+      ? resolveWorldDesignEntry(args.request, view())
+      : null;
     const op =
-      requestedEntry && workshops.includes(requestedEntry.workshop)
-        ? workOrder(requestedEntry.workshop, view(), args.request)
-        : gap &&
-            workshops.includes(gap.workshop) &&
-            !completedWorkshops.has(gap.workshop)
-          ? gap
-          : unfinished
-            ? workOrder(unfinished, view(), args.request)
-            : gap;
+      firstStep && args.request.intent === "advance"
+        ? workOrder("living", view(), args.request)
+        : requestedEntry
+          ? workOrder(requestedEntry.workshop, view(), args.request)
+          : (check.next ??
+            (steps.length === 0 && bootstrap[0]
+              ? workOrder(bootstrap[0], view(), args.request)
+              : null));
     if (!op) break;
     const instruction = {
       ...worldWorkOrderInput(op, view()),
@@ -371,13 +369,15 @@ export async function runWorldWorkshops(args: {
             notes: args.extraContext ?? "",
           }
         : {}),
+      worldBuilderAtlasContract: WORLD_BUILDER_ATLAS_CONTRACT,
+      atlasAudit: playtestWorld(view(), args.request).atlasAudit,
       alreadyProduced: steps.map((s) => ({
         workshop: s.workshop,
         subjectRef: s.subjectRef,
         changedRefs: s.changedRefs,
       })),
       resultContract:
-        "Return a structured increment with nodes, links, activities, interactions, openThreads and dimensionSignals. Reuse the same local IDs for edits. Existing Canon IDs must not be fabricated. Partial refs may point to prior increments. One new playable object, relation or actual action is required for this workshop.",
+        "Return one candidate World Atlas production increment in the current WorldPack staging envelope: concrete objects, typed relations, current activities and useful access/value connections. Reuse the same local IDs for edits. Existing Canon IDs must not be fabricated. Partial refs may point to prior increments. A newly named object alone is not a product; connect it into the world graph.",
     };
     const result = await args.model.structured<WorldPackDocument>(
       args.run,
@@ -385,7 +385,7 @@ export async function runWorldWorkshops(args: {
       "world-pack",
       {
         instructions:
-          "执行一个明确的MMORPG世界内容生产工序。不是写剧情大纲，不是填十个标题。程序将按实际图关系另行选择后续工序。",
+          "执行一个明确的 World Atlas 世界内容生产工序。不是写剧情大纲，不是生成一篇完整世界观，也不是填十个标题。生产具体对象并用 typed relations 接入现实关系网；People-centered 是生产优先级而不是数据库层级。程序将依据实际缺口另行选择后续工序。",
         messages: [{ role: "user", content: JSON.stringify(instruction) }],
         reasoningEffort: "medium",
       },
@@ -442,14 +442,14 @@ export async function runWorldWorkshops(args: {
     );
     state = merged.document;
     steps.push(merged.step);
-    completedWorkshops.add(op.workshop);
     usage = addUsage(usage, result.usage);
     await args.onCheckpoint?.({ document: state, usage, steps: [...steps] });
   }
   const remaining = playtestWorld(view(), args.request).next;
   if (remaining) {
-    // Never silently stage an incomplete package as if a game world exists.
-    // The Run remains recoverably failed for the author to inspect/retry.
+    // Never silently stage a package while a blocking structural deficiency
+    // still exists. Non-blocking Atlas audit gaps remain recommendations for
+    // the next expansion batch, not mandatory checklist failures.
     throw new Error(
       "world.production.unfinished: " +
         remaining.workshop +
@@ -472,6 +472,7 @@ export async function runWorldWorkshops(args: {
         changedRefs: step.changedRefs,
       })),
       playtestedPaths: playtest.interactionPaths,
+      atlasAudit: playtest.atlasAudit,
     },
   };
   return { document, usage, steps, remaining: null };
