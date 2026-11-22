@@ -283,19 +283,28 @@ S04 主动设计：
 - 信息释放顺序；
 - S05 Events。
 
-### 三阵营是作者工具，不是运行时事故
+### 三阵营是作者工具，并且要落到配角下注
 
-作者可以主动选择：
+2026-11-22 最新纠正：此前“不能写死震惊/投靠，Character Agent 决定人物实际怎么做”的表述把人物自主权抬得过高，已经被 [23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md) supersede。
 
-> 这个人承担压力，这个人承担社会定价，这个人承担未来重新估值，这个人是长期阵营转化线。
+作者可以主动设计：
 
-但不能写死：
+> 这个人承担压力，这个人承担社会定价，这个人继续误判并加注，这个人在Payoff后震惊/后悔/投靠/改判，这个人形成长期阵营转化线。
 
-> 他必须震惊、必须投靠、必须跪地三秒。
+关键不是回避设计反应，而是让反应有价格：
 
-作者设计**条件、价格、人物网和反应目标**。
+```text
+固有认知
+→ 人物利益
+→ stakeAction
+→ stakeAssets / commitmentCost
+→ escalation
+→ 主角兑现
+→ payoffReaction
+→ settlementChange
+```
 
-Character Agent 决定人物实际怎么做。
+Character Model 的职责不是决定“这条人物线要不要发生”，而是在作者已经定下的戏剧方向里寻找最符合人设和可见 Reality 的具体演法。
 
 ### Cast Pool ≠ Active Seed
 
@@ -354,7 +363,7 @@ S06 多个具体场景
 每场继续施加压力、移动信息、改变期待
 ```
 
-Character Agent 保留人物自主性，World Arbiter保留Reality裁决权，但二者都不是细纲生成算法。
+Character execution 保留人设与主观认知约束，World Arbiter保留硬 Reality 可行性裁决；二者都没有上位编剧权，也不是细纲生成算法。
 
 详细见：
 
