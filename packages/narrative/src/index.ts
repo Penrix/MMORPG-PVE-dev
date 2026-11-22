@@ -35,3 +35,6 @@ export * from "./story-runtime-workers.js";
 
 export * from "./expectation-runtime.js";
 export * from "./expectation-runtime-workers.js";
+
+export * from "./story-authoring-runtime.js";
+export * from "./story-authoring-runtime-workers.js";
