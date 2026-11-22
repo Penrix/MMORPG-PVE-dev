@@ -217,6 +217,8 @@ function storyUnitDesignFixture(): StoryUnitDesign {
         id: "event:gate",
         title: "Closing side gate",
         purpose: "force a concrete choice",
+        problem: "Hero must choose how to leave before the side gate closes",
+        storyPressure: "the closing gate turns delay into a concrete cost",
         castPoolEntityIds: ["hero"],
         activeSeedEntityIds: ["hero"],
         actorPressures: [
@@ -225,6 +227,17 @@ function storyUnitDesignFixture(): StoryUnitDesign {
             pressure: "the gate is closing",
           },
         ],
+        reactionTargetEntityIds: [],
+        informationReleaseSteps: [],
+        phaseTargets: [
+          {
+            phase: "during",
+            entityIds: ["hero"],
+            authorIntent: "force the decision under visible time pressure",
+            expectationMovement: "move the escape question toward a real choice",
+          },
+        ],
+        realityQuestion: "what does Hero actually choose with the visible gate and available key",
         observableStart: "the gate begins to close",
         expectedChange: "Hero chooses a real action",
         readerExpectation: "whether Hero can leave in time",
