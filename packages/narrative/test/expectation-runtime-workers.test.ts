@@ -154,7 +154,6 @@ function sceneExpansion(): StorySceneExpansion {
   };
 }
 
-
 describe("ExpectationNarrativeService", () => {
   it("designs an expectation transaction before Layer 1 without scripting character decisions", async () => {
     const model: NarrativeModelClient = {
@@ -405,10 +404,7 @@ describe("ExpectationNarrativeService", () => {
       new AbortController().signal,
     );
 
-    expect(result.value.sceneIds).toEqual([
-      "scene:ordinary",
-      "scene:confirm",
-    ]);
+    expect(result.value.sceneIds).toEqual(["scene:ordinary", "scene:confirm"]);
     expect(result.value.decisions[1]?.nextExpectationSeed).toContain("更高层");
   });
 

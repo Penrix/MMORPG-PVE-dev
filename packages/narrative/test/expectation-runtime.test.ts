@@ -195,7 +195,6 @@ function sceneExpansion(): StorySceneExpansion {
 }
 
 describe("Expectation / Narrative Runtime", () => {
-
   it("allocates S07 over S06 scenes and bridges payoff into the next expectation", () => {
     const current = state("ripe");
     const expansion = sceneExpansion();
@@ -301,15 +300,13 @@ describe("Expectation / Narrative Runtime", () => {
             readerOrder: index + 1,
             action: index === 2 ? "payoff" : "background",
             readerTime: index === 2 ? "scene" : "mention",
-            expectationThreadIds:
-              index === 2 ? ["thread:basic-ninjutsu"] : [],
+            expectationThreadIds: index === 2 ? ["thread:basic-ninjutsu"] : [],
             reasons: ["测试期待连续性"],
             deepenScarcityEvidenceIds: [],
             reinforceBeliefIds: [],
             widenGapBeliefIds: [],
             embodimentTargets: [],
-            payoffThreadIds:
-              index === 2 ? ["thread:basic-ninjutsu"] : [],
+            payoffThreadIds: index === 2 ? ["thread:basic-ninjutsu"] : [],
             reactionTargetEntityIds: index === 2 ? ["medic"] : [],
             retainedGainOpportunity: null,
             informationReleased: "当前场信息",
@@ -325,7 +322,6 @@ describe("Expectation / Narrative Runtime", () => {
       ),
     ).toThrow("story_runtime.reader_time.payoff_without_expectation_bridge");
   });
-
 
   it("designs the expectation transaction before Reality simulation without scripting character outcomes", () => {
     const draft: ExpectationDesignDraft = {

@@ -590,9 +590,7 @@ export function finalizeStoryReaderTimePlan(
     );
 
     if (decision.action === "skip" && decision.readerTime !== "none") {
-      throw new Error(
-        "story_runtime.reader_time.skip_requires_no_reader_time",
-      );
+      throw new Error("story_runtime.reader_time.skip_requires_no_reader_time");
     }
     if (
       decision.action === "background" &&
@@ -614,9 +612,7 @@ export function finalizeStoryReaderTimePlan(
       ["seed", "charge", "payoff"].includes(decision.action) &&
       decision.expectationThreadIds.length === 0
     ) {
-      throw new Error(
-        "story_runtime.reader_time.story_action_requires_thread",
-      );
+      throw new Error("story_runtime.reader_time.story_action_requires_thread");
     }
 
     const operations =
@@ -668,4 +664,3 @@ export function finalizeStoryReaderTimePlan(
     digest: digest(parsed),
   });
 }
-

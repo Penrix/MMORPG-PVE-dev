@@ -94,7 +94,6 @@ const NARRATIVE_ALLOCATION_CONTRACT: JsonSchemaContract = {
   schema: z.toJSONSchema(NarrativeAllocationOutputSchema),
 };
 
-
 const StoryReaderTimeOutputSchema = z.object({
   decisions: z.array(StoryReaderTimeSceneDecisionSchema).min(1),
 });
@@ -120,7 +119,6 @@ export interface ExpectationAllocationModelRequest {
   state: ExpectationState;
   candidates: readonly NarrativeCandidate[];
 }
-
 
 export interface StoryReaderTimeModelRequest {
   state: ExpectationState;
@@ -461,9 +459,7 @@ function readerTimeOutputIssues(
     }
     seen.add(decision.sceneId);
     if (orders.has(decision.readerOrder)) {
-      issues.push(
-        `decisions: duplicate readerOrder ${decision.readerOrder}`,
-      );
+      issues.push(`decisions: duplicate readerOrder ${decision.readerOrder}`);
     }
     orders.add(decision.readerOrder);
   }
