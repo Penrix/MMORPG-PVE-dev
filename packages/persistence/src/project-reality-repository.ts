@@ -129,6 +129,99 @@ const slot = (
   sourceKey,
 });
 
+const projectSlot = (
+  facet: RealityFacet,
+  slotKey: string,
+  value: unknown,
+): RealitySlot => ({
+  facet,
+  slotKey,
+  value,
+  origin: "project",
+  revisionId: null,
+  sourceCorpusId: null,
+  sourceKey: null,
+});
+
+/**
+ * Project Reality is the single current-world projection for all accepted
+ * Module-2 structures. Historical-only rows stay out of the current surface.
+ * This prevents Module 3 from silently losing the expensive world content
+ * already stored in the Atlas.
+ */
+function currentProjectStructureSlots(
+  dossier: WorldEntityDossier,
+): RealitySlot[] {
+  const out: RealitySlot[] = [];
+
+  for (const lore of dossier.lore) {
+    out.push(projectSlot("lore", lore.id, lore));
+  }
+
+  if (dossier.organizationProfile) {
+    out.push(
+      projectSlot("organization", "profile", dossier.organizationProfile),
+    );
+  }
+  for (const item of dossier.functions) {
+    if (item.valid_to_event_id !== null) continue;
+    out.push(projectSlot("organization", `function:${item.id}`, item));
+  }
+  for (const item of dossier.stances) {
+    if (item.valid_to_event_id !== null) continue;
+    out.push(projectSlot("standing", `stance:${item.id}`, item));
+  }
+
+  // Standing rows are appraisals over time. Expose only the latest accepted
+  // appraisal per evaluator + dimension as the current standing surface.
+  const latestStanding = new Map<string, (typeof dossier.standings)[number]>();
+  for (const item of dossier.standings) {
+    latestStanding.set(
+      JSON.stringify([item.evaluator_entity_id, item.dimension]),
+      item,
+    );
+  }
+  for (const item of latestStanding.values()) {
+    out.push(projectSlot("standing", `standing:${item.id}`, item));
+  }
+
+  for (const item of dossier.powerChannels) {
+    out.push(projectSlot("organization", `power_channel:${item.id}`, item));
+  }
+  for (const item of dossier.valueAppraisals) {
+    if (item.status === "retired") continue;
+    out.push(projectSlot("value", `appraisal:${item.id}`, item));
+  }
+  for (const item of dossier.mapEdges) {
+    if (item.valid_to_event_id !== null) continue;
+    out.push(projectSlot("map", `edge:${item.id}`, item));
+  }
+
+  if (dossier.capability) {
+    out.push(projectSlot("ability", "profile", dossier.capability));
+  }
+  for (const item of dossier.capabilityLinks) {
+    out.push(projectSlot("ability", `link:${item.id}`, item));
+  }
+  for (const item of dossier.productionLinks) {
+    out.push(projectSlot("production", `process:${item.id}`, item));
+  }
+
+  // origin/home/affiliated are stable world affiliations, not a claim about
+  // moment-to-moment current location.
+  for (const item of dossier.worldAffiliations) {
+    out.push(
+      projectSlot(
+        "map",
+        `affiliation:${item.spaceId}:${item.linkKind}`,
+        item,
+      ),
+    );
+  }
+
+  return out;
+}
+
 /** Deterministic reference facets, without inventing any source-world facts.
  * The original complete dossier remains available in sourceReferences.
  */
@@ -510,6 +603,10 @@ export class SqliteProjectRealityRepository {
           sourceCorpusId: null,
           sourceKey: null,
         });
+      for (const part of currentProjectStructureSlots(currentProjectDossier)) {
+        effective.set(keyFor(part.facet, part.slotKey), part);
+      }
+
       // Native project relationships remain the single accepted truth.
       // Project Reality only projects them into the same readable view.
       for (const relation of currentProjectDossier.network)
