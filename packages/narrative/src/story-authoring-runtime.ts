@@ -3,6 +3,8 @@ import {
   StoryAuthoringSearchSchema,
   StoryObjectFieldDraftSchema,
   StoryObjectFieldSchema,
+  StorySceneExpansionDraftSchema,
+  StorySceneExpansionSchema,
   StoryUnitDesignDraftSchema,
   StoryUnitDesignSchema,
   type ExpectationDesign,
@@ -10,7 +12,10 @@ import {
   type StoryAuthoringSearchDraft,
   type StoryObjectField,
   type StoryObjectFieldDraft,
+  type StorySceneExpansion,
+  type StorySceneExpansionDraft,
   type StoryUnitDesign,
+  type WorldArbitrationReceipt,
   type StoryUnitDesignDraft,
 } from "@narralume/contracts";
 import { sha256Hex } from "@narralume/domain";
@@ -420,7 +425,10 @@ export function finalizeStoryUnitDesign(
   const informationSteps = parsed.informationRelease.map((item) =>
     String(item.step),
   );
-  requireUnique("information_step", informationSteps);
+  const informationStepSet = requireUnique(
+    "information_step",
+    informationSteps,
+  );
   for (let index = 1; index < parsed.informationRelease.length; index += 1) {
     if (
       parsed.informationRelease[index]!.step <=
@@ -429,6 +437,10 @@ export function finalizeStoryUnitDesign(
       throw new Error("story_authoring.information_steps_not_ascending");
     }
   }
+
+  const reactionTargetEntityIds = new Set(
+    parsed.reactionTargets.map((target) => target.entityId),
+  );
 
   const campState = new Map(
     parsed.campNetwork.map((member) => [member.entityId, member.camp] as const),
@@ -473,6 +485,50 @@ export function finalizeStoryUnitDesign(
         `story_authoring.event_pressure_missing_cast_member:${event.id}`,
       );
     }
+
+    requireUnique(
+      `event_reaction_target_${event.id}`,
+      event.reactionTargetEntityIds,
+    );
+    requireRefs(
+      "event_reaction_target",
+      event.reactionTargetEntityIds,
+      reactionTargetEntityIds,
+    );
+    requireRefs(
+      "event_reaction_target_cast",
+      event.reactionTargetEntityIds,
+      castPool,
+    );
+
+    requireUnique(
+      `event_information_step_${event.id}`,
+      event.informationReleaseSteps.map(String),
+    );
+    requireRefs(
+      "event_information_step",
+      event.informationReleaseSteps.map(String),
+      informationStepSet,
+    );
+
+    const phaseNames = requireUnique(
+      `event_phase_${event.id}`,
+      event.phaseTargets.map((target) => target.phase),
+    );
+    if (phaseNames.size !== event.phaseTargets.length) {
+      throw new Error(`story_authoring.duplicate_event_phase:${event.id}`);
+    }
+    for (const target of event.phaseTargets) {
+      requireUnique(
+        `event_phase_entity_${event.id}_${target.phase}`,
+        target.entityIds,
+      );
+      requireRefs(
+        `event_phase_entity_${event.id}_${target.phase}`,
+        target.entityIds,
+        castPool,
+      );
+    }
   }
 
   return StoryUnitDesignSchema.parse({
@@ -497,4 +553,102 @@ export function realityFocusFromStoryUnitDesign(
     firstEventCastPoolEntityIds: [...firstEvent.castPoolEntityIds],
     firstEventActiveSeedEntityIds: [...firstEvent.activeSeedEntityIds],
   };
+}
+
+
+/**
+ * Finalize S06 scene expansion for one S05 Story Node.
+ *
+ * The arbitration receipt constrains what the characters actually did during
+ * S05 rehearsal. S06 is still an author/director expansion: it turns one
+ * problem-node into multiple scenes that keep pressure and expectation moving.
+ */
+export function finalizeStorySceneExpansion(
+  draft: StorySceneExpansionDraft,
+  storyUnit: StoryUnitDesign,
+  arbitration: WorldArbitrationReceipt,
+): StorySceneExpansion {
+  const parsed = StorySceneExpansionDraftSchema.parse(draft);
+  if (storyUnit.status !== "READY") {
+    throw new Error("story_scene.requires_ready_story_unit");
+  }
+  const event = storyUnit.events.find(
+    (item) => item.id === parsed.storyUnitEventId,
+  );
+  if (!event) {
+    throw new Error(
+      `story_scene.unknown_story_unit_event:${parsed.storyUnitEventId}`,
+    );
+  }
+  if (
+    parsed.projectId !== storyUnit.projectId ||
+    parsed.storyUnitDesignDigest !== storyUnit.digest ||
+    parsed.arbitrationDigest !== arbitration.digest ||
+    arbitration.projectId !== storyUnit.projectId ||
+    arbitration.storyUnitDesignDigest !== storyUnit.digest ||
+    arbitration.storyUnitEventId !== event.id
+  ) {
+    throw new Error("story_scene.not_bound_to_rehearsed_event");
+  }
+  if (!arbitration.finalized || arbitration.hardContractStatus !== "feasible") {
+    throw new Error("story_scene.requires_feasible_finalized_rehearsal");
+  }
+  if (parsed.eventProblem !== event.problem) {
+    throw new Error("story_scene.event_problem_mismatch");
+  }
+
+  requireUnique(
+    "scene",
+    parsed.scenes.map((scene) => scene.id),
+  );
+  requireUnique(
+    "scene_order",
+    parsed.scenes.map((scene) => String(scene.order)),
+  );
+  const castPool = new Set(event.castPoolEntityIds);
+  for (let index = 0; index < parsed.scenes.length; index += 1) {
+    const scene = parsed.scenes[index]!;
+    if (index > 0 && scene.order <= parsed.scenes[index - 1]!.order) {
+      throw new Error("story_scene.order_not_ascending");
+    }
+    requireUnique(
+      `scene_participant_${scene.id}`,
+      scene.participantEntityIds,
+    );
+    requireRefs(
+      `scene_participant_${scene.id}`,
+      scene.participantEntityIds,
+      castPool,
+    );
+    if (index < parsed.scenes.length - 1 && scene.nextSceneCause === null) {
+      throw new Error(`story_scene.missing_next_scene_cause:${scene.id}`);
+    }
+  }
+
+  for (const target of event.phaseTargets) {
+    const matchingScenes = parsed.scenes.filter(
+      (scene) => scene.phase === target.phase,
+    );
+    if (matchingScenes.length === 0) {
+      throw new Error(
+        `story_scene.missing_declared_phase:${event.id}:${target.phase}`,
+      );
+    }
+    for (const entityId of target.entityIds) {
+      if (
+        !matchingScenes.some((scene) =>
+          scene.participantEntityIds.includes(entityId),
+        )
+      ) {
+        throw new Error(
+          `story_scene.missing_phase_entity:${event.id}:${target.phase}:${entityId}`,
+        );
+      }
+    }
+  }
+
+  return StorySceneExpansionSchema.parse({
+    ...parsed,
+    digest: digest(parsed),
+  });
 }
