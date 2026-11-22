@@ -539,6 +539,16 @@ describe("object-grounded story authoring runtime", () => {
             purpose: "让异常第一次进入可信见证",
             castPoolEntityIds: ["xiuxin", "medic"],
             activeSeedEntityIds: ["xiuxin"],
+            actorPressures: [
+              {
+                entityId: "xiuxin",
+                pressure: "恢复训练正在暴露自己的真实控制水平",
+              },
+              {
+                entityId: "medic",
+                pressure: "眼前恢复结果开始超出普通伤员流程",
+              },
+            ],
             observableStart: "秀信开始恢复训练",
             expectedChange: "至少产生可被Reality裁决的新事实",
             readerExpectation: "等待专业人物如何真实处理异常",
