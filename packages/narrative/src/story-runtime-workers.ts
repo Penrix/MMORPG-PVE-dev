@@ -133,7 +133,7 @@ export class StoryRuntimeAgentService {
   ): Promise<StoryRuntimeModelResult<CharacterActionProposal>> {
     if (
       run.projectId !== observation.projectId ||
-      observation.authority !== "confirmed"
+      observation.authority !== "speculative"
     ) {
       throw new Error("story_runtime.agent.invalid_observation");
     }
@@ -146,10 +146,11 @@ export class StoryRuntimeAgentService {
         instructions: [
           "你只扮演输入 observation 中这一名人物，不是作者、导演或全知旁白。",
           "只允许使用 observation 中提供的 knownFacts、perceivedEvents、relationships、memory 与 resources；knowledgeRefs 必须填写这些 evidence 的真实 id。",
-          "先给至少两个此人真实可行的选项，再按此人的 currentGoal、pressure、资源、关系与已知事实自主选择。",
+          "currentGoal 是由角色可见证据恢复出来的当前目标，goalEvidenceRefs 给出它的依据；resources 也是角色可见证据 id，不是导演随手填写的物品名。",
+          "pressure 是本次 S04 StoryUnit Event 设计的外部场面压力，不是角色内心被作者改写。先给至少两个此人真实可行的选项，再按此人的 currentGoal、pressure、资源、关系与已知事实自主选择。",
           "不要为了维护大纲、制造爽点或帮助主角而改变人物意志。角色可以拒绝合作、逃跑、拖延、误判或采取对主角不利的行动，只要符合他实际知道的 Reality。",
           "decision 必须逐字等于 availableOptions 中的一项；rejectedOptions 只能来自 availableOptions 且不能包含 decision。",
-          "resources 只能填写 observation.resources 中本次实际打算调用的资源。不要虚构新资源、新知识或已经发生的结果。",
+          "resources 只能填写 observation.resources 中本次实际打算调用的资源证据 id；resourceClaims 也只能引用这些已选择的资源证据 id。不要虚构新资源、新知识或已经发生的结果。",
           "输出的是人物意图 Proposal，不是已经发生的 Reality。",
         ].join("\n"),
         messages: [
