@@ -85,11 +85,9 @@ export interface CharacterObservationBuildRequest {
   projectId: string;
   characterId: string;
   generationId: string;
-  storyUnitDesignDigest: string;
-  storyUnitEventId: string;
-  realityFingerprint: string;
+  storyUnitDesign: StoryUnitDesign;
+  worldContext: WorldArbitrationContext;
   goalEvidenceRefs: readonly string[];
-  pressure: string;
   round?: number;
   targetOutlineNodeId?: string | null;
   resourceEvidenceRefs?: readonly string[];
@@ -125,6 +123,33 @@ export class CharacterObservationBuilder {
   }
 
   build(request: CharacterObservationBuildRequest): CharacterObservationPacket {
+    const design = request.storyUnitDesign;
+    const worldContext = request.worldContext;
+    if (
+      design.status !== "READY" ||
+      design.projectId !== request.projectId ||
+      worldContext.projectId !== request.projectId ||
+      worldContext.storyUnitDesignDigest !== design.digest
+    ) {
+      throw new Error("story_runtime.observation.story_unit_not_bound");
+    }
+    const event = design.events.find(
+      (candidate) => candidate.id === worldContext.storyUnitEventId,
+    );
+    if (!event || !event.castPoolEntityIds.includes(request.characterId)) {
+      throw new Error(
+        `story_runtime.observation.character_not_in_event_cast:${request.characterId}`,
+      );
+    }
+    const actorPressure = event.actorPressures.find(
+      (item) => item.entityId === request.characterId,
+    );
+    if (!actorPressure) {
+      throw new Error(
+        `story_runtime.observation.missing_actor_pressure:${request.characterId}`,
+      );
+    }
+
     const character = this.canon.requireEntity(
       request.projectId,
       request.characterId,
@@ -267,15 +292,15 @@ export class CharacterObservationBuilder {
       projectId: request.projectId,
       generationId: request.generationId,
       round: request.round ?? 1,
-      storyUnitDesignDigest: request.storyUnitDesignDigest.trim(),
-      storyUnitEventId: request.storyUnitEventId.trim(),
+      storyUnitDesignDigest: design.digest,
+      storyUnitEventId: event.id,
       agentId: characterAgentId(request.characterId),
       characterId: request.characterId,
       characterName: character.name,
       targetOutlineNodeId: request.targetOutlineNodeId ?? null,
       currentGoal,
       goalEvidenceRefs,
-      pressure: request.pressure.trim(),
+      pressure: actorPressure.pressure.trim(),
       location: inferredLocation.value,
       locationEvidenceRefs: inferredLocation.evidenceRefs,
       resources,
@@ -284,7 +309,7 @@ export class CharacterObservationBuilder {
       perceivedEvents,
       memory,
       storyStateFingerprint: packet.fingerprint,
-      realityFingerprint: request.realityFingerprint.trim(),
+      realityFingerprint: worldContext.realityFingerprint,
       sourceIds,
     });
 
