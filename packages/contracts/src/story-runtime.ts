@@ -937,7 +937,7 @@ export const StoryUnitEventDesignSchema = z.object({
   castPoolEntityIds: z.array(z.string().min(1)).min(1),
   activeSeedEntityIds: z.array(z.string().min(1)).min(1),
   actorPressures: z.array(StoryUnitActorPressureSchema).min(1),
-  stakeEntryIds: z.array(z.string().min(1)).min(1),
+  stakeEntryIds: z.array(z.string().min(1)),
   reactionTargetEntityIds: z.array(z.string().min(1)),
   informationReleaseSteps: z.array(z.number().int().positive()),
   phaseTargets: z.array(StoryNodePhaseTargetSchema).min(1),
