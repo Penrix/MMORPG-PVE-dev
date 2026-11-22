@@ -84,15 +84,26 @@ export function storyObjectFieldFromWorldContext(
     storyTimeLabel: input.storyTimeLabel,
     realityFingerprint: input.realityFingerprint,
     storyStateFingerprint: input.storyStateFingerprint,
-    objects: input.context.objects.map((object) => ({
-      id: `object:${object.entityId}`,
-      entityId: object.entityId,
-      name: object.name,
-      kind: object.kind,
-      aliases: object.aliases,
-      surfaces: object.surfaces,
-      sourceRefs: object.sourceRefs,
-    })),
+    objects: input.context.objects.map((object) => {
+      const surfaces = object.surfaces.filter(
+        (surface) =>
+          input.scale === "S01" ||
+          surface.authority === "confirmed" ||
+          (surface.facet === "state" &&
+            surface.slotKey === "source_identity"),
+      );
+      return {
+        id: `object:${object.entityId}`,
+        entityId: object.entityId,
+        name: object.name,
+        kind: object.kind,
+        aliases: object.aliases,
+        surfaces,
+        sourceRefs: [
+          ...new Set(surfaces.map((surface) => surface.sourceId)),
+        ],
+      };
+    }),
   };
   return finalizeStoryObjectField(draft);
 }
