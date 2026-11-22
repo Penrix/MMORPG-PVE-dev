@@ -531,3 +531,283 @@ export const NarrativeAllocationBatchSchema = z.object({
 export type NarrativeAllocationBatch = z.infer<
   typeof NarrativeAllocationBatchSchema
 >;
+
+
+/**
+ * Author-side object-grounded story search.
+ *
+ * This layer projects concrete Module-2 world objects for imagination. It is
+ * not a second Reality store and never promotes candidates into Canon.
+ */
+export const StoryAuthoringScaleSchema = z.enum(["S01", "S02", "S03", "S04"]);
+export type StoryAuthoringScale = z.infer<typeof StoryAuthoringScaleSchema>;
+
+export const StoryObjectSurfaceSchema = z.object({
+  authority: z.enum(["confirmed", "reference"]),
+  sourceId: z.string().min(1),
+  facet: z.string().min(1),
+  slotKey: z.string().min(1),
+  value: z.unknown(),
+});
+export type StoryObjectSurface = z.infer<typeof StoryObjectSurfaceSchema>;
+
+export const StoryObjectFieldObjectSchema = z.object({
+  id: z.string().min(1),
+  entityId: z.string().min(1),
+  name: z.string().min(1),
+  kind: z.string().min(1),
+  aliases: z.array(z.string().min(1)),
+  surfaces: z.array(StoryObjectSurfaceSchema).min(1),
+  sourceRefs: z.array(z.string().min(1)).min(1),
+});
+export type StoryObjectFieldObject = z.infer<
+  typeof StoryObjectFieldObjectSchema
+>;
+
+export const StoryObjectFieldSchema = z.object({
+  version: z.literal("story-object-field.v1"),
+  authority: z.literal("speculative"),
+  projectId: z.string().min(1),
+  scale: StoryAuthoringScaleSchema,
+  storyTimeLabel: z.string().min(1).nullable(),
+  realityFingerprint: z.string().min(1),
+  storyStateFingerprint: z.string().min(1),
+  objects: z.array(StoryObjectFieldObjectSchema).min(1),
+  digest: z.string().min(1),
+});
+export type StoryObjectField = z.infer<typeof StoryObjectFieldSchema>;
+export const StoryObjectFieldDraftSchema = StoryObjectFieldSchema.omit({
+  digest: true,
+});
+export type StoryObjectFieldDraft = z.infer<typeof StoryObjectFieldDraftSchema>;
+
+export const StoryCandidateNewObjectSchema = z.object({
+  label: z.string().min(1),
+  kind: z.string().min(1),
+  reason: z.string().min(1),
+  status: z.literal("CANDIDATE"),
+});
+export type StoryCandidateNewObject = z.infer<
+  typeof StoryCandidateNewObjectSchema
+>;
+
+export const StoryOpportunitySeedSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  anchorObjectIds: z.array(z.string().min(1)).min(1),
+  observation: z.string().min(1),
+  searchMove: z.string().min(1),
+  idea: z.string().min(1),
+  protagonistHook: z.string().min(1),
+  readerValue: z.string().min(1),
+  newRelationOrChange: z.string().min(1),
+  candidateNewObjects: z.array(StoryCandidateNewObjectSchema),
+  nextQuestion: z.string().min(1),
+  status: z.literal("CANDIDATE"),
+});
+export type StoryOpportunitySeed = z.infer<typeof StoryOpportunitySeedSchema>;
+
+export const StoryObjectFocusSchema = z.object({
+  objectId: z.string().min(1),
+  whyNow: z.string().min(1),
+  valuableSurface: z.string().min(1),
+});
+export type StoryObjectFocus = z.infer<typeof StoryObjectFocusSchema>;
+
+export const S01StoryConceptCandidateSchema = z.object({
+  concept: z.string().min(1),
+  objectIds: z.array(z.string().min(1)).min(1),
+  life: z.string().min(1),
+  readerValue: z.string().min(1),
+});
+export type S01StoryConceptCandidate = z.infer<
+  typeof S01StoryConceptCandidateSchema
+>;
+
+export const S01StoryEngineCandidateSchema = z.object({
+  engine: z.string().min(1),
+  objectIds: z.array(z.string().min(1)).min(1),
+  repeatablePlay: z.string().min(1),
+  supply: z.string().min(1),
+});
+export type S01StoryEngineCandidate = z.infer<
+  typeof S01StoryEngineCandidateSchema
+>;
+
+export const S01ConceptEngineLinkSchema = z.object({
+  concept: z.string().min(1),
+  engine: z.string().min(1),
+  whySustainable: z.string().min(1),
+});
+export type S01ConceptEngineLink = z.infer<typeof S01ConceptEngineLinkSchema>;
+
+export const S01StorySearchResultSchema = z.object({
+  scale: z.literal("S01"),
+  storyConcepts: z.array(S01StoryConceptCandidateSchema).min(1),
+  storyEngines: z.array(S01StoryEngineCandidateSchema).min(1),
+  conceptEngineLinks: z.array(S01ConceptEngineLinkSchema).min(1),
+});
+export type S01StorySearchResult = z.infer<typeof S01StorySearchResultSchema>;
+
+export const S02StageOpportunitySchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  objectIds: z.array(z.string().min(1)).min(1),
+  whyNow: z.string().min(1),
+  newLife: z.string().min(1),
+  candidateS1: z.string().min(1),
+  unlockedObjects: z.array(z.string().min(1)),
+  status: z.literal("CANDIDATE"),
+});
+export type S02StageOpportunity = z.infer<typeof S02StageOpportunitySchema>;
+
+export const S02StorySearchResultSchema = z.object({
+  scale: z.literal("S02"),
+  currentS0: z.string().min(1),
+  stageOpportunities: z.array(S02StageOpportunitySchema).min(1),
+});
+export type S02StorySearchResult = z.infer<typeof S02StorySearchResultSchema>;
+
+export const S03OpportunityFieldItemSchema = z.object({
+  objectIds: z.array(z.string().min(1)).min(1),
+  opportunity: z.string().min(1),
+  whyAlive: z.string().min(1),
+});
+export type S03OpportunityFieldItem = z.infer<
+  typeof S03OpportunityFieldItemSchema
+>;
+
+export const S03StoryMovementSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  objectIds: z.array(z.string().min(1)).min(1),
+  state: z.enum(["主导", "预热", "暂休", "余韵", "OPEN"]),
+  currentMotion: z.string().min(1),
+  nextPressure: z.string().min(1),
+});
+export type S03StoryMovement = z.infer<typeof S03StoryMovementSchema>;
+
+export const S03StorySearchResultSchema = z.object({
+  scale: z.literal("S03"),
+  periodFocus: z.string().min(1),
+  opportunityField: z.array(S03OpportunityFieldItemSchema).min(1),
+  storyMovements: z.array(S03StoryMovementSchema),
+});
+export type S03StorySearchResult = z.infer<typeof S03StorySearchResultSchema>;
+
+export const StoryScaleSearchResultSchema = z.discriminatedUnion("scale", [
+  S01StorySearchResultSchema,
+  S02StorySearchResultSchema,
+  S03StorySearchResultSchema,
+]);
+export type StoryScaleSearchResult = z.infer<
+  typeof StoryScaleSearchResultSchema
+>;
+
+export const StoryAuthoringSearchSchema = z.object({
+  version: z.literal("story-authoring-search.v1"),
+  authority: z.literal("speculative"),
+  projectId: z.string().min(1),
+  scale: z.enum(["S01", "S02", "S03"]),
+  objectFieldDigest: z.string().min(1),
+  question: z.string().min(1),
+  objectFocus: z.array(StoryObjectFocusSchema),
+  seeds: z.array(StoryOpportunitySeedSchema).min(1),
+  worldGaps: z.array(z.string().min(1)),
+  scaleResult: StoryScaleSearchResultSchema,
+  digest: z.string().min(1),
+});
+export type StoryAuthoringSearch = z.infer<typeof StoryAuthoringSearchSchema>;
+export const StoryAuthoringSearchDraftSchema = StoryAuthoringSearchSchema.omit({
+  digest: true,
+});
+export type StoryAuthoringSearchDraft = z.infer<
+  typeof StoryAuthoringSearchDraftSchema
+>;
+
+export const StoryUnitCampPositionSchema = z.enum([
+  "友方",
+  "敌方",
+  "中立",
+  "其他利益位置",
+]);
+export type StoryUnitCampPosition = z.infer<
+  typeof StoryUnitCampPositionSchema
+>;
+
+export const StoryUnitCampMemberSchema = z.object({
+  entityId: z.string().min(1),
+  camp: StoryUnitCampPositionSchema,
+  currentGoal: z.string().min(1),
+  storyRole: z.string().min(1),
+  currentBelief: z.string().min(1),
+});
+export type StoryUnitCampMember = z.infer<typeof StoryUnitCampMemberSchema>;
+
+export const StoryUnitReactionTargetSchema = z.object({
+  entityId: z.string().min(1),
+  before: z.string().min(1),
+  during: z.string().min(1),
+  after: z.string().min(1),
+});
+export type StoryUnitReactionTarget = z.infer<
+  typeof StoryUnitReactionTargetSchema
+>;
+
+export const StoryUnitCampTransitionSchema = z.object({
+  entityId: z.string().min(1),
+  from: StoryUnitCampPositionSchema,
+  to: StoryUnitCampPositionSchema,
+  condition: z.string().min(1),
+});
+export type StoryUnitCampTransition = z.infer<
+  typeof StoryUnitCampTransitionSchema
+>;
+
+export const StoryUnitInformationReleaseSchema = z.object({
+  step: z.number().int().positive(),
+  readerKnows: z.string().min(1),
+  charactersKnow: z.string().min(1),
+  withheld: z.string().min(1),
+  purpose: z.string().min(1),
+});
+export type StoryUnitInformationRelease = z.infer<
+  typeof StoryUnitInformationReleaseSchema
+>;
+
+export const StoryUnitEventDesignSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  purpose: z.string().min(1),
+  castPoolEntityIds: z.array(z.string().min(1)).min(1),
+  activeSeedEntityIds: z.array(z.string().min(1)).min(1),
+  observableStart: z.string().min(1),
+  expectedChange: z.string().min(1),
+  readerExpectation: z.string().min(1),
+});
+export type StoryUnitEventDesign = z.infer<typeof StoryUnitEventDesignSchema>;
+
+export const StoryUnitDesignSchema = z.object({
+  version: z.literal("story-unit-design.v1"),
+  authority: z.literal("speculative"),
+  projectId: z.string().min(1),
+  objectFieldDigest: z.string().min(1),
+  sourceSeedIds: z.array(z.string().min(1)),
+  expectationDesignDigest: z.string().min(1),
+  objectAnchorIds: z.array(z.string().min(1)).min(1),
+  storyProblem: z.string().min(1),
+  worldGaps: z.array(z.string().min(1)),
+  campNetwork: z.array(StoryUnitCampMemberSchema).min(1),
+  reactionTargets: z.array(StoryUnitReactionTargetSchema),
+  campTransitions: z.array(StoryUnitCampTransitionSchema),
+  appearanceOrderEntityIds: z.array(z.string().min(1)),
+  informationRelease: z.array(StoryUnitInformationReleaseSchema),
+  events: z.array(StoryUnitEventDesignSchema).min(1),
+  mustPreserveAgentAutonomy: z.literal(true),
+  digest: z.string().min(1),
+});
+export type StoryUnitDesign = z.infer<typeof StoryUnitDesignSchema>;
+export const StoryUnitDesignDraftSchema = StoryUnitDesignSchema.omit({
+  digest: true,
+});
+export type StoryUnitDesignDraft = z.infer<typeof StoryUnitDesignDraftSchema>;
