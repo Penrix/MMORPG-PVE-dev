@@ -168,6 +168,7 @@ describe("S06 story scene expansion", () => {
         storyUnitDesignDigest: "story-unit:digest",
         storyUnitEventId: "event:recovery-test",
         arbitrationDigest: "arbitration:digest",
+        realityFingerprint: "reality:1",
         eventProblem: "秀信的异常恢复表现是否会改变医疗忍者对他的专业估值",
         scenes: [
           {
@@ -285,6 +286,7 @@ describe("S06 story scene expansion", () => {
           storyUnitDesignDigest: "story-unit:digest",
           storyUnitEventId: "event:recovery-test",
           arbitrationDigest: "arbitration:broken",
+          realityFingerprint: "reality:1",
           eventProblem: "秀信的异常恢复表现是否会改变医疗忍者对他的专业估值",
           scenes: [
             {
