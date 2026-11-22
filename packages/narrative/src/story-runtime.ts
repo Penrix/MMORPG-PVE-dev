@@ -94,12 +94,12 @@ export interface CharacterObservationBuildRequest {
 }
 
 /**
- * Builds the subjective input for one autonomous character.
+ * Builds one character-facing execution packet inside an authored Story Node.
  *
- * The host may fingerprint omniscient Project Reality to invalidate stale
- * simulations, but the character-facing evidence itself comes only from the
- * character-filtered StoryState projection. This is the core safety boundary:
- * "the database knows" never means "this character knows".
+ * The writer/director already owns the story function and stake direction.
+ * This builder keeps character knowledge subjective so the concrete performance
+ * still follows characterization and visible Reality: "the database knows"
+ * never means "this character knows".
  */
 export class CharacterObservationBuilder {
   private readonly canon: SqliteCanonRepository;
@@ -149,6 +149,28 @@ export class CharacterObservationBuilder {
         `story_runtime.observation.missing_actor_pressure:${request.characterId}`,
       );
     }
+    const campMember = design.campNetwork.find(
+      (member) => member.entityId === request.characterId,
+    );
+    if (!campMember) {
+      throw new Error(
+        `story_runtime.observation.character_not_in_authored_line:${request.characterId}`,
+      );
+    }
+    const activeStakeIds = new Set(event.stakeEntryIds);
+    const authoredStakes = design.stakeLedger.filter(
+      (entry) =>
+        entry.entityId === request.characterId && activeStakeIds.has(entry.id),
+    );
+    const authoredDirection = [
+      `storyRole=${campMember.storyRole}`,
+      `interest=${campMember.currentInterest}`,
+      `nodePurpose=${event.purpose}`,
+      ...authoredStakes.map(
+        (entry) =>
+          `stake=${entry.stakeAction}; escalation=${entry.escalationPlan}; payoff=${entry.payoffReaction}`,
+      ),
+    ].join(" ; ");
 
     const character = this.canon.requireEntity(
       request.projectId,
@@ -301,6 +323,9 @@ export class CharacterObservationBuilder {
       currentGoal,
       goalEvidenceRefs,
       pressure: actorPressure.pressure.trim(),
+      authoredStoryFunction: campMember.storyRole,
+      authoredStakeIds: authoredStakes.map((entry) => entry.id),
+      authoredDirection,
       location: inferredLocation.value,
       locationEvidenceRefs: inferredLocation.evidenceRefs,
       resources,
