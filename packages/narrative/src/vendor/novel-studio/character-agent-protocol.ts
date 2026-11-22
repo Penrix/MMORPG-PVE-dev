@@ -87,7 +87,10 @@ export function finalizeCharacterActionProposal(
     parsed.agentId !== observation.agentId ||
     parsed.characterId !== observation.characterId ||
     parsed.characterName !== observation.characterName ||
-    parsed.observationDigest !== observation.digest
+    parsed.observationDigest !== observation.digest ||
+    parsed.storyUnitDesignDigest !== observation.storyUnitDesignDigest ||
+    parsed.storyUnitEventId !== observation.storyUnitEventId ||
+    parsed.realityFingerprint !== observation.realityFingerprint
   ) {
     throw new Error("story_runtime.proposal.not_bound_to_observation");
   }
