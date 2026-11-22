@@ -1,8 +1,13 @@
 import {
   CharacterObservationPacketDraftSchema,
   CharacterObservationPacketSchema,
+  WorldArbitrationContextDraftSchema,
+  WorldArbitrationContextSchema,
   type CharacterObservationEvidence,
   type CharacterObservationPacket,
+  type StoryObjectField,
+  type StoryUnitDesign,
+  type WorldArbitrationContext,
 } from "@narralume/contracts";
 import { sha256Hex } from "@narralume/domain";
 import {
@@ -14,6 +19,68 @@ import {
 } from "@narralume/persistence";
 
 import { StoryStatePacketBuilder } from "./story-state-packet.js";
+
+export function worldArbitrationContextFromStoryUnit(
+  field: StoryObjectField,
+  design: StoryUnitDesign,
+  eventId: string,
+): WorldArbitrationContext {
+  if (
+    field.scale !== "S04" ||
+    design.status !== "READY" ||
+    design.projectId !== field.projectId ||
+    design.objectFieldDigest !== field.digest
+  ) {
+    throw new Error("story_runtime.world_context.story_unit_not_bound");
+  }
+  const event = design.events.find((candidate) => candidate.id === eventId);
+  if (!event) {
+    throw new Error(`story_runtime.world_context.unknown_event:${eventId}`);
+  }
+
+  const anchorObjectIds = new Set(design.objectAnchorIds);
+  const castEntityIds = new Set(event.castPoolEntityIds);
+  const surfaces = field.objects.flatMap((object) => {
+    if (
+      !anchorObjectIds.has(object.id) &&
+      !castEntityIds.has(object.entityId)
+    ) {
+      return [];
+    }
+    return object.surfaces.flatMap((surface) =>
+      surface.authority === "confirmed"
+        ? [
+            {
+              entityId: object.entityId,
+              name: object.name,
+              kind: object.kind,
+              facet: surface.facet,
+              slotKey: surface.slotKey,
+              value: surface.value,
+              sourceId: surface.sourceId,
+            },
+          ]
+        : [],
+    );
+  });
+  if (surfaces.length === 0) {
+    throw new Error("story_runtime.world_context.no_confirmed_surfaces");
+  }
+
+  const draft = WorldArbitrationContextDraftSchema.parse({
+    version: "world-arbitration-context.v1",
+    authority: "speculative",
+    projectId: field.projectId,
+    storyUnitDesignDigest: design.digest,
+    storyUnitEventId: event.id,
+    realityFingerprint: field.realityFingerprint,
+    surfaces,
+  });
+  return WorldArbitrationContextSchema.parse({
+    ...draft,
+    digest: sha256Hex(stableJson(draft)),
+  });
+}
 
 export interface CharacterObservationBuildRequest {
   projectId: string;
