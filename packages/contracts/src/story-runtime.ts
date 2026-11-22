@@ -150,7 +150,7 @@ export const CharacterDecisionResolutionSchema = z.object({
   outcome: z.enum(["success", "partial", "blocked"]),
   immediateResult: z.string().min(1),
   stateAfter: z.string().min(1),
-  butterflyEffects: z.array(StoryButterflyEffectSchema).min(1),
+  butterflyEffects: z.array(StoryButterflyEffectSchema),
   conflictIds: z.array(z.string().min(1)),
 });
 export type CharacterDecisionResolution = z.infer<
@@ -614,6 +614,7 @@ export const StoryObjectFocusSchema = z.object({
 export type StoryObjectFocus = z.infer<typeof StoryObjectFocusSchema>;
 
 export const S01StoryConceptCandidateSchema = z.object({
+  id: z.string().min(1),
   concept: z.string().min(1),
   objectIds: z.array(z.string().min(1)).min(1),
   life: z.string().min(1),
@@ -624,6 +625,7 @@ export type S01StoryConceptCandidate = z.infer<
 >;
 
 export const S01StoryEngineCandidateSchema = z.object({
+  id: z.string().min(1),
   engine: z.string().min(1),
   objectIds: z.array(z.string().min(1)).min(1),
   repeatablePlay: z.string().min(1),
@@ -634,8 +636,8 @@ export type S01StoryEngineCandidate = z.infer<
 >;
 
 export const S01ConceptEngineLinkSchema = z.object({
-  concept: z.string().min(1),
-  engine: z.string().min(1),
+  conceptId: z.string().min(1),
+  engineId: z.string().min(1),
   whySustainable: z.string().min(1),
 });
 export type S01ConceptEngineLink = z.infer<typeof S01ConceptEngineLinkSchema>;
