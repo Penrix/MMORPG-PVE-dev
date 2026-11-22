@@ -117,12 +117,11 @@ export interface WorldArbitrationModelRequest {
 }
 
 /**
- * Reality rehearsal / adjudication boundary inside an authored S05 Story Node.
+ * Character performance / hard-Reality adjudication inside an authored S05 Node.
  *
- * It deliberately accepts already-built observations and speculative proposals;
- * it does not define S05, generate the story node, expand S06 scenes or write
- * Canon. The caller decides which characters are active from the authored Node,
- * while actual character choices remain autonomous.
+ * The writer/director owns the dramatic line, stakes and payoff direction.
+ * Character execution chooses a characterization-consistent concrete performance
+ * inside that line; World Arbitration only rejects hard Reality contradictions.
  */
 export class StoryRuntimeAgentService {
   constructor(private readonly model: NarrativeModelClient) {}
@@ -149,8 +148,9 @@ export class StoryRuntimeAgentService {
           "你只扮演输入 observation 中这一名人物，不是作者、导演或全知旁白。",
           "只允许使用 observation 中提供的 knownFacts、perceivedEvents、relationships、memory 与 resources；knowledgeRefs 必须填写这些 evidence 的真实 id。",
           "currentGoal 是由角色可见证据恢复出来的当前目标，goalEvidenceRefs 给出它的依据；resources 也是角色可见证据 id，不是导演随手填写的物品名。",
-          "pressure 是当前 S05 Story Node 给这个人物造成的外部场面压力，不是角色内心被作者改写。S05 Node 已由编剧设计，但你只负责这个人物在节点条件下的真实选择。先给至少两个此人真实可行的选项，再按此人的 currentGoal、pressure、资源、关系与已知事实自主选择。",
-          "不要为了维护大纲、制造爽点或帮助主角而改变人物意志。角色可以拒绝合作、逃跑、拖延、误判或采取对主角不利的行动，只要符合他实际知道的 Reality。",
+          "pressure 是当前 S05 Story Node 给这个人物造成的外部场面压力；authoredStoryFunction / authoredDirection / authoredStakeIds 是编剧已经确定的人物线与下注方向。你不是来决定‘这条人物线要不要发生’，而是在这条线里寻找最符合此人人设、利益、固有认知、资源与可见 Reality 的具体演法。",
+          "先给至少两个都能完成 authoredDirection 的具体演法，再依据 currentGoal、pressure、relationships、knownFacts、memory 与 resources 选择最像这个人的一种。嘴硬、误判、加注、投靠、后悔、犯蠢都允许，只要前置认知和人设成立。",
+          "不要用‘人物比较理性/谨慎/自主’把作者已设计的商业男频人物线直接取消。如果当前演法遇到时间、地点、知识、资源或世界规则的硬冲突，把冲突写进 constraints / contingencies，交给 World Arbiter；不要擅自把戏剧功能改成无事发生。",
           "decision 必须逐字等于 availableOptions 中的一项；rejectedOptions 只能来自 availableOptions 且不能包含 decision。",
           "resources 只能填写 observation.resources 中本次实际打算调用的资源证据 id；resourceClaims 也只能引用这些已选择的资源证据 id。不要虚构新资源、新知识或已经发生的结果。",
           "输出的是人物意图 Proposal，不是已经发生的 Reality。",
