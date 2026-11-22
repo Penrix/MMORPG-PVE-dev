@@ -1,5 +1,7 @@
 # 火影原作母体导入｜NarraLume 原生 SQLite（第一批）
 
+> **STATUS: IMPLEMENTATION REFERENCE / SOURCE IMPORT.** 本文记录火影 Source Corpus 导入与迁移事实，不定义当前 Source World 的存储哲学；当前 Module 2 核心服从 13～15。
+
 > 工作分支：`feat/naruto-source-corpus-import`，基于 MMORPG World Builder 开发分支，**不是 World Builder 第一模块完成声明**。
 >
 > **当前产物是可执行导入器、数据库存储/查询与 API。** GitHub 仓库不会自动改变作者电脑上的 `narralume.sqlite`；需在安装 NarraLume 的本地环境执行一次导入命令。原作资料不随公开仓库提交。
