@@ -1,5 +1,7 @@
 # 第三模块｜S08 Production Handoff：锁定 S06/S07 后只生产，不二次编剧（2026-11-22）
 
+> **STATUS: CURRENT SUPPORT / PRODUCTION CONTRACT.** 本文定义 S06/S07 已锁定之后怎样进入 NarraLume 正文生产。它不拥有编剧权；故事方向服从 [23](23-module3-upgrade-stake-director.md)。
+
 > 上游先读 [20 Object-Grounded Writers' Room](20-object-grounded-writers-room.md)、[21 S05 Story Node → S06 Scene Expansion](21-s05-story-node-s06-scene-expansion.md) 与 [19 Expectation / Narrative Runtime](19-expectation-narrative-runtime.md)。
 
 ## 1. 本层解决什么
