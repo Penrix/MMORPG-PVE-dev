@@ -136,7 +136,7 @@ describe("Module 3 World Atlas context adapter", () => {
           '以基础忍术完成超常精度控制','病房内可测试',
           '需要主动结印和查克拉','仍受身体状态限制',
           '当前已掌握基础控制','专业忍者会重新估值',
-          'project_reality',?)
+          'author_design',?)
       `,
       )
       .run(now);
@@ -150,7 +150,7 @@ describe("Module 3 World Atlas context adapter", () => {
         ) VALUES ('hero-value','p1','hero',NULL,'ability',
           '异常控制能力','普通伤员极少出现',
           '需要专业复核','可能进入更高价任务体系','available',
-          'project_reality','当前项目估值',?)
+          'author_design','当前项目估值',?)
       `,
       )
       .run(now);
