@@ -1,3 +1,4 @@
+import { LATEST_MIGRATION_VERSION } from "@narralume/persistence";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -27,8 +28,10 @@ test("sqlite-wasm OPFS driver passes the persistence spike", async ({
     results: Record<string, unknown>;
   };
   expect(result.ok).toBe(true);
-  // WorldPack drafts add migration 046; browser OPFS must migrate it too.
-  expect(result.results.migrationVersion).toBe(46);
+  // Browser OPFS must apply the same complete migration chain as the
+  // authoritative persistence package. Do not freeze this probe to the
+  // migration number that happened to exist when the test was first written.
+  expect(result.results.migrationVersion).toBe(LATEST_MIGRATION_VERSION);
   // sahpool 官方建议 exclusive + WAL；若 WAL 不可接受则退化为 delete 也算过，
   // 但要显式记录（journalMode 进结果便于诊断）。
   expect(["wal", "delete", "truncate"]).toContain(result.results.journalMode);
