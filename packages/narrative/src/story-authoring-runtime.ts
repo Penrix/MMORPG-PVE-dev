@@ -516,6 +516,7 @@ export function finalizeStoryUnitDesign(
     requireUnique(`event_stake_${event.id}`, event.stakeEntryIds);
     requireRefs("event_stake", event.stakeEntryIds, stakeEntryIds);
     requireRefs("event_cast", event.castPoolEntityIds, entityIds);
+    requireRefs("event_cast_camp", event.castPoolEntityIds, campEntityIds);
     const castPool = new Set(event.castPoolEntityIds);
     requireRefs("event_active_seed", event.activeSeedEntityIds, castPool);
     requireRefs(
