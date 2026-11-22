@@ -89,8 +89,7 @@ export function storyObjectFieldFromWorldContext(
         (surface) =>
           input.scale === "S01" ||
           surface.authority === "confirmed" ||
-          (surface.facet === "state" &&
-            surface.slotKey === "source_identity"),
+          (surface.facet === "state" && surface.slotKey === "source_identity"),
       );
       return {
         id: `object:${object.entityId}`,
@@ -99,9 +98,7 @@ export function storyObjectFieldFromWorldContext(
         kind: object.kind,
         aliases: object.aliases,
         surfaces,
-        sourceRefs: [
-          ...new Set(surfaces.map((surface) => surface.sourceId)),
-        ],
+        sourceRefs: [...new Set(surfaces.map((surface) => surface.sourceId))],
       };
     }),
   };
@@ -164,7 +161,10 @@ function validateScaleResult(
     for (const [index, engine] of draft.scaleResult.storyEngines.entries()) {
       requireRefs(`s01_engine_${index}`, engine.objectIds, allowedObjectIds);
     }
-    for (const [index, link] of draft.scaleResult.conceptEngineLinks.entries()) {
+    for (const [
+      index,
+      link,
+    ] of draft.scaleResult.conceptEngineLinks.entries()) {
       requireRefs(`s01_link_concept_${index}`, [link.conceptId], conceptIds);
       requireRefs(`s01_link_engine_${index}`, [link.engineId], engineIds);
     }
@@ -300,9 +300,7 @@ export function finalizeStoryUnitDesign(
 
   if (parsed.status === "BLOCKED_WORLD_GAP") {
     if (parsed.worldGaps.length === 0) {
-      throw new Error(
-        "story_authoring.story_unit_blocked_without_world_gap",
-      );
+      throw new Error("story_authoring.story_unit_blocked_without_world_gap");
     }
     if (parsed.events.length > 0) {
       throw new Error("story_authoring.blocked_story_unit_has_events");
@@ -397,10 +395,7 @@ export function finalizeStoryUnitDesign(
   );
   for (const event of parsed.events) {
     requireUnique(`event_cast_${event.id}`, event.castPoolEntityIds);
-    requireUnique(
-      `event_active_seed_${event.id}`,
-      event.activeSeedEntityIds,
-    );
+    requireUnique(`event_active_seed_${event.id}`, event.activeSeedEntityIds);
     requireRefs("event_cast", event.castPoolEntityIds, entityIds);
     const castPool = new Set(event.castPoolEntityIds);
     requireRefs("event_active_seed", event.activeSeedEntityIds, castPool);

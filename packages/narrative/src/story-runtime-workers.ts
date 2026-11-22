@@ -231,7 +231,8 @@ export class StoryRuntimeAgentService {
           proposal.storyUnitDesignDigest !==
             request.worldContext.storyUnitDesignDigest ||
           proposal.storyUnitEventId !== request.worldContext.storyUnitEventId ||
-          proposal.realityFingerprint !== request.worldContext.realityFingerprint,
+          proposal.realityFingerprint !==
+            request.worldContext.realityFingerprint,
       )
     ) {
       throw new Error("story_runtime.arbiter.proposal_cycle_mismatch");

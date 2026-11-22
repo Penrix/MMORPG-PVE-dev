@@ -228,12 +228,9 @@ export class CharacterObservationBuilder {
     );
 
     const visibleEvidence = new Map(
-      [
-        ...knownFacts,
-        ...relationships,
-        ...perceivedEvents,
-        ...memory,
-      ].map((item) => [item.id, item] as const),
+      [...knownFacts, ...relationships, ...perceivedEvents, ...memory].map(
+        (item) => [item.id, item] as const,
+      ),
     );
     const goalEvidenceRefs = normalizeStrings(request.goalEvidenceRefs);
     if (goalEvidenceRefs.length === 0) {

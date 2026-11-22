@@ -211,11 +211,7 @@ function currentProjectStructureSlots(
   // moment-to-moment current location.
   for (const item of dossier.worldAffiliations) {
     out.push(
-      projectSlot(
-        "map",
-        `affiliation:${item.spaceId}:${item.linkKind}`,
-        item,
-      ),
+      projectSlot("map", `affiliation:${item.spaceId}:${item.linkKind}`, item),
     );
   }
 
