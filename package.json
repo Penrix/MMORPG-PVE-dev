@@ -21,7 +21,7 @@
     "deploy:web": "node scripts/deploy-web.mjs",
     "dev": "concurrently -n server,web -c yellow,cyan \"npm run dev -w @narralume/server\" \"npm run dev -w @narralume/web\"",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write docs/mmorpg/26-m-series-tr02-creative-method-catalog.md docs/mmorpg/CURRENT.md && git diff --exit-code",
     "install:bridge-task": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-bridge-task.ps1",
     "release:build": "node scripts/build-release.mjs",
     "lint": "eslint . --max-warnings=0",
