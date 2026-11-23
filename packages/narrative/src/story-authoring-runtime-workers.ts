@@ -13,6 +13,7 @@ import {
   StoryWorldGapSchema,
   type ExpectationDesign,
   type StoryAuthoringSearch,
+  type StoryCreativeContext,
   type StoryObjectField,
   type StoryUnitDesign,
   type StoryUpgradeLedger,
@@ -31,6 +32,7 @@ import {
   finalizeStoryUnitDesign,
   storyObjectSurfaceRef,
 } from "./story-authoring-runtime.js";
+import { assertStoryCreativeContextBound } from "./story-creative-context.js";
 
 const StoryAuthoringSearchOutputSchema = z.object({
   status: z.enum(["READY", "BLOCKED_WORLD_GAP"]),
@@ -74,6 +76,7 @@ const STORY_UNIT_DESIGN_CONTRACT: JsonSchemaContract = {
 
 export interface StoryAuthoringSearchModelRequest {
   field: StoryObjectField;
+  creativeContext: StoryCreativeContext;
   upgradeLedger: StoryUpgradeLedger;
   request: string;
   readerNeed: string;
@@ -85,6 +88,7 @@ export interface StoryAuthoringSearchModelRequest {
 
 export interface StoryUnitDesignModelRequest {
   field: StoryObjectField;
+  creativeContext: StoryCreativeContext;
   sourceSearch: StoryAuthoringSearch | null;
   sourceSeedIds: readonly string[];
   expectationDesign: ExpectationDesign;
@@ -334,9 +338,9 @@ function storyUnitOutputIssues(
 /**
  * Author-side writers' room service.
  *
- * S01-S03 search on concrete world objects. S04 turns selected objects into a
- * designed story unit. Neither path can mutate Reality or predetermine actor
- * decisions.
+ * S01-S03 are optional lenses over one inherited creative frame. S04 turns
+ * concrete Module-2 objects into an authored story unit around the protagonist.
+ * Character execution chooses concrete performance inside the authored line.
  */
 export class StoryAuthoringService {
   constructor(private readonly model: NarrativeModelClient) {}
@@ -362,6 +366,12 @@ export class StoryAuthoringService {
       throw new Error("story_authoring.invalid_search_request");
     }
 
+    assertStoryCreativeContextBound(
+      request.creativeContext,
+      request.field,
+      request.upgradeLedger,
+    );
+
     const scaleInstruction =
       request.field.scale === "S01"
         ? "S01只是长程视角：围绕既定 Upgrade Ledger 看这条 Road 为什么能持续、哪些现有人物/圈层/资源会成为后续价格阶梯。不要把它当成另一台从零生成 Story Concept 的机器。"
@@ -381,8 +391,10 @@ export class StoryAuthoringService {
           "每颗 Story Seed 的 anchorObjectIds 必须引用 Object Field 中真实 object.id，groundingSurfaceRefs 必须引用对象 surfaces 中提供的 ref。Observation 必须能从这些具体 surfaces 推出来，不能只借两个真名字编一条不存在的关系。",
           "第三模块不负责捏人或补世界。candidateNewObjects 必须为空。若当前 Story 真正缺人物、关系、制度、组织、资源或入口，写入 worldGaps，回 Module 1 / World Builder 生产后再继续。尤其禁止为了‘需要一个识货人/反派/妹妹位’临时造功能NPC。",
           "如果 Object Field 太薄，status 必须返回 BLOCKED_WORLD_GAP。worldGaps 必须结构化写出缺什么、锚在哪些已有对象、为什么缺，并用 productionHint 指向现有 World Builder workshop。此时允许 seeds 与尺度结果为空，不要为了过 schema 用‘神秘高手/反派/美女/商会’占位补洞。",
-          "M 方法只是搜索运动，不提供搜索对象。成熟故事材料只是 prior，不是本书 Reality。",
-          "S01/S02/S03 不是三台独立故事生成器，而是同一条 Upgrade Ledger 的长程 / 当前阶段 / 当前故事三个观察尺度。所有结果必须服务同一条 Road。",
+          "Creative Frame 是当前长篇创作状态：必须继承父层与同层前序区段，不能把当前区段当成新书重新开机。",
+          "男主是故事推演的主摄像机。先问 protagonistCamera 中男主现在在哪里、想得到什么、这一步准备主动做什么，再看他的行动会撞到哪些现成人物、资源、组织和规则。",
+          "M 系列方法通过 creativeContext.methodInvocations 横切进入。它们只是面对当前对象和问题的创作算法，不提供对象、不自动成为 Canon，也不属于某一个固定 S 阶段。成熟故事材料只是 prior，不是本书 Reality。",
+          "S01/S02/S03 不是 S Framework 本体，更不是三台独立故事生成器，只是同一 Creative Frame / Upgrade Ledger 的长程 / 当前阶段 / 当前故事观察尺度。所有结果必须服务同一条 Road。",
           "候选可以分叉、回返和失败；不要为了尽快交付而把第一条可行答案冒充完成。",
           scaleInstruction,
         ].join("\n"),
@@ -396,6 +408,7 @@ export class StoryAuthoringService {
                 readerNeed: request.readerNeed,
                 targetEmotion: request.targetEmotion,
                 protagonistProfile: request.protagonistProfile,
+                creativeContext: request.creativeContext,
                 upgradeLedger: request.upgradeLedger,
                 objectField: {
                   digest: request.field.digest,
@@ -427,6 +440,7 @@ export class StoryAuthoringService {
         projectId: request.field.projectId,
         scale: request.field.scale as "S01" | "S02" | "S03",
         objectFieldDigest: request.field.digest,
+        creativeContextDigest: request.creativeContext.digest,
         question: result.value.question,
         objectFocus: result.value.objectFocus,
         seeds: result.value.seeds,
@@ -462,10 +476,18 @@ export class StoryAuthoringService {
       throw new Error("story_authoring.invalid_story_unit_request");
     }
 
+    assertStoryCreativeContextBound(
+      request.creativeContext,
+      request.field,
+      request.upgradeLedger,
+    );
+
     if (
       request.sourceSearch &&
       (request.sourceSearch.projectId !== request.field.projectId ||
-        request.sourceSearch.scale !== "S03")
+        request.sourceSearch.scale !== "S03" ||
+        request.sourceSearch.creativeContextDigest !==
+          request.creativeContext.digest)
     ) {
       throw new Error("story_authoring.source_search_not_bound");
     }
@@ -516,6 +538,9 @@ export class StoryAuthoringService {
         instructions: [
           "你在 S04 Writers' Room 设计一出故事。小说不是世界自转后的监控录像，也不是让 Character Agents 随机生活后再捡精彩片段。",
           "先从给定 Object Field 与已选 Story Seeds 选择具体对象，再设计为什么这些对象现在要撞在一起。READY 时 groundingSurfaceRefs 必须指出这出 Story 具体踩在哪些 Object surfaces 上，不能只引用对象名。",
+          "Creative Frame 是长期创作状态，不是提示词标题。先继承 parentFrames 与 previousSiblingFrames 已经成立的目标、关系、结果和未结事项，再设计当前区段。",
+          "Protagonist Camera 是本轮推演起点。男主不是旁观摄像头，而是主动行动者：围绕 currentGoal / upgradeNeed / activeMove，让他去碰 Module 2 已有的人、资源、组织、制度与高价对象，由这些人的下注与反应形成剧情。",
+          "Creative Method Invocations 是横切算法调用。M 系列可以帮助找好处、想金手指/能力、技能进化、关系玩法、战斗解法或新点子，但必须作用在当前 Frame + 男主目标 + 已有世界对象上，不能替代 Reality。",
           "Upgrade Ledger 是这部长篇已经确定的升级路线与当前阶段，不是本轮临时脑洞。StoryUnit 必须服务 currentStepId / stageGoal / settlementTarget，不能等一次互动结束后再问‘下一故事自然长什么’。",
           "Expectation Design 已经给出 Reader 需求、目标情绪、稀缺性方向、固有认知、主角优势、反应与收益方向。不得偷换这笔交易。",
           "三阵营首先是编剧工具：只从 Object Field 中已经存在的人物划分当前友方/敌方/中立/其他利益位置。禁止为了‘需要一个识货人/反派/妹妹位’在第三模块临时造功能NPC。",
@@ -540,6 +565,7 @@ export class StoryAuthoringService {
                   storyTimeLabel: request.field.storyTimeLabel,
                   objects: fieldObjectCatalog(request.field),
                 },
+                creativeContext: request.creativeContext,
                 selectedSeeds,
                 upgradeLedger: request.upgradeLedger,
                 expectationDesign: request.expectationDesign,
@@ -565,6 +591,7 @@ export class StoryAuthoringService {
         status: result.value.status,
         projectId: request.field.projectId,
         objectFieldDigest: request.field.digest,
+        creativeContextDigest: request.creativeContext.digest,
         sourceSeedIds: [...request.sourceSeedIds],
         expectationDesignDigest: request.expectationDesign.digest,
         objectAnchorIds: result.value.objectAnchorIds,
