@@ -10,6 +10,7 @@ import {
   type ExpectationDesign,
   type StoryAuthoringSearch,
   type StoryAuthoringSearchDraft,
+  type StoryCreativeContext,
   type StoryObjectField,
   type StoryObjectFieldDraft,
   type StorySceneExpansion,
@@ -245,6 +246,7 @@ function validateScaleResult(
 export function finalizeStoryAuthoringSearch(
   draft: StoryAuthoringSearchDraft,
   field: StoryObjectField,
+  creativeContext?: StoryCreativeContext,
 ): StoryAuthoringSearch {
   const parsed = StoryAuthoringSearchDraftSchema.parse(draft);
   if (
@@ -253,6 +255,13 @@ export function finalizeStoryAuthoringSearch(
     parsed.scale !== field.scale
   ) {
     throw new Error("story_authoring.search_not_bound_to_object_field");
+  }
+  if (
+    creativeContext &&
+    (creativeContext.projectId !== field.projectId ||
+      parsed.creativeContextDigest !== creativeContext.digest)
+  ) {
+    throw new Error("story_authoring.search_not_bound_to_creative_context");
   }
   const allowedObjectIds = new Set(field.objects.map((object) => object.id));
   const allowedSurfaceRefs = allowedStorySurfaceRefs(field);
@@ -331,14 +340,16 @@ export interface StoryUnitRealityFocus {
 }
 
 /**
- * S04 is the writer's room. It designs the play and activation conditions, but
- * the Character Agent / Arbiter runtime still owns actual character choices.
+ * S04 is the writer's room. It owns the commercial story line, stakes and
+ * payoff direction. Character execution chooses characterization-consistent
+ * concrete performance; World Arbiter only checks hard Reality feasibility.
  */
 export function finalizeStoryUnitDesign(
   draft: StoryUnitDesignDraft,
   field: StoryObjectField,
   expectationDesign: ExpectationDesign,
   availableSeedIds: ReadonlySet<string> = new Set(),
+  creativeContext?: StoryCreativeContext,
 ): StoryUnitDesign {
   const parsed = StoryUnitDesignDraftSchema.parse(draft);
   if (
@@ -351,6 +362,13 @@ export function finalizeStoryUnitDesign(
     expectationDesign.storyStateFingerprint !== field.storyStateFingerprint
   ) {
     throw new Error("story_authoring.story_unit_not_bound");
+  }
+  if (
+    creativeContext &&
+    (creativeContext.projectId !== field.projectId ||
+      parsed.creativeContextDigest !== creativeContext.digest)
+  ) {
+    throw new Error("story_authoring.story_unit_not_bound_to_creative_context");
   }
 
   if (parsed.status === "BLOCKED_WORLD_GAP") {
