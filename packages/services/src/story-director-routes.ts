@@ -103,6 +103,11 @@ export function registerStoryDirectorRoutes<T extends {
     if (options.enableBackgroundWorker) coordinator.wake();
     return { status: 202, body: { runId, idempotentReplay: false } };
   };
+  app.route("GET", "/api/projects/:projectId/outline", (request) => {
+    const { projectId } = Params.parse(request.params);
+    requireProject(projectId);
+    return story.listOutline(projectId);
+  });
   app.route("POST", "/api/projects/:projectId/story-director/design", (request) => {
     const { projectId } = Params.parse(request.params);
     return start(projectId, "design", request.body);
