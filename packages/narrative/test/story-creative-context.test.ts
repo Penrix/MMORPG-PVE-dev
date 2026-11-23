@@ -5,6 +5,7 @@ import {
   assertStoryCreativeContextBound,
   buildStoryCreativeFrameContext,
   finalizeStoryCreativeContext,
+  finalizeStoryCreativeFrameContext,
   finalizeStoryObjectField,
 } from "../src/index.js";
 
