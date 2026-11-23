@@ -4,7 +4,11 @@ import type {
   StoryObjectField,
   StoryUpgradeLedger,
 } from "@narralume/contracts";
-import type { NarrativeRun, NarrativeRunStep, RunBudgetUsage } from "@narralume/domain";
+import type {
+  NarrativeRun,
+  NarrativeRunStep,
+  RunBudgetUsage,
+} from "@narralume/domain";
 
 import {
   creativeMethodEligibilityIssue,
@@ -62,7 +66,13 @@ export interface CreativeOperatorInvocationResult {
 }
 
 function emptyUsage(): RunBudgetUsage {
-  return { inputTokens: 0, outputTokens: 0, calls: 0, costUsd: 0, wallTimeMs: 0 };
+  return {
+    inputTokens: 0,
+    outputTokens: 0,
+    calls: 0,
+    costUsd: 0,
+    wallTimeMs: 0,
+  };
 }
 
 function hasPriorStoryState(context: StoryCreativeContext): boolean {
@@ -148,10 +158,9 @@ export class CreativeOperatorInvocationService {
     return {
       definition,
       invocation,
-      creativeContext: withCreativeMethodInvocations(
-        request.creativeContext,
-        [invocation],
-      ),
+      creativeContext: withCreativeMethodInvocations(request.creativeContext, [
+        invocation,
+      ]),
     };
   }
 }

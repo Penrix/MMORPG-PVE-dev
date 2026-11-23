@@ -286,7 +286,9 @@ describe("M-series creative operator runtime", () => {
       ),
     };
 
-    const result = await new StoryAuthoringService(model).searchWithCreativeMethods(
+    const result = await new StoryAuthoringService(
+      model,
+    ).searchWithCreativeMethods(
       run,
       step,
       {
@@ -339,7 +341,9 @@ describe("M-series creative operator runtime", () => {
       ),
     };
 
-    const result = await new StoryAuthoringService(model).searchWithCreativeMethods(
+    const result = await new StoryAuthoringService(
+      model,
+    ).searchWithCreativeMethods(
       run,
       step,
       {
