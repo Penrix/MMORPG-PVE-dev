@@ -320,7 +320,9 @@ export class StoryDirectorPipeline {
           storyUnitDesign: storyUnit,
           worldContext,
           targetOutlineNodeId: request.targetOutlineNodeId ?? null,
-          stakeBeat: request.stakeBeatByEntityId?.[characterId],
+          ...(request.stakeBeatByEntityId?.[characterId]
+            ? { stakeBeat: request.stakeBeatByEntityId[characterId] }
+            : {}),
           round,
         });
         nextObservations.push(observation);
@@ -346,7 +348,7 @@ export class StoryDirectorPipeline {
         round,
         proposals,
         worldContext,
-        hardContracts: request.hardContracts,
+        ...(request.hardContracts ? { hardContracts: request.hardContracts } : {}),
         protagonistCharacterId: request.povEntityId,
       }, signal);
       arbitration = result.value;
@@ -400,7 +402,9 @@ export class StoryDirectorPipeline {
     const creativeFrameState = storyCreativeFrameStateFromStoryUnit({
       frameOutlineNodeId: input.frameOutlineNodeId ?? input.chapterOutlineNodeId,
       storyUnit: input.storyUnit,
-      expectationState: input.expectationState,
+      ...(input.expectationState !== undefined
+        ? { expectationState: input.expectationState }
+        : {}),
       updatedAt: input.updatedAt,
     });
     const frame = stageStoryCreativeFrameState(this.story, creativeFrameState, input.updatedAt);
