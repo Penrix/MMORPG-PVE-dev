@@ -347,8 +347,8 @@ export function finalizeStoryUnitDesign(
   draft: StoryUnitDesignDraft,
   field: StoryObjectField,
   expectationDesign: ExpectationDesign,
-  availableSeedIds: ReadonlySet<string> = new Set(),
   creativeContext: StoryCreativeContext,
+  availableSeedIds: ReadonlySet<string> = new Set(),
 ): StoryUnitDesign {
   const parsed = StoryUnitDesignDraftSchema.parse(draft);
   if (
