@@ -203,9 +203,9 @@ describe("creative frame state persistence", () => {
     expect(context.inheritedState.latestUpgradeLedger?.currentStepId).toBe(
       "step:mission",
     );
-    expect(context.inheritedState.activeStakeLedger.map((item) => item.id)).toEqual([
-      "stake:reviewer",
-    ]);
+    expect(
+      context.inheritedState.activeStakeLedger.map((item) => item.id),
+    ).toEqual(["stake:reviewer"]);
     expect(
       context.inheritedState.openExpectationThreads.map((item) => item.id),
     ).toEqual(["expectation:mission"]);

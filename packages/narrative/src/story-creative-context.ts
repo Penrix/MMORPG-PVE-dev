@@ -83,8 +83,9 @@ function inheritedCreativeState(
     activeStakeLedger:
       latest?.stakeLedger.filter((entry) => entry.state !== "settled") ?? [],
     openExpectationThreads:
-      latest?.expectationThreads.filter((thread) => thread.phase !== "settled") ??
-      [],
+      latest?.expectationThreads.filter(
+        (thread) => thread.phase !== "settled",
+      ) ?? [],
     retainedAssets: latest?.retainedAssets ?? [],
     unresolvedQuestions: latest?.unresolvedQuestions ?? [],
   };
@@ -310,7 +311,6 @@ export function assertStoryCreativeContextBound(
   }
 }
 
-
 export function finalizeStoryCreativeFrameState(
   draft: StoryCreativeFrameStateDraft,
 ): StoryCreativeFrameState {
@@ -318,9 +318,7 @@ export function finalizeStoryCreativeFrameState(
   const stakeIds = new Set<string>();
   for (const entry of parsed.stakeLedger) {
     if (stakeIds.has(entry.id)) {
-      throw new Error(
-        `story_creative_frame_state.duplicate_stake:${entry.id}`,
-      );
+      throw new Error(`story_creative_frame_state.duplicate_stake:${entry.id}`);
     }
     stakeIds.add(entry.id);
   }
