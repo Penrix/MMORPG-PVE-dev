@@ -290,6 +290,7 @@ describe("object-grounded story authoring runtime", () => {
       projectId: "p1",
       scale: "S03",
       objectFieldDigest: objectField.digest,
+        creativeContextDigest: "creative:test",
       question: "这一阵子到底有什么值得玩？",
       objectFocus: [],
       seeds: [
@@ -340,6 +341,7 @@ describe("object-grounded story authoring runtime", () => {
       projectId: "p1",
       scale: "S03",
       objectFieldDigest: objectField.digest,
+        creativeContextDigest: "creative:test",
       question: "两个人之间有什么值得玩的关系？",
       objectFocus: [],
       seeds: [
@@ -388,6 +390,7 @@ describe("object-grounded story authoring runtime", () => {
         projectId: "p1",
         scale: "S01",
         objectFieldDigest: objectField.digest,
+        creativeContextDigest: "creative:test",
         question: "这个男人在忍界长期过什么值得追看的生活？",
         objectFocus: [
           {
@@ -464,6 +467,7 @@ describe("object-grounded story authoring runtime", () => {
         projectId: "p1",
         scale: "S02",
         objectFieldDigest: objectField.digest,
+        creativeContextDigest: "creative:test",
         question: "当前S0能进入什么更贵的新生活？",
         objectFocus: [],
         seeds: [
@@ -523,6 +527,7 @@ describe("object-grounded story authoring runtime", () => {
         status: "READY",
         projectId: "p1",
         objectFieldDigest: objectField.digest,
+        creativeContextDigest: "creative:test",
         sourceSeedIds: ["seed:s03"],
         expectationDesignDigest: exp.digest,
         objectAnchorIds: ["object:xiuxin", "object:medic", "object:sakumo"],
@@ -697,6 +702,7 @@ describe("object-grounded story authoring runtime", () => {
         projectId: "p1",
         scale: "S03",
         objectFieldDigest: objectField.digest,
+        creativeContextDigest: "creative:test",
         question: "这一阵子有什么值得玩？",
         objectFocus: [],
         seeds: [],
@@ -738,6 +744,7 @@ describe("object-grounded story authoring runtime", () => {
           status: "BLOCKED_WORLD_GAP",
           projectId: "p1",
           objectFieldDigest: objectField.digest,
+        creativeContextDigest: "creative:test",
           sourceSeedIds: [],
           expectationDesignDigest: exp.digest,
           objectAnchorIds: [],
@@ -782,6 +789,7 @@ describe("object-grounded story authoring runtime", () => {
           status: "BLOCKED_WORLD_GAP",
           projectId: "p1",
           objectFieldDigest: objectField.digest,
+        creativeContextDigest: "creative:test",
           sourceSeedIds: [],
           expectationDesignDigest: exp.digest,
           objectAnchorIds: [],
