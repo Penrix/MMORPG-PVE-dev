@@ -145,7 +145,9 @@ describe("StoryRuntimeAgentService", () => {
           expect(serialized).toContain("Hero");
           expect(serialized).toContain("authoredStoryFunction");
           expect(serialized).toContain("不是来决定");
-          expect(serialized).toContain("严禁流露出任何‘预知自己会被主角打脸’的违和感");
+          expect(serialized).toContain(
+            "严禁流露出任何‘预知自己会被主角打脸’的违和感",
+          );
           const checked = validate({
             resources: [`${current.characterId}:fact`],
             availableOptions: ["wait", "use the key"],

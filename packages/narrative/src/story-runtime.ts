@@ -168,8 +168,7 @@ export class CharacterObservationBuilder {
       (event.reactionTargetEntityIds.includes(request.characterId)
         ? "payoff"
         : authoredStakes.some((entry) =>
-            entry.state === "escalating" ||
-            (entry.state as string) === "escalated",
+            ["escalated", "escalating"].includes(entry.state),
           )
           ? "escalate"
           : "stake");

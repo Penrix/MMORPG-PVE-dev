@@ -394,17 +394,25 @@ describe("Module 3 Story Runtime core", () => {
       });
 
     const stake = build("stake");
-    expect(stake.authoredDirection).toContain("block the gate and wager my reputation");
+    expect(stake.authoredDirection).toContain(
+      "block the gate and wager my reputation",
+    );
     expect(stake.authoredDirection).toContain("lose public standing");
-    expect(stake.authoredDirection).toContain("belief=the side gate may still be usable");
+    expect(stake.authoredDirection).toContain(
+      "belief=the side gate may still be usable",
+    );
     expect(stake.authoredDirection).not.toContain("summon the harbor guard");
     expect(stake.authoredDirection).not.toContain("realize Hero outplayed me");
 
     const escalate = build("escalate");
-    expect(escalate.authoredDirection).toContain("block the gate and wager my reputation");
+    expect(escalate.authoredDirection).toContain(
+      "block the gate and wager my reputation",
+    );
     expect(escalate.authoredDirection).toContain("lose public standing");
     expect(escalate.authoredDirection).toContain("summon the harbor guard");
-    expect(escalate.authoredDirection).not.toContain("realize Hero outplayed me");
+    expect(escalate.authoredDirection).not.toContain(
+      "realize Hero outplayed me",
+    );
     expect(build().authoredDirection).toBe(escalate.authoredDirection);
 
     const payoff = build("payoff");
@@ -457,7 +465,9 @@ describe("Module 3 Story Runtime core", () => {
       }),
     );
     expect(current.currentGoal).toContain("goal=enter the harbor");
-    expect(current.knownFacts.every((fact) => fact.id === "camp-baseline:newcomer")).toBe(true);
+    expect(
+      current.knownFacts.every((fact) => fact.id === "camp-baseline:newcomer"),
+    ).toBe(true);
     const proposal = finalizeCharacterActionProposal(
       {
         version: "character-action-proposal.v1",
