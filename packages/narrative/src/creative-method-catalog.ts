@@ -88,9 +88,7 @@ export function creativeMethodSegmentFromCuratedCard(input: {
       summary: input.entry.summary,
       callWhen: input.entry.call_when,
       tags: input.entry.tags,
-      sourcePath: `${input.sourceRootLabel.replace(/\/$/u, "")}/${
-        input.entry.filename
-      }`,
+      sourcePath: `${input.sourceRootLabel.replace(/\/$/u, "")}/${input.entry.filename}`,
       curationStage: input.entry.curation_stage ?? null,
     },
     entityIds: [],
