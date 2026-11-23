@@ -255,6 +255,14 @@ digest
 
 ### StoryProtagonistCamera
 
+这里故意和 `StoryUpgradeLedger.currentPosition` 分开：
+
+- `currentPosition` = 男主在长期升级路线上的社会 / 实力 / 价格位置；
+- `currentLocation` = 这一刻人具体在哪里；
+- `currentState` = 这一刻身体、身份、资产、处境等综合状态。
+
+因此“人在木叶医院”不等于“升级位置仍是普通伤员”，地点和长期价格位置不能绑死。
+
 ```text
 protagonistEntityId
 currentLocation
@@ -342,11 +350,13 @@ Project Reality 更新
 
 ## 11. 当前工程顺序
 
-第一批只做三件事：
+第一批已落地：
 
-1. 用 NarraLume outline tree 编译 `StoryCreativeFrameContext`；
-2. Story Authoring / S04 强制带 `StoryProtagonistCamera`；
-3. 新增通用 `CreativeMethodInvocation` 端口，让 M 系列可在任意明确创作问题上进入。
+1. NarraLume outline tree 已可编译 `StoryCreativeFrameContext`；
+2. Story Search / S04 已强制绑定 `StoryCreativeContext`，不能再用假 digest 绕过父层 / 前序状态；
+3. `StoryProtagonistCamera` 已作为 Story Director 推演起点；
+4. 已新增通用 `CreativeMethodInvocation` 端口，M 系列不再被硬编码成某个固定 S 步骤；
+5. `focusObjectIds` 与 Method `inputObjectIds` 必须落在当前 Module-2 Object Field，且 Camera 必须包含男主对象。
 
 后续再做：
 
