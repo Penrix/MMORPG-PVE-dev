@@ -235,6 +235,9 @@ describe("StoryAuthoringService", () => {
           expect(serialized).toContain("step:professional-reprice");
           expect(serialized).toContain("object:xiuxin");
           expect(serialized).toContain("world-reality:medic");
+          expect(serialized).toContain("protagonistCamera");
+          expect(serialized).toContain("methodInvocations");
+          expect(serialized).toContain("activeMove");
           const checked = validate({
             status: "READY",
             question: "病房期哪些对象值得继续玩？",
