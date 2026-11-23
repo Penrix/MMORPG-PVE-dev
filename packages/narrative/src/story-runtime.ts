@@ -163,15 +163,20 @@ export class CharacterObservationBuilder {
       (entry) =>
         entry.entityId === request.characterId && activeStakeIds.has(entry.id),
     );
-    const stakeBeat =
-      request.stakeBeat ??
-      (event.reactionTargetEntityIds.includes(request.characterId)
-        ? "payoff"
-        : authoredStakes.some((entry) =>
-            ["escalated", "escalating"].includes(entry.state),
-          )
-          ? "escalate"
-          : "stake");
+    const isPayoff = event.reactionTargetEntityIds.includes(
+      request.characterId,
+    );
+    const isEscalated = authoredStakes.some((entry) =>
+      ["escalated", "escalating"].includes(entry.state),
+    );
+    let stakeBeat: "stake" | "escalate" | "payoff" = "stake";
+    if (request.stakeBeat) {
+      stakeBeat = request.stakeBeat;
+    } else if (isPayoff) {
+      stakeBeat = "payoff";
+    } else if (isEscalated) {
+      stakeBeat = "escalate";
+    }
     const authoredDirection = [
       `storyRole=${campMember.storyRole}`,
       `belief=${campMember.currentBelief}`,
