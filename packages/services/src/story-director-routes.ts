@@ -1,12 +1,21 @@
+// prettier-ignore
 import { randomUuid } from "@narralume/domain";
+// prettier-ignore
 import { buildStoryDirectorDesignRecipe, buildStoryDirectorRehearseRecipe } from "@narralume/harness";
+// prettier-ignore
 import { SqliteProjectRepository, SqliteRunRepository, SqliteStoryRepository, type NarrativeDatabase } from "@narralume/persistence";
+// prettier-ignore
 import { z } from "zod";
+// prettier-ignore
 import type { RouteApp } from "./route-app.js";
+// prettier-ignore
 import type { RunCoordinator } from "./run-coordinator.js";
+// prettier-ignore
 import { requireWritingAssignment, withRuntimeModelPolicy } from "./run-policy.js";
 
+// prettier-ignore
 const Params = z.object({ projectId: z.string().min(1) });
+// prettier-ignore
 const Design = z.object({
   projectId: z.string().min(1),
   frameOutlineNodeId: z.string().min(1),
@@ -16,6 +25,7 @@ const Design = z.object({
   readerNeed: z.string().min(1),
   targetEmotion: z.string().min(1),
 }).passthrough();
+// prettier-ignore
 const Rehearse = z.object({
   field: z.object({ projectId: z.string().min(1) }).passthrough(),
   storyUnit: z.object({ projectId: z.string().min(1), status: z.literal("READY") }).passthrough(),
@@ -28,6 +38,7 @@ const Rehearse = z.object({
   request: z.string().min(1),
   generationId: z.string().min(1),
 }).passthrough();
+// prettier-ignore
 const Adoption = z.object({
   chapterOutlineNodeId: z.string().min(1),
   frameOutlineNodeId: z.string().min(1).optional(),
@@ -36,11 +47,13 @@ const Adoption = z.object({
   expectationState: z.object({ projectId: z.string().min(1) }).passthrough().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
 }).passthrough();
+// prettier-ignore
 export class StoryDirectorRouteError extends Error {
   constructor(readonly code: string, message: string, readonly statusCode = 422) { super(message); }
 }
 
 /** Generic injection keeps services independent of narrative runtime types. */
+// prettier-ignore
 export function registerStoryDirectorRoutes<T extends {
   chapterOutlineNodeId: string;
   frameOutlineNodeId?: string;

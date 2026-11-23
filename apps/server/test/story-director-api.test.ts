@@ -63,6 +63,7 @@ const camera = {
 let db: NodeNarrativeDatabase;
 let story: SqliteStoryRepository;
 let app: Awaited<ReturnType<typeof buildApp>> | null = null;
+// prettier-ignore
 const config: ServerConfig = { dataDirectory: ".", databasePath: ":memory:", host: "127.0.0.1", port: 4317, environment: "test" };
 
 // prettier-ignore

@@ -1,7 +1,12 @@
+// prettier-ignore
 import type { RunSnapshot, NarrativeRunStep } from "@narralume/domain";
+// prettier-ignore
 import type { WorkerRegistry, StepExecutionResult } from "@narralume/harness";
+// prettier-ignore
 import type { NarrativeDatabase } from "@narralume/persistence";
+// prettier-ignore
 import type { NarrativeModelClient } from "./model-client.js";
+// prettier-ignore
 import {
   StoryDirectorPipeline,
   type StoryDirectorAdoptionInput,
@@ -10,6 +15,7 @@ import {
 } from "./story-director-pipeline.js";
 
 /** Speculative runs never write Canon or outline. Only author adoption stages a handoff. */
+// prettier-ignore
 export class StoryDirectorWorkerSuite {
   private readonly pipeline: StoryDirectorPipeline;
   constructor(database: NarrativeDatabase, model: NarrativeModelClient) {

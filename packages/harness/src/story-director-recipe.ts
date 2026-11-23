@@ -1,6 +1,7 @@
 import type { RunStepKind } from "@narralume/domain";
 import type { RunStepSeed } from "./recipe.js";
 
+// prettier-ignore
 function recipe(runId: string, name: "story-director-design" | "story-director-rehearse", kind: RunStepKind) {
   return {
     name, version: 1,
@@ -10,9 +11,11 @@ function recipe(runId: string, name: "story-director-design" | "story-director-r
     }] satisfies readonly RunStepSeed[],
   };
 }
+// prettier-ignore
 export function buildStoryDirectorDesignRecipe(runId: string) {
   return recipe(runId, "story-director-design", "story.director.design");
 }
+// prettier-ignore
 export function buildStoryDirectorRehearseRecipe(runId: string) {
   return recipe(runId, "story-director-rehearse", "story.director.rehearse");
 }

@@ -103,6 +103,7 @@ export async function buildApp(
         );
       },
     );
+  // prettier-ignore
   const storyDirectorWorkers = new StoryDirectorWorkerSuite(database, modelClient);
   const workers = {
     ...new AssistantWorkerSuite(database, modelClient).registry(),
