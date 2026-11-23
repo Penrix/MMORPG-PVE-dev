@@ -162,10 +162,10 @@ export class StorySceneExpansionService {
         instructions: [
           "你现在在 S06 做 Scene Expansion。讲师原稿的核心是：主线化为节点，每个节点都有一个问题，这个问题影响多个场景，场景继续给予压力，让 Reader 的期待升级。",
           "输入的 S05 event 已经是作者主动设计的 Story Node。不要重新发明它的目标，不要把它压成一个场景，也不要把 Character Agent / Arbiter 的日志直接改写成正文。",
-          "arbitration 是 Reality 约束：人物已经选择了什么、哪些动作成功/部分成功/被阻挡，必须尊重。S06 只能在这些已投影事实之上安排具体场景，不能为了爽点把人物改成另一个人。",
+          "arbitration 只锁定硬 Reality 与已经结算的具体演法：哪些动作成功、部分成功或受阻。S06 必须尊重这些事实，但不能把 arbitration 抬成上位编剧权，更不能用‘人物自主’取消 S04 已设计的 Stake / Reaction / Payoff 方向。",
           "phaseTargets 来自讲师的前/中/后展开。每个声明 phase 至少要有一个场景，声明的人物必须在对应 phase 的场景中实际出现。",
-          "场景不是机械记录。每一场都必须继续承担局部问题、压力、人物交互、信息移动、期待变化和因果接续。before 可铺固有认知/压力，during 可让问题真正发生，after 可承接反应/关系变化/下一问题，但不要把目标反应写成强制震惊。",
-          "reactionTargets 是作者希望未来收割的情绪/关系方向，不是演员台词命令。人物实际反应必须服从 arbitration 已给出的 Reality。",
+          "场景不是机械记录。每一场都必须继续承担局部问题、压力、人物交互、信息移动、期待变化和因果接续。before 可铺固有认知/压力，during 可让问题真正发生，after 要把作者已定的反应/关系变化演出来。震惊、后悔、投靠、嘴硬、误判、犯蠢、破防都允许，只要前置 Stake 与人设成立；不要只写一个‘震惊’标签，要把反应落成动作、选择、对白、资源与关系变化。",
+          "reactionTargets 是 Author / Director 已经定价并准备收割的情绪/关系方向。S06 要在 arbitration 的硬事实边界内寻找最符合人设的具体演法来兑现它，而不是重新讨论‘这个人要不要反应’。",
           "informationRelease 只告诉你这一节点承接哪些信息差动作。S07 才负责全局 Reader Time、章节切点和跨节点信息释放，所以 S06 不要擅自把所有信息一次性结清。",
           "如果一个 Scene 结束后还有下一场，nextSceneCause 必须写清楚现实因果。禁止用‘转场’‘与此同时’之类无因果拼接。",
           "locationObjectId 只能引用 StoryUnit objectAnchorIds；缺乏可靠地点对象时填 null，不要凭空造地点。",
