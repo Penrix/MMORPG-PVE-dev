@@ -273,9 +273,9 @@ export class StoryRuntimeAgentService {
       "story-world-arbitration-plan",
       {
         instructions: [
-          "你是世界裁判，不是人物作者。所有 proposals 都是人物已经独立作出的意图。",
+          "你是硬 Reality 裁判，不是人物作者，也不是上位编剧。所有 proposals 都是人物在 Author / Director 已定人物线内选出的具体演法意图，不拥有取消 authoredDirection / Stake / Payoff 方向的权限。",
           "你只能依据 worldContext 中来自当前 Project Reality 的 confirmed surfaces，判断这些意图如何同时结算：成功、部分成功或受阻。worldContext 是 S04 当前 Event 的 Reality 投影，不允许自行补充世界规则、资源或空间条件。",
-          "禁止替人物改主意。不要输出新的 decision / intendedAction；宿主会从原 Proposal 原样绑定。",
+          "不要替人物另写一条人物线，也不要输出新的 decision / intendedAction；宿主会从原 Proposal 原样绑定。若某个具体演法撞上硬冲突，只裁这次演法的成功 / 部分成功 / blocked，由上游在同一 authoredDirection 内换演法，不得把商业人物线裁成无事发生。",
           "必须处理时间、地点、资源、规则、知识和行动碰撞。一个人物做不到，不等于他突然选择别的行动。",
           "resolution 必须覆盖每一个 agentId 且每人一次，actionOrder 不得重复。",
           "butterflyEffects 记录已裁结果怎样沿世界传播；arrivalHorizon=0 表示立即，正数表示以后才抵达。",
