@@ -193,6 +193,7 @@ function storyUnitDesignFixture(): StoryUnitDesign {
     status: "READY",
     projectId: "p1",
     objectFieldDigest: "field:gate",
+    creativeContextDigest: "creative:test",
     sourceSeedIds: [],
     expectationDesignDigest: "expectation:gate",
     objectAnchorIds: ["object:hero"],
