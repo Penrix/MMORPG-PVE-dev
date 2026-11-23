@@ -114,13 +114,45 @@ export function finalizeStoryCreativeFrameContext(
     throw new Error("story_creative_frame.invalid_projection");
   }
 
-  const previousOrdinals = parsed.previousSiblingFrames.map(
-    (frame) => frame.ordinal,
-  );
-  for (let index = 1; index < previousOrdinals.length; index += 1) {
-    if (previousOrdinals[index]! < previousOrdinals[index - 1]!) {
+  if (parsed.parentFrames.length === 0) {
+    if (parsed.currentFrame.parentId !== null) {
+      throw new Error("story_creative_frame.missing_parent_chain");
+    }
+  } else {
+    for (let index = 0; index < parsed.parentFrames.length; index += 1) {
+      const frame = parsed.parentFrames[index]!;
+      const expectedParentId =
+        index === 0 ? null : parsed.parentFrames[index - 1]!.outlineNodeId;
+      if (frame.parentId !== expectedParentId) {
+        throw new Error("story_creative_frame.invalid_parent_chain");
+      }
+    }
+    if (
+      parsed.currentFrame.parentId !==
+      parsed.parentFrames.at(-1)!.outlineNodeId
+    ) {
+      throw new Error("story_creative_frame.current_parent_mismatch");
+    }
+  }
+
+  const siblingIds = new Set<string>();
+  let previousOrdinal = -1;
+  for (const frame of parsed.previousSiblingFrames) {
+    if (
+      frame.parentId !== parsed.currentFrame.parentId ||
+      frame.kind !== parsed.currentFrame.kind ||
+      frame.ordinal >= parsed.currentFrame.ordinal
+    ) {
+      throw new Error("story_creative_frame.invalid_previous_sibling");
+    }
+    if (siblingIds.has(frame.outlineNodeId)) {
+      throw new Error("story_creative_frame.duplicate_previous_sibling");
+    }
+    siblingIds.add(frame.outlineNodeId);
+    if (frame.ordinal < previousOrdinal) {
       throw new Error("story_creative_frame.previous_siblings_out_of_order");
     }
+    previousOrdinal = frame.ordinal;
   }
 
   return StoryCreativeFrameContextSchema.parse({
@@ -138,6 +170,12 @@ export function finalizeStoryCreativeContext(
     parsed.protagonistCamera.projectId !== parsed.projectId
   ) {
     throw new Error("story_creative_context.project_mismatch");
+  }
+
+  if (
+    !parsed.protagonistCamera.focusObjectIds.some((id) => id.trim().length > 0)
+  ) {
+    throw new Error("story_creative_context.empty_camera_focus");
   }
 
   const invocationIds = new Set<string>();
@@ -181,6 +219,11 @@ export function assertStoryCreativeContextBound(
   );
   if (!protagonistObject) {
     throw new Error("story_creative_context.protagonist_not_in_object_field");
+  }
+  if (
+    !context.protagonistCamera.focusObjectIds.includes(protagonistObject.id)
+  ) {
+    throw new Error("story_creative_context.protagonist_not_in_camera_focus");
   }
 
   for (const objectId of context.protagonistCamera.focusObjectIds) {
