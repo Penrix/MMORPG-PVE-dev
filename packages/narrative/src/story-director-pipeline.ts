@@ -328,6 +328,7 @@ export class StoryDirectorPipeline {
         if (round > 1 && !affected.has(characterId) && old) {
           // The arbiter requires a uniform round; retain the unaffected decision.
           const { digest: _digest, ...draft } = old;
+          void _digest;
           nextProposals.push(finalizeCharacterActionProposal({
             ...draft, round, observationDigest: observation.digest,
           }, observation));
