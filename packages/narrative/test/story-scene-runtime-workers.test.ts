@@ -209,7 +209,9 @@ describe("StorySceneExpansionService", () => {
           const serialized = JSON.stringify(request);
           expect(serialized).toContain("主线化为节点");
           expect(serialized).toContain("每个节点都有一个问题");
-          expect(serialized).toContain("Reality 约束");
+          expect(serialized).toContain("硬 Reality");
+          expect(serialized).toContain("不能把 arbitration 抬成上位编剧权");
+          expect(serialized).toContain("震惊、后悔、投靠");
           const checked = validate({
             scenes: [
               {
