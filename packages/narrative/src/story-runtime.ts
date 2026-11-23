@@ -87,7 +87,8 @@ export interface CharacterObservationBuildRequest {
   generationId: string;
   storyUnitDesign: StoryUnitDesign;
   worldContext: WorldArbitrationContext;
-  goalEvidenceRefs: readonly string[];
+  goalEvidenceRefs?: readonly string[];
+  stakeBeat?: "stake" | "escalate" | "payoff";
   round?: number;
   targetOutlineNodeId?: string | null;
   resourceEvidenceRefs?: readonly string[];
@@ -162,13 +163,24 @@ export class CharacterObservationBuilder {
       (entry) =>
         entry.entityId === request.characterId && activeStakeIds.has(entry.id),
     );
+    const stakeBeat =
+      request.stakeBeat ??
+      (event.reactionTargetEntityIds.includes(request.characterId)
+        ? "payoff"
+        : authoredStakes.some((entry) => entry.state === "escalated")
+          ? "escalate"
+          : "stake");
     const authoredDirection = [
       `storyRole=${campMember.storyRole}`,
+      `belief=${campMember.currentBelief}`,
       `interest=${campMember.currentInterest}`,
       `nodePurpose=${event.purpose}`,
-      ...authoredStakes.map(
-        (entry) =>
-          `stake=${entry.stakeAction}; escalation=${entry.escalationPlan}; payoff=${entry.payoffReaction}`,
+      ...authoredStakes.map((entry) =>
+        stakeBeat === "payoff"
+          ? `stake=${entry.stakeAction}; escalation=${entry.escalationPlan}; payoff=${entry.payoffReaction}`
+          : stakeBeat === "escalate"
+            ? `stake=${entry.stakeAction}; escalation=${entry.escalationPlan}; cost=${entry.commitmentCost}`
+            : `stake=${entry.stakeAction}; cost=${entry.commitmentCost}`,
       ),
     ].join(" ; ");
 
@@ -279,9 +291,18 @@ export class CharacterObservationBuilder {
         (item) => [item.id, item] as const,
       ),
     );
-    const goalEvidenceRefs = normalizeStrings(request.goalEvidenceRefs);
+    const goalEvidenceRefs = normalizeStrings(request.goalEvidenceRefs ?? []);
     if (goalEvidenceRefs.length === 0) {
-      throw new Error("story_runtime.observation.goal_evidence_required");
+      const baselineId = `camp-baseline:${character.id}`;
+      const baseline = evidence({
+        id: baselineId,
+        kind: "fact",
+        text: `character=${character.name} | belief=${campMember.currentBelief} | goal=${campMember.currentGoal}`,
+        sourceType: "authored_camp_baseline",
+      });
+      knownFacts.push(baseline);
+      visibleEvidence.set(baselineId, baseline);
+      goalEvidenceRefs.push(baselineId);
     }
     for (const ref of goalEvidenceRefs) {
       if (!visibleEvidence.has(ref)) {

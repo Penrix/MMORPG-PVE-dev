@@ -365,6 +365,143 @@ function arbitrationContextFor(
 }
 
 describe("Module 3 Story Runtime core", () => {
+  it("reveals stake direction only at the appropriate beat", () => {
+    const design = storyUnitDesignFixture();
+    design.stakeLedger.push({
+      id: "stake:hero",
+      entityId: "hero",
+      currentBelief: "the gate is safe",
+      currentInterest: "control the harbor exit",
+      stakeAction: "block the gate and wager my reputation",
+      stakeAssets: ["reputation"],
+      commitmentCost: "lose public standing",
+      escalationPlan: "summon the harbor guard",
+      payoffReaction: "realize Hero outplayed me",
+      settlementChange: "reputation passes to Hero",
+      state: "escalated",
+    });
+    design.events[0]!.stakeEntryIds.push("stake:hero");
+    const builder = new CharacterObservationBuilder(database);
+    const build = (stakeBeat?: "stake" | "escalate" | "payoff") =>
+      builder.build({
+        projectId: "p1",
+        characterId: "hero",
+        generationId: "generation-1",
+        storyUnitDesign: design,
+        worldContext: worldContextFixture(design),
+        goalEvidenceRefs: ["hero-goal"],
+        stakeBeat,
+      });
+
+    const stake = build("stake");
+    expect(stake.authoredDirection).toContain("block the gate and wager my reputation");
+    expect(stake.authoredDirection).toContain("lose public standing");
+    expect(stake.authoredDirection).toContain("belief=the side gate may still be usable");
+    expect(stake.authoredDirection).not.toContain("summon the harbor guard");
+    expect(stake.authoredDirection).not.toContain("realize Hero outplayed me");
+
+    const escalate = build("escalate");
+    expect(escalate.authoredDirection).toContain("block the gate and wager my reputation");
+    expect(escalate.authoredDirection).toContain("lose public standing");
+    expect(escalate.authoredDirection).toContain("summon the harbor guard");
+    expect(escalate.authoredDirection).not.toContain("realize Hero outplayed me");
+    expect(build().authoredDirection).toBe(escalate.authoredDirection);
+
+    const payoff = build("payoff");
+    expect(payoff.authoredDirection).toContain("realize Hero outplayed me");
+    design.events[0]!.reactionTargetEntityIds.push("hero");
+    expect(build().authoredDirection).toBe(payoff.authoredDirection);
+    design.events[0]!.reactionTargetEntityIds.pop();
+    design.stakeLedger[0]!.state = "planned";
+    expect(build().authoredDirection).toBe(stake.authoredDirection);
+  });
+
+  it("uses a visible camp baseline for a new actor with no story-state records", () => {
+    canon.insertEntity(
+      createCanonEntity({
+        id: "newcomer",
+        projectId: "p1",
+        type: "character",
+        name: "Newcomer",
+        now,
+      }),
+    );
+    const design = storyUnitDesignFixture();
+    design.campNetwork.push({
+      entityId: "newcomer",
+      camp: "友方",
+      currentGoal: "enter the harbor",
+      storyRole: "new arrival",
+      currentBelief: "the harbor offers opportunity",
+      currentInterest: "gain access to the port",
+    });
+    design.events[0]!.castPoolEntityIds.push("newcomer");
+    design.events[0]!.actorPressures.push({
+      entityId: "newcomer",
+      pressure: "the gate is closing",
+    });
+    const current = new CharacterObservationBuilder(database).build({
+      projectId: "p1",
+      characterId: "newcomer",
+      generationId: "generation-1",
+      storyUnitDesign: design,
+      worldContext: worldContextFixture(design),
+      goalEvidenceRefs: [],
+    });
+    expect(current.goalEvidenceRefs).toEqual(["camp-baseline:newcomer"]);
+    expect(current.knownFacts).toContainEqual(
+      expect.objectContaining({
+        id: "camp-baseline:newcomer",
+        kind: "fact",
+        sourceType: "authored_camp_baseline",
+      }),
+    );
+    expect(current.currentGoal).toContain("goal=enter the harbor");
+    expect(current.knownFacts.every((fact) => fact.id === "camp-baseline:newcomer")).toBe(true);
+    const proposal = finalizeCharacterActionProposal(
+      {
+        version: "character-action-proposal.v1",
+        authority: "speculative",
+        projectId: "p1",
+        generationId: "generation-1",
+        round: 1,
+        agentId: current.agentId,
+        characterId: "newcomer",
+        characterName: "Newcomer",
+        observationDigest: current.digest,
+        storyUnitDesignDigest: current.storyUnitDesignDigest,
+        storyUnitEventId: current.storyUnitEventId,
+        realityFingerprint: current.realityFingerprint,
+        location: current.location,
+        currentGoal: current.currentGoal,
+        pressure: current.pressure,
+        resources: [],
+        availableOptions: ["approach the gate", "turn back"],
+        rejectedOptions: ["turn back"],
+        decision: "approach the gate",
+        decisionReason: "I believe the harbor offers opportunity",
+        intendedAction: "approach the gate to ask for entry",
+        actionDuration: "one minute",
+        knowledgeRefs: current.goalEvidenceRefs,
+        resourceClaims: [],
+        constraints: [],
+        contingencies: [],
+        expectedConsequences: ["the guard hears the request"],
+        submittedAt: null,
+      },
+      current,
+    );
+    expect(proposal.knowledgeRefs).toEqual(["camp-baseline:newcomer"]);
+    const omitted = new CharacterObservationBuilder(database).build({
+      projectId: "p1",
+      characterId: "newcomer",
+      generationId: "generation-1",
+      storyUnitDesign: design,
+      worldContext: worldContextFixture(design),
+    });
+    expect(omitted.goalEvidenceRefs).toEqual(current.goalEvidenceRefs);
+  });
+
   it("builds a subjective observation without author-secret leakage", () => {
     const current = observation();
     expect(current.location).toBe("harbor");

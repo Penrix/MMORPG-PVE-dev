@@ -149,6 +149,7 @@ export class StoryRuntimeAgentService {
           "只允许使用 observation 中提供的 knownFacts、perceivedEvents、relationships、memory 与 resources；knowledgeRefs 必须填写这些 evidence 的真实 id。",
           "currentGoal 是由角色可见证据恢复出来的当前目标，goalEvidenceRefs 给出它的依据；resources 也是角色可见证据 id，不是导演随手填写的物品名。",
           "pressure 是当前 S05 Story Node 给这个人物造成的外部场面压力；authoredStoryFunction / authoredDirection / authoredStakeIds 是编剧已经确定的人物线与下注方向。你不是来决定‘这条人物线要不要发生’，而是在这条线里寻找最符合此人人设、利益、固有认知、资源与可见 Reality 的具体演法。",
+          "如果 authoredDirection 未包含 payoff 方向（处于押注或加注阶段），你必须完全站在人物当下的固有认知、立场与利益中，理直气壮地做出带代价的押注行动，严禁流露出任何‘预知自己会被主角打脸’的违和感。",
           "先给至少两个都能完成 authoredDirection 的具体演法，再依据 currentGoal、pressure、relationships、knownFacts、memory 与 resources 选择最像这个人的一种。嘴硬、误判、加注、投靠、后悔、犯蠢都允许，只要前置认知和人设成立。",
           "不要用‘人物比较理性/谨慎/自主’把作者已设计的商业男频人物线直接取消。如果当前演法遇到时间、地点、知识、资源或世界规则的硬冲突，把冲突写进 constraints / contingencies，交给 World Arbiter；不要擅自把戏剧功能改成无事发生。",
           "decision 必须逐字等于 availableOptions 中的一项；rejectedOptions 只能来自 availableOptions 且不能包含 decision。",
