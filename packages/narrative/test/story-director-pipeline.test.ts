@@ -1,7 +1,7 @@
 // prettier-ignore
 import { createCanonEntity, createOutlineNode, createProject, type NarrativeRun, type NarrativeRunStep, type RunBudgetUsage } from "@narralume/domain";
 // prettier-ignore
-import type { ExpectationDesign, ExpectationState, StoryUnitDesign, StorySceneExpansion, StoryReaderTimePlan, WorldArbitrationReceipt, CharacterActionProposal, CharacterObservationPacket } from "@narralume/contracts";
+import type { ExpectationDesign, ExpectationState, StoryUnitDesign, StoryObjectField, StorySceneExpansion, StoryReaderTimePlan, WorldArbitrationReceipt, CharacterActionProposal, CharacterObservationPacket } from "@narralume/contracts";
 // prettier-ignore
 import { SqliteCanonRepository, SqliteProjectRepository, SqliteStoryRepository } from "@narralume/persistence";
 // prettier-ignore
@@ -256,7 +256,7 @@ function rehearsalMocks(statuses: ("feasible" | "infeasible")[]) {
 }
 
 // prettier-ignore
-function rehearsingRequest(designed: { field: any; storyUnit: StoryUnitDesign }) {
+function rehearsingRequest(designed: { field: StoryObjectField; storyUnit: StoryUnitDesign }) {
   return {
     field: designed.field, storyUnit: designed.storyUnit,
     storyUnitEventId: "event:1", expectationState: {
@@ -369,7 +369,7 @@ describe("StoryDirectorPipeline", () => {
         { id: "object:medic", entityId: "medic", kind: "character", name: "医疗忍者",
           surfaces: [{ authority: "confirmed", sourceId: "world-reality:medic", facet: "state", slotKey: "duty", value: "专业复核" }] },
       ], digest: "field:1",
-    };
+    } as unknown as StoryObjectField;
     const result = await director.rehearseAndBuildHandoff(run, step, {
       ...rehearsingRequest({ field, storyUnit: unitFor(field) }),
       activeSeedEntityIds: ["medic"],
