@@ -10,6 +10,8 @@ import type { NarrativeModelClient } from "../src/model-client.js";
 import {
   StoryAuthoringService,
   finalizeExpectationDesign,
+  finalizeStoryCreativeContext,
+  finalizeStoryCreativeFrameContext,
   finalizeStoryObjectField,
   storyObjectSurfaceRef,
 } from "../src/index.js";
@@ -82,6 +84,72 @@ function surfaceRef(
   return storyObjectSurfaceRef(object.id, surface);
 }
 
+function creativeContext(currentField: StoryObjectField) {
+  const frame = finalizeStoryCreativeFrameContext({
+    version: "story-creative-frame.v1",
+    projectId: "p1",
+    targetOutlineNodeId: "arc:hospital",
+    currentFrame: {
+      outlineNodeId: "arc:hospital",
+      parentId: "book:1",
+      kind: "arc",
+      ordinal: 1,
+      title: "木叶医院期",
+      summary: "秀信从重伤状态重新进入忍者体系",
+      goal: "恢复并取得更高任务入口",
+      conflict: null,
+      outcome: null,
+      storyTime: "第三次忍界大战前后",
+      metadata: {},
+    },
+    parentFrames: [
+      {
+        outlineNodeId: "book:1",
+        parentId: null,
+        kind: "book",
+        ordinal: 0,
+        title: "火影长篇",
+        summary: "秀信一路升级进入忍界顶层",
+        goal: "成为忍界最强层级之一",
+        conflict: null,
+        outcome: null,
+        storyTime: null,
+        metadata: {},
+      },
+    ],
+    previousSiblingFrames: [],
+  });
+  return finalizeStoryCreativeContext({
+    version: "story-creative-context.v1",
+    authority: "speculative",
+    projectId: "p1",
+    frame,
+    protagonistCamera: {
+      version: "story-protagonist-camera.v1",
+      projectId: "p1",
+      protagonistEntityId: "xiuxin",
+      currentPosition: "木叶医院",
+      currentGoal: "恢复战斗力并重新进入任务体系",
+      upgradeNeed: "从普通伤员升级为值得高价忍者圈重新估值的人",
+      activeMove: "主动用基础忍术训练恢复，并让真实结果进入专业复核链",
+      focusObjectIds: currentField.objects.map((object) => object.id),
+      advantageRefs: ["world-reality:xiuxin"],
+    },
+    methodInvocations: [
+      {
+        id: "method:m03:story",
+        methodFamily: "M03",
+        methodId: "M03-recall",
+        sourceRef: "Penrix/male-webnovel-cognition/database/m03",
+        scope: "story",
+        purpose: "从当前世界对象寻找更昂贵的人物互动玩法",
+        inputObjectIds: currentField.objects.map((object) => object.id),
+        instruction: "只对当前人物和关系做迁移、组合与变奏，不新增功能NPC。",
+      },
+    ],
+  });
+}
+
 function expectation(): ExpectationDesign {
   return finalizeExpectationDesign({
     version: "expectation-design.v1",
@@ -152,6 +220,7 @@ function upgradeLedger() {
 describe("StoryAuthoringService", () => {
   it("searches S03 only on concrete Object Field objects", async () => {
     const objectField = field("S03");
+    const context = creativeContext(objectField);
     const model: NarrativeModelClient = {
       text: vi.fn(),
       structured: vi.fn(
@@ -234,6 +303,7 @@ describe("StoryAuthoringService", () => {
       step,
       {
         field: objectField,
+        creativeContext: context,
         upgradeLedger: upgradeLedger(),
         request: "寻找当前这一阵子真正值得玩的故事机会",
         readerNeed: "看低位人物凭真实能力被重新估值",
@@ -254,6 +324,7 @@ describe("StoryAuthoringService", () => {
   it("designs S04 as a writers room before Character Agent runtime", async () => {
     const objectField = field("S04");
     const exp = expectation();
+    const context = creativeContext(objectField);
     const sourceSearch = {
       version: "story-authoring-search.v1" as const,
       authority: "speculative" as const,
@@ -261,6 +332,7 @@ describe("StoryAuthoringService", () => {
       projectId: "p1",
       scale: "S03" as const,
       objectFieldDigest: "prior-field",
+      creativeContextDigest: context.digest,
       question: "上一层机会",
       objectFocus: [],
       seeds: [
@@ -311,6 +383,9 @@ describe("StoryAuthoringService", () => {
           expect(serialized).toContain("配角反应是爽点");
           expect(serialized).toContain("stakeLedger");
           expect(serialized).toContain("Upgrade Ledger");
+          expect(serialized).toContain("Creative Frame");
+          expect(serialized).toContain("Protagonist Camera");
+          expect(serialized).toContain("methodInvocations");
           const checked = validate({
             status: "READY",
             objectAnchorIds: ["object:xiuxin", "object:medic"],
@@ -438,6 +513,7 @@ describe("StoryAuthoringService", () => {
       step,
       {
         field: objectField,
+        creativeContext: context,
         sourceSearch,
         sourceSeedIds: ["seed:recheck"],
         expectationDesign: exp,
