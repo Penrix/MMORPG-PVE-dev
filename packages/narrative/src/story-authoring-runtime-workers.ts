@@ -612,8 +612,8 @@ export class StoryAuthoringService {
       },
       request.field,
       request.expectationDesign,
-      availableSeedIds,
       request.creativeContext,
+      availableSeedIds,
     );
 
     return {
