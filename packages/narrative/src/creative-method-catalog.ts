@@ -56,9 +56,7 @@ export function creativeMethodSegmentFromCuratedCard(input: {
       input.entry.status === "candidate") &&
     !markdown
   ) {
-    throw new Error(
-      `creative_method.missing_live_card:${input.entry.id}`,
-    );
+    throw new Error(`creative_method.missing_live_card:${input.entry.id}`);
   }
   const searchable = [
     `方法族：${methodFamily}`,
@@ -90,7 +88,9 @@ export function creativeMethodSegmentFromCuratedCard(input: {
       summary: input.entry.summary,
       callWhen: input.entry.call_when,
       tags: input.entry.tags,
-      sourcePath: `${input.sourceRootLabel.replace(/\/$/u, "")}/${input.entry.filename}`,
+      sourcePath: `${input.sourceRootLabel.replace(/\/$/u, "")}/${
+        input.entry.filename
+      }`,
       curationStage: input.entry.curation_stage ?? null,
     },
     entityIds: [],
