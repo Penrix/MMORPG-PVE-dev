@@ -139,14 +139,16 @@ function creativeContext(currentField: StoryObjectField) {
     },
     methodInvocations: [
       {
-        id: "method:m03:story",
-        methodFamily: "M03",
-        methodId: "M03-recall",
-        sourceRef: "Penrix/male-webnovel-cognition/database/m03",
+        id: "method:m02:story",
+        methodFamily: "M02",
+        methodId: "m02-six-chain",
+        sourceRef:
+          "docs/mmorpg/26-m-series-tr02-creative-method-catalog.md#4-m02六条思维链",
         scope: "story",
-        purpose: "从当前世界对象寻找更昂贵的人物互动玩法",
+        purpose: "打破第一批熟悉答案，寻找机制不同的当前故事候选",
         inputObjectIds: currentField.objects.map((object) => object.id),
-        instruction: "只对当前人物和关系做迁移、组合与变奏，不新增功能NPC。",
+        instruction:
+          "按当前卡点选择真正需要的搜索运动，不把M03素材库误写成算法。",
       },
     ],
   });

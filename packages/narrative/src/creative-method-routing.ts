@@ -20,7 +20,10 @@ import {
 } from "./m-series-methods.js";
 import type { NarrativeModelClient } from "./model-client.js";
 import { zodValidator } from "./schemas.js";
-import { withCreativeMethodInvocations } from "./story-creative-context.js";
+import {
+  assertStoryCreativeContextBound,
+  withCreativeMethodInvocations,
+} from "./story-creative-context.js";
 
 const CreativeMethodRouteSelectionSchema = z.object({
   methodId: z.string().min(1),
@@ -189,6 +192,12 @@ export class CreativeMethodRoutingService {
     ) {
       throw new Error("creative_method_routing.invalid_request");
     }
+
+    assertStoryCreativeContextBound(
+      request.creativeContext,
+      request.field,
+      request.upgradeLedger,
+    );
 
     if (request.creativeContext.methodInvocations.length > 0) {
       return {

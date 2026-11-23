@@ -25,6 +25,7 @@ import type {
 } from "@narralume/domain";
 import type { JsonSchemaContract } from "@narralume/llm";
 
+import type { CreativeMaterialRetrievalService } from "./creative-material-retrieval.js";
 import { CreativeMethodRoutingService } from "./creative-method-routing.js";
 import type { NarrativeModelClient } from "./model-client.js";
 import { zodValidator } from "./schemas.js";
@@ -33,7 +34,10 @@ import {
   finalizeStoryUnitDesign,
   storyObjectSurfaceRef,
 } from "./story-authoring-runtime.js";
-import { assertStoryCreativeContextBound } from "./story-creative-context.js";
+import {
+  assertStoryCreativeContextBound,
+  withCreativeMaterialSelections,
+} from "./story-creative-context.js";
 
 const StoryAuthoringSearchOutputSchema = z.object({
   status: z.enum(["READY", "BLOCKED_WORLD_GAP"]),
@@ -352,7 +356,13 @@ function storyUnitOutputIssues(
  * Character execution chooses concrete performance inside the authored line.
  */
 export class StoryAuthoringService {
-  constructor(private readonly model: NarrativeModelClient) {}
+  constructor(
+    private readonly model: NarrativeModelClient,
+    private readonly creativeMaterials?: Pick<
+      CreativeMaterialRetrievalService,
+      "recall"
+    >,
+  ) {}
 
   async searchWithCreativeMethods(
     run: NarrativeRun,
@@ -360,6 +370,38 @@ export class StoryAuthoringService {
     request: StoryAuthoringSearchModelRequest,
     signal: AbortSignal,
   ): Promise<StoryAuthoringRoutedSearchResult> {
+    assertStoryCreativeContextBound(
+      request.creativeContext,
+      request.field,
+      request.upgradeLedger,
+    );
+
+    let preparedContext = request.creativeContext;
+    if (
+      preparedContext.materialSelections.length === 0 &&
+      this.creativeMaterials
+    ) {
+      const recalled = this.creativeMaterials.recall({
+        field: request.field,
+        creativeContext: preparedContext,
+        scope: "story",
+        purpose: `围绕当前创作问题召回可碰撞的成熟创意对象：${request.request}`,
+        query: [
+          request.readerNeed,
+          request.targetEmotion,
+          request.protagonistProfile,
+        ].join("\n"),
+        focusObjectIds: preparedContext.protagonistCamera.focusObjectIds,
+        limit: 6,
+      });
+      if (recalled.length > 0) {
+        preparedContext = withCreativeMaterialSelections(
+          preparedContext,
+          recalled,
+        );
+      }
+    }
+
     const routing = await new CreativeMethodRoutingService(
       this.model,
     ).routeStorySearch(
@@ -367,7 +409,7 @@ export class StoryAuthoringService {
       step,
       {
         field: request.field,
-        creativeContext: request.creativeContext,
+        creativeContext: preparedContext,
         upgradeLedger: request.upgradeLedger,
         request: request.request,
         readerNeed: request.readerNeed,

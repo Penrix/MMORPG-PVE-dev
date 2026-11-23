@@ -354,4 +354,146 @@ describe("M-series creative method runtime", () => {
     expect(result.routing.creativeContext.methodInvocations).toHaveLength(1);
     expect(result.search.value.seeds[0]?.searchMove).toContain("M02树型");
   });
+
+  it("recalls Module-2 creative materials before routing when a retrieval port is available", async () => {
+    const currentField = field();
+    const creativeContext = context(currentField);
+    const recall = vi.fn(() => [
+      {
+        id: "material-selection:M03:MOVE-0001:1",
+        libraryId: "M03",
+        materialId: "MOVE-0001",
+        materialType: "MOVE",
+        status: "active" as const,
+        title: "先交成果再谈资格",
+        summary: "低位人物先交出超规格成果，再由权威重新估值。",
+        sourceRef:
+          "Penrix/male-webnovel-cognition/database/m03/cards/MOVE/MOVE-0001.md",
+        scope: "story" as const,
+        purpose: "资格不足时寻找成熟做法",
+        inputObjectIds: ["object:xiuxin", "object:medic"],
+        callWhen: ["资格不足时怎样破格？"],
+        tags: ["重新估值"],
+        curationStage: "test",
+        content: "先交出成果，再让已有专业人物行动、下注和改价。",
+      },
+    ]);
+    let calls = 0;
+    const model: NarrativeModelClient = {
+      text: vi.fn(),
+      structured: vi.fn(
+        async (_run, _step, purpose, request, _contract, validate) => {
+          calls += 1;
+          const serialized = JSON.stringify(request);
+          if (purpose === "story-creative-method-routing") {
+            expect(serialized).toContain("m03-compose");
+            expect(serialized).toContain("MOVE-0001");
+            const checked = validate({
+              diagnosis: "当前有成熟MOVE素材可与医院既有人物发生碰撞。",
+              selections: [
+                {
+                  methodId: "m03-compose",
+                  role: "primary",
+                  purpose: "把成熟重新估值做法放进当前医院人物关系里试演",
+                  reason: "素材已召回，当前缺口是具体适配而不是继续空想。",
+                  inputObjectIds: ["object:xiuxin", "object:medic"],
+                },
+              ],
+            });
+            if (!checked.success) throw new Error(checked.issues.join("; "));
+            return {
+              value: checked.data,
+              usage,
+              mode: "native" as const,
+              attempts: 1,
+            };
+          }
+
+          expect(purpose).toBe("story-object-grounded-search");
+          expect(serialized).toContain("MOVE-0001");
+          expect(serialized).toContain("m03-compose");
+          const checked = validate({
+            status: "READY",
+            question: "这张MOVE怎样真正撞到医院既有人物？",
+            objectFocus: [
+              {
+                objectId: "object:medic",
+                surfaceRefs: [surfaceRef(currentField, "object:medic", "duty")],
+                whyNow: "医疗忍者此刻掌握复核权限",
+                valuableSurface: "专业估值与任务资格接口",
+              },
+            ],
+            seeds: [
+              {
+                id: "seed:m03-compose",
+                title: "把成果递到既有专业估值链",
+                anchorObjectIds: ["object:xiuxin", "object:medic"],
+                groundingSurfaceRefs: [
+                  surfaceRef(currentField, "object:xiuxin", "location"),
+                  surfaceRef(currentField, "object:medic", "duty"),
+                ],
+                observation: "秀信正在医院，医疗忍者拥有真实复核职责",
+                searchMove:
+                  "M03 COMPOSE：用MOVE-0001的先交成果机制碰撞当前复核权限",
+                idea: "让训练成果先进入医疗复核，再由已有角色自己重新定价",
+                protagonistHook: "秀信主动交出可验证成果",
+                readerValue: "成熟玩法被当前世界对象重新演成可信的破格入口",
+                newRelationOrChange: "普通医疗关系开始向专业识货关系变价",
+                candidateNewObjects: [],
+                nextQuestion: "哪种成果足以让这笔下注继续升级",
+                status: "CANDIDATE",
+              },
+            ],
+            worldGaps: [],
+            scaleResult: {
+              scale: "S03",
+              periodFocus: "医院重新估值",
+              opportunityField: [
+                {
+                  objectIds: ["object:xiuxin", "object:medic"],
+                  opportunity: "成熟MOVE可以落到现有专业复核关系",
+                  whyAlive: "现实权限与当前主动行动都已经存在",
+                },
+              ],
+              storyMovements: [],
+            },
+          });
+          if (!checked.success) throw new Error(checked.issues.join("; "));
+          return {
+            value: checked.data,
+            usage,
+            mode: "native" as const,
+            attempts: 1,
+          };
+        },
+      ),
+    };
+
+    const result = await new StoryAuthoringService(model, {
+      recall,
+    }).searchWithCreativeMethods(
+      run,
+      step,
+      {
+        field: currentField,
+        creativeContext,
+        upgradeLedger: upgradeLedger(),
+        request: "资格不足时，有没有成熟做法能让现有人物重新估值？",
+        readerNeed: "看低位人物凭真实能力被重新估值",
+        targetEmotion: "得意",
+        protagonistProfile: "秀信：主动用真实成果打开入口",
+      },
+      new AbortController().signal,
+    );
+
+    expect(recall).toHaveBeenCalledTimes(1);
+    expect(calls).toBe(2);
+    expect(result.routing.creativeContext.materialSelections[0]?.materialId).toBe(
+      "MOVE-0001",
+    );
+    expect(result.routing.creativeContext.methodInvocations[0]?.methodId).toBe(
+      "m03-compose",
+    );
+  });
+
 });

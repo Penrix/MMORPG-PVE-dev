@@ -119,7 +119,41 @@ M01A + M01B + M02 + M03 + ... + TR02全部历史版
 
 这些需要各自真正的上游任务和资料，后续做专用入口。
 
-## 5. 新调用入口
+## 5. 第二模块素材库怎样自动进入方法选择
+
+`StoryAuthoringService` 现在可以注入 `CreativeMaterialRetrievalService`（或兼容的 `recall` 端口）。
+
+当调用 `searchWithCreativeMethods(...)` 时：
+
+```text
+当前 creativeContext 已有 materialSelections？
+        ├─ 有 → 尊重上游已经选好的素材
+        └─ 没有
+             ↓
+     是否注入 CreativeMaterialRetrievalService？
+        ├─ 没有 → 只用不依赖素材的方法
+        └─ 有
+             ↓
+     根据当前问题 + ReaderNeed + 情绪 + P_A
+     对 Module-2 Creative Material Space 做一次轻量召回
+             ↓
+     召回结果加入 materialSelections
+             ↓
+     Router 才允许 M03 COMPOSE / M09 / TR02矩阵组合等
+```
+
+因此现在不是“Router猜某张M03卡”，而是：
+
+```text
+第二模块真实检索素材
+→ 方法路由看见这些素材
+→ 判断这次是否值得用素材型方法
+→ 正式 Story Search 再把素材撞到 World Objects
+```
+
+没有素材命中时，素材型方法自然不会获得资格，系统继续使用 M01A / M01B / M02 / M04 / 开放联想等方法。
+
+## 6. 新调用入口
 
 原来的：
 
@@ -146,10 +180,10 @@ routeStorySearch
 
 下游进入 S04 时继续使用返回的 enriched `creativeContext`，这样本轮到底用了什么方法不会丢。
 
-## 6. 当前没有做什么
+## 7. 当前没有做什么
 
 本轮没有做万能 Algorithm Registry，没有让路由器决定故事，没有把 M03 素材卡变成方法，没有新建 Reality，也没有改掉 S04 / Stake / Payoff 的编剧权。
 
-## 7. 下一步
+## 8. 下一步
 
-最值得继续的是把 **M03 SELECT → CreativeMaterialRetrievalService → M03 COMPOSE** 接成真实链。其次再把 M02 六链拆成可直接指定的细模式，以及给 M07 / M08 / M09 / M10 做需要专门证据输入的独立入口。
+M03 素材召回 → COMPOSE 的第一条真实链已经接通。下一步最值得做的是把 M02 六链拆成可直接指定的细模式，再给 M07 / M08 / M09 / M10 做需要专门证据输入的独立入口。SELECT / VERIFY 若要独立暴露给用户或UI，再补专用调用面，而不是重新造一个巨型流程。
