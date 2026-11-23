@@ -1,6 +1,6 @@
 # 第三模块｜Object-Grounded Writers' Room（2026-11-22）
 
-> **STATUS: CURRENT SUPPORT / SEARCH FRAMING PARTIALLY SUPERSEDED.** “故事不是监控录像”“想象必须先有 Module-2 世界对象”仍是硬规则；但旧的 S01/S02/S03 Opportunity 流水线不再是第三模块主发动机。当前固定：S01/S02/S03 只是同一 Upgrade Ledger 的长程 / 阶段 / 当前故事视角，真正故事发动机见 [23](23-module3-upgrade-stake-director.md)。
+> **STATUS: CURRENT SUPPORT / SEARCH FRAMING PARTIALLY SUPERSEDED.** “故事不是监控录像”“想象必须先有对象”仍是硬规则。2026-11-23 新裁决见 [25](25-module2-dual-object-space.md)：第二模块现在明确包含 World Objects 与 Creative Materials 两类可查询对象；世界对象仍是本书 Story 的 Reality 锚点，素材对象负责联想碰撞，不能互相冒充。
 
 > 本文件记录 2026-11-22 的两次作者级纠正，并给出在 NarraLume 正式工程中的实现边界。它覆盖此前把“世界自转后挑精彩事件”当故事生成核心、以及把“自由脑洞”当创作起点的错误路径。
 
@@ -42,10 +42,11 @@
 Module 1 World Builder
 持续生产真实可玩的世界内容
           ↓
-Module 2 Project Reality / Source Atlas
-提供当前可被思考的具体对象
+Module 2 Queryable Object Substrate
+├─ World Object Space → StoryObjectField
+└─ Creative Material Space → CreativeMaterialSelection[]
           ↓
-Object Field
+当前可被思考的具体对象
           ↓
 Reader Need / Target Emotion / P_A
           ↓
@@ -76,18 +77,18 @@ Project Reality
 
 ---
 
-## 1. 第二模块的新职责不是“素材库”，而是 Imagination Substrate
+## 1. 第二模块是 Imagination Substrate，并且拥有两类对象空间
 
-第二模块原有职责仍然成立：
+旧版本只强调世界对象，是为了纠正“无对象自由脑洞”。现在进一步确认：第二模块不仅保存世界对象，也保存可持续增长的创意素材对象。原有世界真值职责仍然成立：
 
 - Project Reality：当前项目确认事实；
 - Source Atlas：母体世界 reference；
 - StoryState：关系、事件、知识与人物可见状态；
 - Settlement：正文实际结果的单一确认写入口。
 
-新增的理解是：
+当前理解是：
 
-> **这些已存在对象本身就是第三模块想象的移动原点。**
+> **World Objects 是故事编剧的现实锚点；Creative Materials 是可调用的创意对象。两者一起构成第三模块的想象底座。**
 
 因此第三模块不应该只接收一句：
 
@@ -158,14 +159,17 @@ authority = speculative
 
 ---
 
-## 3. M01 / M02 / M03 / M04 的正确身份
+## 3. 创意对象与创作算法必须分开
 
 ```text
-Search Object = Object Field 中的具体世界对象
-Search Operator = M01 / M02 / M03 / M04
+Story Anchor Object = StoryObjectField 中的具体世界对象
+Creative Object = CreativeMaterialSelection 中的成熟素材
+Search / Creation Operator = 真正的 M algorithms
 ```
 
-M 方法回答“怎么移动”，不回答“从什么东西上移动”。
+M 算法回答“怎么移动”；World Objects 与 Creative Materials 回答“拿什么东西来移动、碰撞和联想”。
+
+M03 名称存在历史演化：TR02 / M03 曾同时包含算法与内置数据库。今天 `database/m03` 已主要演化成 Creative Material Library，所以不得再把每张 M03 卡解释成一种 Method。历史算法思想留待以后与其他 M 系列一起研究。
 
 例如：
 
