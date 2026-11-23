@@ -811,7 +811,9 @@ export type RunStepKind =
   | "canon.stage"
   | "world.context"
   | "world.generate"
-  | "world.stage";
+  | "world.stage"
+  | "story.director.design"
+  | "story.director.rehearse";
 
 export interface NarrativeRun {
   id: string;

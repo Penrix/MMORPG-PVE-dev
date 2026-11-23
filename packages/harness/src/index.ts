@@ -11,3 +11,4 @@ export * from "./canon-candidate-recipes.js";
 export * from "./template-recipe.js";
 export * from "./prompt-defaults.js";
 export * from "./world-pack-recipe.js";
+export * from "./story-director-recipe.js";

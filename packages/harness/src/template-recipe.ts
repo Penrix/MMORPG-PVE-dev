@@ -58,6 +58,8 @@ const DEFAULT_ATTEMPTS: Readonly<Record<RunStepKind, number>> = {
   "world.context": 2,
   "world.generate": 5,
   "world.stage": 2,
+  "story.director.design": 5,
+  "story.director.rehearse": 5,
 };
 
 interface ParsedStep {

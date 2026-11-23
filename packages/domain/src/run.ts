@@ -96,7 +96,9 @@ export type RunStepKind =
   | DeliveryStepKind
   | AssistantStepKind
   | CanonCandidateStepKind
-  | WorldPackStepKind;
+  | WorldPackStepKind
+  | "story.director.design"
+  | "story.director.rehearse";
 
 export interface RunBudgetUsage {
   inputTokens: number;

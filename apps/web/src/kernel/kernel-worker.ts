@@ -36,6 +36,7 @@ import {
   registerAutomationRoutes,
   registerCanonCandidateRoutes,
   registerWorldPackRoutes,
+  registerStoryDirectorRoutes,
   registerWorldGraphRoutes,
   registerSourceCorpusRoutes,
   registerUnifiedSourceWorldRoutes,
@@ -59,6 +60,7 @@ import {
   AutomationWorkerSuite,
   CanonCandidateWorkerSuite,
   WorldPackWorkerSuite,
+  StoryDirectorWorkerSuite,
   ChapterWorkerSuite,
   CollaborationWorkerSuite,
   DeliveryWorkerSuite,
@@ -137,10 +139,12 @@ async function boot(): Promise<void> {
     credentialedModelFetch,
   );
 
+  const storyDirectorWorkers = new StoryDirectorWorkerSuite(database, modelClient);
   const workers = {
     ...new AssistantWorkerSuite(database, modelClient).registry(),
     ...new CanonCandidateWorkerSuite(database, modelClient).registry(),
     ...new WorldPackWorkerSuite(database, modelClient).registry(),
+    ...storyDirectorWorkers.registry(),
     ...new ChapterWorkerSuite(database, modelClient).registry(),
     ...new AutomationWorkerSuite(database, modelClient).registry(),
     ...new CollaborationWorkerSuite(database, modelClient).registry(),
@@ -314,6 +318,11 @@ async function boot(): Promise<void> {
   registerSourceCorpusRoutes(table, database);
   registerUnifiedSourceWorldRoutes(table, database);
   registerProjectWorldRoutes(table, database);
+  registerStoryDirectorRoutes(table, database, coordinator, {
+    adoptNodeHandoff: storyDirectorWorkers.adoptNodeHandoff.bind(storyDirectorWorkers),
+    enableBackgroundWorker: true,
+    environment: {},
+  });
   registerWorldPackRoutes(table, database, {
     runCoordinator: coordinator,
     enableBackgroundWorker: true,
