@@ -128,12 +128,14 @@ function creativeContext(currentField: StoryObjectField) {
       version: "story-protagonist-camera.v1",
       projectId: "p1",
       protagonistEntityId: "xiuxin",
-      currentPosition: "木叶医院",
+      currentLocation: "木叶医院",
+      currentState: "普通重伤忍者，正在恢复，尚未重新取得高价任务资格",
       currentGoal: "恢复战斗力并重新进入任务体系",
       upgradeNeed: "从普通伤员升级为值得高价忍者圈重新估值的人",
       activeMove: "主动用基础忍术训练恢复，并让真实结果进入专业复核链",
       focusObjectIds: currentField.objects.map((object) => object.id),
       advantageRefs: ["world-reality:xiuxin"],
+      assetRefs: [],
     },
     methodInvocations: [
       {
