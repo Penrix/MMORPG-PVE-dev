@@ -398,6 +398,7 @@ export function finalizeStoryCreativeFrameState(
   });
 }
 
+// prettier-ignore
 export interface ApplySettlementToCreativeFrameStateInput {
   currentState: StoryCreativeFrameState;
   handoff: StoryChapterProductionHandoff;
@@ -410,6 +411,7 @@ export interface ApplySettlementToCreativeFrameStateInput {
  * Advance author-only creative memory after an accepted chapter settlement.
  * Never writes Canon or Reality; the caller owns the settlement transaction.
  */
+// prettier-ignore
 export function applySettlementToCreativeFrameState(
   input: ApplySettlementToCreativeFrameStateInput,
 ): StoryCreativeFrameState {
