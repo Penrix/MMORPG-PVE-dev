@@ -103,8 +103,10 @@ export async function buildApp(
         );
       },
     );
-  // prettier-ignore
-  const storyDirectorWorkers = new StoryDirectorWorkerSuite(database, modelClient);
+  const storyDirectorWorkers = new StoryDirectorWorkerSuite(
+    database,
+    modelClient,
+  );
   const workers = {
     ...new AssistantWorkerSuite(database, modelClient).registry(),
     ...new CanonCandidateWorkerSuite(database, modelClient).registry(),
@@ -371,7 +373,9 @@ export async function buildApp(
   registerUnifiedSourceWorldRoutes(routes, database);
   registerProjectWorldRoutes(routes, database);
   registerStoryDirectorRoutes(routes, database, coordinator, {
-    adoptNodeHandoff: storyDirectorWorkers.adoptNodeHandoff.bind(storyDirectorWorkers),
+    adoptNodeHandoff: storyDirectorWorkers.adoptNodeHandoff.bind(
+      storyDirectorWorkers,
+    ),
     enableBackgroundWorker,
     environment,
   });
