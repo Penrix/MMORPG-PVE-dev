@@ -20,6 +20,8 @@ export interface CreativeMethodDefinition {
   phases: readonly CreativeMethodPhase[];
   storySearchEligible: boolean;
   requiresMaterials: boolean;
+  minimumMaterials?: number;
+  requiredMaterialTypes?: readonly string[];
   requiresPriorStoryState: boolean;
   useWhen: string;
   avoidWhen: string;
@@ -123,6 +125,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
       phases: ["story-search", "story-design"],
       storySearchEligible: true,
       requiresMaterials: true,
+      minimumMaterials: 1,
       requiresPriorStoryState: false,
       useWhen:
         "已经召回了M03等成熟素材，需要让素材真正撞到当前世界对象，而不是停在标签。",
@@ -172,7 +175,9 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
       scope: "story",
       phases: ["story-search", "story-design"],
       storySearchEligible: true,
-      requiresMaterials: false,
+      requiresMaterials: true,
+      minimumMaterials: 1,
+      requiredMaterialTypes: ["PLAY"],
       requiresPriorStoryState: true,
       useWhen:
         "当前底层赢法已经成立，但演法太直、太单、缺少可以反复变化的操作机制。",
@@ -239,7 +244,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
       sourceRef: `${DOC26}#12-m09reader-情绪乐句--演奏语义--b-新戏`,
       scope: "scene",
       phases: ["performance", "story-search", "story-design"],
-      storySearchEligible: true,
+      storySearchEligible: false,
       requiresMaterials: true,
       requiresPriorStoryState: false,
       useWhen:
@@ -273,6 +278,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
       phases: ["project-seed", "story-search"],
       storySearchEligible: true,
       requiresMaterials: true,
+      minimumMaterials: 2,
       requiresPriorStoryState: false,
       useWhen: "已有多种成熟创意对象，希望寻找它们互相增值的化学反应。",
       avoidWhen:
@@ -407,16 +413,50 @@ export function getCreativeMethodDefinition(
   );
 }
 
-export function storySearchMethodDefinitions(input: {
-  hasMaterials: boolean;
+export interface CreativeMethodEligibilityInput {
+  materials: readonly { materialType: string }[];
   hasPriorStoryState: boolean;
-}): CreativeMethodDefinition[] {
-  return CREATIVE_METHOD_DEFINITIONS.filter((definition) => {
-    if (!definition.storySearchEligible) return false;
-    if (definition.requiresMaterials && !input.hasMaterials) return false;
-    if (definition.requiresPriorStoryState && !input.hasPriorStoryState) {
-      return false;
+}
+
+export function creativeMethodEligibilityIssue(
+  definition: CreativeMethodDefinition,
+  input: CreativeMethodEligibilityInput,
+): string | null {
+  if (definition.requiresPriorStoryState && !input.hasPriorStoryState) {
+    return "requires prior story state";
+  }
+
+  const minimumMaterials = definition.minimumMaterials ?? 1;
+  if (
+    definition.requiresMaterials &&
+    input.materials.length < minimumMaterials
+  ) {
+    return `requires at least ${minimumMaterials} creative material(s)`;
+  }
+
+  if (definition.requiredMaterialTypes?.length) {
+    const required = new Set(
+      definition.requiredMaterialTypes.map((value) => value.toUpperCase()),
+    );
+    const hasRequiredType = input.materials.some((material) =>
+      required.has(material.materialType.toUpperCase()),
+    );
+    if (!hasRequiredType) {
+      return `requires material type: ${definition.requiredMaterialTypes.join(
+        " | ",
+      )}`;
     }
-    return true;
-  });
+  }
+
+  return null;
+}
+
+export function storySearchMethodDefinitions(
+  input: CreativeMethodEligibilityInput,
+): CreativeMethodDefinition[] {
+  return CREATIVE_METHOD_DEFINITIONS.filter(
+    (definition) =>
+      definition.storySearchEligible &&
+      creativeMethodEligibilityIssue(definition, input) === null,
+  );
 }

@@ -168,7 +168,7 @@ function surfaceRef(
 describe("M-series creative method runtime", () => {
   it("filters out methods whose prerequisites are missing", () => {
     const methods = storySearchMethodDefinitions({
-      hasMaterials: false,
+      materials: [],
       hasPriorStoryState: false,
     });
     const ids = methods.map((method) => method.methodId);
@@ -179,7 +179,24 @@ describe("M-series creative method runtime", () => {
     expect(ids).not.toContain("m03-compose");
     expect(ids).not.toContain("m05-play-variation");
     expect(ids).not.toContain("m06-long-form-score");
+    expect(ids).not.toContain("m09-performance-semantics");
     expect(ids).not.toContain("m08-concept-engine-migration");
+  });
+
+
+
+  it("only enables PLAY variation when a real PLAY material and prior story state exist", () => {
+    const withoutPlay = storySearchMethodDefinitions({
+      materials: [{ materialType: "MOVE" }],
+      hasPriorStoryState: true,
+    }).map((method) => method.methodId);
+    expect(withoutPlay).not.toContain("m05-play-variation");
+
+    const withPlay = storySearchMethodDefinitions({
+      materials: [{ materialType: "PLAY" }],
+      hasPriorStoryState: true,
+    }).map((method) => method.methodId);
+    expect(withPlay).toContain("m05-play-variation");
   });
 
   it("routes one primary method without deciding the story itself", async () => {

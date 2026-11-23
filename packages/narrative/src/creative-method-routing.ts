@@ -14,6 +14,7 @@ import type {
 import type { JsonSchemaContract } from "@narralume/llm";
 
 import {
+  creativeMethodEligibilityIssue,
   getCreativeMethodDefinition,
   storySearchMethodDefinitions,
   type CreativeMethodDefinition,
@@ -107,6 +108,8 @@ function routerCatalog(definitions: readonly CreativeMethodDefinition[]) {
     useWhen: definition.useWhen,
     avoidWhen: definition.avoidWhen,
     requiresMaterials: definition.requiresMaterials,
+    minimumMaterials: definition.minimumMaterials ?? null,
+    requiredMaterialTypes: definition.requiredMaterialTypes ?? [],
     requiresPriorStoryState: definition.requiresPriorStoryState,
   }));
 }
@@ -202,20 +205,14 @@ export class CreativeMethodRoutingService {
     if (request.creativeContext.methodInvocations.length > 0) {
       for (const invocation of request.creativeContext.methodInvocations) {
         const definition = getCreativeMethodDefinition(invocation.methodId);
-        if (
-          definition?.requiresMaterials &&
-          request.creativeContext.materialSelections.length === 0
-        ) {
+        if (!definition) continue;
+        const issue = creativeMethodEligibilityIssue(definition, {
+          materials: request.creativeContext.materialSelections,
+          hasPriorStoryState: hasPriorStoryState(request.creativeContext),
+        });
+        if (issue) {
           throw new Error(
-            `creative_method_routing.manual_method_missing_materials:${invocation.methodId}`,
-          );
-        }
-        if (
-          definition?.requiresPriorStoryState &&
-          !hasPriorStoryState(request.creativeContext)
-        ) {
-          throw new Error(
-            `creative_method_routing.manual_method_missing_story_state:${invocation.methodId}`,
+            `creative_method_routing.manual_method_prerequisite:${invocation.methodId}:${issue}`,
           );
         }
       }
@@ -248,7 +245,7 @@ export class CreativeMethodRoutingService {
     }
 
     const definitions = storySearchMethodDefinitions({
-      hasMaterials: request.creativeContext.materialSelections.length > 0,
+      materials: request.creativeContext.materialSelections,
       hasPriorStoryState: hasPriorStoryState(request.creativeContext),
     });
     if (definitions.length === 0) {
