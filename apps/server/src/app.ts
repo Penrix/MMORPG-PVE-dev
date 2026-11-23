@@ -69,6 +69,7 @@ export interface BuildAppOptions {
   enableRunWorker?: boolean;
 }
 
+// prettier-ignore
 export async function buildApp(
   options: BuildAppOptions,
 ): Promise<FastifyInstance> {
