@@ -1,3 +1,4 @@
+/** @deprecated 已被 unified-source-world-routes (/api/source-worlds) 替代，新代码禁止依赖。 */
 import { z } from "zod";
 import type { NarrativeDatabase } from "@narralume/persistence";
 import {

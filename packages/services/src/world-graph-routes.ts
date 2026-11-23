@@ -1,3 +1,4 @@
+/** @deprecated 历史世界百科接口，新逻辑统一走 ProjectReality + WorldAtlas，新代码禁止依赖。 */
 import type {
   CanonEntity,
   CanonFact,
