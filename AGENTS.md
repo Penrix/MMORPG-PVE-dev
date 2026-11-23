@@ -10,7 +10,7 @@
 - CURRENT AUTHORITY overrides CURRENT SUPPORT;
 - CURRENT SUPPORT overrides IMPLEMENTATION / HISTORY;
 - SUPERSEDED documents may supply historical facts or migration evidence but cannot define current business semantics;
-- for Module 3, `23-module3-upgrade-stake-director.md` overrides conflicting Agent-autonomy, Opportunity-pipeline, or “simulation first” wording in 18/19/20.
+- for Module 3, `23-module3-upgrade-stake-director.md` is the story-engine authority and `24-creative-frame-protagonist-camera-m-methods.md` is the structural authority; together they override conflicting Agent-autonomy, Opportunity-pipeline, independent-S-generator, or “simulation first” wording in 18/19/20.
 
 ## ACTIVE SCOPE AND MANDATORY SEMANTIC GUARDRAIL (2026-11-20)
 
