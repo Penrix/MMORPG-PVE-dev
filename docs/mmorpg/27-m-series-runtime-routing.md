@@ -1,190 +1,104 @@
-# 第三模块｜M 系列 Runtime：方法目录 → 轻量路由 → Story Search（2026-11-23）
+# M01B 内嵌 × Creative Operator 按需调用（2026-11-23）
 
 > **STATUS: CURRENT IMPLEMENTATION CONTRACT.**
 >
-> 认知来源：[26 M-series × TR-I-02 Creative Method Catalog](26-m-series-tr02-creative-method-catalog.md)。
->
-> 本文记录本轮真正落地的代码：不是再发明一套创作理论，而是让现有 M / TR02 方法开始可以被程序选择和调用。
+> 本文覆盖旧的“当前问题 → Router 自动选1主1辅 → Story Search”实现合同。
 
-## 1. 现在代码怎样工作
+## 1. 当前裁决
+
+M 系列不是固定流程。
 
 ```text
-Story Director / 调用方
-已经给出当前创作问题
+Module 3｜Story Director
+讲师编剧主干
++
+M01B always-on
+├── Upgrade Front
+├── Actor Front
+└── Reader Front
+        │
+        │ 局部需要额外发散/迁移/变奏/检验
+        ▼
+Module 2｜Creative Operator Space
+M01A / M02 / M03历史算法 / M04...M10 / TR02 operators
+        │
+        │ 显式点名调用
+        ▼
+CreativeMethodInvocation
         │
         ▼
-CreativeMethodRoutingService
-只诊断“该怎么想”
+候选 / 观察 / 新连接
         │
-        ├─ 1 primary
-        └─ 最多 1 secondary
-        │
-        ▼
-CreativeMethodInvocation[]
-        │
-        ▼
-StoryCreativeContext
-        │
-        ▼
-StoryAuthoringService.search
-对 World Objects / Creative Materials 真正执行搜索
-        │
-        ▼
-Story Seeds
-        │
-        ▼
-S04 Story Director
-决定人物线 / Stake / Payoff
+        └──────────────→ 回 Story Director
 ```
 
-**路由器没有“什么值得写”的权限。** 它只能从当前卡点选择搜索运动。
+**流程属于第三模块，算子不拥有流程。**
 
-## 2. 两份代码职责
+## 2. M01B 怎样嵌入第三模块
 
-### `m-series-methods.ts`
-
-保存可运行的方法说明书：
-
-- M01A～M10；
-- M03 SELECT / COMPOSE / VERIFY；
-- TR02 中仍有独立价值的矩阵组合、开放联想、反惰性、热插拔、猎场、跳跃随机、连载压力测试等。
-
-每个定义至少包含：
+M01B 不是“运行一次三问”，而是每次 Story Search / S04 编剧都存在的三份连续前线：
 
 ```text
-methodFamily
-methodId
-title
-sourceRef
-scope
-phases
-useWhen
-avoidWhen
-instruction
+Upgrade Front
+当前位置 / 当前Step / Stage Goal / Gate / Settlement Target / 已留资产
+
+Actor Front
+当前Existing Cast / 活跃Stake / 谁已经押了什么 / 下一手会自己干什么
+
+Reader Front
+Open Expectation / Reader已知 / 未结问题 / 哪笔势能正在盯市
 ```
 
-这不是把历史文档压成一个超级 Prompt，而是让程序知道每种脑法的边界。
+当前代码由 `StoryAuthoringService` 在 S01-S03 `search(...)` 与 S04 `designStoryUnit(...)` 都注入 `m01bContinuity`。它不是额外生成器，也不创建新 Reality。
 
-### `creative-method-routing.ts`
+## 3. Creative Operator Space 怎样调用
 
-只做方法选择：
+其他 M / TR02 方法是第二模块工具架。
 
-1. 当前 Creative Context 已经手动指定方法时，尊重原选择，不覆盖；
-2. 未指定时，从当前任务真正可用的方法里选 1 个 primary；
-3. 第二种方法只有在提供不同搜索运动时，才允许作为 secondary；
-4. 方法所作用的对象必须来自当前 StoryObjectField；
-5. 需要素材的方法在没有 `materialSelections` 时不会进入可选集合；
-6. 需要已有长篇历史的方法在没有 inherited state 时不会进入可选集合；
-7. 素材资格按方法继续细分：M03 COMPOSE 至少需要1张素材；M05还必须真的召回PLAY类型；TR02矩阵组合至少需要2张素材；M09不再因“随便有一张素材”就自动启动，等专用演奏证据入口。
+`CreativeOperatorInvocationService.invoke(...)` 接收 `methodId + purpose + inputObjectIds` 与当前 Story Context，检查真实前提后生成一条 `CreativeMethodInvocation`。
 
-## 3. 为什么不把所有方法都塞给 LLM
-
-那会重新制造巨型 Prompt：
+没有自动“主方法 / 辅方法”选择。
 
 ```text
-M01A + M01B + M02 + M03 + ... + TR02全部历史版
-→ 模型在一大坨文字里自由发挥
+Director 当前卡点
+→ 点名 M02
+→ invoke(M02, 当前对象)
+→ 得到候选
+→ 回 Director
+
+需要时再点名 M04 / TR02 / M05 ...
 ```
 
-当前做法：
+可以重复、切换、回返，但不存在固定 M01→M02→M03 流水线。
+
+## 4. 与 M03 素材库的关系
 
 ```text
-代码先裁掉明显不适用的方法
-→ 模型只在少量 eligibleMethods 中诊断当前卡点
-→ 选1主1辅
-→ 把具体 instruction 写入 CreativeContext
-→ Story Search 真正执行
+Creative Material Space
+= 拿什么想
+= MOVE / PLAY / REL / ARCH / ...
+
+Creative Operator Space
+= 怎么想
+= M02 / M04 / TR02 anti-inertia / ...
+
+M01B
+= 第三模块一直怎样继续往深处听
 ```
 
-## 4. 自动 Story Search 与专项方法分权
+素材不会自动选择算子，算子也不会自动把素材变成 Reality。需要 M03 COMPOSE、M05 PLAY 等算子时，调用方先有合格 `materialSelections`，再显式 invoke 对应算子。
 
-当前普通 Story Search 可自动选择：
+## 5. 兼容壳
 
-- M01A / M01B / M02；
-- M03 COMPOSE，前提是已有素材；
-- M04；
-- M05 / M06，前提是已有前序Story状态；
-- TR02矩阵组合，前提是至少已有两张素材；
-- 开放联想、反惰性、热插拔、猎场、跳跃随机。
+旧 `CreativeMethodRoutingService` 与 `StoryAuthoringService.searchWithCreativeMethods(...)` 暂时保留，避免已有调用面立刻断裂，但语义已经改变：
 
-不会在普通 Story Search 里自动启动：
+- 不再调用模型自动选方法；
+- 不再自动召回 M03 素材；
+- 已有显式 operator invocation 就原样带入；
+- 没有就直接让讲师 Director + M01B 继续运行。
 
-- M03 五锚点整书海选；
-- M03 SELECT / VERIFY；
-- M07 男主人格重建；
-- M08 A→B整书迁移；
-- M09 Reader情绪演奏转译；
-- M10 A/B历史选角；
-- TR02题材五维深潜；
-- TR02连载压力测试。
+## 6. Guardrails
 
-这些需要各自真正的上游任务和资料，后续做专用入口。
+禁止恢复自动 Router、1主1辅、M01B 可选化、M03 素材算法化、巨型 Prompt 化，以及算子候选直接升级为 Reality。
 
-## 5. 第二模块素材库怎样自动进入方法选择
-
-`StoryAuthoringService` 现在可以注入 `CreativeMaterialRetrievalService`（或兼容的 `recall` 端口）。
-
-当调用 `searchWithCreativeMethods(...)` 时：
-
-```text
-当前 creativeContext 已有 materialSelections？
-        ├─ 有 → 尊重上游已经选好的素材
-        └─ 没有
-             ↓
-     是否注入 CreativeMaterialRetrievalService？
-        ├─ 没有 → 只用不依赖素材的方法
-        └─ 有
-             ↓
-     根据当前问题 + ReaderNeed + 情绪 + P_A
-     对 Module-2 Creative Material Space 做一次轻量召回
-             ↓
-     召回结果加入 materialSelections
-             ↓
-     Router 才允许 M03 COMPOSE / M09 / TR02矩阵组合等
-```
-
-因此现在不是“Router猜某张M03卡”，而是：
-
-```text
-第二模块真实检索素材
-→ 方法路由看见这些素材
-→ 判断这次是否值得用素材型方法
-→ 正式 Story Search 再把素材撞到 World Objects
-```
-
-没有素材命中时，素材型方法自然不会获得资格，系统继续使用 M01A / M01B / M02 / M04 / 开放联想等方法。
-
-## 6. 新调用入口
-
-原来的：
-
-```ts
-StoryAuthoringService.search(...)
-```
-
-仍保留，适合调用方已经明确指定方法。
-
-新增：
-
-```ts
-StoryAuthoringService.searchWithCreativeMethods(...)
-```
-
-它会：
-
-```text
-routeStorySearch
-→ 得到带 methodInvocations 的 CreativeContext
-→ search
-→ 同时返回 routing + enriched creativeContext + search result
-```
-
-下游进入 S04 时继续使用返回的 enriched `creativeContext`，这样本轮到底用了什么方法不会丢。
-
-## 7. 当前没有做什么
-
-本轮没有做万能 Algorithm Registry，没有让路由器决定故事，没有把 M03 素材卡变成方法，没有新建 Reality，也没有改掉 S04 / Stake / Payoff 的编剧权。
-
-## 8. 下一步
-
-M03 素材召回 → COMPOSE 的第一条真实链已经接通，并开始按方法检查素材类型/数量。下一步最值得做的是把 M02 六链拆成可直接指定的细模式，再给 M07 / M08 / M09 / M10 做需要专门证据输入的独立入口。SELECT / VERIFY 若要独立暴露给用户或UI，再补专用调用面，而不是重新造一个巨型流程。
+> **讲师负责编故事，M01B负责一直往深处挖，第二模块算子负责局部换脑法。**

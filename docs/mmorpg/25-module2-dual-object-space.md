@@ -1,4 +1,4 @@
-# 第二模块｜双对象空间：World Objects × Creative Materials（2026-11-23）
+# 第二模块｜对象空间 + 算子空间：World Objects × Creative Materials × Creative Operators（2026-11-23）
 
 > **STATUS: CURRENT AUTHORITY / MODULE 2 QUERYABLE OBJECT SUBSTRATE.**
 >
@@ -10,7 +10,7 @@
 
 第二模块还负责保存、编辑、增长、索引和查询**写作时可以拿来思考的对象**。
 
-当前至少有两类对象空间：
+当前至少有两类对象空间，加一类与素材库同级、但性质不同的算子空间：
 
 ```text
 Module 2｜Queryable Object Substrate
@@ -29,17 +29,23 @@ B. Creative Material Space
    +
    BRG / MOVE / SIT / REV / SEQ / ARCH / REL / DLG / PLAY / CP / ...
 
-两类对象都可以持续新增、修正、退役、重新索引和扩容。
-它们都给创作提供“可以想的对象”，但真值权限完全不同。
+C. Creative Operator Space
+   M01A / M02 / M03历史算法 / M04 / M05 / M06 / M07 / M08 / M09 / M10
+   + TR02仍有效的矩阵、开放联想、反惰性、热插拔、猎场、跳跃等算子
+
+两类对象空间与算子空间都可以持续新增、修正、退役、重新索引和扩容。
+对象给创作提供“拿什么想”，算子提供“怎么想”。它们同属第二模块可调用资源层，但真值和执行语义完全不同。
 ```
 
 最短定义：
 
 - **World Object**：这本书的世界里有什么、现在什么是真的、哪些母体 reference 可以查。
 - **Creative Material**：成功创作中已经采到哪些可复用的桥段、人物母型、动作、关系、套路、反转、台词、玩法等创意对象。
-- **Creative Method / M Algorithm**：面对这些对象时，模型采用什么搜索、迁移、组合、回返或推演算法。
+- **Creative Operator / M Algorithm**：面对这些对象时，模型可以按需调用的搜索、迁移、组合、回返、变奏或压力测试算子。
 
-对象与算法必须分开。
+对象与算法必须分开；素材库与算子库同级，但不是同一种东西。
+
+**唯一特殊项是 M01B：它不是第二模块按需调用的算子，而是第三模块 Story Director 内嵌的常驻“三意识”运行状态。**
 
 ## 1. 为什么 M03 会同时留下“算法”和“素材库”的历史名称
 
@@ -267,7 +273,9 @@ StoryObjectField                 ← Module 2 World Object Space
 +
 CreativeMaterialSelection[]      ← Module 2 Creative Material Space
 +
-CreativeMethodInvocation[]       ← M algorithms
+CreativeMethodInvocation[]       ← Module 2 Creative Operator Space（显式按需调用）
++
+M01B always-on fronts            ← Module 3 内嵌，不进入 Invocation
         ↓
 Story Director
         ↓
@@ -326,8 +334,23 @@ World Atlas + Project Reality
 Module 2
 = World Object Space
 + Creative Material Space
++ Creative Operator Space
 + Project Reality truth boundary
-+ Query / Retrieval infrastructure
++ Query / Retrieval / Invocation infrastructure
 ```
 
 最终目标不是让模型记住更多名词，而是让创作时真正能拿到足够厚的**世界对象**和**创意对象**，再由算法和 Story Director 对它们进行推演。
+
+
+## 9. 算子不是流程
+
+Creative Operator Space 更像工具架，不是流水线。第三模块遇到局部发散、迁移、变奏、检验问题时，点名调用一个算子，得到候选后立即回到讲师 Story Director 主线。
+
+```text
+Story Director 当前卡点
+→ invoke(M02 / M04 / TR02 / ...)
+→ 候选
+→ 回 Story Director
+```
+
+禁止自动把所有算子排成固定顺序，也禁止让“方法路由”取得故事裁决权。
