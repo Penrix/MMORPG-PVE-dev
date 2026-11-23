@@ -158,10 +158,22 @@ export class SqliteRetrievalRepository {
       queryEmbedding?: readonly number[];
       embeddingModel?: string;
       rerankScores?: Readonly<Record<string, number>>;
+      sourceTypes?: readonly string[];
     } = {},
   ): RetrievalHit[] {
     const limit = Math.max(1, Math.min(options.limit ?? 12, 100));
     const normalized = query.trim();
+    const sourceTypes = [
+      ...new Set(
+        (options.sourceTypes ?? [])
+          .map((value) => value.trim())
+          .filter(Boolean),
+      ),
+    ].slice(0, 20);
+    const sourceTypePredicate =
+      sourceTypes.length > 0
+        ? ` AND segment.source_type IN (${sourceTypes.map(() => "?").join(",")})`
+        : "";
     const merged = new Map<string, RetrievalHit>();
     if (normalized) {
       let rows =
@@ -173,6 +185,7 @@ export class SqliteRetrievalRepository {
               FROM text_segments_fts
               JOIN text_segments segment ON segment.row_id = text_segments_fts.rowid
               WHERE text_segments_fts MATCH ? AND segment.project_id = ?
+                ${sourceTypePredicate}
                 AND ${ACTIVE_SEGMENT_PREDICATE}
               ORDER BY lexical_rank LIMIT ?
             `,
@@ -180,6 +193,7 @@ export class SqliteRetrievalRepository {
               .all(
                 ftsPhrase(normalized),
                 projectId,
+                ...sourceTypes,
                 limit * 2,
               ) as unknown as SegmentRow[])
           : (this.database.raw
@@ -187,6 +201,7 @@ export class SqliteRetrievalRepository {
                 `
               SELECT segment.*, 0.0 AS lexical_rank FROM text_segments segment
               WHERE segment.project_id = ? AND (title LIKE ? OR content LIKE ?)
+                ${sourceTypePredicate}
                 AND ${ACTIVE_SEGMENT_PREDICATE}
               ORDER BY segment.updated_at DESC LIMIT ?
             `,
@@ -195,10 +210,16 @@ export class SqliteRetrievalRepository {
                 projectId,
                 `%${normalized}%`,
                 `%${normalized}%`,
+                ...sourceTypes,
                 limit * 2,
               ) as unknown as SegmentRow[]);
       if (rows.length === 0) {
-        rows = this.lexicalFallback(projectId, normalized, limit * 2);
+        rows = this.lexicalFallback(
+          projectId,
+          normalized,
+          limit * 2,
+          sourceTypes,
+        );
       }
       rows.forEach((row, index) => {
         const segment = mapSegment(row, this.entityIds(row.id));
@@ -225,13 +246,19 @@ export class SqliteRetrievalRepository {
           FROM segment_entities link
           JOIN text_segments segment ON segment.id = link.segment_id
           WHERE segment.project_id = ? AND link.entity_id IN (${placeholders})
+            ${sourceTypePredicate}
             AND ${ACTIVE_SEGMENT_PREDICATE}
           GROUP BY segment.id
           ORDER BY entity_score DESC, segment.updated_at DESC
           LIMIT ?
         `,
         )
-        .all(projectId, ...entityIds, limit * 2) as unknown as SegmentRow[];
+        .all(
+          projectId,
+          ...entityIds,
+          ...sourceTypes,
+          limit * 2,
+        ) as unknown as SegmentRow[];
       rows.forEach((row, index) => {
         const current = merged.get(row.id);
         const entityScore = row.entity_score ?? 0;
@@ -271,6 +298,7 @@ export class SqliteRetrievalRepository {
           queryEmbedding.length,
           options.embeddingModel ?? null,
           options.embeddingModel ?? null,
+          ...sourceTypes,
         ) as unknown as SegmentRow[];
       vectorRows
         .map((row) => ({
@@ -349,6 +377,7 @@ export class SqliteRetrievalRepository {
     projectId: string,
     query: string,
     limit: number,
+    sourceTypes: readonly string[] = [],
   ): SegmentRow[] {
     const terms = lexicalTerms(query);
     if (terms.length === 0) return [];
@@ -359,16 +388,22 @@ export class SqliteRetrievalRepository {
       const pattern = `%${escapeLike(term)}%`;
       return [pattern, pattern];
     });
+    const sourceTypePredicate =
+      sourceTypes.length > 0
+        ? ` AND segment.source_type IN (${sourceTypes.map(() => "?").join(",")})`
+        : "";
     const rows = this.database.raw
       .prepare(
         `SELECT segment.* FROM text_segments segment
          WHERE segment.project_id = ? AND (${where})
+           ${sourceTypePredicate}
            AND ${ACTIVE_SEGMENT_PREDICATE}
          ORDER BY segment.updated_at DESC LIMIT ?`,
       )
       .all(
         projectId,
         ...parameters,
+        ...sourceTypes,
         Math.max(limit * 4, 20),
       ) as unknown as SegmentRow[];
     const normalizedTerms = terms.map((term) => term.toLocaleLowerCase());
