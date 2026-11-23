@@ -257,12 +257,14 @@ digest
 
 ```text
 protagonistEntityId
-currentPosition
+currentLocation
+currentState
 currentGoal
 upgradeNeed
 activeMove
 focusObjectIds
 advantageRefs
+assetRefs
 ```
 
 它保证第三模块不是从“世界随机发生什么”开始，而是从：
