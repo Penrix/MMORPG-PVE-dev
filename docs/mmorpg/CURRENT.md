@@ -107,7 +107,7 @@ Upgrade Ladder
 | [09 Naruto Source Corpus Import](09-naruto-source-corpus-import.md) | 火影 Source Corpus 导入实现记录                                  |
 | [research/README](research/README.md)                               | v0.1～v0.7 原始研究母本索引；Source Material，不是工程 Authority |
 
-这些实现如果与 13～17、23～24 的业务定义冲突，应**适配当前业务定义**，不能拿旧实现反证新认知。
+这些实现如果与 13～17、23～25 的业务定义冲突，应**适配当前业务定义**，不能拿旧实现反证新认知。
 
 ## 4. SUPERSEDED / HISTORY｜历史认知，不作为当前设计依据
 
@@ -133,6 +133,7 @@ CURRENT.md
 → 15
 → 16
 → 17
+→ 25
 → 23
 → 24
 ```
@@ -153,6 +154,7 @@ CURRENT.md
 → 13
 → 14
 → 15
+→ 25（World Objects × Creative Materials）
 → 10 / 11（纠错与 Fork 语义）
 → 12（仅查历史实现）
 ```
@@ -161,6 +163,7 @@ CURRENT.md
 
 ```text
 CURRENT.md
+→ 25
 → 23
 → 24
 → 17
