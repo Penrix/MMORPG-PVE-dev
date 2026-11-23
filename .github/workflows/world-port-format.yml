@@ -3,7 +3,7 @@ name: World port one-branch formatting
 on:
   push:
     branches:
-      - feat/module3-world-atlas-integration
+      - feat/world-builder-w0-w1-mvp
   workflow_dispatch:
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: true
-          ref: feat/module3-world-atlas-integration
+          ref: feat/world-builder-w0-w1-mvp
       - uses: actions/setup-node@v5
         with:
           node-version: 24
@@ -41,9 +41,9 @@ jobs:
             # Rebase the purely stylistic commit against the latest remote
             # instead of failing on a routine non-fast-forward push.
             for attempt in 1 2 3 4; do
-              git fetch origin feat/module3-world-atlas-integration
-              git rebase origin/feat/module3-world-atlas-integration
-              if git push origin HEAD:refs/heads/feat/module3-world-atlas-integration; then
+              git fetch origin feat/world-builder-w0-w1-mvp
+              git rebase origin/feat/world-builder-w0-w1-mvp
+              if git push origin HEAD:refs/heads/feat/world-builder-w0-w1-mvp; then
                 exit 0
               fi
               sleep 2
