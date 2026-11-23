@@ -68,7 +68,7 @@ export const CreativeMethodInvocationSchema = z.object({
   sourceRef: z.string().min(1).nullable(),
   scope: CreativeMethodScopeSchema,
   purpose: z.string().min(1),
-  inputObjectIds: z.array(z.string().min(1)),
+  inputObjectIds: z.array(z.string().min(1)).min(1),
   instruction: z.string().min(1),
 });
 export type CreativeMethodInvocation = z.infer<
@@ -84,7 +84,7 @@ export const StoryProtagonistCameraSchema = z.object({
   currentGoal: z.string().min(1),
   upgradeNeed: z.string().min(1),
   activeMove: z.string().min(1),
-  focusObjectIds: z.array(z.string().min(1)),
+  focusObjectIds: z.array(z.string().min(1)).min(1),
   advantageRefs: z.array(z.string().min(1)),
   assetRefs: z.array(z.string().min(1)),
 });
