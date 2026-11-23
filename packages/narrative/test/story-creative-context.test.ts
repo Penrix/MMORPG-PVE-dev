@@ -144,13 +144,13 @@ describe("StoryCreativeFrameContext", () => {
         projectId: "p1",
         protagonistEntityId: "xiuxin",
         currentLocation: "木叶医院",
-      currentState: "普通重伤忍者，正在恢复，尚未重新取得高价任务资格",
+        currentState: "普通重伤忍者，正在恢复，尚未重新取得高价任务资格",
         currentGoal: "重新进入忍者体系",
         upgradeNeed: "取得可信专业估值",
         activeMove: "主动训练并进入复核",
         focusObjectIds: ["object:xiuxin", "object:medic"],
         advantageRefs: ["world-reality:xiuxin"],
-      assetRefs: [],
+        assetRefs: [],
       },
       methodInvocations: [
         {
@@ -172,7 +172,7 @@ describe("StoryCreativeFrameContext", () => {
         road: "忍界最强",
         currentStepId: "step:hospital",
         currentLocation: "木叶医院",
-      currentState: "普通重伤忍者，正在恢复，尚未重新取得高价任务资格",
+        currentState: "普通重伤忍者，正在恢复，尚未重新取得高价任务资格",
         stageGoal: "得到专业重新估值",
         settlementTarget: "进入更高任务入口",
         steps: [
@@ -202,7 +202,7 @@ describe("StoryCreativeFrameContext", () => {
         road: "忍界最强",
         currentStepId: "step:hospital",
         currentLocation: "木叶医院",
-      currentState: "普通重伤忍者，正在恢复，尚未重新取得高价任务资格",
+        currentState: "普通重伤忍者，正在恢复，尚未重新取得高价任务资格",
         stageGoal: "得到专业重新估值",
         settlementTarget: "进入更高任务入口",
         steps: [

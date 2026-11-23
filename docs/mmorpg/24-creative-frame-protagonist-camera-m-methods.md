@@ -180,16 +180,16 @@ M 系列属于 **Cross-Cutting Creative Method Library**。
 
 它可以在任何创作对象上被调用：
 
-| 当前问题 | M 方法可以帮助做什么 |
-| --- | --- |
-| 世界 | 哪个区域值得深挖、哪里有高价内容、哪些对象能组合出新玩法 |
-| 男主 Build | 金手指、职业路线、能力结构、个人构筑 |
-| 能力 / 技能 | 招式怎么打、怎么解说、怎样反制、怎样进化 |
-| 资源 / 矿场 | 男主应该去哪里捞好处、谁控制、怎样取得 |
-| 人物关系 | 哪两个人 / 哪几个人之间还能产生什么昂贵互动 |
-| Story | 新点子、变奏、迁移、组合、反转、升级玩法 |
-| Scene | 这一场具体怎么演、谁先动作、怎样加价、怎样兑现 |
-| Combat | 动作、策略、克制、反制、能力联动 |
+| 当前问题    | M 方法可以帮助做什么                                     |
+| ----------- | -------------------------------------------------------- |
+| 世界        | 哪个区域值得深挖、哪里有高价内容、哪些对象能组合出新玩法 |
+| 男主 Build  | 金手指、职业路线、能力结构、个人构筑                     |
+| 能力 / 技能 | 招式怎么打、怎么解说、怎样反制、怎样进化                 |
+| 资源 / 矿场 | 男主应该去哪里捞好处、谁控制、怎样取得                   |
+| 人物关系    | 哪两个人 / 哪几个人之间还能产生什么昂贵互动              |
+| Story       | 新点子、变奏、迁移、组合、反转、升级玩法                 |
+| Scene       | 这一场具体怎么演、谁先动作、怎样加价、怎样兑现           |
+| Combat      | 动作、策略、克制、反制、能力联动                         |
 
 因此代码上只提供通用调用端口：
 
@@ -217,26 +217,26 @@ M 返回的是候选、连接、玩法或推演，不自动成为 Canon。
 
 ## 6. 三种东西不能再混在一起
 
-| 系统 | 回答的问题 | 是否生成剧情 |
-| --- | --- | --- |
-| S / Creative Frame | 我现在写到哪里？父层和前面已经决定了什么？ | 否，主要是状态/记忆框架 |
-| M Method | 面对当前对象和问题，还有什么可想、可变奏、可组合？ | 可提供候选，但不是最终编剧权 |
-| Story Director + 讲师法 | 这批现成人物围绕男主当前升级到底怎样演成故事？ | **是** |
+| 系统                    | 回答的问题                                         | 是否生成剧情                 |
+| ----------------------- | -------------------------------------------------- | ---------------------------- |
+| S / Creative Frame      | 我现在写到哪里？父层和前面已经决定了什么？         | 否，主要是状态/记忆框架      |
+| M Method                | 面对当前对象和问题，还有什么可想、可变奏、可组合？ | 可提供候选，但不是最终编剧权 |
+| Story Director + 讲师法 | 这批现成人物围绕男主当前升级到底怎样演成故事？     | **是**                       |
 
 ## 7. 与现有代码 Crosswalk
 
-| 现有代码 | 当前解释 | 动作 |
-| --- | --- | --- |
-| NarraLume `outline_nodes` | S Framework 的物理底座 | 保留；新增 Creative Frame 投影 |
-| `StoryUpgradeLedger` | 男主长期 Road / 升级账 | 保留 |
-| `StoryStakeLedgerEntry` | 配角认知→下注→加注→反应账 | 保留 |
-| `StoryObjectField` | Module 2 世界对象切片 | 保留，但不再把“对象召回”神秘化成故事生成 |
-| S01/S02/S03 search | 旧工程形成的三个尺度搜索器 | 降级为可选 lens；不是 S Framework 本体 |
-| S04 `StoryUnitDesign` | 当前一段主动编剧 | 保留，并绑定 Creative Frame + Protagonist Camera + Method Invocations |
-| Character Agent | 人物具体演法 | 保留，不能否决 Author Story Line |
-| World Arbiter | 硬 Reality 可行性 | 保留 |
-| S05→S08 | Node→Scene→Reader Time→Production | 保留 |
-| `mmorpg-method-catalog.ts` | v0.1～v0.7 世界设计方法目录 | 保留；**不是 M 系列** |
+| 现有代码                   | 当前解释                          | 动作                                                                  |
+| -------------------------- | --------------------------------- | --------------------------------------------------------------------- |
+| NarraLume `outline_nodes`  | S Framework 的物理底座            | 保留；新增 Creative Frame 投影                                        |
+| `StoryUpgradeLedger`       | 男主长期 Road / 升级账            | 保留                                                                  |
+| `StoryStakeLedgerEntry`    | 配角认知→下注→加注→反应账         | 保留                                                                  |
+| `StoryObjectField`         | Module 2 世界对象切片             | 保留，但不再把“对象召回”神秘化成故事生成                              |
+| S01/S02/S03 search         | 旧工程形成的三个尺度搜索器        | 降级为可选 lens；不是 S Framework 本体                                |
+| S04 `StoryUnitDesign`      | 当前一段主动编剧                  | 保留，并绑定 Creative Frame + Protagonist Camera + Method Invocations |
+| Character Agent            | 人物具体演法                      | 保留，不能否决 Author Story Line                                      |
+| World Arbiter              | 硬 Reality 可行性                 | 保留                                                                  |
+| S05→S08                    | Node→Scene→Reader Time→Production | 保留                                                                  |
+| `mmorpg-method-catalog.ts` | v0.1～v0.7 世界设计方法目录       | 保留；**不是 M 系列**                                                 |
 
 ## 8. 新增合同
 

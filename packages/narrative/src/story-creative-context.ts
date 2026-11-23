@@ -84,7 +84,9 @@ export function buildStoryCreativeFrameContext(
         node.ordinal < target.ordinal &&
         node.status !== "abandoned",
     )
-    .sort((a, b) => a.ordinal - b.ordinal || a.createdAt.localeCompare(b.createdAt));
+    .sort(
+      (a, b) => a.ordinal - b.ordinal || a.createdAt.localeCompare(b.createdAt),
+    );
 
   return finalizeStoryCreativeFrameContext({
     version: "story-creative-frame.v1",

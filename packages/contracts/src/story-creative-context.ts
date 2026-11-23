@@ -8,7 +8,9 @@ export const StoryCreativeFrameKindSchema = z.enum([
   "scene",
   "beat",
 ]);
-export type StoryCreativeFrameKind = z.infer<typeof StoryCreativeFrameKindSchema>;
+export type StoryCreativeFrameKind = z.infer<
+  typeof StoryCreativeFrameKindSchema
+>;
 
 export const StoryCreativeFrameSnapshotSchema = z.object({
   outlineNodeId: z.string().min(1),
