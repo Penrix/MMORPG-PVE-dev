@@ -111,6 +111,8 @@ export * from "./autopilot-coordinator.js";
 export * from "./long-goal-coordinator.js";
 export * from "./assistant-tool-executor.js";
 export * from "./project-bootstrap.js";
+export * from "./inspiration-slot-bank.js";
+export * from "./inspiration-slot-routes.js";
 export * from "./story-context.js";
 export * from "./project-overview-service.js";
 export * from "./assistant-tool-registry.js";
