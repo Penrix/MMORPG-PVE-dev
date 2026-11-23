@@ -1,7 +1,7 @@
 // prettier-ignore
 import { createCanonEntity, createOutlineNode, createProject, type RunBudgetUsage } from "@narralume/domain";
 // prettier-ignore
-import type { ExpectationDesign, ExpectationState, StoryUnitDesign, StoryObjectField, StorySceneExpansion, StoryReaderTimePlan, WorldArbitrationReceipt, CharacterActionProposal, CharacterObservationPacket } from "@narralume/contracts";
+import type { ExpectationDesign, ExpectationState, StoryUnitDesign, StoryObjectField, StorySceneExpansion, StoryReaderTimePlan, WorldArbitrationReceipt, CharacterActionProposal } from "@narralume/contracts";
 // prettier-ignore
 import { SqliteCanonRepository, SqliteProjectRepository, SqliteStoryRepository, SqliteRunRepository } from "@narralume/persistence";
 // prettier-ignore
