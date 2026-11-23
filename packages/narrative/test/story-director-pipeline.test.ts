@@ -69,6 +69,7 @@ const camera = {
 let db: NodeNarrativeDatabase;
 let story: SqliteStoryRepository;
 
+// prettier-ignore
 beforeEach(() => {
   db = new NodeNarrativeDatabase();
   db.migrate();
@@ -93,6 +94,7 @@ beforeEach(() => {
   }
 });
 
+// prettier-ignore
 afterEach(() => {
   vi.restoreAllMocks();
   db.close();
