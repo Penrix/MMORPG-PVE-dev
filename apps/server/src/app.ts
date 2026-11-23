@@ -47,6 +47,7 @@ import {
   registerReviewRoutes,
   registerRunRoutes,
   registerStoryRoutes,
+  registerInspirationSlotRoutes,
   registerStudioRoutes,
   registerTemplateRoutes,
   seedEnvironmentModelConfig,
@@ -333,6 +334,7 @@ export async function buildApp(
     enableBackgroundWorker,
     environment,
   });
+  registerInspirationSlotRoutes(routes, database);
   registerProjectCoverRoutes(routes, database);
   registerAgentSkillRoutes(routes, database);
   registerProviderRoutes(routes, database, { environment });
