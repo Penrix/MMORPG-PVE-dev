@@ -291,6 +291,7 @@ export class SqliteRetrievalRepository {
            JOIN segment_embeddings embedding ON embedding.segment_id = segment.id
            WHERE segment.project_id = ? AND embedding.dimensions = ?
              AND (? IS NULL OR embedding.model = ?)
+             ${sourceTypePredicate}
              AND ${ACTIVE_SEGMENT_PREDICATE}`,
         )
         .all(
