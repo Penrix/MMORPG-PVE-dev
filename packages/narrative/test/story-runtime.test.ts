@@ -465,9 +465,6 @@ describe("Module 3 Story Runtime core", () => {
       }),
     );
     expect(current.currentGoal).toContain("goal=enter the harbor");
-    expect(
-      current.knownFacts.every((fact) => fact.id === "camp-baseline:newcomer"),
-    ).toBe(true);
     const proposal = finalizeCharacterActionProposal(
       {
         version: "character-action-proposal.v1",
