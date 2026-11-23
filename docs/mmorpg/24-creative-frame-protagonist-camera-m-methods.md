@@ -448,3 +448,27 @@ npm run import:creative-methods -- \
 
 4. **其他 M 系列 adapter**  
    M03 已证明通用端口成立。M01/M02 等后续只应增加 source adapter / index importer，不再重做创作架构。
+
+
+## 12. 当前实现状态
+
+截至 2026-11-23，本合同已经不只是设计稿，以下部分已落地：
+
+- `StoryCreativeFrameContext`：直接从 NarraLume `outline_nodes` 编译当前 Frame、父层链和同层前序区段；
+- `StoryCreativeFrameState`：Upgrade Ledger、Stake Ledger、未结 Expectation、retained assets、unresolved questions 可以写入现有 outline metadata；
+- 后续 Frame 会从父层 + 前序同层恢复上述创作状态，不新建第二套 S 数据库；
+- `StoryProtagonistCamera`：Story Authoring 强制携带男主当前位置、当前状态、当前目标、upgradeNeed、activeMove 与 focus objects；
+- `creativeContextDigest`：S01～S04 的搜索/编剧结果绑定当前 Creative Context，旧 Frame 结果不能静默混入新状态；
+- `CreativeMethodInvocation`：M 方法作为横切调用记录进入 Story Authoring；
+- `CreativeMethodRetrievalService`：可从 NarraLume Retrieval 中按当前 Frame、男主目标、世界对象与 scope 召回方法；
+- `import:creative-methods`：支持从外部方法库导入可重建检索索引；
+- M03 已按 `male-webnovel-cognition/database/m03/curated_index.jsonl` 的 Active / Candidate / Merged / Retired 状态设计适配；默认只召回 Active，可显式包含 Candidate，永不普通召回 Retired；
+- 原始方法 Markdown 仍在 cognition 仓保持权威，dev 仓只保存可重建 retrieval segment，不复制 5,519 张卡作为新的真相库。
+
+当前仍未强行自动化的部分：
+
+- Protagonist Camera 的 `currentGoal / activeMove` 仍是作者侧创作输入，不由 Reality 自动替作者决定；
+- M 方法召回是可调用能力，不要求每一步机械调用；
+- Scene / Combat / Ability 等更细粒度入口可继续复用同一 `CreativeMethodInvocation` 合同，而不是再造新方法系统。
+
+这三个“不自动化”是有意设计，不是缺口：**S 负责记忆位置，M 负责提供思考算法，Director 仍负责创作选择。**
