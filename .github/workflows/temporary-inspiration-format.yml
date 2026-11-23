@@ -1,0 +1,26 @@
+name: Temporary Inspiration Formatter
+on:
+  push:
+    branches:
+      - feat/module3-world-atlas-integration
+jobs:
+  format:
+    if: github.event.head_commit.message != 'chore: format inspiration files'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci
+      - run: npx prettier --write apps/server/test/inspiration-slot-api.test.ts packages/contracts/src/inspiration-slot-machine.ts packages/services/src/inspiration-slot-bank-data.ts packages/services/src/inspiration-slot-bank.ts packages/services/src/inspiration-slot-routes.ts packages/services/test/inspiration-slot-bank.test.ts
+      - name: Commit formatted files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/server/test/inspiration-slot-api.test.ts packages/contracts/src/inspiration-slot-machine.ts packages/services/src/inspiration-slot-bank-data.ts packages/services/src/inspiration-slot-bank.ts packages/services/src/inspiration-slot-routes.ts packages/services/test/inspiration-slot-bank.test.ts
+          git diff --cached --quiet || (git commit -m "chore: format inspiration files" && git push)
