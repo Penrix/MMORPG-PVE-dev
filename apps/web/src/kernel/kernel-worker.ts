@@ -48,6 +48,7 @@ import {
   registerReviewRoutes,
   registerRunRoutes,
   registerStoryRoutes,
+  registerInspirationSlotRoutes,
   registerStudioRoutes,
   registerTemplateRoutes,
   seedDemoRelayProvider,
@@ -253,6 +254,7 @@ async function boot(): Promise<void> {
   });
 
   const table = new RouteTable();
+  registerInspirationSlotRoutes(table, database);
   registerStoryRoutes(table, database, {
     coordinator,
     enableBackgroundWorker: true,
