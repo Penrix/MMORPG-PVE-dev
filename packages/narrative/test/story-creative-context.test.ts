@@ -87,6 +87,26 @@ describe("StoryCreativeFrameContext", () => {
     expect(context.digest.length).toBeGreaterThan(20);
   });
 
+  it("rejects a broken parent chain instead of pretending S inheritance exists", () => {
+    const context = buildStoryCreativeFrameContext(outlineFixture(), "arc:2");
+    expect(() =>
+      finalizeStoryCreativeFrameContext({
+        version: "story-creative-frame.v1",
+        projectId: "p1",
+        targetOutlineNodeId: context.targetOutlineNodeId,
+        currentFrame: context.currentFrame,
+        parentFrames: [
+          {
+            ...context.parentFrames[0]!,
+            parentId: "not-a-real-parent",
+          },
+          context.parentFrames[1]!,
+        ],
+        previousSiblingFrames: context.previousSiblingFrames,
+      }),
+    ).toThrow("story_creative_frame.invalid_parent_chain");
+  });
+
   it("binds protagonist camera and cross-cutting methods to current Module-2 objects", () => {
     const frame = buildStoryCreativeFrameContext(outlineFixture(), "arc:2");
     const field = finalizeStoryObjectField({
@@ -171,8 +191,7 @@ describe("StoryCreativeFrameContext", () => {
         protagonistEntityId: "xiuxin",
         road: "忍界最强",
         currentStepId: "step:hospital",
-        currentLocation: "木叶医院",
-        currentState: "普通重伤忍者，正在恢复，尚未重新取得高价任务资格",
+        currentPosition: "普通重伤忍者，尚未进入高价任务圈",
         stageGoal: "得到专业重新估值",
         settlementTarget: "进入更高任务入口",
         steps: [
@@ -186,6 +205,33 @@ describe("StoryCreativeFrameContext", () => {
         ],
       }),
     ).not.toThrow();
+
+    const cameraWithoutProtagonist = {
+      ...context,
+      protagonistCamera: {
+        ...context.protagonistCamera,
+        focusObjectIds: ["object:medic"],
+      },
+    };
+    expect(() =>
+      assertStoryCreativeContextBound(cameraWithoutProtagonist, field, {
+        protagonistEntityId: "xiuxin",
+        road: "忍界最强",
+        currentStepId: "step:hospital",
+        currentPosition: "普通重伤忍者，尚未进入高价任务圈",
+        stageGoal: "得到专业重新估值",
+        settlementTarget: "进入更高任务入口",
+        steps: [
+          {
+            id: "step:hospital",
+            title: "医院重新估值",
+            targetGain: "专业评级",
+            gate: "证明恢复与能力异常",
+            targetCircle: "医疗与任务体系",
+          },
+        ],
+      }),
+    ).toThrow("story_creative_context.protagonist_not_in_camera_focus");
 
     const bad = {
       ...context,
@@ -201,8 +247,7 @@ describe("StoryCreativeFrameContext", () => {
         protagonistEntityId: "xiuxin",
         road: "忍界最强",
         currentStepId: "step:hospital",
-        currentLocation: "木叶医院",
-        currentState: "普通重伤忍者，正在恢复，尚未重新取得高价任务资格",
+        currentPosition: "普通重伤忍者，尚未进入高价任务圈",
         stageGoal: "得到专业重新估值",
         settlementTarget: "进入更高任务入口",
         steps: [
