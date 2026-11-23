@@ -48,3 +48,4 @@ export * from "./story-production-handoff.js";
 
 export * from "./creative-material-catalog.js";
 export * from "./creative-material-retrieval.js";
+export * from "./story-director-pipeline.js";
