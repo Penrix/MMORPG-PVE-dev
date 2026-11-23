@@ -152,9 +152,7 @@ function methodSegment(input: {
       name: input.name,
       status: input.status,
       summary: input.summary,
-      call_when: [
-        "低位男主怎样用一次超规格结果让专业人物重新估值？",
-      ],
+      call_when: ["低位男主怎样用一次超规格结果让专业人物重新估值？"],
       tags: ["重新估值", "低位升级"],
       filename: `cards/MOVE/${input.id}.md`,
       curation_stage: "test",
