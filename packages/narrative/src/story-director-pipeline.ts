@@ -1,4 +1,6 @@
+// prettier-ignore
 import { sha256Hex, type NarrativeRun, type NarrativeRunStep, type RunBudgetUsage } from "@narralume/domain";
+// prettier-ignore
 import type {
   CharacterActionProposal,
   CharacterObservationPacket,
@@ -17,6 +19,7 @@ import type {
   WorldArbitrationContext,
   WorldArbitrationReceipt,
 } from "@narralume/contracts";
+// prettier-ignore
 import {
   type NarrativeDatabase,
   SqliteCanonRepository,
@@ -25,30 +28,42 @@ import {
   WorldAtlasStoryContextBuilder,
 } from "@narralume/persistence";
 
+// prettier-ignore
 import type { NarrativeModelClient } from "./model-client.js";
+// prettier-ignore
 import { StoryStatePacketBuilder } from "./story-state-packet.js";
+// prettier-ignore
 import { storyObjectFieldFromWorldContext, storyObjectSurfaceRef } from "./story-authoring-runtime.js";
+// prettier-ignore
 import {
   buildStoryCreativeFrameContext,
   finalizeStoryCreativeContext,
   storyCreativeFrameStateFromStoryUnit,
   stageStoryCreativeFrameState,
 } from "./story-creative-context.js";
+// prettier-ignore
 import { ExpectationNarrativeService } from "./expectation-runtime-workers.js";
+// prettier-ignore
 import { StoryAuthoringService } from "./story-authoring-runtime-workers.js";
+// prettier-ignore
 import {
   worldArbitrationContextFromStoryUnit,
   CharacterObservationBuilder,
 } from "./story-runtime.js";
+// prettier-ignore
 import { StoryRuntimeAgentService } from "./story-runtime-workers.js";
+// prettier-ignore
 import { finalizeCharacterActionProposal } from "./vendor/novel-studio/character-agent-protocol.js";
+// prettier-ignore
 import { StorySceneExpansionService } from "./story-scene-runtime-workers.js";
+// prettier-ignore
 import {
   buildStoryChapterProductionHandoff,
   stageStoryChapterProductionHandoff,
   type StoryChapterProductionHandoff,
 } from "./story-production-handoff.js";
 
+// prettier-ignore
 export interface StoryDirectorFrameRequest {
   projectId: string;
   frameOutlineNodeId: string;
@@ -65,6 +80,7 @@ export interface StoryDirectorFrameRequest {
   sourceSeedIds?: readonly string[];
 }
 
+// prettier-ignore
 export type StoryDirectorFrameResult =
   | {
       status: "BLOCKED_WORLD_GAP";
@@ -84,6 +100,7 @@ export type StoryDirectorFrameResult =
       usage: RunBudgetUsage;
     };
 
+// prettier-ignore
 export interface StoryDirectorRehearsalRequest {
   field: StoryObjectField;
   storyUnit: StoryUnitDesign;
@@ -102,6 +119,7 @@ export interface StoryDirectorRehearsalRequest {
   maxConflictRetries?: number;
 }
 
+// prettier-ignore
 export type StoryDirectorRehearsalResult =
   | {
       status: "CONFLICT_BLOCKED";
@@ -123,6 +141,7 @@ export type StoryDirectorRehearsalResult =
       usage: RunBudgetUsage;
     };
 
+// prettier-ignore
 export interface StoryDirectorAdoptionInput {
   chapterOutlineNodeId: string;
   frameOutlineNodeId?: string;
@@ -132,10 +151,12 @@ export interface StoryDirectorAdoptionInput {
   updatedAt: string;
 }
 
+// prettier-ignore
 function emptyUsage(): RunBudgetUsage {
   return { inputTokens: 0, outputTokens: 0, calls: 0, costUsd: 0, wallTimeMs: 0 };
 }
 
+// prettier-ignore
 function addUsage(total: RunBudgetUsage, next: RunBudgetUsage): RunBudgetUsage {
   return {
     inputTokens: total.inputTokens + next.inputTokens,
@@ -147,6 +168,7 @@ function addUsage(total: RunBudgetUsage, next: RunBudgetUsage): RunBudgetUsage {
 }
 
 /** S01-S08 coordination only. The speculative methods never stage data. */
+// prettier-ignore
 export class StoryDirectorPipeline {
   private readonly story: SqliteStoryRepository;
   private readonly canon: SqliteCanonRepository;
