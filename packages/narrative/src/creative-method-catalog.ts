@@ -52,8 +52,7 @@ export function creativeMethodSegmentFromCuratedCard(input: {
   if (!methodFamily) throw new Error("creative_method.empty_family");
   const markdown = input.markdown.trim();
   if (
-    (input.entry.status === "active" ||
-      input.entry.status === "candidate") &&
+    (input.entry.status === "active" || input.entry.status === "candidate") &&
     !markdown
   ) {
     throw new Error(`creative_method.missing_live_card:${input.entry.id}`);
@@ -88,7 +87,9 @@ export function creativeMethodSegmentFromCuratedCard(input: {
       summary: input.entry.summary,
       callWhen: input.entry.call_when,
       tags: input.entry.tags,
-      sourcePath: `${input.sourceRootLabel.replace(/\/$/u, "")}/${input.entry.filename}`,
+      sourcePath: `${input.sourceRootLabel.replace(/\/$/u, "")}/${
+        input.entry.filename
+      }`,
       curationStage: input.entry.curation_stage ?? null,
     },
     entityIds: [],
