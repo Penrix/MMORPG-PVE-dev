@@ -13,6 +13,7 @@ function storyUnit(): StoryUnitDesign {
     status: "READY",
     projectId: "p1",
     objectFieldDigest: "field:digest",
+    creativeContextDigest: "creative:test",
     sourceSeedIds: ["seed:recheck"],
     expectationDesignDigest: "expectation:digest",
     objectAnchorIds: ["object:xiuxin", "object:medic"],
