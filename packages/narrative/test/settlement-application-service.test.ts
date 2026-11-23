@@ -498,6 +498,7 @@ describe("SettlementApplicationService", () => {
   });
 });
 
+// prettier-ignore
 describe("accepted settlement creative-state write-back", () => {
   it("settles payoff stakes, charges open stakes and carries retained gains into chapter two", () => {
     stageCreativeChapter();
@@ -637,6 +638,7 @@ describe("accepted settlement creative-state write-back", () => {
   });
 });
 
+// prettier-ignore
 function creativeState() {
   const stake = (id: string, entityId: string) => ({
     id,
@@ -689,6 +691,7 @@ function creativeState() {
   });
 }
 
+// prettier-ignore
 function creativeHandoff() {
   const directive = (action: "payoff" | "charge", order: number) => ({
     sceneId: `scene:${order}`,
@@ -740,12 +743,14 @@ function creativeHandoff() {
   });
 }
 
+// prettier-ignore
 function stageCreativeChapter(): void {
   const story = new SqliteStoryRepository(database);
   stageStoryChapterProductionHandoff(story, "chapter-1", creativeHandoff(), now);
   stageStoryCreativeFrameState(story, creativeState(), now);
 }
 
+// prettier-ignore
 function chapterCreativeState() {
   const node = new SqliteStoryRepository(database).requireOutlineNode("p1", "chapter-1");
   return node.metadata.mmorpgCreativeState as ReturnType<typeof creativeState>;
