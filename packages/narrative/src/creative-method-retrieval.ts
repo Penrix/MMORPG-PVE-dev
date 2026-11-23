@@ -11,8 +11,10 @@ import {
   type CreativeMaterialRecallRequest,
 } from "./creative-material-retrieval.js";
 
-export interface CreativeMethodRecallRequest
-  extends Omit<CreativeMaterialRecallRequest, "libraries"> {
+export interface CreativeMethodRecallRequest extends Omit<
+  CreativeMaterialRecallRequest,
+  "libraries"
+> {
   methodFamilies?: readonly string[];
 }
 

@@ -168,8 +168,7 @@ function creativeContext(currentField: StoryObjectField) {
         id: "method:m01a:story",
         methodFamily: "M01A",
         methodId: "six-question-playability-search",
-        sourceRef:
-          "Penrix/male-webnovel-cognition/docs/fourth-generation/M01A",
+        sourceRef: "Penrix/male-webnovel-cognition/docs/fourth-generation/M01A",
         scope: "story",
         purpose: "从当前具体世界对象提出新的创作问题",
         inputObjectIds: currentField.objects.map((object) => object.id),

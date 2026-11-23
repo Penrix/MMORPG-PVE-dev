@@ -132,8 +132,7 @@ export class CreativeMaterialRetrievalService {
       .map((hit, index) => {
         const libraryId = metadataString(hit, "libraryId")!;
         const materialId = metadataString(hit, "materialId") ?? hit.sourceId;
-        const materialType =
-          metadataString(hit, "materialType") ?? "unknown";
+        const materialType = metadataString(hit, "materialType") ?? "unknown";
         const status = metadataString(hit, "status");
         if (
           status !== "active" &&

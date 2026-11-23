@@ -335,15 +335,17 @@ describe("CreativeMaterialRetrievalService", () => {
       }),
     );
     expect(
-      service.recall({
-        field: field(),
-        creativeContext: context(),
-        scope: "story",
-        purpose: "重新估值",
-        query: "专业重新估值",
-        libraries: ["M03"],
-        limit: 10,
-      }).map((item) => item.materialId),
+      service
+        .recall({
+          field: field(),
+          creativeContext: context(),
+          scope: "story",
+          purpose: "重新估值",
+          query: "专业重新估值",
+          libraries: ["M03"],
+          limit: 10,
+        })
+        .map((item) => item.materialId),
     ).toEqual(expect.arrayContaining(["MOVE-0001", "MOVE-0002"]));
   });
 });

@@ -11,8 +11,7 @@ import {
   type CuratedCreativeMaterialIndexEntry,
 } from "./creative-material-catalog.js";
 
-export type CuratedCreativeMethodIndexEntry =
-  CuratedCreativeMaterialIndexEntry;
+export type CuratedCreativeMethodIndexEntry = CuratedCreativeMaterialIndexEntry;
 
 export const parseCuratedCreativeMethodIndex =
   parseCuratedCreativeMaterialIndex;
