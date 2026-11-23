@@ -2,6 +2,7 @@ import { createCanonFact, type CanonFact } from "@narralume/domain";
 import {
   CanonChangeSetDecisionConflictError,
   SqliteCanonRepository,
+  SqliteDocumentRepository,
   SqliteNarrativeStateRepository,
   SqliteReviewRepository,
   SqliteRunRepository,
@@ -61,6 +62,7 @@ const CoCreateChangesSchema = z.object({
 export class SettlementApplicationService {
   private readonly canon: SqliteCanonRepository;
   private readonly story: SqliteStoryRepository;
+  private readonly documents: SqliteDocumentRepository;
   private readonly state: SqliteNarrativeStateRepository;
   private readonly reviews: SqliteReviewRepository;
   private readonly runs: SqliteRunRepository;
@@ -68,6 +70,7 @@ export class SettlementApplicationService {
   constructor(private readonly database: NarrativeDatabase) {
     this.canon = new SqliteCanonRepository(database);
     this.story = new SqliteStoryRepository(database);
+    this.documents = new SqliteDocumentRepository(database);
     this.state = new SqliteNarrativeStateRepository(
       database,
       this.canon,
@@ -167,7 +170,7 @@ export class SettlementApplicationService {
     const outlineNodeId =
       run?.targetOutlineNodeId ??
       (typeof documentId === "string"
-        ? this.story.getDocument(changeSet.projectId, documentId)?.outlineNodeId ?? null
+        ? this.documents.get(changeSet.projectId, documentId)?.outlineNodeId ?? null
         : null);
     if (!outlineNodeId) return;
 
