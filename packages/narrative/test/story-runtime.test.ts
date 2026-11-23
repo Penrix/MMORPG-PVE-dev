@@ -378,7 +378,7 @@ describe("Module 3 Story Runtime core", () => {
       escalationPlan: "summon the harbor guard",
       payoffReaction: "realize Hero outplayed me",
       settlementChange: "reputation passes to Hero",
-      state: "escalated",
+      state: "escalating",
     });
     design.events[0]!.stakeEntryIds.push("stake:hero");
     const builder = new CharacterObservationBuilder(database);
@@ -412,7 +412,7 @@ describe("Module 3 Story Runtime core", () => {
     design.events[0]!.reactionTargetEntityIds.push("hero");
     expect(build().authoredDirection).toBe(payoff.authoredDirection);
     design.events[0]!.reactionTargetEntityIds.pop();
-    design.stakeLedger[0]!.state = "planned";
+    design.stakeLedger[0]!.state = "seeded";
     expect(build().authoredDirection).toBe(stake.authoredDirection);
   });
 
