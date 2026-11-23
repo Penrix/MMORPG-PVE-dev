@@ -70,23 +70,33 @@ export function registerInspirationSlotRoutes(
       story.upsertAuthorIntent({
         ...intent,
         promise: card.sentence,
-        audience: card.channel === "female" ? "女频读者" : card.channel === "male" ? "男频读者" : "综合读者",
+        audience:
+          card.channel === "female"
+            ? "女频读者"
+            : card.channel === "male"
+              ? "男频读者"
+              : "综合读者",
         tone: card.starterBlueprint.targetEmotion,
         themes: [card.starterBlueprint.readerNeed],
         currentFocus: JSON.stringify(card.starterBlueprint),
         updatedAt: now,
       });
-      story.updateOutlineDetails(projectId, outlineNodeId, {
-        summary: card.sentence,
-        goal: card.starterBlueprint.targetCircle,
-        conflict: card.starterBlueprint.openingTension,
-        metadata: {
-          inspirationCardId: card.id,
-          inspirationSeed: card.sentence,
-          starterBlueprint: card.starterBlueprint,
-          origin: "inspiration-slot-machine",
+      story.updateOutlineDetails(
+        projectId,
+        outlineNodeId,
+        {
+          summary: card.sentence,
+          goal: card.starterBlueprint.targetCircle,
+          conflict: card.starterBlueprint.openingTension,
+          metadata: {
+            inspirationCardId: card.id,
+            inspirationSeed: card.sentence,
+            starterBlueprint: card.starterBlueprint,
+            origin: "inspiration-slot-machine",
+          },
         },
-      }, now);
+        now,
+      );
       return { project: ProjectSchema.parse(project), outlineNodeId };
     });
     return { status: 201, body: result };

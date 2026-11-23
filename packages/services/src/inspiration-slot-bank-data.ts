@@ -1,9 +1,16 @@
-import type { InspirationChannel, InspirationSlotItem, InspirationSlotKey } from "@narralume/contracts";
+import type {
+  InspirationChannel,
+  InspirationSlotItem,
+  InspirationSlotKey,
+} from "@narralume/contracts";
 
 /** Source-of-truth for portable, world-agnostic slot phrases. Add cards here, never to Canon. */
-const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly string[]>> = {
-  "identity": {
-    "male": [
+const phrases: Record<
+  InspirationSlotKey,
+  Record<InspirationChannel, readonly string[]>
+> = {
+  identity: {
+    male: [
       "古董街鉴定学徒",
       "夜间急诊护工",
       "废品站小老板",
@@ -15,9 +22,9 @@ const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly st
       "仙门藏经阁扫地童子",
       "港口走私船修理工",
       "旧城殡仪馆背尸人",
-      "电视台深夜档剪辑助理"
+      "电视台深夜档剪辑助理",
     ],
-    "female": [
+    female: [
       "豪门婚礼策划师",
       "顶流剧组服装助理",
       "旧城区私人化妆师",
@@ -29,9 +36,9 @@ const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly st
       "拍卖行遗物整理师",
       "古堡里的临时女管家",
       "电竞俱乐部战队分析员",
-      "仙门灵兽园喂养女弟子"
+      "仙门灵兽园喂养女弟子",
     ],
-    "hybrid": [
+    hybrid: [
       "老城区按摩师",
       "午夜便利店值班员",
       "乡镇兽医",
@@ -43,11 +50,11 @@ const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly st
       "山村药铺学徒",
       "旧书店收银员",
       "民俗博物馆库房管理员",
-      "暴雨天的道路救援员"
-    ]
+      "暴雨天的道路救援员",
+    ],
   },
-  "anomalyRule": {
-    "male": [
+  anomalyRule: {
+    male: [
       "能听出每件古董前主人的最后一句遗言",
       "每治好一名重伤高手就继承他的一门绝技",
       "经手的废铁会显露失传的锻造秘方",
@@ -59,9 +66,9 @@ const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly st
       "被撕掉的秘籍在眼前自动补全",
       "修好的船能短暂驶入另一条历史航线",
       "触碰遗体就能看见死者藏起的宝藏",
-      "剪掉的废片会在明日成为真实新闻"
+      "剪掉的废片会在明日成为真实新闻",
     ],
-    "female": [
+    female: [
       "剪断婚纱丝线就能看见一段被隐瞒的婚约",
       "替演员试穿戏服能预演她未来的成名现场",
       "化妆时能改写对象在旁人心中的第一印象",
@@ -73,9 +80,9 @@ const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly st
       "触碰拍卖遗物便能重播它最贵的一次交易",
       "能看见每个贵族来客的谎言标价",
       "看一眼比赛录像便能预知队伍下一次关键失误",
-      "喂过的灵兽会替她说出主人的真心话"
+      "喂过的灵兽会替她说出主人的真心话",
     ],
-    "hybrid": [
+    hybrid: [
       "按对穴位能精准调节他人情绪",
       "开发的APP意外连通地府",
       "每卖出一件夜宵就能交换客人一段好运",
@@ -87,11 +94,11 @@ const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly st
       "煎药时能看见病人命运中的断点",
       "旧书里的空白页会写出即将发生的秘密",
       "库房标本在月圆时能复活一刻钟",
-      "每救出一位被困者就能得到一张隐藏地图"
-    ]
+      "每救出一位被困者就能得到一张隐藏地图",
+    ],
   },
-  "highValueCircle": {
-    "male": [
+  highValueCircle: {
+    male: [
       "地下黑帮大佬圈",
       "诸天仙尊大能的私人宴席",
       "豪门世家权贵",
@@ -103,9 +110,9 @@ const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly st
       "顶级地下格斗王者圈",
       "皇室御马监与将门",
       "隐世丹宗的炼丹宗师",
-      "娱乐帝国顶级导演制片人圈"
+      "娱乐帝国顶级导演制片人圈",
     ],
-    "female": [
+    female: [
       "顶级豪门继承人圈",
       "顶流影帝与资本局",
       "高冷世家掌权人",
@@ -117,9 +124,9 @@ const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly st
       "奢侈品牌首席设计师圈",
       "电影节红毯与影后争夺局",
       "顶尖职业战队与巨额赞助商",
-      "仙门圣女与掌教亲传圈"
+      "仙门圣女与掌教亲传圈",
     ],
-    "hybrid": [
+    hybrid: [
       "城市隐秘超自然调查局",
       "跨国古董黑市拍卖圈",
       "三界失物招领所",
@@ -131,11 +138,11 @@ const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly st
       "王城最古老的商会",
       "历史谜案调查专家圈",
       "神明降临的秘密委员会",
-      "异世界远征队的开拓者联盟"
-    ]
+      "异世界远征队的开拓者联盟",
+    ],
   },
-  "twistPressure": {
-    "male": [
+  twistPressure: {
+    male: [
       "没想到全城大佬都求着来当常客，但一张破账本竟牵出他们的命脉",
       "结果对手越打压反而越帮我涨修为，却引来幕后掌局者亲自登门",
       "却被满楼怪物当成最可怕的隐世凶物，争着献上镇楼宝物",
@@ -147,9 +154,9 @@ const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly st
       "没想到镇守宝库的神兽只肯认我为主，所有长老当场翻脸",
       "但赢下第一场地下擂台后，三位拳王竟同时宣布要收我为徒",
       "结果那些看不起我的贵族抢着送来家传秘宝，只为换一次交易机会",
-      "不料我剪出的废片提前泄露了王朝更替的秘密，全城权贵连夜找上门"
+      "不料我剪出的废片提前泄露了王朝更替的秘密，全城权贵连夜找上门",
     ],
-    "female": [
+    female: [
       "没想到被嫌弃的婚纱竟让三位豪门继承人当众争夺同一桩婚约",
       "却意外掌握影帝最不愿公开的秘密，整个剧组开始对我另眼相看",
       "结果高冷掌权人亲自来求我赴宴，竞争家族却当场宣布截胡",
@@ -161,9 +168,9 @@ const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly st
       "但那位向来不近人情的影后当众宣布只肯用我的妆造",
       "没想到王妃的一句夸赞让满宫权贵争相求见，皇帝却也注意到了我",
       "却被圣女当众点名做唯一搭档，其他亲传弟子纷纷下场争夺",
-      "结果我随口说出的战术让弱队击败冠军，资本方连夜改写收购方案"
+      "结果我随口说出的战术让弱队击败冠军，资本方连夜改写收购方案",
     ],
-    "hybrid": [
+    hybrid: [
       "没想到常客竟是失踪已久的城主，但他的名字早从所有档案里消失",
       "结果门外排队的全是神仙妖王，却没人敢先迈进店门",
       "却发现每一个买家都想抢同一件不起眼的旧货，价格一夜翻百倍",
@@ -175,25 +182,29 @@ const phrases: Record<InspirationSlotKey, Record<InspirationChannel, readonly st
       "但拍卖会最贵的拍品竟主动认我为主，买家纷纷开出天价交换",
       "结果那只快死的灵兽开口叫我主人，连宗门掌教都失态",
       "不料三支远征队都在地图上看见我的名字，争着交出指挥权",
-      "却发现整座城市的富豪都在寻找我手里那张普通收据"
-    ]
-  }
+      "却发现整座城市的富豪都在寻找我手里那张普通收据",
+    ],
+  },
 };
 
 export const BUILTIN_INSPIRATION_SLOT_BANK: readonly InspirationSlotItem[] = (
-  Object.entries(phrases) as [InspirationSlotKey, Record<InspirationChannel, readonly string[]>][]
+  Object.entries(phrases) as [
+    InspirationSlotKey,
+    Record<InspirationChannel, readonly string[]>,
+  ][]
 ).flatMap(([slot, channels]) =>
-  (Object.entries(channels) as [InspirationChannel, readonly string[]][]).flatMap(
-    ([channel, items]) =>
-      items.map((phrase, index) => ({
-        id: "slot-bank:" + slot + ":" + channel + ":" + String(index + 1),
-        slot,
-        channels: [channel],
-        label: phrase,
-        phrase,
-        sourceLibrary: "slot-bank" as const,
-        materialType: null,
-        tags: [channel, slot],
-      })),
+  (
+    Object.entries(channels) as [InspirationChannel, readonly string[]][]
+  ).flatMap(([channel, items]) =>
+    items.map((phrase, index) => ({
+      id: "slot-bank:" + slot + ":" + channel + ":" + String(index + 1),
+      slot,
+      channels: [channel],
+      label: phrase,
+      phrase,
+      sourceLibrary: "slot-bank" as const,
+      materialType: null,
+      tags: [channel, slot],
+    })),
   ),
 );
