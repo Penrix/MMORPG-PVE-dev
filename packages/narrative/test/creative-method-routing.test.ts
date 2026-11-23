@@ -8,13 +8,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { NarrativeModelClient } from "../src/model-client.js";
 import {
-  CreativeMethodRoutingService,
+  CreativeOperatorInvocationService,
   StoryAuthoringService,
   finalizeStoryCreativeContext,
   finalizeStoryCreativeFrameContext,
   finalizeStoryObjectField,
   storyObjectSurfaceRef,
-  storySearchMethodDefinitions,
+  module2CreativeOperatorDefinitions,
 } from "../src/index.js";
 
 const usage: RunBudgetUsage = {
@@ -165,100 +165,100 @@ function surfaceRef(
   return storyObjectSurfaceRef(object.id, surface);
 }
 
-describe("M-series creative method runtime", () => {
-  it("filters out methods whose prerequisites are missing", () => {
-    const methods = storySearchMethodDefinitions({
+function readySearchDraft(currentField: StoryObjectField) {
+  return {
+    status: "READY" as const,
+    question: "医院期还有哪些机制不同的可玩关系？",
+    objectFocus: [
+      {
+        objectId: "object:medic",
+        surfaceRefs: [surfaceRef(currentField, "object:medic", "duty")],
+        whyNow: "医疗忍者正在处理秀信",
+        valuableSurface: "专业权限与重新估值入口",
+      },
+    ],
+    seeds: [
+      {
+        id: "seed:hospital-branch",
+        title: "专业估值继续变价",
+        anchorObjectIds: ["object:xiuxin", "object:medic"],
+        groundingSurfaceRefs: [
+          surfaceRef(currentField, "object:xiuxin", "location"),
+          surfaceRef(currentField, "object:medic", "duty"),
+        ],
+        observation: "两人已经在同一医疗处理链",
+        searchMove: "从当前人物行动继续追升级、人物下一手与Reader等待",
+        idea: "让真实复核动作把普通医疗关系推向更贵的专业估值",
+        protagonistHook: "秀信主动让训练结果进入专业观察",
+        readerValue: "Reader能看见价格正在被重新评估",
+        newRelationOrChange: "医疗关系出现可升级的专业定价接口",
+        candidateNewObjects: [],
+        nextQuestion: "谁会基于这次结果继续下注",
+        status: "CANDIDATE" as const,
+      },
+    ],
+    worldGaps: [],
+    scaleResult: {
+      scale: "S03" as const,
+      periodFocus: "病房恢复与专业重新估值",
+      opportunityField: [
+        {
+          objectIds: ["object:xiuxin", "object:medic"],
+          opportunity: "已有复核关系可以继续变价",
+          whyAlive: "两人当前就在同一Reality处理链",
+        },
+      ],
+      storyMovements: [],
+    },
+  };
+}
+
+describe("M-series creative operator runtime", () => {
+  it("keeps M01B embedded while exposing other methods as Module-2 operators", () => {
+    const ids = module2CreativeOperatorDefinitions({
       materials: [],
       hasPriorStoryState: false,
-    });
-    const ids = methods.map((method) => method.methodId);
+    }).map((method) => method.methodId);
 
     expect(ids).toContain("m01a-playability");
     expect(ids).toContain("m02-six-chain");
     expect(ids).toContain("m04-mature-story-prototype");
+    expect(ids).not.toContain("m01b-three-consciousness");
     expect(ids).not.toContain("m03-compose");
     expect(ids).not.toContain("m05-play-variation");
-    expect(ids).not.toContain("m06-long-form-score");
-    expect(ids).not.toContain("m09-performance-semantics");
-    expect(ids).not.toContain("m08-concept-engine-migration");
   });
 
-
-
-  it("only enables PLAY variation when a real PLAY material and prior story state exist", () => {
-    const withoutPlay = storySearchMethodDefinitions({
-      materials: [{ materialType: "MOVE" }],
-      hasPriorStoryState: true,
-    }).map((method) => method.methodId);
-    expect(withoutPlay).not.toContain("m05-play-variation");
-
-    const withPlay = storySearchMethodDefinitions({
-      materials: [{ materialType: "PLAY" }],
-      hasPriorStoryState: true,
-    }).map((method) => method.methodId);
-    expect(withPlay).toContain("m05-play-variation");
-  });
-
-  it("routes one primary method without deciding the story itself", async () => {
+  it("invokes a named Module-2 operator explicitly without automatic routing", () => {
     const currentField = field();
-    const creativeContext = context(currentField);
-    const model: NarrativeModelClient = {
-      text: vi.fn(),
-      structured: vi.fn(
-        async (_run, _step, purpose, request, _contract, validate) => {
-          expect(purpose).toBe("story-creative-method-routing");
-          const serialized = JSON.stringify(request);
-          expect(serialized).toContain("m02-six-chain");
-          expect(serialized).not.toContain("m08-concept-engine-migration");
-          expect(serialized).toContain("不负责决定故事写什么");
-          const checked = validate({
-            diagnosis: "第一批答案收缩成同一种专业复核，需要改变搜索运动。",
-            selections: [
-              {
-                methodId: "m02-six-chain",
-                role: "primary",
-                purpose: "从现有医院对象中打开机制不同的行动分支",
-                reason: "当前卡点是搜索惯性，不是缺世界对象。",
-                inputObjectIds: ["object:xiuxin", "object:medic"],
-              },
-            ],
-          });
-          if (!checked.success) throw new Error(checked.issues.join("; "));
-          return {
-            value: checked.data,
-            usage,
-            mode: "native" as const,
-            attempts: 1,
-          };
-        },
-      ),
-    };
+    const result = new CreativeOperatorInvocationService().invoke({
+      field: currentField,
+      creativeContext: context(currentField),
+      upgradeLedger: upgradeLedger(),
+      methodId: "m02-six-chain",
+      purpose: "当前答案太像，改一次搜索运动",
+      inputObjectIds: ["object:xiuxin", "object:medic"],
+    });
 
-    const result = await new CreativeMethodRoutingService(
-      model,
-    ).routeStorySearch(
-      run,
-      step,
-      {
-        field: currentField,
-        creativeContext,
-        upgradeLedger: upgradeLedger(),
-        request: "别只给我同一种专业复核，继续找真正不同的玩法",
-        readerNeed: "看低位人物凭真实能力被重新估值",
-        targetEmotion: "得意",
-      },
-      new AbortController().signal,
-    );
-
-    expect(result.plan.mode).toBe("auto");
-    expect(result.plan.selections).toHaveLength(1);
-    expect(result.plan.selections[0]?.role).toBe("primary");
-    expect(result.creativeContext.methodInvocations[0]?.methodId).toBe(
-      "m02-six-chain",
-    );
+    expect(result.definition.placement).toBe("module2-operator");
+    expect(result.invocation.methodId).toBe("m02-six-chain");
+    expect(result.creativeContext.methodInvocations).toHaveLength(1);
   });
 
-  it("routes then executes the selected method through StoryAuthoringService", async () => {
+  it("rejects M01B as a callable operator because it is embedded in Module 3", () => {
+    const currentField = field();
+    expect(() =>
+      new CreativeOperatorInvocationService().invoke({
+        field: currentField,
+        creativeContext: context(currentField),
+        upgradeLedger: upgradeLedger(),
+        methodId: "m01b-three-consciousness",
+        purpose: "不应这样调用",
+        inputObjectIds: ["object:xiuxin"],
+      }),
+    ).toThrow("creative_operator.embedded_not_callable");
+  });
+
+  it("runs Story Search with embedded M01B and does not auto-pick an operator", async () => {
     const currentField = field();
     const creativeContext = context(currentField);
     let calls = 0;
@@ -267,78 +267,14 @@ describe("M-series creative method runtime", () => {
       structured: vi.fn(
         async (_run, _step, purpose, request, _contract, validate) => {
           calls += 1;
-          if (purpose === "story-creative-method-routing") {
-            const checked = validate({
-              diagnosis: "需要打破第一先验。",
-              selections: [
-                {
-                  methodId: "m02-six-chain",
-                  role: "primary",
-                  purpose: "改变搜索运动",
-                  reason: "当前答案同质。",
-                  inputObjectIds: ["object:xiuxin", "object:medic"],
-                },
-              ],
-            });
-            if (!checked.success) throw new Error(checked.issues.join("; "));
-            return {
-              value: checked.data,
-              usage,
-              mode: "native" as const,
-              attempts: 1,
-            };
-          }
-
           expect(purpose).toBe("story-object-grounded-search");
           const serialized = JSON.stringify(request);
-          expect(serialized).toContain("m02-six-chain");
-          expect(serialized).toContain("primary方法决定本轮主要搜索运动");
-          const checked = validate({
-            status: "READY",
-            question: "医院期还有哪些机制不同的可玩关系？",
-            objectFocus: [
-              {
-                objectId: "object:medic",
-                surfaceRefs: [surfaceRef(currentField, "object:medic", "duty")],
-                whyNow: "医疗忍者正在处理秀信",
-                valuableSurface: "专业权限与重新估值入口",
-              },
-            ],
-            seeds: [
-              {
-                id: "seed:m02-branch",
-                title: "复核权限内部继续分叉",
-                anchorObjectIds: ["object:xiuxin", "object:medic"],
-                groundingSurfaceRefs: [
-                  surfaceRef(currentField, "object:xiuxin", "location"),
-                  surfaceRef(currentField, "object:medic", "duty"),
-                ],
-                observation: "两人已经在同一医疗处理链",
-                searchMove:
-                  "M02树型：改变复核结果的公开程度，观察人物下一手如何变化",
-                idea: "不造新人物，从既有复核权限内部寻找不同分支",
-                protagonistHook: "秀信主动让训练结果进入专业观察",
-                readerValue: "同一能力在不同公开程度下产生不同价格",
-                newRelationOrChange: "医疗关系出现可升级的专业定价接口",
-                candidateNewObjects: [],
-                nextQuestion: "哪一条分支最适合进入S04下注设计",
-                status: "CANDIDATE",
-              },
-            ],
-            worldGaps: [],
-            scaleResult: {
-              scale: "S03",
-              periodFocus: "病房恢复与专业重新估值",
-              opportunityField: [
-                {
-                  objectIds: ["object:xiuxin", "object:medic"],
-                  opportunity: "复核权限内部可以继续分叉",
-                  whyAlive: "两人当前就在同一现实处理链",
-                },
-              ],
-              storyMovements: [],
-            },
-          });
+          expect(serialized).toContain("M01B不是可选methodInvocation");
+          expect(serialized).toContain("embedded-always-on");
+          expect(serialized).toContain("upgradeFront");
+          expect(serialized).toContain("actorFront");
+          expect(serialized).toContain("readerFront");
+          const checked = validate(readySearchDraft(currentField));
           if (!checked.success) throw new Error(checked.issues.join("; "));
           return {
             value: checked.data,
@@ -350,166 +286,78 @@ describe("M-series creative method runtime", () => {
       ),
     };
 
-    const result = await new StoryAuthoringService(
-      model,
-    ).searchWithCreativeMethods(
+    const result = await new StoryAuthoringService(model).searchWithCreativeMethods(
       run,
       step,
       {
         field: currentField,
         creativeContext,
         upgradeLedger: upgradeLedger(),
-        request: "别只给我同一种专业复核，继续找真正不同的玩法",
-        readerNeed: "看低位人物凭真实能力被重新估值",
-        targetEmotion: "得意",
-        protagonistProfile: "秀信：低位、主动、用基础能力解决现实问题",
-      },
-      new AbortController().signal,
-    );
-
-    expect(calls).toBe(2);
-    expect(result.routing.creativeContext.methodInvocations).toHaveLength(1);
-    expect(result.search.value.seeds[0]?.searchMove).toContain("M02树型");
-  });
-
-  it("recalls Module-2 creative materials before routing when a retrieval port is available", async () => {
-    const currentField = field();
-    const creativeContext = context(currentField);
-    const recall = vi.fn(() => [
-      {
-        id: "material-selection:M03:MOVE-0001:1",
-        libraryId: "M03",
-        materialId: "MOVE-0001",
-        materialType: "MOVE",
-        status: "active" as const,
-        title: "先交成果再谈资格",
-        summary: "低位人物先交出超规格成果，再由权威重新估值。",
-        sourceRef:
-          "Penrix/male-webnovel-cognition/database/m03/cards/MOVE/MOVE-0001.md",
-        scope: "story" as const,
-        purpose: "资格不足时寻找成熟做法",
-        inputObjectIds: ["object:xiuxin", "object:medic"],
-        callWhen: ["资格不足时怎样破格？"],
-        tags: ["重新估值"],
-        curationStage: "test",
-        content: "先交出成果，再让已有专业人物行动、下注和改价。",
-      },
-    ]);
-    let calls = 0;
-    const model: NarrativeModelClient = {
-      text: vi.fn(),
-      structured: vi.fn(
-        async (_run, _step, purpose, request, _contract, validate) => {
-          calls += 1;
-          const serialized = JSON.stringify(request);
-          if (purpose === "story-creative-method-routing") {
-            expect(serialized).toContain("m03-compose");
-            expect(serialized).toContain("MOVE-0001");
-            const checked = validate({
-              diagnosis: "当前有成熟MOVE素材可与医院既有人物发生碰撞。",
-              selections: [
-                {
-                  methodId: "m03-compose",
-                  role: "primary",
-                  purpose: "把成熟重新估值做法放进当前医院人物关系里试演",
-                  reason: "素材已召回，当前缺口是具体适配而不是继续空想。",
-                  inputObjectIds: ["object:xiuxin", "object:medic"],
-                },
-              ],
-            });
-            if (!checked.success) throw new Error(checked.issues.join("; "));
-            return {
-              value: checked.data,
-              usage,
-              mode: "native" as const,
-              attempts: 1,
-            };
-          }
-
-          expect(purpose).toBe("story-object-grounded-search");
-          expect(serialized).toContain("MOVE-0001");
-          expect(serialized).toContain("m03-compose");
-          const checked = validate({
-            status: "READY",
-            question: "这张MOVE怎样真正撞到医院既有人物？",
-            objectFocus: [
-              {
-                objectId: "object:medic",
-                surfaceRefs: [surfaceRef(currentField, "object:medic", "duty")],
-                whyNow: "医疗忍者此刻掌握复核权限",
-                valuableSurface: "专业估值与任务资格接口",
-              },
-            ],
-            seeds: [
-              {
-                id: "seed:m03-compose",
-                title: "把成果递到既有专业估值链",
-                anchorObjectIds: ["object:xiuxin", "object:medic"],
-                groundingSurfaceRefs: [
-                  surfaceRef(currentField, "object:xiuxin", "location"),
-                  surfaceRef(currentField, "object:medic", "duty"),
-                ],
-                observation: "秀信正在医院，医疗忍者拥有真实复核职责",
-                searchMove:
-                  "M03 COMPOSE：用MOVE-0001的先交成果机制碰撞当前复核权限",
-                idea: "让训练成果先进入医疗复核，再由已有角色自己重新定价",
-                protagonistHook: "秀信主动交出可验证成果",
-                readerValue: "成熟玩法被当前世界对象重新演成可信的破格入口",
-                newRelationOrChange: "普通医疗关系开始向专业识货关系变价",
-                candidateNewObjects: [],
-                nextQuestion: "哪种成果足以让这笔下注继续升级",
-                status: "CANDIDATE",
-              },
-            ],
-            worldGaps: [],
-            scaleResult: {
-              scale: "S03",
-              periodFocus: "医院重新估值",
-              opportunityField: [
-                {
-                  objectIds: ["object:xiuxin", "object:medic"],
-                  opportunity: "成熟MOVE可以落到现有专业复核关系",
-                  whyAlive: "现实权限与当前主动行动都已经存在",
-                },
-              ],
-              storyMovements: [],
-            },
-          });
-          if (!checked.success) throw new Error(checked.issues.join("; "));
-          return {
-            value: checked.data,
-            usage,
-            mode: "native" as const,
-            attempts: 1,
-          };
-        },
-      ),
-    };
-
-    const result = await new StoryAuthoringService(model, {
-      recall,
-    }).searchWithCreativeMethods(
-      run,
-      step,
-      {
-        field: currentField,
-        creativeContext,
-        upgradeLedger: upgradeLedger(),
-        request: "资格不足时，有没有成熟做法能让现有人物重新估值？",
-        readerNeed: "看低位人物凭真实能力被重新估值",
+        request: "沿当前医院故事继续往深处挖",
+        readerNeed: "看低位人物被重新估值",
         targetEmotion: "得意",
         protagonistProfile: "秀信：主动用真实成果打开入口",
       },
       new AbortController().signal,
     );
 
-    expect(recall).toHaveBeenCalledTimes(1);
-    expect(calls).toBe(2);
-    expect(
-      result.routing.creativeContext.materialSelections[0]?.materialId,
-    ).toBe("MOVE-0001");
-    expect(result.routing.creativeContext.methodInvocations[0]?.methodId).toBe(
-      "m03-compose",
+    expect(calls).toBe(1);
+    expect(result.routing.plan.mode).toBe("manual");
+    expect(result.routing.plan.selections).toHaveLength(0);
+    expect(result.routing.creativeContext.methodInvocations).toHaveLength(0);
+  });
+
+  it("preserves an explicitly invoked operator inside Story Search", async () => {
+    const currentField = field();
+    const invoked = new CreativeOperatorInvocationService().invoke({
+      field: currentField,
+      creativeContext: context(currentField),
+      upgradeLedger: upgradeLedger(),
+      methodId: "m02-six-chain",
+      purpose: "改变当前局部搜索运动",
+      inputObjectIds: ["object:xiuxin", "object:medic"],
+    });
+
+    const model: NarrativeModelClient = {
+      text: vi.fn(),
+      structured: vi.fn(
+        async (_run, _step, purpose, request, _contract, validate) => {
+          expect(purpose).toBe("story-object-grounded-search");
+          const serialized = JSON.stringify(request);
+          expect(serialized).toContain("m02-six-chain");
+          expect(serialized).toContain("按需显式调用的算子");
+          expect(serialized).toContain("M01B不是可选methodInvocation");
+          const checked = validate(readySearchDraft(currentField));
+          if (!checked.success) throw new Error(checked.issues.join("; "));
+          return {
+            value: checked.data,
+            usage,
+            mode: "native" as const,
+            attempts: 1,
+          };
+        },
+      ),
+    };
+
+    const result = await new StoryAuthoringService(model).searchWithCreativeMethods(
+      run,
+      step,
+      {
+        field: currentField,
+        creativeContext: invoked.creativeContext,
+        upgradeLedger: upgradeLedger(),
+        request: "这次明确用M02继续发散",
+        readerNeed: "看低位人物被重新估值",
+        targetEmotion: "得意",
+        protagonistProfile: "秀信：主动用真实成果打开入口",
+      },
+      new AbortController().signal,
     );
+
+    expect(result.routing.plan.selections).toHaveLength(1);
+    expect(result.routing.plan.selections[0]?.invocation.methodId).toBe(
+      "m02-six-chain",
+    );
+    expect(result.search.value.seeds).toHaveLength(1);
   });
 });

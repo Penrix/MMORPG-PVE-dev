@@ -25,9 +25,7 @@ import type {
 } from "@narralume/domain";
 import type { JsonSchemaContract } from "@narralume/llm";
 
-import type { CreativeMaterialRetrievalService } from "./creative-material-retrieval.js";
 import { CreativeMethodRoutingService } from "./creative-method-routing.js";
-import { getCreativeMethodDefinition } from "./m-series-methods.js";
 import type { NarrativeModelClient } from "./model-client.js";
 import { zodValidator } from "./schemas.js";
 import {
@@ -35,10 +33,7 @@ import {
   finalizeStoryUnitDesign,
   storyObjectSurfaceRef,
 } from "./story-authoring-runtime.js";
-import {
-  assertStoryCreativeContextBound,
-  withCreativeMaterialSelections,
-} from "./story-creative-context.js";
+import { assertStoryCreativeContextBound } from "./story-creative-context.js";
 
 const StoryAuthoringSearchOutputSchema = z.object({
   status: z.enum(["READY", "BLOCKED_WORLD_GAP"]),
@@ -132,6 +127,44 @@ function fieldObjectCatalog(field: StoryObjectField) {
     })),
     sourceRefs: object.sourceRefs,
   }));
+}
+
+function m01bContinuitySnapshot(input: {
+  field: StoryObjectField;
+  creativeContext: StoryCreativeContext;
+  upgradeLedger: StoryUpgradeLedger;
+}) {
+  const currentStep =
+    input.upgradeLedger.steps.find(
+      (step) => step.id === input.upgradeLedger.currentStepId,
+    ) ?? null;
+  return {
+    mode: "embedded-always-on" as const,
+    upgradeFront: {
+      currentPosition: input.upgradeLedger.currentPosition,
+      stageGoal: input.upgradeLedger.stageGoal,
+      settlementTarget: input.upgradeLedger.settlementTarget,
+      currentStep,
+      retainedAssets: input.creativeContext.frame.inheritedState.retainedAssets,
+    },
+    actorFront: {
+      currentPeople: input.field.objects
+        .filter((object) => object.kind === "character")
+        .map((object) => ({
+          objectId: object.id,
+          entityId: object.entityId,
+          name: object.name,
+        })),
+      activeStakes:
+        input.creativeContext.frame.inheritedState.activeStakeLedger,
+    },
+    readerFront: {
+      openExpectationThreads:
+        input.creativeContext.frame.inheritedState.openExpectationThreads,
+      unresolvedQuestions:
+        input.creativeContext.frame.inheritedState.unresolvedQuestions,
+    },
+  };
 }
 
 function searchOutputIssues(
@@ -359,12 +392,16 @@ function storyUnitOutputIssues(
 export class StoryAuthoringService {
   constructor(
     private readonly model: NarrativeModelClient,
-    private readonly creativeMaterials?: Pick<
-      CreativeMaterialRetrievalService,
-      "recall"
-    >,
+    _legacyCreativeMaterials?: unknown,
   ) {}
 
+  /**
+   * Compatibility entry retained for callers that used the former auto-router.
+   *
+   * It no longer selects methods or recalls materials automatically. Explicit
+   * Module-2 operator invocations already present in creativeContext are
+   * preserved; otherwise the Story Director proceeds with embedded M01B only.
+   */
   async searchWithCreativeMethods(
     run: NarrativeRun,
     step: NarrativeRunStep,
@@ -377,39 +414,6 @@ export class StoryAuthoringService {
       request.upgradeLedger,
     );
 
-    let preparedContext = request.creativeContext;
-    const manualMethodNeedsMaterials = preparedContext.methodInvocations.some(
-      (invocation) =>
-        getCreativeMethodDefinition(invocation.methodId)?.requiresMaterials ===
-        true,
-    );
-    if (
-      preparedContext.materialSelections.length === 0 &&
-      this.creativeMaterials &&
-      (preparedContext.methodInvocations.length === 0 ||
-        manualMethodNeedsMaterials)
-    ) {
-      const recalled = this.creativeMaterials.recall({
-        field: request.field,
-        creativeContext: preparedContext,
-        scope: "story",
-        purpose: `围绕当前创作问题召回可碰撞的成熟创意对象：${request.request}`,
-        query: [
-          request.readerNeed,
-          request.targetEmotion,
-          request.protagonistProfile,
-        ].join("\n"),
-        focusObjectIds: preparedContext.protagonistCamera.focusObjectIds,
-        limit: 6,
-      });
-      if (recalled.length > 0) {
-        preparedContext = withCreativeMaterialSelections(
-          preparedContext,
-          recalled,
-        );
-      }
-    }
-
     const routing = await new CreativeMethodRoutingService(
       this.model,
     ).routeStorySearch(
@@ -417,7 +421,7 @@ export class StoryAuthoringService {
       step,
       {
         field: request.field,
-        creativeContext: preparedContext,
+        creativeContext: request.creativeContext,
         upgradeLedger: request.upgradeLedger,
         request: request.request,
         readerNeed: request.readerNeed,
@@ -428,10 +432,7 @@ export class StoryAuthoringService {
     const search = await this.search(
       run,
       step,
-      {
-        ...request,
-        creativeContext: routing.creativeContext,
-      },
+      { ...request, creativeContext: routing.creativeContext },
       signal,
     );
     return { routing, search };
@@ -485,8 +486,9 @@ export class StoryAuthoringService {
           "如果 Object Field 太薄，status 必须返回 BLOCKED_WORLD_GAP。worldGaps 必须结构化写出缺什么、锚在哪些已有对象、为什么缺，并用 productionHint 指向现有 World Builder workshop。此时允许 seeds 与尺度结果为空，不要为了过 schema 用‘神秘高手/反派/美女/商会’占位补洞。",
           "Creative Frame 是当前长篇创作状态：必须继承父层与同层前序区段，不能把当前区段当成新书重新开机。",
           "男主是故事推演的主摄像机。先问 protagonistCamera 中男主现在在哪里、想得到什么、这一步准备主动做什么，再看他的行动会撞到哪些现成人物、资源、组织和规则。",
-          "creativeContext.methodInvocations 只承载真正的创作算法；creativeContext.materialSelections 承载从 Module 2 素材空间召回的具体创意对象。M03素材卡不是算法。两类输入都不能自动成为 Canon。",
-          "methodInvocations按顺序执行：primary方法决定本轮主要搜索运动，secondary只在它能提供不同搜索运动时辅助。不要在未选中的M方法之间自由串烧，也不要只复述方法名；每颗Seed的searchMove要能看出该方法实际怎样改变了搜索。",
+          "M01B不是可选methodInvocation，而是第三模块常驻三意识：始终同时听升级是否真正变贵、现有人物接下来会自己干什么、Reader已经在等什么；三者互相触发、回返，不能机械排成三步流程。",
+          "creativeContext.methodInvocations 只承载从 Module 2 Creative Operator Space 按需显式调用的算子；creativeContext.materialSelections 承载从 Module 2 Creative Material Space 召回的具体素材。M03素材卡不是算法，两类输入都不能自动成为 Canon。",
+          "没有显式算子调用时不要自动挑一个方法。存在methodInvocations时，按每次调用的purpose与instruction解决那个局部卡点；算子可以重复、回返、切换，但不构成固定主辅流程。每颗Seed的searchMove要能看出实际使用了什么搜索运动。",
           "S01/S02/S03 不是 S Framework 本体，更不是三台独立故事生成器，只是同一 Creative Frame / Upgrade Ledger 的长程 / 当前阶段 / 当前故事观察尺度。所有结果必须服务同一条 Road。",
           "候选可以分叉、回返和失败；不要为了尽快交付而把第一条可行答案冒充完成。",
           scaleInstruction,
@@ -502,6 +504,11 @@ export class StoryAuthoringService {
                 targetEmotion: request.targetEmotion,
                 protagonistProfile: request.protagonistProfile,
                 creativeContext: request.creativeContext,
+                m01bContinuity: m01bContinuitySnapshot({
+                  field: request.field,
+                  creativeContext: request.creativeContext,
+                  upgradeLedger: request.upgradeLedger,
+                }),
                 upgradeLedger: request.upgradeLedger,
                 objectField: {
                   digest: request.field.digest,
@@ -635,7 +642,8 @@ export class StoryAuthoringService {
           "先从给定 Object Field 与已选 Story Seeds 选择具体对象，再设计为什么这些对象现在要撞在一起。READY 时 groundingSurfaceRefs 必须指出这出 Story 具体踩在哪些 Object surfaces 上，不能只引用对象名。",
           "Creative Frame 是长期创作状态，不是提示词标题。先继承 parentFrames 与 previousSiblingFrames 已经成立的目标、关系、结果和未结事项，再设计当前区段。",
           "Protagonist Camera 是本轮推演起点。男主不是旁观摄像头，而是主动行动者：围绕 currentGoal / upgradeNeed / activeMove，让他去碰 Module 2 已有的人、资源、组织、制度与高价对象，由这些人的下注与反应形成剧情。",
-          "Creative Method Invocations 是横切算法调用。M 系列可以帮助找好处、想金手指/能力、技能进化、关系玩法、战斗解法或新点子，但必须作用在当前 Frame + 男主目标 + 已有世界对象上，不能替代 Reality。",
+          "M01B三意识在S04仍然常驻：升级意识持续追问这出戏结束后男主真正变贵什么；人物自己找事持续追问现有人物基于欲望、认知、利益和已下注筹码下一手会干什么；Reader张力持续追问已经立价的期待怎样蓄力、兑现或合法转期。三者是同时运行的前线，不是额外三步。",
+          "Creative Method Invocations 是从第二模块按需拿来的创意算子。只有调用方明确点名时才执行；它们帮助局部搜索、迁移、组合、变奏或压力测试，但不接管讲师Story Director主流程。",
           "Upgrade Ledger 是这部长篇已经确定的升级路线与当前阶段，不是本轮临时脑洞。StoryUnit 必须服务 currentStepId / stageGoal / settlementTarget，不能等一次互动结束后再问‘下一故事自然长什么’。",
           "Expectation Design 已经给出 Reader 需求、目标情绪、稀缺性方向、固有认知、主角优势、反应与收益方向。不得偷换这笔交易。",
           "三阵营首先是编剧工具：只从 Object Field 中已经存在的人物划分当前友方/敌方/中立/其他利益位置。禁止为了‘需要一个识货人/反派/妹妹位’在第三模块临时造功能NPC。",
@@ -661,6 +669,11 @@ export class StoryAuthoringService {
                   objects: fieldObjectCatalog(request.field),
                 },
                 creativeContext: request.creativeContext,
+                m01bContinuity: m01bContinuitySnapshot({
+                  field: request.field,
+                  creativeContext: request.creativeContext,
+                  upgradeLedger: request.upgradeLedger,
+                }),
                 selectedSeeds,
                 upgradeLedger: request.upgradeLedger,
                 expectationDesign: request.expectationDesign,

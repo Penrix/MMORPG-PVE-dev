@@ -1,5 +1,7 @@
 import type { CreativeMethodScope } from "@narralume/contracts";
 
+export type CreativeMethodPlacement = "module3-embedded" | "module2-operator";
+
 export type CreativeMethodPhase =
   | "project-seed"
   | "story-search"
@@ -14,6 +16,7 @@ export type CreativeMethodPhase =
 export interface CreativeMethodDefinition {
   methodFamily: string;
   methodId: string;
+  placement: CreativeMethodPlacement;
   title: string;
   sourceRef: string;
   scope: CreativeMethodScope;
@@ -35,6 +38,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M01A",
       methodId: "m01a-playability",
+      placement: "module2-operator",
       title: "六问可玩性搜索",
       sourceRef: `${DOC26}#2-m01a六问可玩性搜索`,
       scope: "story",
@@ -52,15 +56,16 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M01B",
       methodId: "m01b-three-consciousness",
+      placement: "module3-embedded",
       title: "三意识深层搜索",
       sourceRef: `${DOC26}#3-m01b三意识深层搜索`,
       scope: "story",
       phases: ["story-search", "story-design"],
-      storySearchEligible: true,
+      storySearchEligible: false,
       requiresMaterials: false,
       requiresPriorStoryState: false,
       useWhen:
-        "当前事件因果基本可行，但升级价格、人物主动找事或Reader观看张力太薄。",
+        "第三模块每次推进Story Search、Story Unit与后续结算时都常驻：持续从升级、人物自己找事、Reader张力三个方向往深处挖。",
       avoidWhen:
         "不要把升级、人物行动、张力机械变成三步剧情流程，也不要临时造反派代替真实人物因果。",
       instruction:
@@ -69,6 +74,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M02",
       methodId: "m02-six-chain",
+      placement: "module2-operator",
       title: "六条思维链",
       sourceRef: `${DOC26}#4-m02六条思维链`,
       scope: "story",
@@ -86,6 +92,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M03",
       methodId: "m03-five-anchor",
+      placement: "module2-operator",
       title: "TR02五锚点N案快搜",
       sourceRef: `${DOC26}#5-m03tr02-三战略--五锚点-n-案快搜`,
       scope: "story",
@@ -102,6 +109,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M03",
       methodId: "m03-select",
+      placement: "module2-operator",
       title: "成熟素材SELECT",
       sourceRef: `${DOC26}#6-m03-历史有效方法select--compose--verify`,
       scope: "story",
@@ -119,6 +127,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M03",
       methodId: "m03-compose",
+      placement: "module2-operator",
       title: "成熟素材COMPOSE",
       sourceRef: `${DOC26}#6-m03-历史有效方法select--compose--verify`,
       scope: "story",
@@ -137,6 +146,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M03",
       methodId: "m03-verify",
+      placement: "module2-operator",
       title: "成熟玩法VERIFY",
       sourceRef: `${DOC26}#6-m03-历史有效方法select--compose--verify`,
       scope: "story",
@@ -153,6 +163,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M04",
       methodId: "m04-mature-story-prototype",
+      placement: "module2-operator",
       title: "成熟故事原型复入",
       sourceRef: `${DOC26}#7-m04成熟故事原型复入--当前世界重写人物因果`,
       scope: "story",
@@ -170,6 +181,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M05",
       methodId: "m05-play-variation",
+      placement: "module2-operator",
       title: "PLAY反差与新鲜感增补",
       sourceRef: `${DOC26}#8-m05play-反差与新鲜感增补`,
       scope: "story",
@@ -189,6 +201,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M06",
       methodId: "m06-long-form-score",
+      placement: "module2-operator",
       title: "故事总谱与具体T长篇运行",
       sourceRef: `${DOC26}#9-m06故事总谱--具体-t-长篇运行`,
       scope: "story",
@@ -206,6 +219,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M07",
       methodId: "m07-character-cause-rebuild",
+      placement: "module2-operator",
       title: "男主人格果因重建",
       sourceRef: `${DOC26}#10-m07男主人格果--因重建`,
       scope: "protagonist_build",
@@ -223,6 +237,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M08",
       methodId: "m08-concept-engine-migration",
+      placement: "module2-operator",
       title: "Story Concept×Story Engine双轨迁移",
       sourceRef: `${DOC26}#11-m08成功旧书-story-concept--story-engine-双轨迁移`,
       scope: "story",
@@ -240,6 +255,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M09",
       methodId: "m09-performance-semantics",
+      placement: "module2-operator",
       title: "Reader情绪演奏转译",
       sourceRef: `${DOC26}#12-m09reader-情绪乐句--演奏语义--b-新戏`,
       scope: "scene",
@@ -257,6 +273,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "M10",
       methodId: "m10-crossworld-casting",
+      placement: "module2-operator",
       title: "多圈人物动力与A/B选角",
       sourceRef: `${DOC26}#13-m10多圈人物动力--三个-why--ab-选角`,
       scope: "relationship",
@@ -272,6 +289,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "TR02",
       methodId: "tr02-matrix-combine",
+      placement: "module2-operator",
       title: "矩阵组合",
       sourceRef: `${DOC26}#15-tr02-方法去重后的可调用动作表`,
       scope: "story",
@@ -289,6 +307,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "TR02",
       methodId: "tr02-open-association",
+      placement: "module2-operator",
       title: "开放联想召回",
       sourceRef: `${DOC26}#146-微观元素矩阵-v13开放式数据库加权检索`,
       scope: "story",
@@ -306,6 +325,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "TR02",
       methodId: "tr02-anti-inertia",
+      placement: "module2-operator",
       title: "反惰性跨域组合",
       sourceRef: `${DOC26}#148-v23-策略驱动反惰性-vs-爆款热插拔`,
       scope: "story",
@@ -323,6 +343,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "TR02",
       methodId: "tr02-hot-swap",
+      placement: "module2-operator",
       title: "成熟基座热插拔",
       sourceRef: `${DOC26}#148-v23-策略驱动反惰性-vs-爆款热插拔`,
       scope: "story",
@@ -339,6 +360,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "TR02",
       methodId: "tr02-theme-5d",
+      placement: "module2-operator",
       title: "题材五维深潜",
       sourceRef: `${DOC26}#1410-v30-主题深潜先理解赛道再组合`,
       scope: "world",
@@ -354,6 +376,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "TR02",
       methodId: "tr02-hunting-ground",
+      placement: "module2-operator",
       title: "猎场扫描",
       sourceRef: `${DOC26}#1412-v35-remake--v36-diamond-class猎场非对称优势冲突战利品`,
       scope: "story",
@@ -371,6 +394,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "TR02",
       methodId: "tr02-jump-random",
+      placement: "module2-operator",
       title: "跳跃随机生成",
       sourceRef: `${DOC26}#1413-v23-r-连载生存改进稿双引擎`,
       scope: "story",
@@ -387,6 +411,7 @@ export const CREATIVE_METHOD_DEFINITIONS: readonly CreativeMethodDefinition[] =
     {
       methodFamily: "TR02",
       methodId: "tr02-serial-survival",
+      placement: "module2-operator",
       title: "连载生存压力测试",
       sourceRef: `${DOC26}#1413-v23-r-连载生存改进稿双引擎`,
       scope: "story",
@@ -422,6 +447,10 @@ export function creativeMethodEligibilityIssue(
   definition: CreativeMethodDefinition,
   input: CreativeMethodEligibilityInput,
 ): string | null {
+  if (definition.placement === "module3-embedded") {
+    return "embedded in Module 3 runtime; not callable as a Module-2 operator";
+  }
+
   if (definition.requiresPriorStoryState && !input.hasPriorStoryState) {
     return "requires prior story state";
   }
@@ -451,12 +480,20 @@ export function creativeMethodEligibilityIssue(
   return null;
 }
 
-export function storySearchMethodDefinitions(
+export function module2CreativeOperatorDefinitions(
   input: CreativeMethodEligibilityInput,
 ): CreativeMethodDefinition[] {
   return CREATIVE_METHOD_DEFINITIONS.filter(
     (definition) =>
+      definition.placement === "module2-operator" &&
       definition.storySearchEligible &&
       creativeMethodEligibilityIssue(definition, input) === null,
   );
+}
+
+/** @deprecated Use module2CreativeOperatorDefinitions. No automatic routing is implied. */
+export function storySearchMethodDefinitions(
+  input: CreativeMethodEligibilityInput,
+): CreativeMethodDefinition[] {
+  return module2CreativeOperatorDefinitions(input);
 }
