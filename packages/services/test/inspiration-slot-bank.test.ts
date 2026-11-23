@@ -108,7 +108,7 @@ describe("inspiration slot machine", () => {
       lockedSlots: { highValueCircle: locked },
     });
     expect(
-      rolled.cards.every((card) => card.slots.highValueCircle === locked),
+      rolled.cards.every((card) => card.slots.highValueCircle.id === locked.id),
     ).toBe(true);
     expect(
       new Set(rolled.cards.map((card) => card.slots.identity.id)).size,
