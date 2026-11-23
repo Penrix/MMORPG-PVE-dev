@@ -2,6 +2,8 @@
 
 > **STATUS: CURRENT AUTHORITY / MODULE 3 HIGHEST PRIORITY.** 无上下文修改第三模块时先读本文。若 18/19/20 或 PR 历史记录与本文冲突，以本文为准：**Upgrade Ladder 写长；Existing Cast 是第二模块已有的人；Stake Ledger + 配角反应写爽；Character Agent 只负责符合人设的具体演法。**
 
+> **结构补全见 [24 Creative Frame × Protagonist Camera × M Methods](24-creative-frame-protagonist-camera-m-methods.md)。** 23 回答“商业男频故事怎样发动”，24 回答“S状态怎样继承、男主怎样成为推演入口、M系列怎样横切调用”；二者共同构成当前 Module 3 Authority。
+
 > 本文是当前第三模块最高优先级工程认知。它纠正此前把 Character Agent 自主性、Opportunity 流水线和 Reality Rehearsal 抬到编剧权之上的路径。上游世界仍由 Module 1 / Module 2 提供，下游 S06-S08 继续复用现有实现。
 
 ## 1. 一句话
