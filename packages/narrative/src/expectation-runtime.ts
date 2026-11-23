@@ -135,9 +135,10 @@ export interface ExpectationRealityFocus {
 }
 
 /**
- * Layer 2 is designed first, but this bridge only tells Layer 1 where to look.
- * It never tells a Character Agent what decision to make or the Arbiter what
- * outcome to produce.
+ * Layer 2 is designed first, and this bridge tells the Reality rehearsal where
+ * to look. It carries authored expectation / reaction direction downward without
+ * dictating the character's exact performance; World Arbitration still only
+ * decides hard-Reality feasibility of that concrete performance.
  */
 export function realityFocusFromExpectationDesign(
   design: ExpectationDesign,
