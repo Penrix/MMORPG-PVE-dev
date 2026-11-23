@@ -59,6 +59,7 @@ const CoCreateChangesSchema = z.object({
   ),
 });
 
+// prettier-ignore
 export class SettlementApplicationService {
   private readonly canon: SqliteCanonRepository;
   private readonly story: SqliteStoryRepository;
