@@ -90,3 +90,44 @@
 6. **先解决能运行的垂直链路**，再逐步深化能力、产业、人物生态等专项结构，不因易做的数表取得进度就宣布数据库整体完成。
 
 **如果出现“按开书时间删除世界”“从火影跳海贼变两个项目”“穿越自动强制建分支”“原著只需原地记录男主见过的东西”等提议，先按照本文件逐项纠错，不要继续写代码。**
+
+## 5. 2026-11-23｜第二模块不是只有世界真值，还拥有可持续增长的创意对象空间
+
+最新权威见 [25 World Objects × Creative Materials](25-module2-dual-object-space.md)。
+
+本轮确认的新认知：
+
+```text
+Module 2
+= World Object Space
++ Creative Material Space
++ Project Reality truth boundary
++ shared query / retrieval infrastructure
+```
+
+此前开发只把第二模块理解为 World Atlas / Project Reality，导致 M03 素材库被塞到第三模块，并进一步被错误建模成 `creative_method → CreativeMethodInvocation`。
+
+错误路径：
+
+```text
+TR02 / M03 早期确实含创意算法
+        ↓
+后来内置数据库不断扩大
+        ↓
+模型只记住“M03 是算法模块”
+        ↓
+把数据库里的每张 MOVE / BRG / ARCH / DLG 卡
+都当成一种算法
+```
+
+正确纠正：
+
+- TR02 / M03 的历史算法思想保留，未来与其他 M 系列一起研究；
+- 今天的 `database/m03` 主要作为 Creative Material Library；
+- M03 素材库与 World Atlas 一样，都是写作时需要查询的对象底座；
+- 两者都必须允许持续新增、修正、精修、退役和重建索引；
+- 素材卡不是 Project Reality，也不是 Source World entity；
+- 真正的 M algorithm 与素材对象必须使用不同合同；
+- 当前素材类型和卡数都不能写死进 Runtime schema。
+
+后续如果再出现“把素材卡复制进固定 Prompt”“把 M03 当前分类做成永久 enum”“检索到素材就算世界事实”“每张素材卡都是一个 Method”等实现，应先停止并回读 25。

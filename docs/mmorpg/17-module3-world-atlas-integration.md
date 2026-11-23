@@ -314,3 +314,59 @@ Atlas 分层进入       StoryState 认知过滤
 ## 9. 当前定义
 
 > **Novel Studio 是 Project Reality 的消费者，也是经作者确认后的 Reality 变化生产者。它通过统一 Adapter 读取第二模块；故事发生后的变化仍由 Canon / Narrative State 单写，随后成为下一轮 Project Reality。**
+
+## 10. 2026-11-23｜第三模块现在读取第二模块的两类对象空间
+
+17 原先只定义 Novel Studio 如何读取 Project Reality / Source Atlas。当前新增边界见 [25](25-module2-dual-object-space.md)。
+
+第三模块的作者侧创作上下文现在分成：
+
+```text
+StoryObjectField
+← Module 2 World Object Space
+← 当前世界里真正可编剧的人、地、组织、能力、资源、关系与 Reality surfaces
+
+CreativeMaterialSelection[]
+← Module 2 Creative Material Space
+← M03 等素材库里可拿来联想、碰撞、迁移和变奏的成熟创意对象
+
+CreativeMethodInvocation[]
+← Creative Algorithm layer
+← 真正的 M 系列算法调用
+```
+
+三者不能互相冒充。
+
+### World Object 的权限
+
+- Project Reality confirmed surface 仍是当前项目真值；
+- Source Atlas 仍只是 reference baseline；
+- StoryObjectField 仍是本轮作者侧对象切片；
+- Character POV 仍不能绕过知识边界。
+
+### Creative Material 的权限
+
+- 素材是 reference，不是 Project Reality；
+- 素材没有当前世界 entity 身份；
+- 素材不能进入 Character knowledge；
+- 素材可以记录本次拿来碰撞的 `inputObjectIds`；
+- 素材被采用为创意启发，不等于其中原故事事实被移植进本书；
+- 只有本书实际写成、作者接受并 Settlement 的结果，才可能成为下一轮 Reality。
+
+### 数据生命周期
+
+Creative Material Library 与 World Atlas 一样是活数据库。它可以继续采集、修正和扩容，Runtime 只依赖稳定的查询接口，不依赖固定卡数或固定分类全集。
+
+当前实现使用：
+
+```text
+external authoritative Markdown / curated index
+        ↓ repeated import / upsert
+text_segments(source_type = creative_material)
+        ↓
+CreativeMaterialRetrievalService
+        ↓
+CreativeMaterialSelection[]
+```
+
+因此第三模块只消费查询结果，不拥有素材库，也不负责把素材库冻结成系统提示词。
