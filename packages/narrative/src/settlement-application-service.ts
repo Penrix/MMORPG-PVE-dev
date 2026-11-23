@@ -10,6 +10,15 @@ import {
   type NarrativeDatabase,
 } from "@narralume/persistence";
 import { z } from "zod";
+import { StoryCreativeFrameStateSchema } from "@narralume/contracts";
+
+import {
+  applySettlementToCreativeFrameState,
+  buildStoryCreativeFrameContext,
+  CREATIVE_FRAME_STATE_METADATA_KEY,
+  stageStoryCreativeFrameState,
+} from "./story-creative-context.js";
+import { parseStoryChapterProductionHandoff } from "./story-production-handoff.js";
 
 import {
   GroundedParagraphEvidenceSchema,
@@ -127,6 +136,9 @@ export class SettlementApplicationService {
         status: "applied",
         now,
       });
+      if (settlement.success) {
+        this.advanceAcceptedChapterCreativeState(changeSet, now);
+      }
       return result;
     });
   }
@@ -144,6 +156,51 @@ export class SettlementApplicationService {
       status: "rejected",
       now: input.now ?? new Date().toISOString(),
     });
+  }
+
+  private advanceAcceptedChapterCreativeState(
+    changeSet: CanonChangeSetView,
+    now: string,
+  ): void {
+    const run = this.runs.getRun(changeSet.runId);
+    const documentId = run?.policy.documentId;
+    const outlineNodeId =
+      run?.targetOutlineNodeId ??
+      (typeof documentId === "string"
+        ? this.story.getDocument(changeSet.projectId, documentId)?.outlineNodeId ?? null
+        : null);
+    if (!outlineNodeId) return;
+
+    const chapterNode = this.story.requireOutlineNode(changeSet.projectId, outlineNodeId);
+    if (chapterNode.kind !== "chapter") return;
+    const handoff = parseStoryChapterProductionHandoff(
+      chapterNode.metadata.storyProductionHandoff,
+    );
+    if (!handoff || handoff.projectId !== changeSet.projectId) return;
+
+    const ownState = StoryCreativeFrameStateSchema.safeParse(
+      chapterNode.metadata[CREATIVE_FRAME_STATE_METADATA_KEY],
+    );
+    const currentState =
+      ownState.success &&
+      ownState.data.projectId === changeSet.projectId &&
+      ownState.data.frameOutlineNodeId === chapterNode.id
+        ? ownState.data
+        : chapterNode.metadata[CREATIVE_FRAME_STATE_METADATA_KEY] === undefined
+          ? buildStoryCreativeFrameContext(
+              this.story.listOutline(changeSet.projectId),
+              chapterNode.id,
+            ).inheritedState.sourceStates.at(-1) ?? null
+          : null;
+    if (!currentState) return;
+
+    const nextState = applySettlementToCreativeFrameState({
+      currentState,
+      handoff,
+      frameOutlineNodeId: chapterNode.id,
+      updatedAt: now,
+    });
+    stageStoryCreativeFrameState(this.story, nextState, now);
   }
 
   private applyChapterSettlement(
