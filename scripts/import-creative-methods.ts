@@ -84,6 +84,7 @@ async function main(): Promise<void> {
       if (entry.status === "active" || entry.status === "candidate") {
         throw new Error(
           `creative_method.live_card_unreadable:${entry.id}:${String(error)}`,
+          { cause: error },
         );
       }
       // Retired / merged entries may no longer need a full body. Their index
