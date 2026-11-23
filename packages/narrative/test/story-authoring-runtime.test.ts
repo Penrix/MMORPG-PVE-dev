@@ -15,6 +15,10 @@ import {
   storyObjectSurfaceRef,
 } from "../src/story-authoring-runtime.js";
 import { finalizeExpectationDesign } from "../src/expectation-runtime.js";
+import {
+  finalizeStoryCreativeContext,
+  finalizeStoryCreativeFrameContext,
+} from "../src/story-creative-context.js";
 
 function field(scale: StoryObjectField["scale"] = "S03"): StoryObjectField {
   const draft: StoryObjectFieldDraft = {
@@ -104,6 +108,74 @@ function surfaceRef(
     ? object.surfaces.find((item) => item.slotKey === slotKey)!
     : object.surfaces[0]!;
   return storyObjectSurfaceRef(object.id, surface);
+}
+
+function creativeContext(currentField: StoryObjectField) {
+  const frame = finalizeStoryCreativeFrameContext({
+    version: "story-creative-frame.v1",
+    projectId: "p1",
+    targetOutlineNodeId: "arc:hospital",
+    currentFrame: {
+      outlineNodeId: "arc:hospital",
+      parentId: "book:1",
+      kind: "arc",
+      ordinal: 1,
+      title: "木叶医院期",
+      summary: "秀信从低位伤员重新进入忍者体系",
+      goal: "让异常能力进入可信专业估值链",
+      conflict: null,
+      outcome: null,
+      storyTime: "第三次忍界大战前后",
+      metadata: {},
+    },
+    parentFrames: [
+      {
+        outlineNodeId: "book:1",
+        parentId: null,
+        kind: "book",
+        ordinal: 0,
+        title: "火影长篇",
+        summary: "秀信一路升级进入忍界顶层",
+        goal: "进入忍界最强层级",
+        conflict: null,
+        outcome: null,
+        storyTime: null,
+        metadata: {},
+      },
+    ],
+    previousSiblingFrames: [],
+  });
+  return finalizeStoryCreativeContext({
+    version: "story-creative-context.v1",
+    authority: "speculative",
+    projectId: "p1",
+    frame,
+    protagonistCamera: {
+      version: "story-protagonist-camera.v1",
+      projectId: "p1",
+      protagonistEntityId: "xiuxin",
+      currentLocation: "木叶医院",
+      currentState: "普通重伤忍者，正在恢复，尚未重新取得高价任务资格",
+      currentGoal: "恢复战斗力并重新进入任务体系",
+      upgradeNeed: "取得可信专业估值并打开更高任务入口",
+      activeMove: "主动训练基础忍术，让异常结果进入医疗复核链",
+      focusObjectIds: currentField.objects.map((object) => object.id),
+      advantageRefs: ["reality:xiuxin-control"],
+      assetRefs: [],
+    },
+    methodInvocations: [
+      {
+        id: "method:m03:story",
+        methodFamily: "M03",
+        methodId: "M03-recall",
+        sourceRef: "Penrix/male-webnovel-cognition/database/m03",
+        scope: "story",
+        purpose: "对当前世界对象寻找更昂贵的人物互动玩法",
+        inputObjectIds: currentField.objects.map((object) => object.id),
+        instruction: "只对当前对象做迁移、组合与变奏，不新增功能NPC。",
+      },
+    ],
+  });
 }
 
 function expectation(): ExpectationDesign {
@@ -290,7 +362,7 @@ describe("object-grounded story authoring runtime", () => {
       projectId: "p1",
       scale: "S03",
       objectFieldDigest: objectField.digest,
-      creativeContextDigest: "creative:test",
+      creativeContextDigest: creativeContext(objectField).digest,
       question: "这一阵子到底有什么值得玩？",
       objectFocus: [],
       seeds: [
@@ -327,7 +399,7 @@ describe("object-grounded story authoring runtime", () => {
       },
     };
 
-    expect(() => finalizeStoryAuthoringSearch(draft, objectField)).toThrow(
+    expect(() => finalizeStoryAuthoringSearch(draft, objectField, creativeContext(objectField))).toThrow(
       "story_authoring.unknown_seed_anchor_0:object:mystery-elder",
     );
   });
@@ -341,7 +413,7 @@ describe("object-grounded story authoring runtime", () => {
       projectId: "p1",
       scale: "S03",
       objectFieldDigest: objectField.digest,
-      creativeContextDigest: "creative:test",
+      creativeContextDigest: creativeContext(objectField).digest,
       question: "两个人之间有什么值得玩的关系？",
       objectFocus: [],
       seeds: [
@@ -375,7 +447,7 @@ describe("object-grounded story authoring runtime", () => {
         storyMovements: [],
       },
     };
-    expect(() => finalizeStoryAuthoringSearch(draft, objectField)).toThrow(
+    expect(() => finalizeStoryAuthoringSearch(draft, objectField, creativeContext(objectField))).toThrow(
       "story_authoring.unknown_seed_surface_0:surface:invented-debt",
     );
   });
@@ -390,7 +462,7 @@ describe("object-grounded story authoring runtime", () => {
         projectId: "p1",
         scale: "S01",
         objectFieldDigest: objectField.digest,
-        creativeContextDigest: "creative:test",
+        creativeContextDigest: creativeContext(objectField).digest,
         question: "这个男人在忍界长期过什么值得追看的生活？",
         objectFocus: [
           {
@@ -451,6 +523,7 @@ describe("object-grounded story authoring runtime", () => {
         },
       },
       objectField,
+      creativeContext(objectField),
     );
 
     expect(result.scaleResult.scale).toBe("S01");
@@ -467,7 +540,7 @@ describe("object-grounded story authoring runtime", () => {
         projectId: "p1",
         scale: "S02",
         objectFieldDigest: objectField.digest,
-        creativeContextDigest: "creative:test",
+        creativeContextDigest: creativeContext(objectField).digest,
         question: "当前S0能进入什么更贵的新生活？",
         objectFocus: [],
         seeds: [
@@ -509,6 +582,7 @@ describe("object-grounded story authoring runtime", () => {
         },
       },
       objectField,
+      creativeContext(objectField),
     );
 
     expect(result.scaleResult.scale).toBe("S02");
@@ -517,7 +591,7 @@ describe("object-grounded story authoring runtime", () => {
     }
   });
 
-  it("designs S04 Cast Pool and Active Seed without giving S05 actor outcomes", () => {
+  it("designs S04 Cast Pool, stakes and authored direction before character performance", () => {
     const objectField = field("S04");
     const exp = expectation();
     const design = finalizeStoryUnitDesign(
@@ -527,7 +601,7 @@ describe("object-grounded story authoring runtime", () => {
         status: "READY",
         projectId: "p1",
         objectFieldDigest: objectField.digest,
-        creativeContextDigest: "creative:test",
+        creativeContextDigest: creativeContext(objectField).digest,
         sourceSeedIds: ["seed:s03"],
         expectationDesignDigest: exp.digest,
         objectAnchorIds: ["object:xiuxin", "object:medic", "object:sakumo"],
@@ -665,6 +739,7 @@ describe("object-grounded story authoring runtime", () => {
       },
       objectField,
       exp,
+      creativeContext(objectField),
       new Set(["seed:s03"]),
     );
 
@@ -687,6 +762,7 @@ describe("object-grounded story authoring runtime", () => {
         },
         objectField,
         exp,
+        creativeContext(objectField),
         new Set(["seed:s03"]),
       ),
     ).toThrow("story_authoring.unknown_event_active_seed:sakumo");
@@ -702,7 +778,7 @@ describe("object-grounded story authoring runtime", () => {
         projectId: "p1",
         scale: "S03",
         objectFieldDigest: objectField.digest,
-        creativeContextDigest: "creative:test",
+        creativeContextDigest: creativeContext(objectField).digest,
         question: "这一阵子有什么值得玩？",
         objectFocus: [],
         seeds: [],
@@ -725,6 +801,7 @@ describe("object-grounded story authoring runtime", () => {
         },
       },
       objectField,
+      creativeContext(objectField),
     );
     expect(result.status).toBe("BLOCKED_WORLD_GAP");
     expect(result.seeds).toEqual([]);
@@ -744,7 +821,7 @@ describe("object-grounded story authoring runtime", () => {
           status: "BLOCKED_WORLD_GAP",
           projectId: "p1",
           objectFieldDigest: objectField.digest,
-          creativeContextDigest: "creative:test",
+          creativeContextDigest: creativeContext(objectField).digest,
           sourceSeedIds: [],
           expectationDesignDigest: exp.digest,
           objectAnchorIds: [],
@@ -774,6 +851,7 @@ describe("object-grounded story authoring runtime", () => {
         },
         objectField,
         exp,
+        creativeContext(objectField),
       ),
     ).toThrow("story_authoring.story_unit_not_bound");
   });
@@ -789,7 +867,7 @@ describe("object-grounded story authoring runtime", () => {
           status: "BLOCKED_WORLD_GAP",
           projectId: "p1",
           objectFieldDigest: objectField.digest,
-          creativeContextDigest: "creative:test",
+          creativeContextDigest: creativeContext(objectField).digest,
           sourceSeedIds: [],
           expectationDesignDigest: exp.digest,
           objectAnchorIds: [],
@@ -819,6 +897,7 @@ describe("object-grounded story authoring runtime", () => {
         },
         objectField,
         exp,
+        creativeContext(objectField),
       ),
     ).toThrow("story_authoring.story_unit_not_bound");
   });
