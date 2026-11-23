@@ -32,12 +32,12 @@ export function registerInspirationSlotRoutes(
   app.route("GET", "/api/inspirations/catalog", (request) => {
     const { projectId } = CatalogQuerySchema.parse(request.query);
     const m03 = loadM03SlotItems(database, projectId);
-    // Catalog reports per-channel pools, never assigns M03 material to unrelated female channel.
+    // The catalog counts the full shared bank; roll counts remain channel-specific.
     const channels = InspirationChannelSchema.options;
     return InspirationCatalogResponseSchema.parse({
       channels,
       slots: InspirationSlotKeySchema.options,
-      poolStats: inspirationPoolStats("male", m03),
+      poolStats: inspirationPoolStats("all", m03),
       m03TypeMapping: M03_TYPE_MAPPING,
     });
   });
