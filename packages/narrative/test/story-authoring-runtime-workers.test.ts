@@ -230,7 +230,7 @@ describe("StoryAuthoringService", () => {
           expect(purpose).toBe("story-object-grounded-search");
           const serialized = JSON.stringify(request);
           expect(serialized).toContain("所有想象和脑洞必须先有想象对象");
-          expect(serialized).toContain("S01/S02/S03 不是三台独立故事生成器");
+          expect(serialized).toContain("S01/S02/S03 不是 S Framework 本体");
           expect(serialized).toContain("candidateNewObjects 必须为空");
           expect(serialized).toContain("step:professional-reprice");
           expect(serialized).toContain("object:xiuxin");
