@@ -7,12 +7,12 @@ import { NodeNarrativeDatabase } from "@narralume/persistence/node";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
-  CreativeMethodRetrievalService,
-  creativeMethodSegmentFromCuratedCard,
+  CreativeMaterialRetrievalService,
+  creativeMaterialSegmentFromCuratedCard,
   finalizeStoryCreativeContext,
   finalizeStoryCreativeFrameContext,
   finalizeStoryObjectField,
-  parseCuratedCreativeMethodIndex,
+  parseCuratedCreativeMaterialIndex,
 } from "../src/index.js";
 
 const now = "2026-11-23T02:00:00.000Z";
@@ -23,7 +23,7 @@ beforeEach(() => {
   database = new NodeNarrativeDatabase();
   database.migrate();
   new SqliteProjectRepository(database).insert(
-    createProject({ id: "p1", title: "M Method Retrieval", now }),
+    createProject({ id: "p1", title: "Creative Material Retrieval", now }),
   );
   retrieval = new SqliteRetrievalRepository(database);
 });
@@ -132,20 +132,21 @@ function context() {
       assetRefs: [],
     },
     methodInvocations: [],
+    materialSelections: [],
   });
 }
 
-function methodSegment(input: {
-  family: string;
+function materialSegment(input: {
+  libraryId: string;
   id: string;
   status: "active" | "candidate" | "merged" | "retired";
   name: string;
   summary: string;
 }) {
-  return creativeMethodSegmentFromCuratedCard({
+  return creativeMaterialSegmentFromCuratedCard({
     projectId: "p1",
-    methodFamily: input.family,
-    sourceRootLabel: "/method-source",
+    libraryId: input.libraryId,
+    sourceRootLabel: "/material-source",
     entry: {
       id: input.id,
       type: "MOVE",
@@ -162,9 +163,9 @@ function methodSegment(input: {
   });
 }
 
-describe("CreativeMethodRetrievalService", () => {
-  it("parses the curated index as the import authority", () => {
-    const parsed = parseCuratedCreativeMethodIndex(
+describe("CreativeMaterialRetrievalService", () => {
+  it("parses a mutable curated material index without freezing material types", () => {
+    const parsed = parseCuratedCreativeMaterialIndex(
       [
         JSON.stringify({
           id: "MOVE-0001",
@@ -178,24 +179,24 @@ describe("CreativeMethodRetrievalService", () => {
           curation_stage: "semantic-reworked",
         }),
         JSON.stringify({
-          id: "MOVE-9999",
-          type: "MOVE",
-          name: "退役方法",
-          status: "retired",
-          summary: "不再用于普通召回。",
+          id: "FUTURE-TYPE-0001",
+          type: "FUTURE-TYPE",
+          name: "未来新增组件类型",
+          status: "candidate",
+          summary: "证明新增素材类型不要求 Story schema 升级。",
           call_when: [],
           tags: [],
-          filename: "cards/MOVE/MOVE-9999.md",
+          filename: "cards/FUTURE/FUTURE-TYPE-0001.md",
         }),
       ].join("\n"),
     );
-    expect(parsed.map((item) => item.status)).toEqual(["active", "retired"]);
+    expect(parsed.map((item) => item.type)).toEqual(["MOVE", "FUTURE-TYPE"]);
   });
 
-  it("recalls only live cards from the requested M family, not world text or retired cards", () => {
+  it("recalls material objects from one library, not world text or retired cards", () => {
     retrieval.upsertSegment(
-      methodSegment({
-        family: "M03",
+      materialSegment({
+        libraryId: "M03",
         id: "MOVE-0001",
         status: "active",
         name: "先交出超规格成果再谈资格",
@@ -203,8 +204,8 @@ describe("CreativeMethodRetrievalService", () => {
       }),
     );
     retrieval.upsertSegment(
-      methodSegment({
-        family: "M03",
+      materialSegment({
+        libraryId: "M03",
         id: "MOVE-0999",
         status: "retired",
         name: "旧重新估值套路",
@@ -212,11 +213,11 @@ describe("CreativeMethodRetrievalService", () => {
       }),
     );
     retrieval.upsertSegment(
-      methodSegment({
-        family: "M02",
+      materialSegment({
+        libraryId: "OTHER-LIBRARY",
         id: "MOVE-0001",
         status: "active",
-        name: "另一方法族",
+        name: "另一素材库",
         summary: "低位男主超规格结果专业重新估值。",
       }),
     );
@@ -235,47 +236,48 @@ describe("CreativeMethodRetrievalService", () => {
       updatedAt: now,
     });
 
-    const methods = new CreativeMethodRetrievalService(retrieval).recall({
+    const materials = new CreativeMaterialRetrievalService(retrieval).recall({
       field: field(),
       creativeContext: context(),
       scope: "story",
-      purpose: "寻找秀信如何用真实结果逼专业体系重新估值的剧情演法",
+      purpose: "寻找秀信如何用真实结果逼专业体系重新估值的成熟创意对象",
       query: "低位男主 超规格结果 专业重新估值",
-      methodFamilies: ["M03"],
+      libraries: ["M03"],
       limit: 5,
     });
 
-    expect(methods).toHaveLength(1);
-    expect(methods[0]).toMatchObject({
-      methodFamily: "M03",
-      methodId: "MOVE-0001",
+    expect(materials).toHaveLength(1);
+    expect(materials[0]).toMatchObject({
+      libraryId: "M03",
+      materialId: "MOVE-0001",
+      materialType: "MOVE",
       scope: "story",
       inputObjectIds: ["object:xiuxin", "object:medic"],
     });
-    expect(methods[0]!.instruction).toContain("先交出超规格成果再谈资格");
+    expect(materials[0]!.content).toContain("先交出超规格成果再谈资格");
   });
 
   it("can opt into Candidate without ever returning Retired", () => {
     retrieval.upsertSegment(
-      methodSegment({
-        family: "M03",
+      materialSegment({
+        libraryId: "M03",
         id: "ACT-0001",
         status: "candidate",
-        name: "候选行为法",
+        name: "候选行为素材",
         summary: "男主主动试探价格差。",
       }),
     );
     retrieval.upsertSegment(
-      methodSegment({
-        family: "M03",
+      materialSegment({
+        libraryId: "M03",
         id: "ACT-0002",
         status: "retired",
-        name: "退役行为法",
+        name: "退役行为素材",
         summary: "男主主动试探价格差。",
       }),
     );
 
-    const service = new CreativeMethodRetrievalService(retrieval);
+    const service = new CreativeMaterialRetrievalService(retrieval);
     expect(
       service.recall({
         field: field(),
@@ -283,7 +285,7 @@ describe("CreativeMethodRetrievalService", () => {
         scope: "resource",
         purpose: "寻找当前对象里的价格差",
         query: "主动试探价格差",
-        methodFamilies: ["M03"],
+        libraries: ["M03"],
         includeCandidate: false,
       }),
     ).toEqual([]);
@@ -294,9 +296,54 @@ describe("CreativeMethodRetrievalService", () => {
       scope: "resource",
       purpose: "寻找当前对象里的价格差",
       query: "主动试探价格差",
-      methodFamilies: ["M03"],
+      libraries: ["M03"],
       includeCandidate: true,
     });
-    expect(withCandidate.map((item) => item.methodId)).toEqual(["ACT-0001"]);
+    expect(withCandidate.map((item) => item.materialId)).toEqual(["ACT-0001"]);
+  });
+
+  it("supports library growth through ordinary upsert without changing runtime contracts", () => {
+    const service = new CreativeMaterialRetrievalService(retrieval);
+    retrieval.upsertSegment(
+      materialSegment({
+        libraryId: "M03",
+        id: "MOVE-0001",
+        status: "active",
+        name: "第一张素材",
+        summary: "专业重新估值的成熟动作。",
+      }),
+    );
+    expect(
+      service.recall({
+        field: field(),
+        creativeContext: context(),
+        scope: "story",
+        purpose: "重新估值",
+        query: "专业重新估值",
+        libraries: ["M03"],
+        limit: 10,
+      }).length,
+    ).toBe(1);
+
+    retrieval.upsertSegment(
+      materialSegment({
+        libraryId: "M03",
+        id: "MOVE-0002",
+        status: "active",
+        name: "后来新增的第二张素材",
+        summary: "专业重新估值的另一种成熟动作。",
+      }),
+    );
+    expect(
+      service.recall({
+        field: field(),
+        creativeContext: context(),
+        scope: "story",
+        purpose: "重新估值",
+        query: "专业重新估值",
+        libraries: ["M03"],
+        limit: 10,
+      }).map((item) => item.materialId),
+    ).toEqual(expect.arrayContaining(["MOVE-0001", "MOVE-0002"]));
   });
 });

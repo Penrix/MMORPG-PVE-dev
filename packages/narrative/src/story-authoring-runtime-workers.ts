@@ -83,6 +83,7 @@ export interface StoryAuthoringSearchModelRequest {
   targetEmotion: string;
   protagonistProfile: string;
   methodInstructions?: string;
+  /** @deprecated Prefer creativeContext.materialSelections from Module 2. */
   matureStoryMaterials?: string;
 }
 
@@ -393,7 +394,7 @@ export class StoryAuthoringService {
           "如果 Object Field 太薄，status 必须返回 BLOCKED_WORLD_GAP。worldGaps 必须结构化写出缺什么、锚在哪些已有对象、为什么缺，并用 productionHint 指向现有 World Builder workshop。此时允许 seeds 与尺度结果为空，不要为了过 schema 用‘神秘高手/反派/美女/商会’占位补洞。",
           "Creative Frame 是当前长篇创作状态：必须继承父层与同层前序区段，不能把当前区段当成新书重新开机。",
           "男主是故事推演的主摄像机。先问 protagonistCamera 中男主现在在哪里、想得到什么、这一步准备主动做什么，再看他的行动会撞到哪些现成人物、资源、组织和规则。",
-          "M 系列方法通过 creativeContext.methodInvocations 横切进入。它们只是面对当前对象和问题的创作算法，不提供对象、不自动成为 Canon，也不属于某一个固定 S 阶段。成熟故事材料只是 prior，不是本书 Reality。",
+          "creativeContext.methodInvocations 只承载真正的创作算法；creativeContext.materialSelections 承载从 Module 2 素材空间召回的具体创意对象。M03素材卡不是算法。两类输入都不能自动成为 Canon。",
           "S01/S02/S03 不是 S Framework 本体，更不是三台独立故事生成器，只是同一 Creative Frame / Upgrade Ledger 的长程 / 当前阶段 / 当前故事观察尺度。所有结果必须服务同一条 Road。",
           "候选可以分叉、回返和失败；不要为了尽快交付而把第一条可行答案冒充完成。",
           scaleInstruction,
@@ -416,7 +417,8 @@ export class StoryAuthoringService {
                   objects: fieldObjectCatalog(request.field),
                 },
                 methodInstructions: request.methodInstructions ?? null,
-                matureStoryMaterials: request.matureStoryMaterials ?? null,
+                legacyMatureStoryMaterials:
+                  request.matureStoryMaterials ?? null,
               },
               null,
               2,

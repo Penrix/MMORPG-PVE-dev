@@ -175,14 +175,35 @@ describe("StoryCreativeFrameContext", () => {
       },
       methodInvocations: [
         {
-          id: "m03:story:1",
-          methodFamily: "M03",
-          methodId: "M03-recall",
-          sourceRef: "Penrix/male-webnovel-cognition/database/m03",
+          id: "method:m01a:story:1",
+          methodFamily: "M01A",
+          methodId: "six-question-playability-search",
+          sourceRef:
+            "Penrix/male-webnovel-cognition/docs/fourth-generation/M01A",
           scope: "story",
-          purpose: "寻找人物互动玩法",
+          purpose: "围绕现有对象提出新的可玩问题",
           inputObjectIds: ["object:xiuxin", "object:medic"],
-          instruction: "只在当前对象之间寻找可编剧关系。",
+          instruction: "从当前具体人事物中寻找新的可玩作用。",
+        },
+      ],
+      materialSelections: [
+        {
+          id: "material-selection:M03:MOVE-0001:1",
+          libraryId: "M03",
+          materialId: "MOVE-0001",
+          materialType: "MOVE",
+          status: "active",
+          title: "M03 MOVE-0001｜先交成果再谈资格",
+          summary: "低位人物先交出超规格成果，再让专业体系重新估值。",
+          sourceRef:
+            "Penrix/male-webnovel-cognition/database/m03/cards/MOVE/MOVE-0001.md",
+          scope: "story",
+          purpose: "给当前医院复核对象提供成熟创意碰撞素材",
+          inputObjectIds: ["object:xiuxin", "object:medic"],
+          callWhen: ["资格不足时怎样破格？"],
+          tags: ["重新估值"],
+          curationStage: "test",
+          content: "先交出超规格成果，再让既有专业人物根据自己的职责采取行动。",
         },
       ],
     });
@@ -236,9 +257,9 @@ describe("StoryCreativeFrameContext", () => {
 
     const bad = {
       ...context,
-      methodInvocations: [
+      materialSelections: [
         {
-          ...context.methodInvocations[0]!,
+          ...context.materialSelections[0]!,
           inputObjectIds: ["object:not-in-world"],
         },
       ],
@@ -261,6 +282,6 @@ describe("StoryCreativeFrameContext", () => {
           },
         ],
       }),
-    ).toThrow("story_creative_context.unknown_method_object");
+    ).toThrow("story_creative_context.unknown_material_object");
   });
 });

@@ -165,14 +165,35 @@ function creativeContext(currentField: StoryObjectField) {
     },
     methodInvocations: [
       {
-        id: "method:m03:story",
-        methodFamily: "M03",
-        methodId: "M03-recall",
-        sourceRef: "Penrix/male-webnovel-cognition/database/m03",
+        id: "method:m01a:story",
+        methodFamily: "M01A",
+        methodId: "six-question-playability-search",
+        sourceRef:
+          "Penrix/male-webnovel-cognition/docs/fourth-generation/M01A",
         scope: "story",
-        purpose: "对当前世界对象寻找更昂贵的人物互动玩法",
+        purpose: "从当前具体世界对象提出新的创作问题",
         inputObjectIds: currentField.objects.map((object) => object.id),
-        instruction: "只对当前对象做迁移、组合与变奏，不新增功能NPC。",
+        instruction: "先看现有人事物，再寻找新的作用关系。",
+      },
+    ],
+    materialSelections: [
+      {
+        id: "material-selection:M03:MOVE-0001:1",
+        libraryId: "M03",
+        materialId: "MOVE-0001",
+        materialType: "MOVE",
+        status: "active",
+        title: "M03 MOVE-0001｜先交成果再谈资格",
+        summary: "低位人物先交成果，再让权威重新估值。",
+        sourceRef:
+          "Penrix/male-webnovel-cognition/database/m03/cards/MOVE/MOVE-0001.md",
+        scope: "story",
+        purpose: "让当前医院人物与成熟创意素材发生碰撞",
+        inputObjectIds: currentField.objects.map((object) => object.id),
+        callWhen: ["资格不足时怎样破格？"],
+        tags: ["重新估值"],
+        curationStage: "test",
+        content: "先交出超规格成果，再由已有专业人物行动、下注和改价。",
       },
     ],
   });
