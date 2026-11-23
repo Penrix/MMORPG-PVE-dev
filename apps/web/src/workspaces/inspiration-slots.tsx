@@ -94,7 +94,9 @@ export function InspirationSlotsWorkspace() {
       .catch((cause) => {
         if (!controller.signal.aborted) setError(apiErrorMessage(cause));
       });
-    void roll("male", true, {}, "");
+    void Promise.resolve().then(() => {
+      if (!controller.signal.aborted) return roll("male", true, {}, "");
+    });
     return () => {
       mountedRef.current = false;
       controller.abort();
