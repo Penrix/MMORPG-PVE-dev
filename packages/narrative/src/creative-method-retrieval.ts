@@ -27,7 +27,7 @@ export class CreativeMethodRetrievalService {
     const { methodFamilies, ...rest } = request;
     return this.materials.recall({
       ...rest,
-      libraries: methodFamilies,
+      ...(methodFamilies ? { libraries: methodFamilies } : {}),
     });
   }
 }
