@@ -194,7 +194,8 @@ export class CreativeMethodRoutingService {
       return {
         plan: {
           mode: "manual",
-          diagnosis: "调用方已经明确指定创作方法，自动路由不覆盖作者/上游选择。",
+          diagnosis:
+            "调用方已经明确指定创作方法，自动路由不覆盖作者/上游选择。",
           selections: request.creativeContext.methodInvocations.map(
             (invocation) => {
               const definition = getCreativeMethodDefinition(

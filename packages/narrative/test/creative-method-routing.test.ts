@@ -217,7 +217,9 @@ describe("M-series creative method runtime", () => {
       ),
     };
 
-    const result = await new CreativeMethodRoutingService(model).routeStorySearch(
+    const result = await new CreativeMethodRoutingService(
+      model,
+    ).routeStorySearch(
       run,
       step,
       {
@@ -273,18 +275,14 @@ describe("M-series creative method runtime", () => {
           expect(purpose).toBe("story-object-grounded-search");
           const serialized = JSON.stringify(request);
           expect(serialized).toContain("m02-six-chain");
-          expect(serialized).toContain(
-            "primary方法决定本轮主要搜索运动",
-          );
+          expect(serialized).toContain("primary方法决定本轮主要搜索运动");
           const checked = validate({
             status: "READY",
             question: "医院期还有哪些机制不同的可玩关系？",
             objectFocus: [
               {
                 objectId: "object:medic",
-                surfaceRefs: [
-                  surfaceRef(currentField, "object:medic", "duty"),
-                ],
+                surfaceRefs: [surfaceRef(currentField, "object:medic", "duty")],
                 whyNow: "医疗忍者正在处理秀信",
                 valuableSurface: "专业权限与重新估值入口",
               },
@@ -335,21 +333,22 @@ describe("M-series creative method runtime", () => {
       ),
     };
 
-    const result =
-      await new StoryAuthoringService(model).searchWithCreativeMethods(
-        run,
-        step,
-        {
-          field: currentField,
-          creativeContext,
-          upgradeLedger: upgradeLedger(),
-          request: "别只给我同一种专业复核，继续找真正不同的玩法",
-          readerNeed: "看低位人物凭真实能力被重新估值",
-          targetEmotion: "得意",
-          protagonistProfile: "秀信：低位、主动、用基础能力解决现实问题",
-        },
-        new AbortController().signal,
-      );
+    const result = await new StoryAuthoringService(
+      model,
+    ).searchWithCreativeMethods(
+      run,
+      step,
+      {
+        field: currentField,
+        creativeContext,
+        upgradeLedger: upgradeLedger(),
+        request: "别只给我同一种专业复核，继续找真正不同的玩法",
+        readerNeed: "看低位人物凭真实能力被重新估值",
+        targetEmotion: "得意",
+        protagonistProfile: "秀信：低位、主动、用基础能力解决现实问题",
+      },
+      new AbortController().signal,
+    );
 
     expect(calls).toBe(2);
     expect(result.routing.creativeContext.methodInvocations).toHaveLength(1);

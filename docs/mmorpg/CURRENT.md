@@ -61,7 +61,7 @@ Module 3：这些已经存在的人接下来演什么故事？
 | Module 3     | [23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md)                | **故事发动机权威。** 升级路线写长，配角下注与反应写爽；已有世界人物是故事对象                                             |
 | Module 3     | [24 Creative Frame × Protagonist Camera × M Methods](24-creative-frame-protagonist-camera-m-methods.md) | **结构权威。** S 是父层+前序区段继承的创作状态框架；M 算法与 Module-2 素材对象严格分离                                    |
 | Module 3     | [26 M-series × TR-I-02 Creative Method Catalog](26-m-series-tr02-creative-method-catalog.md)            | **创作方法目录权威。** 逐项记录 M01A～M10 与 TR02 各版本仍有价值的搜索、发散、迁移和变奏方法；不覆盖 23 的 Story Director |
-| Module 3     | [27 M-series Runtime Routing](27-m-series-runtime-routing.md)                                          | **方法运行时实现合同。** 当前问题 → 1主方法+最多1辅方法 → CreativeMethodInvocation → Story Search；路由器没有故事裁决权 |
+| Module 3     | [27 M-series Runtime Routing](27-m-series-runtime-routing.md)                                           | **方法运行时实现合同。** 当前问题 → 1主方法+最多1辅方法 → CreativeMethodInvocation → Story Search；路由器没有故事裁决权   |
 
 ### 当前 Module 3 主链
 
