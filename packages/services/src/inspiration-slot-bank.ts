@@ -146,11 +146,11 @@ function extractM03Phrase(
 }
 
 export function inspirationPoolStats(
-  channel: InspirationChannel,
+  channel: InspirationChannel | "all",
   m03: readonly InspirationSlotItem[],
 ) {
   const builtin = BUILTIN_INSPIRATION_SLOT_BANK.filter((item) =>
-    item.channels.includes(channel),
+    channel === "all" || item.channels.includes(channel),
   );
   const imported = m03.filter((item) => item.channels.includes(channel));
   const bySlot = Object.fromEntries(
