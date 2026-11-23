@@ -200,6 +200,25 @@ export class CreativeMethodRoutingService {
     );
 
     if (request.creativeContext.methodInvocations.length > 0) {
+      for (const invocation of request.creativeContext.methodInvocations) {
+        const definition = getCreativeMethodDefinition(invocation.methodId);
+        if (
+          definition?.requiresMaterials &&
+          request.creativeContext.materialSelections.length === 0
+        ) {
+          throw new Error(
+            `creative_method_routing.manual_method_missing_materials:${invocation.methodId}`,
+          );
+        }
+        if (
+          definition?.requiresPriorStoryState &&
+          !hasPriorStoryState(request.creativeContext)
+        ) {
+          throw new Error(
+            `creative_method_routing.manual_method_missing_story_state:${invocation.methodId}`,
+          );
+        }
+      }
       return {
         plan: {
           mode: "manual",

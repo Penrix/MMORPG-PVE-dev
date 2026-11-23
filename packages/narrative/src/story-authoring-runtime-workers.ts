@@ -27,6 +27,7 @@ import type { JsonSchemaContract } from "@narralume/llm";
 
 import type { CreativeMaterialRetrievalService } from "./creative-material-retrieval.js";
 import { CreativeMethodRoutingService } from "./creative-method-routing.js";
+import { getCreativeMethodDefinition } from "./m-series-methods.js";
 import type { NarrativeModelClient } from "./model-client.js";
 import { zodValidator } from "./schemas.js";
 import {
@@ -377,9 +378,16 @@ export class StoryAuthoringService {
     );
 
     let preparedContext = request.creativeContext;
+    const manualMethodNeedsMaterials = preparedContext.methodInvocations.some(
+      (invocation) =>
+        getCreativeMethodDefinition(invocation.methodId)?.requiresMaterials ===
+        true,
+    );
     if (
       preparedContext.materialSelections.length === 0 &&
-      this.creativeMaterials
+      this.creativeMaterials &&
+      (preparedContext.methodInvocations.length === 0 ||
+        manualMethodNeedsMaterials)
     ) {
       const recalled = this.creativeMaterials.recall({
         field: request.field,
