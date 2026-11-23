@@ -234,6 +234,7 @@ function rehearsingRequest(designed: { field: any; storyUnit: StoryUnitDesign })
     chapterTitle: "重新估值", chapterGoal: "让专业旧认知崩塌",
     povEntityId: "hero", targetCharacters: 1200,
     request: "把复核扩展成多场景", generationId: "g1",
+    activeSeedEntityIds: ["medic"],
     stakeBeatByEntityId: { medic: "stake" as const },
   };
 }
