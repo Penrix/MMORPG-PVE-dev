@@ -488,12 +488,11 @@ describe("M-series creative method runtime", () => {
 
     expect(recall).toHaveBeenCalledTimes(1);
     expect(calls).toBe(2);
-    expect(result.routing.creativeContext.materialSelections[0]?.materialId).toBe(
-      "MOVE-0001",
-    );
+    expect(
+      result.routing.creativeContext.materialSelections[0]?.materialId,
+    ).toBe("MOVE-0001");
     expect(result.routing.creativeContext.methodInvocations[0]?.methodId).toBe(
       "m03-compose",
     );
   });
-
 });
