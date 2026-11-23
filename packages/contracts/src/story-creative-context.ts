@@ -5,6 +5,7 @@ import {
   StoryStakeLedgerEntrySchema,
   StoryUpgradeLedgerSchema,
 } from "./story-runtime.js";
+import { CreativeMaterialSelectionSchema } from "./creative-material.js";
 
 export const StoryCreativeFrameKindSchema = z.enum([
   "book",
@@ -168,12 +169,13 @@ export const StoryCreativeContextSchema = z.object({
   frame: StoryCreativeFrameContextSchema,
   protagonistCamera: StoryProtagonistCameraSchema,
   methodInvocations: z.array(CreativeMethodInvocationSchema),
+  materialSelections: z.array(CreativeMaterialSelectionSchema).default([]),
   digest: z.string().min(1),
 });
 export type StoryCreativeContext = z.infer<typeof StoryCreativeContextSchema>;
 export const StoryCreativeContextDraftSchema = StoryCreativeContextSchema.omit({
   digest: true,
 });
-export type StoryCreativeContextDraft = z.infer<
+export type StoryCreativeContextDraft = z.input<
   typeof StoryCreativeContextDraftSchema
 >;

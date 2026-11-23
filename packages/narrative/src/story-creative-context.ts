@@ -11,6 +11,7 @@ import {
   type StoryCreativeFrameContextDraft,
   type StoryCreativeFrameSnapshot,
   type CreativeMethodInvocation,
+  type CreativeMaterialSelection,
   type StoryCreativeFrameState,
   type StoryCreativeFrameStateDraft,
   type ExpectationState,
@@ -256,6 +257,16 @@ export function finalizeStoryCreativeContext(
     invocationIds.add(invocation.id);
   }
 
+  const materialIds = new Set<string>();
+  for (const material of parsed.materialSelections) {
+    if (materialIds.has(material.id)) {
+      throw new Error(
+        `story_creative_context.duplicate_material_selection:${material.id}`,
+      );
+    }
+    materialIds.add(material.id);
+  }
+
   return StoryCreativeContextSchema.parse({
     ...parsed,
     digest: digest(parsed),
@@ -273,6 +284,22 @@ export function withCreativeMethodInvocations(
     frame: context.frame,
     protagonistCamera: context.protagonistCamera,
     methodInvocations: [...context.methodInvocations, ...invocations],
+    materialSelections: context.materialSelections,
+  });
+}
+
+export function withCreativeMaterialSelections(
+  context: StoryCreativeContext,
+  selections: readonly CreativeMaterialSelection[],
+): StoryCreativeContext {
+  return finalizeStoryCreativeContext({
+    version: "story-creative-context.v1",
+    authority: "speculative",
+    projectId: context.projectId,
+    frame: context.frame,
+    protagonistCamera: context.protagonistCamera,
+    methodInvocations: context.methodInvocations,
+    materialSelections: [...context.materialSelections, ...selections],
   });
 }
 
@@ -320,6 +347,15 @@ export function assertStoryCreativeContextBound(
       if (!allowedObjectIds.has(objectId)) {
         throw new Error(
           `story_creative_context.unknown_method_object:${invocation.id}:${objectId}`,
+        );
+      }
+    }
+  }
+  for (const material of context.materialSelections) {
+    for (const objectId of material.inputObjectIds) {
+      if (!allowedObjectIds.has(objectId)) {
+        throw new Error(
+          `story_creative_context.unknown_material_object:${material.id}:${objectId}`,
         );
       }
     }

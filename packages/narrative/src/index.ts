@@ -44,5 +44,5 @@ export * from "./story-scene-runtime-workers.js";
 
 export * from "./story-production-handoff.js";
 
-export * from "./creative-method-catalog.js";
-export * from "./creative-method-retrieval.js";
+export * from "./creative-material-catalog.js";
+export * from "./creative-material-retrieval.js";
