@@ -39,6 +39,8 @@ export * from "./expectation-runtime-workers.js";
 export * from "./story-authoring-runtime.js";
 export * from "./story-authoring-runtime-workers.js";
 export * from "./story-creative-context.js";
+export * from "./m-series-methods.js";
+export * from "./creative-method-routing.js";
 
 export * from "./story-scene-runtime-workers.js";
 

@@ -25,6 +25,7 @@ import type {
 } from "@narralume/domain";
 import type { JsonSchemaContract } from "@narralume/llm";
 
+import { CreativeMethodRoutingService } from "./creative-method-routing.js";
 import type { NarrativeModelClient } from "./model-client.js";
 import { zodValidator } from "./schemas.js";
 import {
@@ -104,6 +105,13 @@ export interface StoryAuthoringModelResult<T> {
     mode: "native" | "json-mode" | "prompt" | "repair";
     attempts: number;
   };
+}
+
+export interface StoryAuthoringRoutedSearchResult {
+  routing: Awaited<
+    ReturnType<CreativeMethodRoutingService["routeStorySearch"]>
+  >;
+  search: StoryAuthoringModelResult<StoryAuthoringSearch>;
 }
 
 function fieldObjectCatalog(field: StoryObjectField) {
@@ -346,6 +354,39 @@ function storyUnitOutputIssues(
 export class StoryAuthoringService {
   constructor(private readonly model: NarrativeModelClient) {}
 
+  async searchWithCreativeMethods(
+    run: NarrativeRun,
+    step: NarrativeRunStep,
+    request: StoryAuthoringSearchModelRequest,
+    signal: AbortSignal,
+  ): Promise<StoryAuthoringRoutedSearchResult> {
+    const routing = await new CreativeMethodRoutingService(
+      this.model,
+    ).routeStorySearch(
+      run,
+      step,
+      {
+        field: request.field,
+        creativeContext: request.creativeContext,
+        upgradeLedger: request.upgradeLedger,
+        request: request.request,
+        readerNeed: request.readerNeed,
+        targetEmotion: request.targetEmotion,
+      },
+      signal,
+    );
+    const search = await this.search(
+      run,
+      step,
+      {
+        ...request,
+        creativeContext: routing.creativeContext,
+      },
+      signal,
+    );
+    return { routing, search };
+  }
+
   async search(
     run: NarrativeRun,
     step: NarrativeRunStep,
@@ -395,6 +436,7 @@ export class StoryAuthoringService {
           "Creative Frame 是当前长篇创作状态：必须继承父层与同层前序区段，不能把当前区段当成新书重新开机。",
           "男主是故事推演的主摄像机。先问 protagonistCamera 中男主现在在哪里、想得到什么、这一步准备主动做什么，再看他的行动会撞到哪些现成人物、资源、组织和规则。",
           "creativeContext.methodInvocations 只承载真正的创作算法；creativeContext.materialSelections 承载从 Module 2 素材空间召回的具体创意对象。M03素材卡不是算法。两类输入都不能自动成为 Canon。",
+          "methodInvocations按顺序执行：primary方法决定本轮主要搜索运动，secondary只在它能提供不同搜索运动时辅助。不要在未选中的M方法之间自由串烧，也不要只复述方法名；每颗Seed的searchMove要能看出该方法实际怎样改变了搜索。",
           "S01/S02/S03 不是 S Framework 本体，更不是三台独立故事生成器，只是同一 Creative Frame / Upgrade Ledger 的长程 / 当前阶段 / 当前故事观察尺度。所有结果必须服务同一条 Road。",
           "候选可以分叉、回返和失败；不要为了尽快交付而把第一条可行答案冒充完成。",
           scaleInstruction,
