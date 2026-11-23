@@ -448,6 +448,7 @@ export class StoryAuthoringService {
         scaleResult: result.value.scaleResult,
       },
       request.field,
+      request.creativeContext,
     );
 
     return {
@@ -612,6 +613,7 @@ export class StoryAuthoringService {
       request.field,
       request.expectationDesign,
       availableSeedIds,
+      request.creativeContext,
     );
 
     return {
