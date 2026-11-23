@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+import {
+  ExpectationThreadPhaseSchema,
+  StoryStakeLedgerEntrySchema,
+  StoryUpgradeLedgerSchema,
+} from "./story-runtime.js";
+
 export const StoryCreativeFrameKindSchema = z.enum([
   "book",
   "volume",
@@ -29,6 +35,67 @@ export type StoryCreativeFrameSnapshot = z.infer<
   typeof StoryCreativeFrameSnapshotSchema
 >;
 
+export const StoryCreativeExpectationThreadSchema = z.object({
+  id: z.string().min(1),
+  targetEmotion: z.string().min(1),
+  targetOutcome: z.string().min(1),
+  readerKnowledgeSummary: z.string().min(1),
+  payoffCondition: z.string().min(1),
+  reactionTargetEntityIds: z.array(z.string().min(1)),
+  retainedGainTarget: z.string().min(1).nullable(),
+  phase: ExpectationThreadPhaseSchema,
+});
+export type StoryCreativeExpectationThread = z.infer<
+  typeof StoryCreativeExpectationThreadSchema
+>;
+
+export const StoryCreativeFrameStateStatusSchema = z.enum([
+  "planned",
+  "in_progress",
+  "settled",
+]);
+export type StoryCreativeFrameStateStatus = z.infer<
+  typeof StoryCreativeFrameStateStatusSchema
+>;
+
+export const StoryCreativeFrameStateSchema = z.object({
+  version: z.literal("story-creative-frame-state.v1"),
+  authority: z.literal("creative-state"),
+  projectId: z.string().min(1),
+  frameOutlineNodeId: z.string().min(1),
+  status: StoryCreativeFrameStateStatusSchema,
+  upgradeLedger: StoryUpgradeLedgerSchema.nullable(),
+  stakeLedger: z.array(StoryStakeLedgerEntrySchema),
+  expectationThreads: z.array(StoryCreativeExpectationThreadSchema),
+  retainedAssets: z.array(z.string().min(1)),
+  unresolvedQuestions: z.array(z.string().min(1)),
+  sourceStoryUnitDigests: z.array(z.string().min(1)),
+  realityFingerprint: z.string().min(1).nullable(),
+  updatedAt: z.string().min(1),
+  digest: z.string().min(1),
+});
+export type StoryCreativeFrameState = z.infer<
+  typeof StoryCreativeFrameStateSchema
+>;
+export const StoryCreativeFrameStateDraftSchema =
+  StoryCreativeFrameStateSchema.omit({ digest: true });
+export type StoryCreativeFrameStateDraft = z.infer<
+  typeof StoryCreativeFrameStateDraftSchema
+>;
+
+export const StoryCreativeInheritedStateSchema = z.object({
+  sourceFrameIds: z.array(z.string().min(1)),
+  sourceStateDigests: z.array(z.string().min(1)),
+  latestUpgradeLedger: StoryUpgradeLedgerSchema.nullable(),
+  activeStakeLedger: z.array(StoryStakeLedgerEntrySchema),
+  openExpectationThreads: z.array(StoryCreativeExpectationThreadSchema),
+  retainedAssets: z.array(z.string().min(1)),
+  unresolvedQuestions: z.array(z.string().min(1)),
+});
+export type StoryCreativeInheritedState = z.infer<
+  typeof StoryCreativeInheritedStateSchema
+>;
+
 export const StoryCreativeFrameContextSchema = z.object({
   version: z.literal("story-creative-frame.v1"),
   projectId: z.string().min(1),
@@ -36,13 +103,14 @@ export const StoryCreativeFrameContextSchema = z.object({
   currentFrame: StoryCreativeFrameSnapshotSchema,
   parentFrames: z.array(StoryCreativeFrameSnapshotSchema),
   previousSiblingFrames: z.array(StoryCreativeFrameSnapshotSchema),
+  inheritedState: StoryCreativeInheritedStateSchema,
   digest: z.string().min(1),
 });
 export type StoryCreativeFrameContext = z.infer<
   typeof StoryCreativeFrameContextSchema
 >;
 export const StoryCreativeFrameContextDraftSchema =
-  StoryCreativeFrameContextSchema.omit({ digest: true });
+  StoryCreativeFrameContextSchema.omit({ digest: true, inheritedState: true });
 export type StoryCreativeFrameContextDraft = z.infer<
   typeof StoryCreativeFrameContextDraftSchema
 >;
