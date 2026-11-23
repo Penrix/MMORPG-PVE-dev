@@ -77,12 +77,14 @@ export const StoryProtagonistCameraSchema = z.object({
   version: z.literal("story-protagonist-camera.v1"),
   projectId: z.string().min(1),
   protagonistEntityId: z.string().min(1),
-  currentPosition: z.string().min(1),
+  currentLocation: z.string().min(1),
+  currentState: z.string().min(1),
   currentGoal: z.string().min(1),
   upgradeNeed: z.string().min(1),
   activeMove: z.string().min(1),
   focusObjectIds: z.array(z.string().min(1)),
   advantageRefs: z.array(z.string().min(1)),
+  assetRefs: z.array(z.string().min(1)),
 });
 export type StoryProtagonistCamera = z.infer<
   typeof StoryProtagonistCameraSchema
