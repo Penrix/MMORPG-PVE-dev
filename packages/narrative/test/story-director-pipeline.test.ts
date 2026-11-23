@@ -1,27 +1,47 @@
+// prettier-ignore
 import { createCanonEntity, createOutlineNode, createProject, type NarrativeRun, type NarrativeRunStep, type RunBudgetUsage } from "@narralume/domain";
+// prettier-ignore
 import type { ExpectationDesign, ExpectationState, StoryUnitDesign, StorySceneExpansion, StoryReaderTimePlan, WorldArbitrationReceipt, CharacterActionProposal, CharacterObservationPacket } from "@narralume/contracts";
+// prettier-ignore
 import { SqliteCanonRepository, SqliteProjectRepository, SqliteStoryRepository } from "@narralume/persistence";
+// prettier-ignore
 import { NodeNarrativeDatabase } from "@narralume/persistence/node";
+// prettier-ignore
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// prettier-ignore
 import type { NarrativeModelClient } from "../src/model-client.js";
+// prettier-ignore
 import { StoryDirectorPipeline } from "../src/story-director-pipeline.js";
+// prettier-ignore
 import { StoryAuthoringService } from "../src/story-authoring-runtime-workers.js";
+// prettier-ignore
 import { ExpectationNarrativeService } from "../src/expectation-runtime-workers.js";
+// prettier-ignore
 import { StoryRuntimeAgentService } from "../src/story-runtime-workers.js";
+// prettier-ignore
 import { StorySceneExpansionService } from "../src/story-scene-runtime-workers.js";
+// prettier-ignore
 import { buildStoryCreativeFrameContext } from "../src/story-creative-context.js";
+// prettier-ignore
 import { parseStoryChapterProductionHandoff } from "../src/story-production-handoff.js";
 
+// prettier-ignore
 const now = "2026-11-23T12:00:00.000Z";
+// prettier-ignore
 const usage: RunBudgetUsage = { inputTokens: 10, outputTokens: 5, calls: 1, costUsd: 0, wallTimeMs: 2 };
+// prettier-ignore
 const run = { projectId: "p1" } as NarrativeRun;
+// prettier-ignore
 const step = { id: "test-step" } as NarrativeRunStep;
+// prettier-ignore
 const signal = new AbortController().signal;
+// prettier-ignore
 const mockModel: NarrativeModelClient = {
   text: vi.fn(),
   structured: vi.fn(),
 };
+// prettier-ignore
 const ledger = {
   protagonistEntityId: "hero",
   road: "高价忍者任务",
@@ -31,6 +51,7 @@ const ledger = {
   settlementTarget: "高价任务资格",
   steps: [{ id: "step:1", title: "专业复核", targetGain: "上级任务", gate: "专业认可", targetCircle: "忍者任务体系" }],
 };
+// prettier-ignore
 const camera = {
   version: "story-protagonist-camera.v1" as const,
   projectId: "p1",
@@ -77,6 +98,7 @@ afterEach(() => {
   db.close();
 });
 
+// prettier-ignore
 function frameRequest() {
   return {
     projectId: "p1",
@@ -90,6 +112,7 @@ function frameRequest() {
   };
 }
 
+// prettier-ignore
 function expectationFor(field: { realityFingerprint: string; storyStateFingerprint: string }): ExpectationDesign {
   return {
     version: "expectation-design.v1", authority: "speculative",
@@ -106,6 +129,7 @@ function expectationFor(field: { realityFingerprint: string; storyStateFingerpri
   };
 }
 
+// prettier-ignore
 function unitFor(field: { digest: string }, status: "READY" | "BLOCKED_WORLD_GAP" = "READY"): StoryUnitDesign {
   return {
     version: "story-unit-design.v1", authority: "speculative", status,
@@ -146,11 +170,13 @@ function unitFor(field: { digest: string }, status: "READY" | "BLOCKED_WORLD_GAP
   } as StoryUnitDesign;
 }
 
+// prettier-ignore
 const expectationState = {
   projectId: "p1", realityFingerprint: "",
   threads: [],
 } as unknown as ExpectationState;
 
+// prettier-ignore
 function sceneExpansion(realityFingerprint: string): StorySceneExpansion {
   return {
     version: "story-scene-expansion.v1", authority: "speculative",
@@ -169,6 +195,7 @@ function sceneExpansion(realityFingerprint: string): StorySceneExpansion {
   };
 }
 
+// prettier-ignore
 function readerTime(realityFingerprint: string): StoryReaderTimePlan {
   return {
     version: "story-reader-time-plan.v1", authority: "speculative",
@@ -187,6 +214,7 @@ function readerTime(realityFingerprint: string): StoryReaderTimePlan {
   };
 }
 
+// prettier-ignore
 function rehearsalMocks(statuses: ("feasible" | "infeasible")[]) {
   vi.spyOn(StoryRuntimeAgentService.prototype, "proposeCharacterAction")
     .mockImplementation(async (_run, _step, observation) => ({
@@ -225,6 +253,7 @@ function rehearsalMocks(statuses: ("feasible" | "infeasible")[]) {
   return { arbitration, scenes, reader };
 }
 
+// prettier-ignore
 function rehearsingRequest(designed: { field: any; storyUnit: StoryUnitDesign }) {
   return {
     field: designed.field, storyUnit: designed.storyUnit,
@@ -239,6 +268,7 @@ function rehearsingRequest(designed: { field: any; storyUnit: StoryUnitDesign })
   };
 }
 
+// prettier-ignore
 describe("StoryDirectorPipeline", () => {
   it("connects S04-S08 and only writes the handoff / inherited creative ledgers on adoption", async () => {
     const observations: CharacterObservationPacket[] = [];
