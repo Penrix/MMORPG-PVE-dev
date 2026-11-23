@@ -173,7 +173,9 @@ export class CreativeOperatorInvocationService {
  * explicitly when a local problem needs one.
  */
 export class CreativeMethodRoutingService {
-  constructor(_model?: NarrativeModelClient) {}
+  constructor(_model?: NarrativeModelClient) {
+    void _model;
+  }
 
   async routeStorySearch(
     run: NarrativeRun,
@@ -181,6 +183,8 @@ export class CreativeMethodRoutingService {
     request: StoryCreativeMethodRoutingRequest,
     _signal: AbortSignal,
   ): Promise<StoryCreativeMethodRoutingResult> {
+    void _signal;
+
     if (
       run.projectId !== request.field.projectId ||
       request.creativeContext.projectId !== request.field.projectId ||

@@ -393,7 +393,9 @@ export class StoryAuthoringService {
   constructor(
     private readonly model: NarrativeModelClient,
     _legacyCreativeMaterials?: unknown,
-  ) {}
+  ) {
+    void _legacyCreativeMaterials;
+  }
 
   /**
    * Compatibility entry retained for callers that used the former auto-router.
