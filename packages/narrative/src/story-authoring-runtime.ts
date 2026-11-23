@@ -246,7 +246,7 @@ function validateScaleResult(
 export function finalizeStoryAuthoringSearch(
   draft: StoryAuthoringSearchDraft,
   field: StoryObjectField,
-  creativeContext?: StoryCreativeContext,
+  creativeContext: StoryCreativeContext,
 ): StoryAuthoringSearch {
   const parsed = StoryAuthoringSearchDraftSchema.parse(draft);
   if (
@@ -257,9 +257,8 @@ export function finalizeStoryAuthoringSearch(
     throw new Error("story_authoring.search_not_bound_to_object_field");
   }
   if (
-    creativeContext &&
-    (creativeContext.projectId !== field.projectId ||
-      parsed.creativeContextDigest !== creativeContext.digest)
+    creativeContext.projectId !== field.projectId ||
+    parsed.creativeContextDigest !== creativeContext.digest
   ) {
     throw new Error("story_authoring.search_not_bound_to_creative_context");
   }
@@ -349,7 +348,7 @@ export function finalizeStoryUnitDesign(
   field: StoryObjectField,
   expectationDesign: ExpectationDesign,
   availableSeedIds: ReadonlySet<string> = new Set(),
-  creativeContext?: StoryCreativeContext,
+  creativeContext: StoryCreativeContext,
 ): StoryUnitDesign {
   const parsed = StoryUnitDesignDraftSchema.parse(draft);
   if (
@@ -364,9 +363,8 @@ export function finalizeStoryUnitDesign(
     throw new Error("story_authoring.story_unit_not_bound");
   }
   if (
-    creativeContext &&
-    (creativeContext.projectId !== field.projectId ||
-      parsed.creativeContextDigest !== creativeContext.digest)
+    creativeContext.projectId !== field.projectId ||
+    parsed.creativeContextDigest !== creativeContext.digest
   ) {
     throw new Error("story_authoring.story_unit_not_bound_to_creative_context");
   }
