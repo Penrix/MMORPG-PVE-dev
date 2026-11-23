@@ -12,6 +12,7 @@ import {
   type StoryCreativeFrameSnapshot,
   type StoryCreativeFrameState,
   type StoryCreativeFrameStateDraft,
+  type CreativeMethodInvocation,
   type ExpectationState,
   type StoryUnitDesign,
   type StoryObjectField,
@@ -258,6 +259,23 @@ export function finalizeStoryCreativeContext(
   return StoryCreativeContextSchema.parse({
     ...parsed,
     digest: digest(parsed),
+  });
+}
+
+export function withCreativeMethodInvocations(
+  context: StoryCreativeContext,
+  invocations: readonly CreativeMethodInvocation[],
+): StoryCreativeContext {
+  return finalizeStoryCreativeContext({
+    version: "story-creative-context.v1",
+    authority: "speculative",
+    projectId: context.projectId,
+    frame: context.frame,
+    protagonistCamera: context.protagonistCamera,
+    methodInvocations: [
+      ...context.methodInvocations,
+      ...invocations,
+    ],
   });
 }
 
