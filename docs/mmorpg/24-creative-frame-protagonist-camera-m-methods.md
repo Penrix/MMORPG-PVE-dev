@@ -2,7 +2,7 @@
 
 > **STATUS: CURRENT AUTHORITY / MODULE 3 STRUCTURAL COMPLETION.**
 >
-> 本文与 [23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md) 和 [25 World Objects × Creative Materials](25-module2-dual-object-space.md) 一起构成当前第三模块权威。23 定义故事发动机，25 定义第二模块的两类可查询对象空间，本文定义长期创作状态、男主摄像机以及真正的 M 算法怎样进入 Story Director。
+> 本文与 [23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md)、[25 World Objects × Creative Materials](25-module2-dual-object-space.md) 和 [26 M-series × TR-I-02 Creative Method Catalog](26-m-series-tr02-creative-method-catalog.md) 一起构成当前第三模块权威。23 定义故事发动机与“什么值得写”；25 定义第二模块两类可查询对象空间；本文定义长期创作状态与方法端口；26 逐项记录现有 M / TR02 的真实搜索、发散、迁移和变奏方法。
 
 ## 1. 一句话
 
@@ -247,7 +247,7 @@ database/m03 material cards
 → 不是 CreativeMethodInvocation
 ```
 
-本轮不重新裁决 TR02 全版本算法。
+TR02 各版本的方法谱系已在 [26](26-m-series-tr02-creative-method-catalog.md) 逐项恢复。不得把它重新压成一个“最新版巨型 Prompt”，也不得因此改写 23 已成立的 Story Director。
 
 ## 6. Creative Material 的合同
 
@@ -474,8 +474,8 @@ Project Reality 更新
 2. Settlement → Creative Frame State 自动结算。
 3. 多 Node / 多 Frame 的升级、加注、期待转期与阵营变化连续推进。
 4. Creative Material Library 的 UI / API 浏览、编辑、同步和更多素材库 adapter。
-5. 未来专门恢复第四代 M 系列时，再建立真正的 Algorithm Registry / Router。
-6. TR02 各历史版本的算法思想留待与其他 M 系列统一研究，不在本轮提前收束。
+5. 按 [26](26-m-series-tr02-creative-method-catalog.md) 的方法目录，选择真实需要的方法逐个做 adapter / executor；不要先造万能 Algorithm Registry。
+6. 当前先保持方法可独立、可回返、非线性调用；只有真实运行需求证明需要统一 Router 时再增加相应基础设施。
 
 当前仍有意不自动化：
 

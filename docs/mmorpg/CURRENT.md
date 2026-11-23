@@ -60,6 +60,7 @@ Module 3：这些已经存在的人接下来演什么故事？
 | Module 3 ↔ 2 | [17 Novel Studio ↔ World Atlas](17-module3-world-atlas-integration.md)                                  | Module 3 读取 Project Reality / Source Atlas 的正式边界与单一 settlement 写回               |
 | Module 3     | [23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md)                | **故事发动机权威。** 升级路线写长，配角下注与反应写爽；已有世界人物是故事对象               |
 | Module 3     | [24 Creative Frame × Protagonist Camera × M Methods](24-creative-frame-protagonist-camera-m-methods.md) | **结构权威。** S 是父层+前序区段继承的创作状态框架；M 算法与 Module-2 素材对象严格分离      |
+| Module 3     | [26 M-series × TR-I-02 Creative Method Catalog](26-m-series-tr02-creative-method-catalog.md)            | **创作方法目录权威。** 逐项记录 M01A～M10 与 TR02 各版本仍有价值的搜索、发散、迁移和变奏方法；不覆盖 23 的 Story Director |
 
 ### 当前 Module 3 主链
 
@@ -136,6 +137,7 @@ CURRENT.md
 → 25
 → 23
 → 24
+→ 26
 ```
 
 ### 修改 Module 1
@@ -166,6 +168,7 @@ CURRENT.md
 → 25
 → 23
 → 24
+→ 26
 → 17
 → 21
 → 22
