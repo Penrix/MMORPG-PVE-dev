@@ -21,6 +21,7 @@ import {
 } from "@narralume/contracts";
 import { sha256Hex, type OutlineNode } from "@narralume/domain";
 import type { SqliteStoryRepository } from "@narralume/persistence";
+import type { StoryChapterProductionHandoff } from "./story-production-handoff.js";
 
 function stableJson(value: unknown): string {
   if (Array.isArray(value)) {
@@ -394,6 +395,88 @@ export function finalizeStoryCreativeFrameState(
       retainedAssets: [...new Set(parsed.retainedAssets)],
       unresolvedQuestions: [...new Set(parsed.unresolvedQuestions)],
     }),
+  });
+}
+
+export interface ApplySettlementToCreativeFrameStateInput {
+  currentState: StoryCreativeFrameState;
+  handoff: StoryChapterProductionHandoff;
+  frameOutlineNodeId: string;
+  updatedAt: string;
+  advanceUpgradeStep?: boolean;
+}
+
+/**
+ * Advance author-only creative memory after an accepted chapter settlement.
+ * Never writes Canon or Reality; the caller owns the settlement transaction.
+ */
+export function applySettlementToCreativeFrameState(
+  input: ApplySettlementToCreativeFrameStateInput,
+): StoryCreativeFrameState {
+  const { currentState, handoff } = input;
+  if (currentState.projectId !== handoff.projectId) {
+    throw new Error("story_creative_frame_state.handoff_project_mismatch");
+  }
+  const payoffEntityIds = new Set<string>();
+  const escalateEntityIds = new Set<string>();
+  const seedEntityIds = new Set<string>();
+  const payoffThreadIds = new Set<string>();
+  const chargingThreadIds = new Set<string>();
+  const retainedGains: string[] = [];
+
+  for (const directive of handoff.readerTimeDirectives) {
+    if (directive.action === "payoff") {
+      directive.reactionTargetEntityIds.forEach((id) => payoffEntityIds.add(id));
+      directive.payoffThreadIds.forEach((id) => payoffThreadIds.add(id));
+    } else if (directive.action === "charge") {
+      directive.reactionTargetEntityIds.forEach((id) => escalateEntityIds.add(id));
+      directive.expectationThreadIds.forEach((id) => chargingThreadIds.add(id));
+    } else if (directive.action === "seed") {
+      directive.reactionTargetEntityIds.forEach((id) => seedEntityIds.add(id));
+    }
+    if (directive.retainedGainOpportunity?.trim()) {
+      retainedGains.push(directive.retainedGainOpportunity);
+    }
+  }
+
+  const ledger = currentState.upgradeLedger;
+  const currentStepIndex = ledger?.steps.findIndex(
+    (step) => step.id === ledger.currentStepId,
+  ) ?? -1;
+  const nextStep =
+    input.advanceUpgradeStep && ledger && currentStepIndex >= 0
+      ? ledger.steps[currentStepIndex + 1]
+      : undefined;
+
+  return finalizeStoryCreativeFrameState({
+    ...currentState,
+    frameOutlineNodeId: input.frameOutlineNodeId,
+    status: "settled",
+    upgradeLedger: ledger && nextStep
+      ? { ...ledger, currentStepId: nextStep.id }
+      : ledger,
+    stakeLedger: currentState.stakeLedger.map((entry) => {
+      if (entry.state === "settled") return entry;
+      if (payoffEntityIds.has(entry.entityId)) return { ...entry, state: "settled" };
+      if (escalateEntityIds.has(entry.entityId)) {
+        return { ...entry, state: entry.state === "ripe" ? "ripe" : "escalating" };
+      }
+      if (seedEntityIds.has(entry.entityId) && entry.state === "seeded") {
+        return { ...entry, state: "committed" };
+      }
+      return entry;
+    }),
+    expectationThreads: currentState.expectationThreads.map((thread) => {
+      if (thread.phase === "settled") return thread;
+      if (payoffThreadIds.has(thread.id)) return { ...thread, phase: "settled" };
+      if (chargingThreadIds.has(thread.id) && thread.phase === "seeding") {
+        return { ...thread, phase: "charging" };
+      }
+      return thread;
+    }),
+    retainedAssets: [...currentState.retainedAssets, ...retainedGains],
+    realityFingerprint: handoff.realityFingerprint,
+    updatedAt: input.updatedAt,
   });
 }
 
