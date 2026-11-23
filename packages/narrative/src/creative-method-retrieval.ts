@@ -4,9 +4,9 @@ import type {
   StoryCreativeContext,
   StoryObjectField,
 } from "@narralume/contracts";
-import {
+import type {
+  RetrievalHit,
   SqliteRetrievalRepository,
-  type RetrievalHit,
 } from "@narralume/persistence";
 
 export interface CreativeMethodRecallRequest {
