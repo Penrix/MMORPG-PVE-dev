@@ -21,10 +21,7 @@ export interface CreativeMethodRecallRequest {
   limit?: number;
 }
 
-function metadataString(
-  hit: RetrievalHit,
-  key: string,
-): string | null {
+function metadataString(hit: RetrievalHit, key: string): string | null {
   const value = hit.metadata[key];
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
@@ -65,7 +62,8 @@ export class CreativeMethodRetrievalService {
     );
     const focusObjectIds = [
       ...new Set(
-        request.focusObjectIds ?? creativeContext.protagonistCamera.focusObjectIds,
+        request.focusObjectIds ??
+          creativeContext.protagonistCamera.focusObjectIds,
       ),
     ];
     if (focusObjectIds.length === 0) {
@@ -79,7 +77,9 @@ export class CreativeMethodRetrievalService {
 
     const limit = Math.max(1, Math.min(request.limit ?? 8, 24));
     const families = new Set(
-      (request.methodFamilies ?? []).map((value) => value.trim()).filter(Boolean),
+      (request.methodFamilies ?? [])
+        .map((value) => value.trim())
+        .filter(Boolean),
     );
     const frame = creativeContext.frame;
     const camera = creativeContext.protagonistCamera;
