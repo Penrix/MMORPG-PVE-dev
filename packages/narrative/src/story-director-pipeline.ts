@@ -277,9 +277,9 @@ export class StoryDirectorPipeline {
     );
     const event = storyUnit.events.find((item) => item.id === request.storyUnitEventId)!;
     const characterIds = request.activeSeedEntityIds
-      ?? (event.activeSeedEntityIds.length > 0 ? event.activeSeedEntityIds : event.castPoolEntityIds.filter((id) => field.objects.some(
+      ?? event.castPoolEntityIds.filter((id) => field.objects.some(
         (object) => object.entityId === id && object.kind === "character",
-      )));
+      ));
     if (characterIds.length === 0) throw new Error("story_director.no_active_characters");
     let usage = emptyUsage();
     let observations: CharacterObservationPacket[] = [];
