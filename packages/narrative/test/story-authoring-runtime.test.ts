@@ -399,9 +399,13 @@ describe("object-grounded story authoring runtime", () => {
       },
     };
 
-    expect(() => finalizeStoryAuthoringSearch(draft, objectField, creativeContext(objectField))).toThrow(
-      "story_authoring.unknown_seed_anchor_0:object:mystery-elder",
-    );
+    expect(() =>
+      finalizeStoryAuthoringSearch(
+        draft,
+        objectField,
+        creativeContext(objectField),
+      ),
+    ).toThrow("story_authoring.unknown_seed_anchor_0:object:mystery-elder");
   });
 
   it("rejects a seed that names real objects but cites an invented surface", () => {
@@ -447,9 +451,13 @@ describe("object-grounded story authoring runtime", () => {
         storyMovements: [],
       },
     };
-    expect(() => finalizeStoryAuthoringSearch(draft, objectField, creativeContext(objectField))).toThrow(
-      "story_authoring.unknown_seed_surface_0:surface:invented-debt",
-    );
+    expect(() =>
+      finalizeStoryAuthoringSearch(
+        draft,
+        objectField,
+        creativeContext(objectField),
+      ),
+    ).toThrow("story_authoring.unknown_seed_surface_0:surface:invented-debt");
   });
 
   it("keeps S01 Concept x Engine as a distinct scale result", () => {
