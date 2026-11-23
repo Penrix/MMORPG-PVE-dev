@@ -86,6 +86,7 @@ export type StoryCreativeFrameStateDraft = z.infer<
 export const StoryCreativeInheritedStateSchema = z.object({
   sourceFrameIds: z.array(z.string().min(1)),
   sourceStateDigests: z.array(z.string().min(1)),
+  sourceStates: z.array(StoryCreativeFrameStateSchema),
   latestUpgradeLedger: StoryUpgradeLedgerSchema.nullable(),
   activeStakeLedger: z.array(StoryStakeLedgerEntrySchema),
   openExpectationThreads: z.array(StoryCreativeExpectationThreadSchema),
