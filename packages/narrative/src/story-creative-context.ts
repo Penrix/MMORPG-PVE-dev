@@ -167,8 +167,7 @@ export function assertStoryCreativeContextBound(
   if (
     context.projectId !== field.projectId ||
     context.protagonistCamera.protagonistEntityId !==
-      upgradeLedger.protagonistEntityId ||
-    context.protagonistCamera.currentPosition !== upgradeLedger.currentPosition
+      upgradeLedger.protagonistEntityId
   ) {
     throw new Error("story_creative_context.not_bound");
   }
