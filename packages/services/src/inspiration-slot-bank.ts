@@ -152,7 +152,9 @@ export function inspirationPoolStats(
   const builtin = BUILTIN_INSPIRATION_SLOT_BANK.filter((item) =>
     channel === "all" || item.channels.includes(channel),
   );
-  const imported = m03.filter((item) => item.channels.includes(channel));
+  const imported = m03.filter(
+    (item) => channel === "all" || item.channels.includes(channel),
+  );
   const bySlot = Object.fromEntries(
     SLOT_KEYS.map((slot) => {
       const slotBankCount = builtin.filter((item) => item.slot === slot).length;
