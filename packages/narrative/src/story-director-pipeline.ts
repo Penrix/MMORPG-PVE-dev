@@ -41,6 +41,7 @@ import {
   CharacterObservationBuilder,
 } from "./story-runtime.js";
 import { StoryRuntimeAgentService } from "./story-runtime-workers.js";
+import { finalizeCharacterActionProposal } from "./vendor/novel-studio/character-agent-protocol.js";
 import { StorySceneExpansionService } from "./story-scene-runtime-workers.js";
 import {
   buildStoryChapterProductionHandoff,
@@ -305,7 +306,6 @@ export class StoryDirectorPipeline {
         if (round > 1 && !affected.has(characterId) && old) {
           // The arbiter requires a uniform round; retain the unaffected decision.
           const { digest: _digest, ...draft } = old;
-          const { finalizeCharacterActionProposal } = await import("./story-runtime.js");
           nextProposals.push(finalizeCharacterActionProposal({
             ...draft, round, observationDigest: observation.digest,
           }, observation));
