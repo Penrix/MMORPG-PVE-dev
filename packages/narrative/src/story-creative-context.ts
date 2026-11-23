@@ -128,8 +128,7 @@ export function finalizeStoryCreativeFrameContext(
       }
     }
     if (
-      parsed.currentFrame.parentId !==
-      parsed.parentFrames.at(-1)!.outlineNodeId
+      parsed.currentFrame.parentId !== parsed.parentFrames.at(-1)!.outlineNodeId
     ) {
       throw new Error("story_creative_frame.current_parent_mismatch");
     }
