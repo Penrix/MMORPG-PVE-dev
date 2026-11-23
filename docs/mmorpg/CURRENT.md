@@ -57,7 +57,8 @@ Module 3：这些已经存在的人接下来演什么故事？
 | Module 2 | [15 People-Centered Narrative Axis](15-people-centered-narrative-axis.md) | 人是默认叙事展开中心，其他世界对象通过人与人 / 人与世界关系进入故事 |
 | Module 1 | [16 World Builder ← World Atlas](16-world-builder-from-world-atlas.md) | World Builder = World Atlas Content Producer |
 | Module 3 ↔ 2 | [17 Novel Studio ↔ World Atlas](17-module3-world-atlas-integration.md) | Module 3 读取 Project Reality / Source Atlas 的正式边界与单一 settlement 写回 |
-| Module 3 | [23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md) | **第三模块最高优先级。** 升级路线写长，配角下注与反应写爽；已有世界人物是故事对象 |
+| Module 3 | [23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md) | **故事发动机权威。** 升级路线写长，配角下注与反应写爽；已有世界人物是故事对象 |
+| Module 3 | [24 Creative Frame × Protagonist Camera × M Methods](24-creative-frame-protagonist-camera-m-methods.md) | **结构权威。** S 是父层+前序区段继承的创作状态框架；男主是推演主摄像机；M 系列是横切算法库 |
 
 ### 当前 Module 3 主链
 
@@ -105,7 +106,7 @@ Upgrade Ladder
 | [09 Naruto Source Corpus Import](09-naruto-source-corpus-import.md) | 火影 Source Corpus 导入实现记录 |
 | [research/README](research/README.md) | v0.1～v0.7 原始研究母本索引；Source Material，不是工程 Authority |
 
-这些实现如果与 13～17、23 的业务定义冲突，应**适配当前业务定义**，不能拿旧实现反证新认知。
+这些实现如果与 13～17、23～24 的业务定义冲突，应**适配当前业务定义**，不能拿旧实现反证新认知。
 
 ## 4. SUPERSEDED / HISTORY｜历史认知，不作为当前设计依据
 
@@ -159,6 +160,7 @@ CURRENT.md
 ```text
 CURRENT.md
 → 23
+→ 24
 → 17
 → 21
 → 22
