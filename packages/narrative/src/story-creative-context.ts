@@ -3,15 +3,22 @@ import {
   StoryCreativeContextSchema,
   StoryCreativeFrameContextDraftSchema,
   StoryCreativeFrameContextSchema,
+  StoryCreativeFrameStateDraftSchema,
+  StoryCreativeFrameStateSchema,
   type StoryCreativeContext,
   type StoryCreativeContextDraft,
   type StoryCreativeFrameContext,
   type StoryCreativeFrameContextDraft,
   type StoryCreativeFrameSnapshot,
+  type StoryCreativeFrameState,
+  type StoryCreativeFrameStateDraft,
+  type ExpectationState,
+  type StoryUnitDesign,
   type StoryObjectField,
   type StoryUpgradeLedger,
 } from "@narralume/contracts";
 import { sha256Hex, type OutlineNode } from "@narralume/domain";
+import type { SqliteStoryRepository } from "@narralume/persistence";
 
 function stableJson(value: unknown): string {
   if (Array.isArray(value)) {
@@ -29,6 +36,58 @@ function stableJson(value: unknown): string {
 
 function digest(value: unknown): string {
   return sha256Hex(stableJson(value));
+}
+
+export const CREATIVE_FRAME_STATE_METADATA_KEY = "mmorpgCreativeState";
+
+function frameCreativeState(
+  projectId: string,
+  frame: StoryCreativeFrameSnapshot,
+): StoryCreativeFrameState | null {
+  const raw = frame.metadata[CREATIVE_FRAME_STATE_METADATA_KEY];
+  if (raw === undefined) return null;
+  const parsed = StoryCreativeFrameStateSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new Error(
+      `story_creative_frame.invalid_metadata_state:${frame.outlineNodeId}`,
+    );
+  }
+  if (
+    parsed.data.projectId !== projectId ||
+    parsed.data.frameOutlineNodeId !== frame.outlineNodeId
+  ) {
+    throw new Error(
+      `story_creative_frame.metadata_state_not_bound:${frame.outlineNodeId}`,
+    );
+  }
+  return parsed.data;
+}
+
+function inheritedCreativeState(
+  projectId: string,
+  parentFrames: readonly StoryCreativeFrameSnapshot[],
+  previousSiblingFrames: readonly StoryCreativeFrameSnapshot[],
+) {
+  const sourceStates = [...parentFrames, ...previousSiblingFrames].flatMap(
+    (frame) => {
+      const state = frameCreativeState(projectId, frame);
+      return state ? [state] : [];
+    },
+  );
+  const latest = sourceStates.at(-1) ?? null;
+  return {
+    sourceFrameIds: sourceStates.map((state) => state.frameOutlineNodeId),
+    sourceStateDigests: sourceStates.map((state) => state.digest),
+    sourceStates,
+    latestUpgradeLedger: latest?.upgradeLedger ?? null,
+    activeStakeLedger:
+      latest?.stakeLedger.filter((entry) => entry.state !== "settled") ?? [],
+    openExpectationThreads:
+      latest?.expectationThreads.filter((thread) => thread.phase !== "settled") ??
+      [],
+    retainedAssets: latest?.retainedAssets ?? [],
+    unresolvedQuestions: latest?.unresolvedQuestions ?? [],
+  };
 }
 
 function snapshot(node: OutlineNode): StoryCreativeFrameSnapshot {
@@ -154,9 +213,17 @@ export function finalizeStoryCreativeFrameContext(
     previousOrdinal = frame.ordinal;
   }
 
-  return StoryCreativeFrameContextSchema.parse({
+  const withInheritedState = {
     ...parsed,
-    digest: digest(parsed),
+    inheritedState: inheritedCreativeState(
+      parsed.projectId,
+      parsed.parentFrames,
+      parsed.previousSiblingFrames,
+    ),
+  };
+  return StoryCreativeFrameContextSchema.parse({
+    ...withInheritedState,
+    digest: digest(withInheritedState),
   });
 }
 
@@ -241,4 +308,124 @@ export function assertStoryCreativeContextBound(
       }
     }
   }
+}
+
+
+export function finalizeStoryCreativeFrameState(
+  draft: StoryCreativeFrameStateDraft,
+): StoryCreativeFrameState {
+  const parsed = StoryCreativeFrameStateDraftSchema.parse(draft);
+  const stakeIds = new Set<string>();
+  for (const entry of parsed.stakeLedger) {
+    if (stakeIds.has(entry.id)) {
+      throw new Error(
+        `story_creative_frame_state.duplicate_stake:${entry.id}`,
+      );
+    }
+    stakeIds.add(entry.id);
+  }
+  const threadIds = new Set<string>();
+  for (const thread of parsed.expectationThreads) {
+    if (threadIds.has(thread.id)) {
+      throw new Error(
+        `story_creative_frame_state.duplicate_expectation:${thread.id}`,
+      );
+    }
+    threadIds.add(thread.id);
+  }
+  const sourceStoryUnitDigests = [...new Set(parsed.sourceStoryUnitDigests)];
+  return StoryCreativeFrameStateSchema.parse({
+    ...parsed,
+    sourceStoryUnitDigests,
+    retainedAssets: [...new Set(parsed.retainedAssets)],
+    unresolvedQuestions: [...new Set(parsed.unresolvedQuestions)],
+    digest: digest({
+      ...parsed,
+      sourceStoryUnitDigests,
+      retainedAssets: [...new Set(parsed.retainedAssets)],
+      unresolvedQuestions: [...new Set(parsed.unresolvedQuestions)],
+    }),
+  });
+}
+
+export interface StoryCreativeFrameStateFromStoryUnitInput {
+  frameOutlineNodeId: string;
+  storyUnit: StoryUnitDesign;
+  expectationState?: ExpectationState | null;
+  status?: StoryCreativeFrameState["status"];
+  retainedAssets?: readonly string[];
+  unresolvedQuestions?: readonly string[];
+  realityFingerprint?: string | null;
+  updatedAt: string;
+}
+
+/**
+ * Build a complete creative-state snapshot for one S frame.
+ *
+ * This is author memory, not Project Reality. Callers should carry forward all
+ * still-active stakes / expectations they want the next frame to inherit.
+ */
+export function storyCreativeFrameStateFromStoryUnit(
+  input: StoryCreativeFrameStateFromStoryUnitInput,
+): StoryCreativeFrameState {
+  if (
+    input.expectationState &&
+    input.expectationState.projectId !== input.storyUnit.projectId
+  ) {
+    throw new Error("story_creative_frame_state.expectation_project_mismatch");
+  }
+  return finalizeStoryCreativeFrameState({
+    version: "story-creative-frame-state.v1",
+    authority: "creative-state",
+    projectId: input.storyUnit.projectId,
+    frameOutlineNodeId: input.frameOutlineNodeId,
+    status: input.status ?? "in_progress",
+    upgradeLedger: input.storyUnit.upgradeLedger,
+    stakeLedger: input.storyUnit.stakeLedger,
+    expectationThreads:
+      input.expectationState?.threads.map((thread) => ({
+        id: thread.id,
+        targetEmotion: thread.targetEmotion,
+        targetOutcome: thread.targetOutcome,
+        readerKnowledgeSummary: thread.readerKnowledgeSummary,
+        payoffCondition: thread.payoffCondition,
+        reactionTargetEntityIds: thread.reactionTargetEntityIds,
+        retainedGainTarget: thread.retainedGainTarget,
+        phase: thread.phase,
+      })) ?? [],
+    retainedAssets: [...(input.retainedAssets ?? [])],
+    unresolvedQuestions: [...(input.unresolvedQuestions ?? [])],
+    sourceStoryUnitDigests: [input.storyUnit.digest],
+    realityFingerprint:
+      input.realityFingerprint ??
+      input.expectationState?.realityFingerprint ??
+      null,
+    updatedAt: input.updatedAt,
+  });
+}
+
+/**
+ * Persist the creative-state snapshot in the existing outline metadata.
+ * No database migration and no second Canon/Reality store are introduced.
+ */
+export function stageStoryCreativeFrameState(
+  story: SqliteStoryRepository,
+  state: StoryCreativeFrameState,
+  updatedAt: string,
+): OutlineNode {
+  const frame = story.requireOutlineNode(
+    state.projectId,
+    state.frameOutlineNodeId,
+  );
+  return story.updateOutlineDetails(
+    state.projectId,
+    state.frameOutlineNodeId,
+    {
+      metadata: {
+        ...frame.metadata,
+        [CREATIVE_FRAME_STATE_METADATA_KEY]: state,
+      },
+    },
+    updatedAt,
+  );
 }
