@@ -348,21 +348,103 @@ Project Reality 更新
 - 为了调用 M 方法先造功能 NPC；
 - 让 Character Agent 因“理性/自主”取消已设计的人物线。
 
-## 11. 当前工程顺序
+## 11. 当前实现状态
 
-第一批已落地：
+### 第一批：S / Camera / Method Port
 
-1. NarraLume outline tree 已可编译 `StoryCreativeFrameContext`；
-2. Story Search / S04 已强制绑定 `StoryCreativeContext`，不能再用假 digest 绕过父层 / 前序状态；
-3. `StoryProtagonistCamera` 已作为 Story Director 推演起点；
-4. 已新增通用 `CreativeMethodInvocation` 端口，M 系列不再被硬编码成某个固定 S 步骤；
-5. `focusObjectIds` 与 Method `inputObjectIds` 必须落在当前 Module-2 Object Field，且 Camera 必须包含男主对象。
+已落地：
 
-后续再做：
+1. NarraLume outline tree 可编译 `StoryCreativeFrameContext`；
+2. Story Search / S04 强制绑定 `StoryCreativeContext`，不能用假 digest 绕过父层 / 前序状态；
+3. `StoryProtagonistCamera` 作为 Story Director 推演起点；
+4. `CreativeMethodInvocation` 是横切方法端口，不绑定某一个 S 步骤；
+5. Camera 与 Method 的对象引用必须落在当前 Module-2 Object Field，且 Camera 必须包含男主对象。
 
-- Upgrade / Stake / Expectation 状态怎样写入 Frame metadata 并随区段继承；
-- M03 / 其他 M 系列的真实检索 adapter；
-- Module 2 person-centered Reality → Protagonist Camera 的自动上下文装配；
-- 多 Node / 多 Frame 的长期 settlement 与推进。
+### 第二批：Creative Frame 长期账
 
-这样先把根架构改对，不用一次性重写整个 NarraLume。
+已落地 `StoryCreativeFrameState`，直接保存在现有 `outline_nodes.metadata.mmorpgCreativeState`，不新增平行数据库。
+
+每个区段保存的是**截至该区段的创作工作快照**：
+
+```text
+Upgrade Ledger
+Active / Settled Stake Ledger
+Expectation Threads
+Retained Assets
+Unresolved Questions
+Reality Fingerprint
+Story Unit provenance
+```
+
+下一 Frame 编译 Context 时：
+
+```text
+Parent Frames
++
+Previous Same-Level Frames
+        ↓
+sourceStates 保留完整来源
+        ↓
+最近一份快照形成默认工作集
+        ↓
+settled Stake / settled Expectation
+不进入 active working set
+```
+
+这层是作者创作记忆，不是 Project Reality。世界真相仍只有 Module 2。
+
+### 第三批：M03 正式索引召回
+
+已复用 NarraLume 现有 Retrieval：
+
+```text
+male-webnovel-cognition
+database/m03/curated_index.jsonl
+        ↓
+按正式索引读取真实 Markdown 卡
+        ↓
+source_type = creative_method
+        ↓
+FTS / embedding / rerank
+        ↓
+CreativeMethodRetrievalService
+        ↓
+CreativeMethodInvocation
+```
+
+关键约束：
+
+- 不复制 M03 源卡到 dev 仓；
+- `curated_index.jsonl` 是 M03 导入白名单与状态来源；
+- 默认只召回 Active；
+- Candidate 必须显式开启；
+- Merged / Retired 不参与普通召回；
+- Retrieval 新增 `sourceTypes` 过滤，世界资料、正文记忆不能冒充 M 方法；
+- `mmorpg-method-catalog.ts` 仍是 v0.1～v0.7 世界设计方法目录，不冒充 M 系列。
+
+本地索引命令：
+
+```bash
+npm run import:creative-methods -- \
+  --project PROJECT_ID \
+  --source /path/to/male-webnovel-cognition/database/m03 \
+  --family M03
+```
+
+源 Markdown 仍是唯一内容真相；SQLite `text_segments` 只是可重建索引。
+
+## 12. 下一批真正剩余的工程缺口
+
+现在不再缺 S 框架、长期创作账或 M03 召回底座。下一步主要是：
+
+1. **Module 2 People-centered Reality → Protagonist Camera 自动装配**  
+   现在 Camera 合同已经存在，但 host 仍需显式提供 currentLocation / currentState / currentGoal / focusObjectIds。下一步应让人物当前 Reality、Upgrade Ledger 与作者当前意图共同组装它，而不是让调用者重复手填。
+
+2. **Settlement → Creative Frame State 自动结算**  
+   当前 Frame State 可以写入/继承，但还需要把正文 Settlement 的真实收益、Stake 结算、Expectation 平仓自动更新到 Frame snapshot。
+
+3. **多 Node / 多 Frame 长期推进**  
+   一个 Story Unit 内的多 Node 已有基础；还需要把跨 Frame 的升级、加注、转期、阵营变化真正连续跑起来。
+
+4. **其他 M 系列 adapter**  
+   M03 已证明通用端口成立。M01/M02 等后续只应增加 source adapter / index importer，不再重做创作架构。
