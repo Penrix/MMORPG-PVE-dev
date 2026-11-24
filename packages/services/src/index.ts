@@ -150,4 +150,5 @@ export * from "./story-director-routes.js";
 export * from "./world-graph-routes.js";
 export * from "./source-corpus-routes.js";
 export * from "./unified-source-world-routes.js";
+export * from "./source-world-production-service.js";
 export * from "./project-world-routes.js";
