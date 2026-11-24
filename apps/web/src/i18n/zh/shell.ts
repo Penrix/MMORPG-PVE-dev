@@ -1,6 +1,8 @@
 /* 应用骨架文案：左栏 rail 导航、命令面板、主题切换、内核状态与在线体验门。 */
 export const shell = {
   nav: {
+    marketRadar: "市场对标开书",
+    marketRadarBlurb: "真实男频新书榜雷达、TR-01风口入M03、选对标书微创新开书",
     inspirations: "灵感老虎机",
     inspirationsBlurb: "四槽组合画面种子，锁槽换灵感，一键开书",
     shelf: "书架",

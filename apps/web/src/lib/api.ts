@@ -1,9 +1,20 @@
 import type {
+  BenchmarkIncubateRequest,
+  BenchmarkIncubateResponse,
+  CreateProjectFromBenchmarkProposalRequest,
+  CreateProjectFromBenchmarkProposalResponse,
   InspirationChannel,
   InspirationRollRequest,
   InspirationRollResponse,
   InspirationCatalogResponse,
   CreateProjectFromInspirationRequest,
+  MarketM03Material,
+  MarketPlatform,
+  MarketRadarBooksResponse,
+  SaveMarketM03Request,
+  SaveMarketM03Response,
+  Tr01AnalyzeRequest,
+  Tr01AnalyzeResponse,
   WorldAtlasCardKind,
   WorldPackDocument,
   WorldPackRecord,
@@ -4013,6 +4024,73 @@ export async function createProjectFromInspiration(
   signal?: AbortSignal,
 ): Promise<{ project: Project; outlineNodeId: string }> {
   return requestJson("/api/inspirations/create-project", {
+    ...jsonRequest("POST", input),
+    ...(signal ? { signal } : {}),
+  });
+}
+
+/* 市场新书雷达 · TR-01 高权重入 M03 · 对标微创新开书。 */
+export async function getMarketRadarBooks(
+  query: {
+    windowDays?: number;
+    platform?: MarketPlatform;
+    category?: string;
+    search?: string;
+    limit?: number;
+  } = {},
+  signal?: AbortSignal,
+): Promise<MarketRadarBooksResponse> {
+  const params = new URLSearchParams();
+  if (query.windowDays !== undefined) params.set("windowDays", String(query.windowDays));
+  if (query.platform) params.set("platform", query.platform);
+  if (query.category) params.set("category", query.category);
+  if (query.search) params.set("search", query.search);
+  if (query.limit !== undefined) params.set("limit", String(query.limit));
+  const suffix = params.size ? `?${params.toString()}` : "";
+  return requestJson(`/api/market-radar/books${suffix}`, signal ? { signal } : {});
+}
+
+export async function getMarketM03Trends(
+  signal?: AbortSignal,
+): Promise<{ total: number; cards: MarketM03Material[] }> {
+  return requestJson("/api/market-radar/m03-trends", signal ? { signal } : {});
+}
+
+export async function runTr01MarketAnalysis(
+  input: Partial<Tr01AnalyzeRequest>,
+  signal?: AbortSignal,
+): Promise<Tr01AnalyzeResponse> {
+  return requestJson("/api/market-radar/tr01-analyze", {
+    ...jsonRequest("POST", input),
+    ...(signal ? { signal } : {}),
+  });
+}
+
+export async function saveMarketM03Trends(
+  input: SaveMarketM03Request,
+  signal?: AbortSignal,
+): Promise<SaveMarketM03Response> {
+  return requestJson("/api/market-radar/m03-trends/save", {
+    ...jsonRequest("POST", input),
+    ...(signal ? { signal } : {}),
+  });
+}
+
+export async function incubateBenchmarkBook(
+  input: Partial<BenchmarkIncubateRequest>,
+  signal?: AbortSignal,
+): Promise<BenchmarkIncubateResponse> {
+  return requestJson("/api/market-radar/benchmark-incubate", {
+    ...jsonRequest("POST", input),
+    ...(signal ? { signal } : {}),
+  });
+}
+
+export async function createProjectFromBenchmarkProposal(
+  input: CreateProjectFromBenchmarkProposalRequest,
+  signal?: AbortSignal,
+): Promise<CreateProjectFromBenchmarkProposalResponse> {
+  return requestJson("/api/market-radar/create-project", {
     ...jsonRequest("POST", input),
     ...(signal ? { signal } : {}),
   });

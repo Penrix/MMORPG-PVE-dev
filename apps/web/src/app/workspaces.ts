@@ -37,6 +37,17 @@ export interface WorkspaceDef {
 
 export const WORKSPACES: WorkspaceDef[] = [
   {
+    id: "marketRadar",
+    path: "/market-radar",
+    projectScoped: false,
+    label: "shell.nav.marketRadar",
+    en: "RADAR",
+    index: "M0",
+    icon: Radar,
+    blurb: "shell.nav.marketRadarBlurb",
+    seal: "榜",
+  },
+  {
     id: "inspirations",
     path: "/inspirations",
     projectScoped: false,

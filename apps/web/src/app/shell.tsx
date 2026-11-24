@@ -66,6 +66,7 @@ function GitHubMark({ size = 17 }: { size?: number }) {
 const ShelfWorkspace = lazy(() => import("../workspaces/shelf").then((module) => ({ default: module.ShelfWorkspace })));
 const OverviewWorkspace = lazy(() => import("../workspaces/overview").then((module) => ({ default: module.OverviewWorkspace })));
 const WorldBuilderWorkspace = lazy(() => import("../workspaces/world-builder").then((module) => ({ default: module.WorldBuilderWorkspace })));
+const MarketRadarWorkspace = lazy(() => import("../workspaces/market-radar").then((module) => ({ default: module.MarketRadarWorkspace })));
 const InspirationSlotsWorkspace = lazy(() => import("../workspaces/inspiration-slots").then((module) => ({ default: module.InspirationSlotsWorkspace })));
 const WorldAtlasWorkspace = lazy(() => import("../workspaces/world-atlas").then((module) => ({ default: module.WorldAtlasWorkspace })));
 const BibleWorkspace = lazy(() => import("../workspaces/bible").then((module) => ({ default: module.BibleWorkspace })));
@@ -390,6 +391,7 @@ function ShellFrame() {
             <Route path="/world" element={<WorldBuilderWorkspace />} />
             <Route path="/projects/:projectId/world" element={<WorldBuilderWorkspace />} />
             <Route path="/atlas" element={<WorldAtlasWorkspace />} />
+            <Route path="/market-radar" element={<MarketRadarWorkspace />} />
             <Route path="/inspirations" element={<InspirationSlotsWorkspace />} />
             <Route path="/bible" element={<BibleWorkspace />} />
             <Route path="/projects/:projectId/bible" element={<BibleWorkspace />} />
