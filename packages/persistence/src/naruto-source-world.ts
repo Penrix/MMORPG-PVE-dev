@@ -87,7 +87,7 @@ export function installNarutoSourceWorld(
   if (!dattebayo) throw new Error("naruto.source_world.dattebayo_missing");
 
   return db.transaction(() => {
-    let world = worlds.getWorld(NARUTO_SOURCE_WORLD_ID);
+    const world = worlds.getWorld(NARUTO_SOURCE_WORLD_ID);
     let canonical = sources.getCorpus(NARUTO_CANONICAL_CORPUS);
     if (!canonical) {
       sources.upsertCorpus({
@@ -120,7 +120,6 @@ export function installNarutoSourceWorld(
         createdAt: now,
       };
       worlds.createWorld(created);
-      world = created;
     } else if (world.canonicalCorpusId !== NARUTO_CANONICAL_CORPUS) {
       throw new Error("naruto.source_world.canonical_corpus_conflict");
     }
