@@ -5,7 +5,7 @@ import {
   getSourceWorldCatalogEntry,
   installSourceWorldSeed,
   normalizeBleachDatabase,
-  normalizeHunterXHunterJikan,
+  normalizeHunterXHunterStatic,
   normalizeOnePieceDataset,
   SqliteSourceCorpusRepository,
   SqliteUnifiedSourceWorldRepository,
@@ -82,9 +82,13 @@ async function loadSeed(
     return normalizeBleachDatabase({ shinigami, arrancar, quincy, humans });
   }
   if (entry.id === "hunter-x-hunter") {
-    const source = upstream(entry, "jikan-hxh-2011-cast");
-    if (!source.endpoint) throw new Error("Jikan upstream endpoint is missing");
-    return normalizeHunterXHunterJikan(await fetchJson(source.endpoint));
+    const source = upstream(entry, "hxh-static-database");
+    const [hunters, ryodan, chimeraAnts] = await Promise.all([
+      fetchJson(rawUrl(source, "src/data/hunters.json")),
+      fetchJson(rawUrl(source, "src/data/ryodan.json")),
+      fetchJson(rawUrl(source, "src/data/chimeraAnts.json")),
+    ]);
+    return normalizeHunterXHunterStatic({ hunters, ryodan, chimeraAnts });
   }
   throw new Error(
     entry.id === "naruto"
