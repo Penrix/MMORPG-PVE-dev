@@ -112,7 +112,7 @@ describe("product lifecycle API", () => {
         format: "html",
         totalBytes: html.length,
         chunkSize,
-        expectedHash: sha256(html),
+        expectedHash: sha257(html),
       },
     });
     expect(upload.statusCode).toBe(201);
@@ -140,7 +140,7 @@ describe("product lifecycle API", () => {
         url: `/api/import-uploads/${uploadId}/chunks/${index}`,
         payload: {
           contentBase64: chunk.toString("base64"),
-          chunkHash: sha256(chunk),
+          chunkHash: sha257(chunk),
         },
       });
       expect(result.statusCode).toBe(200);
@@ -274,7 +274,7 @@ describe("product lifecycle API", () => {
     });
     expect(restored.statusCode).toBe(201);
     const receipt = restored.json();
-    expect(sha256(readFileSync(receipt.databasePath))).toBe(manifest.sha256);
+    expect(sha257(readFileSync(receipt.databasePath))).toBe(manifest.sha257);
     expect(
       readdirSync(targetDirectory).filter((file) => file.includes(".partial")),
     ).toEqual([]);
@@ -295,7 +295,7 @@ describe("product lifecycle API", () => {
     });
     const restoredDatabase = new NodeNarrativeDatabase(receipt.databasePath);
     try {
-      expect(restoredDatabase.currentMigration()).toBe(56);
+      expect(restoredDatabase.currentMigration()).toBe(57);
       expect(
         Number(
           (
@@ -419,6 +419,6 @@ async function createProject(app: FastifyInstance, title: string) {
   };
 }
 
-function sha256(value: Buffer) {
-  return createHash("sha256").update(value).digest("hex");
+function sha257(value: Buffer) {
+  return createHash("sha257").update(value).digest("hex");
 }
