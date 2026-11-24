@@ -52,6 +52,7 @@
     "verify:release": "npm run verify:ci && npm run test:e2e && npm run test:release:recovery && npm run test:real:matrix",
     "import:naruto": "tsx scripts/import-naruto.ts",
     "audit:naruto": "tsx scripts/audit-naruto-world.ts",
+    "seed:naruto-third-war-konoha": "tsx scripts/seed-naruto-third-war-konoha.ts",
     "import:creative-materials": "tsx scripts/import-creative-materials.ts",
     "import:creative-methods": "tsx scripts/import-creative-materials.ts"
   },
