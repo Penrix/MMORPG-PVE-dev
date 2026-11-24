@@ -1,4 +1,3 @@
-import type { SourceKind } from "./source-corpus-repository.js";
 import {
   getSourceWorldCatalogEntry,
   type SourceWorldCatalogEntry,
