@@ -121,47 +121,64 @@ export function adoptSourceWorldProduction(
       outgoing.set(fromKey, list);
     }
 
-    const nodeKeys = new Set(Object.values(adoptedKeys));
-    for (const fromKey of outgoing.keys()) nodeKeys.add(fromKey);
-
-    for (const key of nodeKeys) {
-      const node = [...nodeByLocal.values()].find(
-        (candidate) => adoptedKeys[candidate.localId] === key,
-      );
+    // Phase 1: create/update every candidate node without cross-node typed
+    // links. This guarantees all new target identities exist before reindexing.
+    for (const node of draft.document.nodes) {
+      const key = adoptedKeys[node.localId]!;
       const existing = worlds.getCard(worldId, key);
-      if (!node && !existing) continue;
-      const name = node?.name ?? existing!.record.name;
-      const kind = node ? worldPackAtlasKind(node) : existing!.record.kind;
       const expansion = renderAdoptedExpansion({
         draftId,
         node,
-        relations: outgoing.get(key) ?? [],
+        relations: [],
         resolveName: (targetKey) =>
-          [...nodeByLocal.values()].find(
-            (candidate) => adoptedKeys[candidate.localId] === targetKey,
-          )?.name ??
-          worlds.getCard(worldId, targetKey)?.record.name ??
-          targetKey,
+          worlds.getCard(worldId, targetKey)?.record.name ?? targetKey,
       });
-      const content = existing
-        ? appendManagedExpansion(existing.content, expansion)
-        : `# ${name}\n\n${expansion}`;
       worlds.upsertCard({
         worldId,
         entityKey: key,
-        kind,
-        name,
+        kind: worldPackAtlasKind(node),
+        name: node.name,
         aliases: existing?.record.aliases ?? [],
-        content,
+        content: existing
+          ? appendManagedExpansion(existing.content, expansion)
+          : `# ${node.name}\n\n${expansion}`,
         now,
       });
-      if (node?.readerSemantics)
+      if (node.readerSemantics)
         worlds.upsertReaderSemantics({
           worldId,
           entityKey: key,
           semantics: node.readerSemantics,
           now,
         });
+    }
+
+    // Phase 2: now that every new target exists, append relation truth and let
+    // upsertCard rebuild source_relations from the complete Markdown graph.
+    for (const [fromKey, relations] of outgoing) {
+      const existing = worlds.getCard(worldId, fromKey);
+      if (!existing)
+        throw serviceError(
+          "source.world.production.source_missing",
+          `Relation source card not found after node adoption: ${fromKey}`,
+          422,
+        );
+      const expansion = renderAdoptedExpansion({
+        draftId,
+        node: undefined,
+        relations,
+        resolveName: (targetKey) =>
+          worlds.getCard(worldId, targetKey)?.record.name ?? targetKey,
+      });
+      worlds.upsertCard({
+        worldId,
+        entityKey: fromKey,
+        kind: existing.record.kind,
+        name: existing.record.name,
+        aliases: existing.record.aliases,
+        content: appendManagedExpansion(existing.content, expansion),
+        now,
+      });
     }
 
     for (const activity of draft.document.activities) {
