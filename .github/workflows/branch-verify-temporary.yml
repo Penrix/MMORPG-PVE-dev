@@ -1,5 +1,5 @@
 name: Branch Verify Temporary
-# rerun after repository Prettier formatting
+# final verification after authority-doc formatting
 
 on:
   push:
