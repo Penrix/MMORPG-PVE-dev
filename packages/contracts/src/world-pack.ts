@@ -109,7 +109,7 @@ export const WorldPackNodeSchema = z
     ]),
     sourceNote: z.string().trim().max(3_000),
     /** Reader-side prior; never Source objective fact or Project Canon. */
-    readerSemantics: WorldAtlasReaderSemanticsSchema.optional(),
+    readerSemantics: WorldAtlasReaderSemanticsSchema.nullable().optional(),
   })
   .strict();
 export type WorldPackNode = z.infer<typeof WorldPackNodeSchema>;
