@@ -11,8 +11,6 @@ import { fileURLToPath } from "node:url";
 import { NodeNarrativeDatabase } from "@narralume/persistence/node";
 import {
   NARUTO_COLLECTIONS,
-  NARUTO_DATTEBAYO_CORPUS,
-  NARUTO_WIKI_CORPUS,
   SqliteSourceCorpusRepository,
   importNarutoDattebayo,
   importNarutoWikiScraper,
