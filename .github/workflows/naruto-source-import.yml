@@ -1,9 +1,6 @@
 name: Naruto original-source real import smoke
 
 on:
-  push:
-    branches:
-      - feat/module3-world-atlas-integration
   pull_request:
     paths:
       - ".github/workflows/naruto-source-import.yml"
