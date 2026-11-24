@@ -37,10 +37,11 @@ export function readStaticExportedArray(
       const value = evaluateStatic(declaration.initializer);
       if (!Array.isArray(value))
         throw new Error("static.export.not_array:" + exportName);
-      return value.filter(
-        (item): item is Record<string, unknown> =>
-          !!item && typeof item === "object" && !Array.isArray(item),
-      );
+      const out: Array<Record<string, unknown>> = [];
+      for (const item of value)
+        if (item && typeof item === "object" && !Array.isArray(item))
+          out.push(item as Record<string, unknown>);
+      return out;
     }
   }
   throw new Error("static.export.not_found:" + exportName + ":" + filePath);
