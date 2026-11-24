@@ -27,7 +27,7 @@ function detectPlatform(headerLine, filename) {
 function detectBoard(headerLine, filename) {
   const cleaned = String(headerLine ?? "")
     .replace(/^#+\s*/u, "")
-    .replace(/^(?:起点|番茄|刺猬猫)\s*[·・\-]\s*/u, "")
+    .replace(/^(?:起点|番茄|刺猬猫)\s*[·・-]\s*/u, "")
     .replace(/\s*[·・]\s*全\s*\d+\s*题材.*$/u, "")
     .trim();
   if (cleaned) return cleaned;
