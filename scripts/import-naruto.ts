@@ -16,6 +16,7 @@ import {
   SqliteSourceCorpusRepository,
   importNarutoDattebayo,
   importNarutoWikiScraper,
+  installNarutoSourceWorld,
   type NarutoData,
 } from "@narralume/persistence";
 
@@ -88,6 +89,7 @@ async function main(): Promise<void> {
     const wikiStats = Array.isArray(wiki)
       ? importNarutoWikiScraper(db, wiki)
       : null;
+    const sourceWorld = installNarutoSourceWorld(db);
     if (projectId) {
       // Bind reference sources to ONE novel's reader context. No Canon
       // entities, actual character abilities or future events are promoted.
@@ -103,6 +105,7 @@ async function main(): Promise<void> {
           projectId: projectId ?? null,
           source: sourceStats,
           wiki: wikiStats,
+          sourceWorld,
           corpusList: refs.listCorpora(),
         },
         null,
