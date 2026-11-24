@@ -590,4 +590,36 @@ describe("M3 transport retry defaults, timeouts, and timing", () => {
     expect(serialized.requestId).toBe("req-failed");
     expect(serialized.timing?.dispatchedAt).toEqual(expect.any(Number));
   });
+
+  it("injects x-opencode-session and user-agent headers for OpenCode Go requests", async () => {
+    const fetch = vi.fn(async () =>
+      jsonResponse({
+        id: "chat-go",
+        choices: [{ message: { content: "ok" }, finish_reason: "stop" }],
+        usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+      }),
+    );
+    const gateway = new ModelGateway(
+      new OpenAIChatAdapter({
+        protocol: "openai-chat",
+        baseUrl: "https://opencode.ai/zen/go/v1",
+        apiKey: "go-key",
+        fetch,
+        maxRetries: 0,
+      }),
+    );
+
+    await gateway.generate({
+      model: "deepseek-v4.1-flash",
+      messages: [{ role: "user", content: "hi" }],
+      promptCacheKey: "project:naruto",
+    });
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const call = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(call[0]).toBe("https://opencode.ai/zen/go/v1/chat/completions");
+    const headers = call[1].headers as Record<string, string>;
+    expect(headers["x-opencode-session"]).toBe("narralume-project:naruto");
+    expect(headers["user-agent"]).toBe("narralume/0.2.0");
+  });
 });
