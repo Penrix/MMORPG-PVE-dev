@@ -1,0 +1,57 @@
+name: Naruto vertical temporary
+
+on:
+  push:
+    branches:
+      - feat/module3-world-atlas-integration
+
+permissions:
+  contents: read
+
+jobs:
+  verify-naruto-vertical:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- naruto-source-import source-world-production
+      - run: npm run build
+      - name: Real Naruto import + unified Source World
+        run: npm run import:naruto -- --db /tmp/naruto-vertical.sqlite
+      - name: Assert Naruto vertical state
+        run: |
+          node --input-type=module <<'EOF'
+          import { DatabaseSync } from "node:sqlite";
+          import assert from "node:assert/strict";
+          const db = new DatabaseSync("/tmp/naruto-vertical.sqlite", {readOnly:true});
+          const scalar = (sql,...args) => db.prepare(sql).get(...args).n;
+          const world = db.prepare("SELECT id,canonical_corpus_id AS corpus FROM source_worlds WHERE id='naruto'").get();
+          const atlasCards = scalar("SELECT COUNT(*) AS n FROM source_records WHERE corpus_id='wiki:naruto'");
+          const atlasLinks = scalar("SELECT COUNT(*) AS n FROM source_relations WHERE corpus_id='wiki:naruto'");
+          const evidence = scalar("SELECT COUNT(*) AS n FROM source_world_evidence_links WHERE world_id='naruto'");
+          const dattebayo = scalar("SELECT COUNT(*) AS n FROM source_records r LEFT JOIN source_record_presence p ON p.corpus_id=r.corpus_id AND p.source_key=r.source_key WHERE r.corpus_id='naruto-dattebayo' AND COALESCE(p.active,1)=1");
+          const projects = scalar("SELECT COUNT(*) AS n FROM canon_entities");
+          const cognitive = db.prepare("SELECT json_extract(metadata_json,'$.cognitiveMother.summary') AS summary FROM source_corpora WHERE id='wiki:naruto'").get();
+          const konoha = db.prepare("SELECT source_key,name FROM source_records WHERE corpus_id='wiki:naruto' AND name='Konohagakure'").all();
+          const uchiha = db.prepare("SELECT source_key,name FROM source_records WHERE corpus_id='wiki:naruto' AND name='Uchiha'").all();
+          const sharingan = db.prepare("SELECT source_key,name FROM source_records WHERE corpus_id='wiki:naruto' AND name='Sharingan'").all();
+          console.log({world,dattebayo,atlasCards,atlasLinks,evidence,projects,cognitive,konoha,uchiha,sharingan});
+          assert.equal(world?.corpus, "wiki:naruto");
+          assert(atlasCards >= dattebayo && atlasCards > 3000);
+          assert(atlasLinks > 500);
+          assert(evidence >= dattebayo);
+          assert.equal(projects, 0);
+          assert(typeof cognitive?.summary === "string" && cognitive.summary.length > 20);
+          assert.equal(konoha.length, 1);
+          assert.equal(uchiha.length, 1);
+          assert.equal(sharingan.length, 1);
+          db.close();
+          EOF
