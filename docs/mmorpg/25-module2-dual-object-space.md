@@ -353,3 +353,221 @@ Story Director 当前卡点
 ```
 
 禁止自动把所有算子排成固定顺序，也禁止让“方法路由”取得故事裁决权。
+
+## 10. 2026-11-25｜多母体 Source World 数据库已经动态化
+
+第二模块的 World Object Space 不再以“火影有一套专用导入器”作为默认形状。
+
+当前正式结构是：
+
+```text
+SourceWorldCatalog
+        │
+        ├─ naruto
+        ├─ one-piece
+        ├─ bleach
+        ├─ hunter-x-hunter
+        └─ future worlds...
+                 │
+                 ▼
+        Source Adapter
+  上游 JSON / CSV / API / Wiki scrape
+                 │
+                 ▼
+        Normalized Source Seed
+  records + typed relations + provenance
+                 │
+                 ▼
+        Generic Source Installer
+                 │
+       ┌─────────┴─────────┐
+       ▼                   ▼
+Raw Evidence          Canonical Source World
+source_corpora        Card + Typed Relations
+source_records        Evidence Mapping
+source_relations      Cognitive Mother
+       │                   │
+       └─────────┬─────────┘
+                 ▼
+          ONE NarraLume SQLite
+                 │
+      Project 可绑定 N 个母体
+                 │
+                 ▼
+      Project Reality 仍完全独立
+```
+
+### 10.1 不为每个作品复制一套数据库
+
+当前第一批 Catalog：
+
+| Source World | Canonical Corpus | 主导 Adapter |
+| --- | --- | --- |
+| 火影忍者 | `wiki:naruto` | 现有 specialized Naruto importer |
+| 海贼王 | `wiki:one-piece` | `one-piece-dataset-v1` |
+| 死神 | `wiki:bleach` | `bleach-database-v1` |
+| 全职猎人 | `wiki:hunter-x-hunter` | `hxh-static-v1` |
+
+新增第五、第六个母体时，默认动作应该是：
+
+```text
+找到可追溯上游
+→ 固定版本 / commit
+→ 写 Adapter / Normalizer
+→ 输出统一 SourceWorldSeed
+→ 交给 Generic Installer
+```
+
+而不是：
+
+```text
+复制 Naruto importer
+→ 再造一套 OnePieceRepository
+→ 再造 Bleach SQL 表
+→ 每个作品各长一套孤立基础设施
+```
+
+### 10.2 Generic Installer 的 Authority 规则
+
+`installSourceWorldSeed()` 当前执行：
+
+1. 保存原始 Evidence corpus / record / relation；
+2. 只有 Adapter 显式给出 `canonicalKey` 的记录才能投影为统一 Source World identity；
+3. 同名不自动合并；
+4. Evidence → Canonical identity 的映射保存 provenance；
+5. 第三方社区数据即使被投影成可查询 Source card，也不升级成“官方已核实 Canon”；
+6. 已被作者人工深化的 canonical Markdown card，重复导入不得覆盖；
+7. 重导入采用 snapshot/upsert，不能越导越胖；
+8. Source 导入绝不创建 `canon_entities`，因此不会污染任何 Project Reality。
+
+所以：
+
+```text
+canonical Source identity
+≠ 官方事实认证
+≠ Project Canon
+```
+
+它只是：
+
+> **这个 Source World 内，我们用哪个稳定对象承接一条或多条有 provenance 的外部证据。**
+
+### 10.3 第一批真实同库验收
+
+真实 GitHub Actions 使用固定上游版本，把四个母体安装进**同一个临时 NarraLume SQLite**，得到：
+
+| Source World | Canonical cards | Typed relations |
+| --- | ---: | ---: |
+| Naruto | **3,371** | **4,779** |
+| One Piece | **63** | **83** |
+| Bleach | **358** | **899** |
+| Hunter x Hunter | **183** | **227** |
+
+同时确认：
+
+- 四个 Source World 均存在各自 Cognitive Mother；
+- 四个 world 使用不同 canonical corpus，但共用同一 SQLite / repository infrastructure；
+- `canon_entities = 0`，没有任何 Source import 偷写 Project Canon；
+- One Piece / Bleach / Hunter x Hunter 二次完整导入后，各 evidence/canonical corpus 数量不增长；
+- Generic Adapter 的所有关系端点均解析成功，当前真实 smoke 的 `unresolvedRelations = 0`。
+
+这组数字只表示**当前已安装的第一层可靠种子厚度**，不是“世界完成度”。
+
+尤其 One Piece 当前 63 张卡只是第一批人物 / 海贼团 / 船 / listed abilities。Catalog 已登记覆盖漫画 1–1085 话的 interaction dataset 作为后续 relation enrichment 来源；应继续向同一个 `one-piece` Source World 增厚，而不是再建第二个海贼数据库。
+
+### 10.4 上游允许异构，落库必须统一
+
+四个世界已经证明上游可以完全不同：
+
+```text
+Naruto
+→ 多组结构化 JSON + Wiki biography
+
+One Piece
+→ character / crew JSON
+→ 后续可追加大规模 chapter interaction CSV
+
+Bleach
+→ Shinigami / Arrancar / Quincy / Humans 四组大型 JSON
+→ Professional Status / Primary Skills
+
+Hunter x Hunter
+→ Hunters / Phantom Troupe / Chimera Ants 三组固定 JSON
+→ Nen Type / Ability / Profession / Family
+```
+
+第二模块不要求这些来源先长成同一种 schema。
+
+Adapter 的责任是把它们翻译成：
+
+```text
+World Atlas Card Kind
++
+Typed Relation
++
+Stable Source Key
++
+Explicit Canonical Key
++
+Provenance
+```
+
+然后所有世界共享同一查询、证据、关系、World Builder、time-slice 和 Project binding 能力。
+
+### 10.5 在线 API 只能做 enrichment，不能做唯一地基
+
+这轮真实 smoke 曾经首先把 Hunter x Hunter 建在 Jikan 在线 API 上。
+
+结果 GitHub Actions 中 Jikan 连接超时，虽然因为 CLI 使用“**全部下载成功后才打开 SQLite**”而没有留下半安装数据库，但它暴露了一个底层原则：
+
+> **可复用母体的 mandatory seed 必须尽量可固定版本、可重复获取；在线 SaaS/API 默认只能做 optional enrichment。**
+
+因此 Hunter x Hunter 已改为固定 commit 的静态 GitHub 数据作为 primary seed；Jikan 保留 supporting 角色，不参与默认 `--all` 安装。
+
+### 10.6 当前操作入口
+
+```bash
+# 查看可安装母体
+npm run import:source-world -- --list
+
+# 单独安装
+npm run import:source-world -- --world one-piece
+npm run import:source-world -- --world bleach
+npm run import:source-world -- --world hunter-x-hunter
+
+# 三个 generic world 一次安装
+npm run import:source-world -- --all
+
+# 安装并绑定到某个已经存在的 Project
+npm run import:source-world -- --all --project <project-id>
+
+# Naruto 继续使用更成熟的专用路径
+npm run import:naruto
+```
+
+Server / Browser Kernel 的查询面同时提供：
+
+```text
+GET /api/source-worlds
+= 本地已经安装的母体
+
+GET /api/source-worlds/catalog
+= 当前可安装 / 可继续富化的母体目录
+  + installed
+  + installedCardCount
+```
+
+因此“数据库是活的”现在不再只指单个世界内部能增加卡片，也包括：
+
+```text
+安装新母体
+→ 为旧母体追加新 Evidence Corpus
+→ Adapter 增强
+→ 重新 import / upsert
+→ 现有人工 Card 不被覆盖
+→ 关系与 Evidence 索引增量更新
+→ Project 随时绑定多个母体
+```
+
+这才是当前第二模块 World Object Space 的长期扩容方式。
+
