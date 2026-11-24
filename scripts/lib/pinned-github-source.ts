@@ -50,6 +50,7 @@ export function withPinnedGitHubCheckout<T>(
         input.ref +
         ":" +
         message,
+      { cause: error },
     );
   } finally {
     rmSync(root, { recursive: true, force: true });
