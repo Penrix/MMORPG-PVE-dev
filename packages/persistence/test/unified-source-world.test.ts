@@ -19,7 +19,7 @@ afterEach(() => {
 describe("one original Naruto wiki identity from several distinct upstream datasets", () => {
   it("keeps Madara as one curated world entity with two independently reviewable source references", () => {
     db = new NodeNarrativeDatabase();
-    expect(db.migrate()).toBe(56);
+    expect(db.migrate()).toBe(57);
     const source = new SqliteSourceCorpusRepository(db);
     const worlds = new SqliteUnifiedSourceWorldRepository(db);
     for (const [id, title] of [
