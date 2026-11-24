@@ -108,7 +108,10 @@ export function resolveWorldDesignEntry(
       n.localId === focus ||
       n.name === focus ||
       n.existingCanonId === focus ||
-      (n.existingCanonId != null && "canon:" + n.existingCanonId === focus),
+      (n.existingCanonId != null && "canon:" + n.existingCanonId === focus) ||
+      n.existingSourceKey === focus ||
+      (n.existingSourceKey != null &&
+        "source:" + n.existingSourceKey === focus),
   );
   const candidates = exact.length
     ? exact
