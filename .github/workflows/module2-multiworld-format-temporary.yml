@@ -1,5 +1,5 @@
 name: Module2 Multiworld Formatter Temporary
-# Rerun after HxH static-source switch.
+# Final formatting pass for docs and permanent smoke.
 
 on:
   push:
