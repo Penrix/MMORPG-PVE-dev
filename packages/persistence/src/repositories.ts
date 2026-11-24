@@ -38,6 +38,7 @@ export * from "./source-world-production-repository.js";
 export * from "./source-world-catalog.js";
 export * from "./source-world-seed.js";
 export * from "./source-world-normalizers.js";
+export * from "./source-world-rich-normalizers.js";
 export * from "./project-world-repository.js";
 export * from "./project-reality-repository.js";
 export * from "./project-reality-context.js";
