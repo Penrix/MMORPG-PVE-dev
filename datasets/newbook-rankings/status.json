@@ -1,0 +1,18 @@
+{
+  "updatedAt": "2026-11-24T04:23:29.565Z",
+  "observedDate": "2026-11-24",
+  "partial": true,
+  "total": 73,
+  "addedThisRun": 73,
+  "updatedThisRun": 0,
+  "skippedInvalidThisRun": 0,
+  "byPlatform": {
+    "qidian": 73
+  },
+  "rawFiles": {
+    "起点三江推荐_20261124.md": 17,
+    "起点公众作者新书榜_20261124.md": 20,
+    "起点新人作者新书榜_20261124.md": 20,
+    "起点签约作者新书榜_20261124.md": 20
+  }
+}
