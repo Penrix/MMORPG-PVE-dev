@@ -1,4 +1,5 @@
 name: Module2 Multiworld Real Import Temporary
+# Rerun with pinned static HxH primary source.
 
 on:
   push:
