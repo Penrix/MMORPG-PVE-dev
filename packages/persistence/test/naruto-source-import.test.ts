@@ -3,11 +3,16 @@ import { createProject } from "@narralume/domain";
 import {
   importNarutoDattebayo,
   importNarutoWikiScraper,
+  installNarutoSourceWorld,
+  NARUTO_CANONICAL_CORPUS,
+  NARUTO_COGNITIVE_MOTHER,
   NARUTO_DATTEBAYO_CORPUS,
+  NARUTO_SOURCE_WORLD_ID,
   NARUTO_WIKI_CORPUS,
   SqliteCanonRepository,
   SqliteProjectRepository,
   SqliteSourceCorpusRepository,
+  SqliteUnifiedSourceWorldRepository,
   type NarutoData,
 } from "../src/index.js";
 import { NodeNarrativeDatabase } from "../src/node.js";
@@ -111,6 +116,90 @@ describe("Naruto mother-world import into the ONE NarraLume SQLite", () => {
     importNarutoDattebayo(db, example(), now);
     expect(source.getCorpus(NARUTO_DATTEBAYO_CORPUS)?.recordCount).toBe(count);
     expect(source.search("Itachi", { projectId: "novel" })).toHaveLength(1);
+  });
+
+  it("installs one curated Naruto Source World without overwriting later author edits", () => {
+    db = new NodeNarrativeDatabase();
+    db.migrate();
+    importNarutoDattebayo(db, example(), now);
+    importNarutoWikiScraper(
+      db,
+      [
+        {
+          name: "Itachi Uchiha",
+          summary: "Separate long biography evidence",
+        },
+      ],
+      now,
+    );
+
+    const first = installNarutoSourceWorld(db, now);
+    expect(first.worldId).toBe(NARUTO_SOURCE_WORLD_ID);
+    expect(first.canonicalCorpusId).toBe(NARUTO_CANONICAL_CORPUS);
+    expect(first.createdCards).toBeGreaterThan(9);
+    expect(first.canonicalRelations).toBeGreaterThan(5);
+    expect(first.evidenceLinks).toBe(first.sourceRecords);
+    expect(first.cognitiveMother).toBe(true);
+
+    const worlds = new SqliteUnifiedSourceWorldRepository(db);
+    expect(worlds.getWorld(NARUTO_SOURCE_WORLD_ID)?.name).toBe("火影忍者");
+    expect(worlds.getCognitiveMother(NARUTO_SOURCE_WORLD_ID)?.summary).toBe(
+      NARUTO_COGNITIVE_MOTHER.summary,
+    );
+
+    const itachi = worlds.getCard(NARUTO_SOURCE_WORLD_ID, "character:1293");
+    expect(itachi?.content).toContain(
+      "clan_member_recorded：[[clan:45|Uchiha]]",
+    );
+    expect(itachi?.relations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          relation: "village_affiliation_recorded",
+          otherName: "Konohagakure",
+        }),
+        expect.objectContaining({
+          relation: "kekkei_genkai_recorded",
+          otherName: "Sharingan",
+        }),
+      ]),
+    );
+    expect(
+      worlds.getReaderSemantics(NARUTO_SOURCE_WORLD_ID, "village:3")
+        ?.readerPrice,
+    ).toContain("木叶");
+
+    worlds.upsertCard({
+      worldId: NARUTO_SOURCE_WORLD_ID,
+      entityKey: "character:1293",
+      kind: "character",
+      name: "Itachi Uchiha",
+      content: "# Itachi Uchiha\n\n作者人工深化后的卡片，重新导入不能覆盖。",
+      now: "2026-11-24T16:00:00.000Z",
+    });
+    const second = installNarutoSourceWorld(
+      db,
+      "2026-11-24T16:01:00.000Z",
+    );
+    expect(second.createdCards).toBe(0);
+    expect(second.preservedCards).toBe(first.sourceRecords);
+    expect(
+      worlds.getCard(NARUTO_SOURCE_WORLD_ID, "character:1293")?.content,
+    ).toContain("作者人工深化后的卡片");
+
+    // Supporting Wiki evidence is installed as a corpus but deliberately not
+    // same-name merged into the canonical identity.
+    const dossier = worlds.getDossier(
+      NARUTO_SOURCE_WORLD_ID,
+      "character:1293",
+    );
+    expect(
+      dossier?.evidence.some(
+        (item) => item.evidenceCorpusId === NARUTO_WIKI_CORPUS,
+      ),
+    ).toBe(false);
+    expect(
+      db.raw.prepare("SELECT COUNT(*) AS n FROM canon_entities").get(),
+    ).toEqual({ n: 0 });
   });
 
   it("keeps long Wiki biography separate and allows two corpora in one novel", () => {
