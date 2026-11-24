@@ -34,6 +34,7 @@ export * from "./world-structures-repository.js";
 export * from "./source-corpus-repository.js";
 export * from "./source-world-encyclopedia-repository.js";
 export * from "./unified-source-world-repository.js";
+export * from "./source-world-production-repository.js";
 export * from "./project-world-repository.js";
 export * from "./project-reality-repository.js";
 export * from "./project-reality-context.js";
