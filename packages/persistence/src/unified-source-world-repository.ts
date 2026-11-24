@@ -325,7 +325,8 @@ export class SqliteUnifiedSourceWorldRepository {
     this.sources.upsertRecord({
       ...record,
       raw: { ...record.raw, readerSemantics: semantics },
-      importedAt: input.now,
+      // Reader-side semantics are not a Source evidence re-import.
+      importedAt: record.importedAt,
     });
     return {
       worldId: input.worldId,
