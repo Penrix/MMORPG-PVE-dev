@@ -250,13 +250,20 @@ function buildBatchValidationSchema(input: InspirationRollRequest) {
             message: "locked slot must be preserved verbatim",
           });
         }
-        if (!card.sentence.includes(phrase)) {
-          context.addIssue({
-            code: "custom",
-            path: ["cards", offset, "sentence"],
-            message: `sentence must contain ${field} verbatim`,
-          });
-        }
+      }
+      if (card.sentence.length > 90) {
+        context.addIssue({
+          code: "custom",
+          path: ["cards", offset, "sentence"],
+          message: "sentence is a one-line hook, keep it under 90 characters",
+        });
+      }
+      if (!card.sentence.startsWith("我是")) {
+        context.addIssue({
+          code: "custom",
+          path: ["cards", offset, "sentence"],
+          message: "sentence must open in first person",
+        });
       }
     }
 
@@ -414,8 +421,9 @@ function buildPrompt(
 硬规则：
 - #N 必须明显继承 #N 发到的玩法/反转模具，不得跨号换牌，不得把 24 条写成同一个套路的改名版。
 - 未锁定时，本批 identity、anomalyRule、highValueCircle 不得逐字重复，且应尽量在职业、力量、圈层和矛盾类型上拉开。
-- sentence 必须逐字包含本条四个槽位字符串，并包含“没想到 / 却 / 但 / 不料 / 结果 / 反而”至少一个转折词。
-- sentence 必须同时出现“能做什么”与“谁/什么因此形成反向压力”，禁止只有设定没有故事。
+- sentence 是卡面钩子：第一人称“我是…”，35–50 字，最多 90 字；结尾必须落在某个人的反应或下一步动作上。四槽信息留在各自字段里，不要把四槽串成一段剧情简介。
+- sentence 必须包含“没想到 / 却 / 但 / 不料 / 结果 / 反而”至少一个转折词。
+- sentence 必须同时出现“他能做什么”与“谁因此找上门”，禁止只有设定没有现场。
 - 每条只返回一个 concise suggestedTitle；不要解释、点评、排序。
 ${lockText ? `- 锁槽：${lockText}。每一条对应字段必须逐字原样输出，只生成其余槽位。\n` : ""}
 发牌如下：

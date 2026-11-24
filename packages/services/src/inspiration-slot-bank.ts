@@ -14,6 +14,7 @@ import type { NarrativeDatabase } from "@narralume/persistence";
 import {
   BUILTIN_INSPIRATION_SLOT_BANK,
   INSPIRATION_CHAINS,
+  hookFor,
   type InspirationChain,
 } from "./inspiration-slot-bank-data.js";
 
@@ -280,31 +281,15 @@ const CHAIN_SLOT_FIELDS = {
 } as const satisfies Record<InspirationSlotKey, keyof InspirationChain>;
 
 /**
- * Three cadences so a batch does not read like one sentence with new nouns.
+ * The card face is the hook; the five-segment chain stays behind it and only
+ * feeds the outline. Do not concatenate the chain into the sentence.
  */
-const SENTENCE_TEMPLATES: readonly ((chain: InspirationChain) => string)[] = [
-  (chain) =>
-    `我是${chain.identity}，${chain.leverage}。${chain.firstTake}，就此进了${chain.gatekeeper}。${chain.inbound}。`,
-  (chain) =>
-    `${chain.identity}出身。${chain.leverage}。${chain.firstTake}——${chain.inbound}。`,
-  (chain) =>
-    `在${chain.gatekeeper}里，我只是个${chain.identity}。${chain.leverage}。${chain.firstTake}。${chain.inbound}。`,
-];
-
 function sentenceFor(chain: InspirationChain): string {
-  let hash = 0;
-  for (const character of chain.id) {
-    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  const hook = hookFor(chain);
+  if (!TURN.test(hook) || !hook.startsWith("我是")) {
+    throw new Error("inspiration.hollow_seed:" + chain.id);
   }
-  const spoken: InspirationChain = TURN.test(chain.inbound)
-    ? chain
-    : { ...chain, inbound: "没想到" + chain.inbound };
-  const sentence =
-    SENTENCE_TEMPLATES[hash % SENTENCE_TEMPLATES.length]!(spoken);
-  if (!TURN.test(sentence) || !sentence.includes(chain.identity)) {
-    throw new Error("inspiration.hollow_seed");
-  }
-  return sentence;
+  return hook;
 }
 
 function chainSlots(

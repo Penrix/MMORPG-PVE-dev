@@ -99,9 +99,8 @@ describe("inspiration slot machine", () => {
     expect(first.cards).toHaveLength(12);
     for (const card of first.cards) {
       expect(card.chainId).toBeTruthy();
-      expect(card.sentence).toContain(
-        card.starterBlueprint.protagonistIdentity,
-      );
+      expect(card.sentence.startsWith("我是")).toBe(true);
+      expect(card.sentence.length).toBeLessThanOrEqual(60);
       expect(card.sentence).toMatch(/没想到|却|但|不料|结果|反而/u);
       expect(card.starterBlueprint.firstTake).toBeTruthy();
       expect(card.starterBlueprint.inbound).toBeTruthy();
