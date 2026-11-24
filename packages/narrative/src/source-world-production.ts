@@ -290,9 +290,10 @@ export function projectSourceWorldForProduction(
     if (selected.size >= 65) break;
   }
 
-  // Empty / genuinely thin focuses get a broad fallback. Once the local graph
-  // is thick enough, unrelated global cards would contaminate a Zone audit.
-  if (selected.size < 12)
+  // Only a completely unresolved/empty entry may fall back to broad Atlas
+  // context. A resolved but thin Zone is itself a production deficiency and
+  // must stay thin so the audit can ask Module 1 to fill it.
+  if (selected.size === 0)
     for (const hit of worlds.listCards(worldId, "", { limit: 80 })) {
       if (selected.size >= 80) break;
       if (!selected.has(hit.sourceKey)) selected.set(hit.sourceKey, hit);
