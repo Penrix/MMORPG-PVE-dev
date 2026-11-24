@@ -79,7 +79,7 @@ function subjectFor(
   return null;
 }
 
-function workOrder(
+export function worldProductionWorkOrder(
   workshop: WorldWorkshop,
   doc: WorldPackDocument,
   request: WorldPackRequest,
@@ -173,7 +173,7 @@ function workOrder(
   };
 }
 
-function hasWorkshopOutput(
+export function hasWorldWorkshopOutput(
   workshop: WorldWorkshop,
   previous: WorldPackDocument,
   current: WorldPackDocument,
@@ -324,6 +324,7 @@ export async function runWorldWorkshops(args: {
   request: WorldPackRequest;
   basePrompt: string;
   knownCanonIds: ReadonlySet<string>;
+  knownSourceKeys?: ReadonlySet<string>;
   existingWorld?: WorldPackDocument;
   contract: JsonSchemaContract;
   signal: AbortSignal;
@@ -352,12 +353,12 @@ export async function runWorldWorkshops(args: {
       : null;
     const op =
       firstStep && args.request.intent === "advance"
-        ? workOrder("living", view(), args.request)
+        ? worldProductionWorkOrder("living", view(), args.request)
         : requestedEntry
-          ? workOrder(requestedEntry.workshop, view(), args.request)
+          ? worldProductionWorkOrder(requestedEntry.workshop, view(), args.request)
           : (check.next ??
             (steps.length === 0 && bootstrap[0]
-              ? workOrder(bootstrap[0], view(), args.request)
+              ? worldProductionWorkOrder(bootstrap[0], view(), args.request)
               : null));
     if (!op) break;
     const instruction = {
@@ -406,9 +407,10 @@ export async function runWorldWorkshops(args: {
             args.knownCanonIds,
             op.workshop,
             op.subjectRef,
+            args.knownSourceKeys ?? new Set<string>(),
           );
           if (
-            !hasWorkshopOutput(
+            !hasWorldWorkshopOutput(
               op.workshop,
               view(),
               previewProductionReality(existingWorld, merged.document),
@@ -439,6 +441,7 @@ export async function runWorldWorkshops(args: {
       args.knownCanonIds,
       op.workshop,
       op.subjectRef,
+      args.knownSourceKeys ?? new Set<string>(),
     );
     state = merged.document;
     steps.push(merged.step);
