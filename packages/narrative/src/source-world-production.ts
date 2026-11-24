@@ -4,6 +4,7 @@ import {
   WorldPackRequestSchema,
   worldPackAtlasKind,
   worldPackCoarseTypeForAtlasKind,
+  type WorldAction,
   type WorldPackDocument,
   type WorldPackRequest,
 } from "@narralume/contracts";
@@ -242,6 +243,7 @@ function projectSourceWorldForProduction(
   const nodes: WorldPackDocument["nodes"] = [];
   const links: WorldPackDocument["links"] = [];
   const activities: WorldPackDocument["activities"] = [];
+  const interactions: WorldPackDocument["interactions"] = [];
   const seenLinks = new Set<string>();
 
   for (const hit of selected.values()) {
@@ -270,6 +272,9 @@ function projectSourceWorldForProduction(
       sourceNote: "Existing Source World Atlas reference",
       readerSemantics: worlds.getReaderSemantics(worldId, hit.sourceKey),
     });
+    interactions.push(
+      ...readAdoptedWorldActions(card.content, "source:" + hit.sourceKey),
+    );
     if (hit.kind === "activity") {
       const actorRefs = card.relations
         .filter(
@@ -321,7 +326,7 @@ function projectSourceWorldForProduction(
     nodes,
     links,
     activities,
-    interactions: [],
+    interactions,
     openThreads: [],
     dimensionSignals: [],
   };
@@ -396,6 +401,81 @@ async function callSourceWorldModel(
     { maxRepairAttempts: 1 },
   );
   return result.value;
+}
+
+const WORLD_ACTION_TERM_KINDS = new Set<WorldAction["requires"][number]["kind"]>([
+  "asset",
+  "permission",
+  "relationship",
+  "knowledge",
+  "ability",
+  "access",
+]);
+
+function readAdoptedWorldActions(
+  content: string,
+  offeredByRef: string,
+): WorldAction[] {
+  const actions: WorldAction[] = [];
+  const pattern =
+    /<!-- world-builder-action:[^\n]*:([a-z][a-z0-9_-]{1,79}) -->\s*\n### 可玩入口｜([^\n]+)\n([\s\S]*?)(?=\n<!-- world-builder-action:|$)/g;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(content)) !== null) {
+    const localId = match[1];
+    const name = match[2]?.trim();
+    const body = match[3] ?? "";
+    if (!localId || !name) continue;
+    const lines = body.split(/\r?\n/).map((line) => line.trim());
+    const action = lines.find(
+      (line) =>
+        line &&
+        !line.startsWith("状态：") &&
+        !line.startsWith("地点：") &&
+        !line.startsWith("需要(") &&
+        !line.startsWith("取得("),
+    );
+    const stateLine = lines.find((line) => line.startsWith("状态："));
+    const state =
+      stateLine?.slice("状态：".length).trim() === "potential"
+        ? "potential"
+        : "available";
+    const locationLine = lines.find((line) => line.startsWith("地点："));
+    const locationKey = locationLine ? wikiTarget(locationLine) : null;
+    const parseTerms = (
+      prefix: "需要" | "取得",
+    ): WorldAction["requires"] => {
+      const terms: WorldAction["requires"] = [];
+      for (const line of lines) {
+        const term = new RegExp(
+          "^" + prefix + "\\(([^)]+)\\)：",
+        ).exec(line);
+        if (!term) continue;
+        const kind = term[1] as WorldAction["requires"][number]["kind"];
+        const key = wikiTarget(line);
+        if (!key || !WORLD_ACTION_TERM_KINDS.has(kind)) continue;
+        terms.push({ kind, ref: "source:" + key });
+      }
+      return terms;
+    };
+    const yields = parseTerms("取得");
+    if (!action || yields.length === 0) continue;
+    actions.push({
+      localId,
+      name,
+      offeredByRef,
+      locationRef: locationKey ? "source:" + locationKey : null,
+      action,
+      requires: parseTerms("需要"),
+      yields,
+      state,
+    });
+  }
+  return actions;
+}
+
+function wikiTarget(line: string): string | null {
+  const match = /\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/.exec(line);
+  return match?.[1]?.trim() || null;
 }
 
 function readAdoptedWorldFields(content: string): {
