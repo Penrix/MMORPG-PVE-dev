@@ -53,7 +53,7 @@ function extractAuthorAndCategory(metaLine, fallbackCategory) {
     .slice(1)
     .filter(
       (part) =>
-        !/^(?:连载中|已完结|完结|未完结|\d+(?:\.\d+)?万?在读|\d+(?:\.\d+)?万?字)$/u.test(
+        !/^(?:连载中|已完结|完结|未完结|\d+(?:\.\d+)?\s*万?\s*(?:在读|字|点击|月票|推荐|收藏|订阅|刀片|吐槽))$/u.test(
           part,
         ),
     );
