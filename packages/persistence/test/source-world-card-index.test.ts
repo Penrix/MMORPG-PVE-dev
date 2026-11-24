@@ -35,6 +35,17 @@ describe("World Atlas lightweight cards and typed wiki links", () => {
       { relation: "所属组织", target: "木叶隐村", label: null },
       { relation: "所属组织", target: "木叶暗部", label: null },
     ]);
+    expect(
+      parseTypedWikiLinks(
+        "village_affiliation_recorded：[[village:3|Konohagakure]]",
+      ),
+    ).toEqual([
+      {
+        relation: "village_affiliation_recorded",
+        target: "village:3",
+        label: "Konohagakure",
+      },
+    ]);
     expect(inverseRelation("老师")).toBe("学生");
     expect(inverseRelation("敌对")).toBe("敌对");
     expect(inverseRelation("自定义关系")).toBeNull();
