@@ -1,0 +1,177 @@
+import { afterEach, describe, expect, it } from "vitest";
+import {
+  SqliteSourceCorpusRepository,
+  SqliteUnifiedSourceWorldRepository,
+} from "@narralume/persistence";
+import { NodeNarrativeDatabase } from "@narralume/persistence/node";
+import { generateSourceWorldProduction } from "../src/source-world-production.js";
+
+let db: NodeNarrativeDatabase | null = null;
+const now = "2026-11-24T15:00:00.000Z";
+
+function seedWorld() {
+  db = new NodeNarrativeDatabase();
+  db.migrate();
+  const sources = new SqliteSourceCorpusRepository(db);
+  sources.upsertCorpus({
+    id: "wiki:naruto",
+    title: "火影忍者",
+    sourceUrl: "",
+    rightsNotice: "test",
+    importer: "test",
+    metadata: {},
+    importedAt: now,
+  });
+  const worlds = new SqliteUnifiedSourceWorldRepository(db);
+  worlds.createWorld({
+    id: "naruto",
+    name: "火影忍者",
+    kind: "fictional",
+    canonicalCorpusId: "wiki:naruto",
+    description: "原生母体",
+    createdAt: now,
+  });
+  worlds.upsertCard({
+    worldId: "naruto",
+    entityKey: "ability:sharingan",
+    kind: "ability",
+    name: "写轮眼",
+    content: "# 写轮眼\n\n宇智波一族代表性的瞳术能力。",
+    now,
+  });
+  return worlds;
+}
+
+afterEach(() => {
+  db?.close();
+  db = null;
+});
+
+describe("Source World World Builder target", () => {
+  it("projects existing Source identities instead of pretending they are Project Canon", async () => {
+    seedWorld();
+    const document = await generateSourceWorldProduction(
+      db!,
+      {
+        worldId: "naruto",
+        request: {
+          requestId: "00000000-0000-4000-8000-000000000257",
+          scale: "W1",
+          premise: "深化写轮眼力量网络",
+          worldTime: "原作全时代参考",
+          focus: "写轮眼",
+          genre: "火影同人",
+          scarcity: "",
+          instruction: "",
+          parentAreaId: null,
+        },
+      },
+      {
+        generateOverride: ({ existingWorld, operation, prompt }) => {
+          expect(operation).toBe("power");
+          expect(prompt).toContain("source:<stable-key>");
+          expect(existingWorld.nodes).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                localId: "source:ability:sharingan",
+                existingCanonId: null,
+                existingSourceKey: "ability:sharingan",
+              }),
+            ]),
+          );
+          return {
+            summary: "补写轮眼的社会连接",
+            nodes: [
+              {
+                localId: "sharingan_training",
+                existingCanonId: null,
+                existingSourceKey: null,
+                type: "rule",
+                atlasKind: "ability",
+                name: "写轮眼训练经验",
+                description: "围绕写轮眼使用形成的训练经验与能力理解。",
+                areaRef: null,
+                value: "对掌握写轮眼的人具有明显能力价值",
+                access: "由掌握者的训练与传授进入",
+                motive: "提高写轮眼运用水平",
+                currentActivity: "被掌握者持续训练和总结",
+                origin: "inference",
+                sourceNote: "模型推断候选，待原作资料核验",
+                readerSemantics: null,
+              },
+            ],
+            links: [
+              {
+                fromRef: "sharingan_training",
+                toRef: "source:ability:sharingan",
+                relation: "依赖",
+                description: "训练经验围绕写轮眼形成",
+                status: "current",
+              },
+            ],
+            activities: [],
+            interactions: [],
+            openThreads: [],
+            dimensionSignals: [],
+          };
+        },
+      },
+    );
+    expect(document.production?.executed[0]?.workshop).toBe("power");
+    expect(document.nodes[0]?.origin).toBe("inference");
+  });
+
+  it("rejects a newly generated object that falsely claims source_canon", async () => {
+    seedWorld();
+    await expect(
+      generateSourceWorldProduction(
+        db!,
+        {
+          worldId: "naruto",
+          request: {
+            requestId: "00000000-0000-4000-8000-000000000357",
+            scale: "W1",
+            premise: "深化写轮眼",
+            worldTime: "原作全时代参考",
+            focus: "写轮眼",
+            genre: "火影同人",
+            scarcity: "",
+            instruction: "",
+            parentAreaId: null,
+          },
+        },
+        {
+          generateOverride: () => ({
+            summary: "错误候选",
+            nodes: [
+              {
+                localId: "fake_canon",
+                existingCanonId: null,
+                existingSourceKey: null,
+                type: "rule",
+                atlasKind: "ability",
+                name: "不存在的原作忍术",
+                description: "模型自行生成，却试图冒充原作事实。",
+                areaRef: null,
+                value: "高",
+                access: "未知",
+                motive: "",
+                currentActivity: "",
+                origin: "source_canon",
+                sourceNote: "",
+                readerSemantics: null,
+              },
+            ],
+            links: [],
+            activities: [],
+            interactions: [],
+            openThreads: [],
+            dimensionSignals: [],
+          }),
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "source.world.production.fabricated_canon",
+    });
+  });
+});
