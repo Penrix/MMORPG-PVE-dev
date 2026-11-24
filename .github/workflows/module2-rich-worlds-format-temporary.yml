@@ -1,4 +1,5 @@
 name: Module2 Rich Worlds Format Temporary
+# Rerun from current rich-import HEAD.
 
 on:
   push:
