@@ -409,6 +409,37 @@ export class SqliteUnifiedSourceWorldRepository {
     });
   }
 
+  findCardByReference(
+    worldId: string,
+    reference: string,
+    options: { kind?: SourceKind } = {},
+  ): SourceWorldCard | null {
+    const world = this.getWorld(worldId);
+    if (!world) return null;
+    const ref = reference.trim();
+    if (!ref) return null;
+
+    if (options.kind) {
+      const matches = this.sources
+        .search(ref, {
+          corpusId: world.canonicalCorpusId,
+          kind: options.kind,
+          limit: 200,
+        })
+        .filter(
+          (hit) => hit.sourceKey === ref || hit.name === ref,
+        );
+      if (matches.length !== 1) return null;
+      return this.getCard(worldId, matches[0]!.sourceKey);
+    }
+
+    const record = this.sources.findRecordByReference(
+      world.canonicalCorpusId,
+      ref,
+    );
+    return record ? this.getCard(worldId, record.sourceKey) : null;
+  }
+
   getCard(worldId: string, entityKey: string): SourceWorldCard | null {
     const world = this.getWorld(worldId);
     if (!world) return null;
