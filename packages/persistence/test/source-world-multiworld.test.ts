@@ -3,6 +3,7 @@ import {
   installSourceWorldSeed,
   normalizeBleachDatabase,
   normalizeHunterXHunterJikan,
+  normalizeHunterXHunterStatic,
   normalizeOnePieceDataset,
   SqliteCanonRepository,
   SqliteUnifiedSourceWorldRepository,
@@ -220,6 +221,62 @@ describe("multi-world normalizers", () => {
         "previous_affiliation_recorded",
         "previous_team_recorded",
         "base_of_operations_recorded",
+        "ability_listed",
+      ]),
+    );
+  });
+
+  it("normalizes pinned Hunter x Hunter groups, Nen types and abilities", () => {
+    const seed = normalizeHunterXHunterStatic({
+      hunters: [
+        {
+          _id: 16,
+          name: "Gon Freecss",
+          japanese_name: "ゴン＝フリークス",
+          also_known_as: ["Gon"],
+          nen_type: ["Enhancement"],
+          abilities: ["Jajanken"],
+          professions: ["Hunter"],
+        },
+      ],
+      ryodan: [
+        {
+          _id: 2,
+          name: "Chrollo Lucilfer",
+          nen_type: ["Specialization"],
+          abilities: ["Skill Hunter"],
+          professions: ["Leader of the Phantom Troupe"],
+        },
+      ],
+      chimeraAnts: [
+        {
+          _id: 1,
+          name: "Alligator",
+          nen_type: [],
+          abilities: [],
+          professions: ["Chimera Ant"],
+        },
+      ],
+    });
+    const corpus = seed.corpora[0]!;
+    expect(seed.world.id).toBe("hunter-x-hunter");
+    expect(corpus.records).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "character", name: "Gon Freecss" }),
+        expect.objectContaining({ kind: "character", name: "Chrollo Lucilfer" }),
+        expect.objectContaining({ kind: "organization", name: "Hunter Association" }),
+        expect.objectContaining({ kind: "organization", name: "Phantom Troupe" }),
+        expect.objectContaining({ kind: "organization", name: "Chimera Ants" }),
+        expect.objectContaining({ kind: "ability", name: "Enhancement Nen" }),
+        expect.objectContaining({ kind: "ability", name: "Jajanken" }),
+      ]),
+    );
+    expect(corpus.relations.map((edge) => edge.relation)).toEqual(
+      expect.arrayContaining([
+        "hunter_association_context",
+        "phantom_troupe_roster_recorded",
+        "chimera_ant_group_recorded",
+        "nen_type_recorded",
         "ability_listed",
       ]),
     );
