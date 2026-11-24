@@ -134,14 +134,12 @@ export async function generateInspirationSeedsWithLlm(
       instructions:
         "你是中国商业类型小说的灵感发牌器。必须严格执行用户给出的四槽模具与 JSON 合同，不得把任务改成自由脑暴。",
       messages: [{ role: "user", content: prompt }],
-      temperature:
-        samplingNumber(assignment.model.sampling.temperature) ?? 0.9,
+      temperature: samplingNumber(assignment.model.sampling.temperature) ?? 0.9,
       ...(samplingNumber(assignment.model.sampling.topP) === null
         ? {}
         : { topP: samplingNumber(assignment.model.sampling.topP)! }),
       maxOutputTokens: Math.min(
-        assignment.model.maxOutputTokens ??
-          Math.max(8_000, input.count * 360),
+        assignment.model.maxOutputTokens ?? Math.max(8_000, input.count * 360),
         16_000,
       ),
       responseSchema,
@@ -184,8 +182,7 @@ function buildGateway(
   database: NarrativeDatabase,
   options: InspirationLlmGeneratorOptions,
 ): ModelGateway {
-  const resolved =
-    new SqliteAssignmentRepository(database).resolve("writing");
+  const resolved = new SqliteAssignmentRepository(database).resolve("writing");
   if (!resolved) throw new InspirationModelUnavailableError();
   const environment = options.environment ?? {};
   const credential = resolveCredential(resolved.provider, environment);
@@ -352,9 +349,7 @@ function buildSeedCard(
       readerNeed:
         input.channel === "female" ? "偏爱与主动权" : "得意与阶层跃升",
       targetEmotion:
-        input.channel === "female"
-          ? "被偏爱、掌握命运"
-          : "得意、惊艳、赢麻了",
+        input.channel === "female" ? "被偏爱、掌握命运" : "得意、惊艳、赢麻了",
       protagonistIdentity: slots.identity.phrase,
       advantageHook: slots.anomalyRule.phrase,
       targetCircle: slots.highValueCircle.phrase,
@@ -390,15 +385,14 @@ function buildPrompt(
     .map((slot) => `${slot}=「${locked[slot]!.phrase}」`)
     .join("；");
   const deals = bundles
-    .map(
-      (bundle) =>
-        [
-          `#${bundle.index}`,
-          `① identityHint: ${renderHint(bundle.identityHint!)}`,
-          `② anomalyHint: ${renderHint(bundle.anomalyHint)}`,
-          `③ circleHint: ${renderHint(bundle.circleHint!)}`,
-          `④ twistHint: ${renderHint(bundle.twistHint)}`,
-        ].join("\n"),
+    .map((bundle) =>
+      [
+        `#${bundle.index}`,
+        `① identityHint: ${renderHint(bundle.identityHint!)}`,
+        `② anomalyHint: ${renderHint(bundle.anomalyHint)}`,
+        `③ circleHint: ${renderHint(bundle.circleHint!)}`,
+        `④ twistHint: ${renderHint(bundle.twistHint)}`,
+      ].join("\n"),
     )
     .join("\n\n");
 

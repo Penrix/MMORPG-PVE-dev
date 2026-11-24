@@ -116,21 +116,18 @@ describe("inspiration slot machine", () => {
   });
 
   for (const count of [24, 30]) {
-    it(
-      `rolls ${count} local cards across shuffle rounds with globally unique four-slot signatures`,
-      () => {
-        const result = rollInspirationSeeds(database, {
-          channel: "male",
-          count,
-          mode: "local",
-          useM03: false,
-          seed: "large-batch-" + count,
-        });
-        expect(result.cards).toHaveLength(count);
-        expect(result.mode).toBe("local");
-        expect(new Set(result.cards.map(signature)).size).toBe(count);
-      },
-    );
+    it(`rolls ${count} local cards across shuffle rounds with globally unique four-slot signatures`, () => {
+      const result = rollInspirationSeeds(database, {
+        channel: "male",
+        count,
+        mode: "local",
+        useM03: false,
+        seed: "large-batch-" + count,
+      });
+      expect(result.cards).toHaveLength(count);
+      expect(result.mode).toBe("local");
+      expect(new Set(result.cards.map(signature)).size).toBe(count);
+    });
   }
 
   it("keeps a 30-card batch unique even when three slots are locked", () => {
@@ -159,8 +156,7 @@ describe("inspiration slot machine", () => {
         (card) =>
           card.slots.identity.id === baseline.slots.identity.id &&
           card.slots.anomalyRule.id === baseline.slots.anomalyRule.id &&
-          card.slots.highValueCircle.id ===
-            baseline.slots.highValueCircle.id,
+          card.slots.highValueCircle.id === baseline.slots.highValueCircle.id,
       ),
     ).toBe(true);
   });
@@ -260,10 +256,8 @@ describe("inspiration slot machine", () => {
     ).toBe(true);
   });
 
-  it(
-    "deals LLM molds from the preferred active M03 types before slot-bank fallbacks",
-    () => {
-      addM03("ROLE-9001", "ROLE", "木叶医院最不起眼的护理忍者");
+  it("deals LLM molds from the preferred active M03 types before slot-bank fallbacks", () => {
+    addM03("ROLE-9001", "ROLE", "木叶医院最不起眼的护理忍者");
     addM03("GF-9001", "GF", "治疗伤员就能复制其查克拉特性");
     addM03("GATE-9001", "GATE", "上忍与忍族争夺的医疗资源圈");
     addM03("REV-9001", "REV", "根部却开始追查异常治疗记录");
@@ -302,9 +296,8 @@ describe("inspiration slot machine", () => {
         bundle.twistHint.id,
       ].join("|"),
     );
-      expect(new Set(bundleSignatures).size).toBe(24);
-    },
-  );
+    expect(new Set(bundleSignatures).size).toBe(24);
+  });
 
   it("rejects mismatched locked slots and hollow phrases", () => {
     const item = BUILTIN_INSPIRATION_SLOT_BANK.find(

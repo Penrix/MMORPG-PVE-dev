@@ -67,7 +67,10 @@ function mockSlot(
   };
 }
 
-const mockLlmGenerator: InspirationLlmGenerator = async (_database, request) => {
+const mockLlmGenerator: InspirationLlmGenerator = async (
+  _database,
+  request,
+) => {
   const cards = Array.from({ length: request.count }, (_, offset) => {
     const index = offset + 1;
     const identity =
@@ -209,10 +212,8 @@ describe("inspiration API", () => {
     ).toBe(8);
   });
 
-  it(
-    "routes one 24-card 火影 LLM batch through the injected generator and preserves locked slots",
-    async () => {
-      const { app } = await setup(mockLlmGenerator);
+  it("routes one 24-card 火影 LLM batch through the injected generator and preserves locked slots", async () => {
+    const { app } = await setup(mockLlmGenerator);
     const local = await app.inject({
       method: "POST",
       url: "/api/inspirations/roll",
@@ -253,13 +254,10 @@ describe("inspiration API", () => {
         (card: { slots: { identity: unknown } }) =>
           JSON.stringify(card.slots.identity) === JSON.stringify(locked),
       ),
-      ).toBe(true);
-    },
-  );
+    ).toBe(true);
+  });
 
-  it(
-    "returns a clear 422 when LLM mode has no configured writing model",
-    async () => {
+  it("returns a clear 422 when LLM mode has no configured writing model", async () => {
     const { app } = await setup();
     const response = await app.inject({
       method: "POST",
@@ -276,9 +274,8 @@ describe("inspiration API", () => {
     expect(response.json().error).toMatchObject({
       code: "inspiration.model_unavailable",
     });
-      expect(response.json().error.message).toContain("免费词库速摇");
-    },
-  );
+    expect(response.json().error.message).toContain("免费词库速摇");
+  });
 
   it("atomically creates a project with intent, premise and book outline", async () => {
     const { app, database } = await setup();
