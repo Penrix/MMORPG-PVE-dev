@@ -212,7 +212,9 @@ export function installSourceWorldSeed(
     }
 
     const touchedCanonicalKeys = new Set(
-      [...projectionByEvidence.values()].map((projection) => projection.canonicalKey),
+      [...projectionByEvidence.values()].map(
+        (projection) => projection.canonicalKey,
+      ),
     );
     const canonicalRelations = collectCanonicalEvidenceRelations(
       db,
@@ -236,19 +238,10 @@ export function installSourceWorldSeed(
 
       const relationLines = (relationsByCanonical.get(canonicalKey) ?? []).map(
         (edge) =>
-          edge.relation +
-          "：[[" +
-          edge.toCanonical +
-          "|" +
-          edge.toName +
-          "]]",
+          edge.relation + "：[[" + edge.toCanonical + "|" + edge.toName + "]]",
       );
       const baseContent = created.has(canonicalKey)
-        ? renderSeedCard(
-            representative.record,
-            representative.corpusId,
-            [],
-          )
+        ? renderSeedCard(representative.record, representative.corpusId, [])
         : migrateLegacySeedRelationSection(card.content);
       const nextContent = upsertManagedRelationSection(
         baseContent,
@@ -375,7 +368,11 @@ function upsertManagedRelationSection(
   const end = content.indexOf(MANAGED_RELATION_END);
   if (start >= 0 && end >= start) {
     const tail = end + MANAGED_RELATION_END.length;
-    return [content.slice(0, start).trimEnd(), managed, content.slice(tail).trim()]
+    return [
+      content.slice(0, start).trimEnd(),
+      managed,
+      content.slice(tail).trim(),
+    ]
       .filter(Boolean)
       .join("\n\n");
   }

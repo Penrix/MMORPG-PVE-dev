@@ -1,8 +1,4 @@
-import {
-  readdirSync,
-  readFileSync,
-  statSync,
-} from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -120,9 +116,7 @@ async function loadOnePieceSeed(
     (root) => {
       const base = join(root, "data/universes/one-piece");
       const entities = readJsonObjectsRecursively(join(base, "entities"));
-      const translations = readTranslationMap(
-        join(base, "translations/en"),
-      );
+      const translations = readTranslationMap(join(base, "translations/en"));
       console.log(
         "One Piece rich graph: " +
           entities.length +
@@ -260,14 +254,10 @@ async function loadHunterXHunterSeed(
           "utf8",
         ),
       ) as unknown;
-      if (!Array.isArray(parsed))
-        throw new Error("HxH roster is not an array");
+      if (!Array.isArray(parsed)) throw new Error("HxH roster is not an array");
       return normalizeHunterXHunterRoster({
         roster: parsed.filter(isJsonObject),
-        canonicalByIdentity: buildSourceIdentityBridge(
-          staticSeed,
-          mindMaps,
-        ),
+        canonicalByIdentity: buildSourceIdentityBridge(staticSeed, mindMaps),
       });
     },
   );

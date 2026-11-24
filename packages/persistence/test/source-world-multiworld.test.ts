@@ -126,7 +126,6 @@ describe("generic multi-world Source seed installer", () => {
   });
 });
 
-
 describe("Source World evidence enrichment", () => {
   it("lets later evidence thicken an existing canonical graph without overwriting author text", () => {
     db = new NodeNarrativeDatabase();
@@ -256,11 +255,7 @@ describe("Source World evidence enrichment", () => {
       ],
     };
 
-    installSourceWorldSeed(
-      db,
-      supporting,
-      "2026-11-25T01:20:00.000Z",
-    );
+    installSourceWorldSeed(db, supporting, "2026-11-25T01:20:00.000Z");
     const enriched = worlds.getCard("enrichment-world", "character:alice");
     expect(enriched?.content).toContain("作者深化");
     expect(enriched?.content).toContain("自动证据关系");
@@ -278,11 +273,7 @@ describe("Source World evidence enrichment", () => {
       ]),
     );
 
-    installSourceWorldSeed(
-      db,
-      supporting,
-      "2026-11-25T01:30:00.000Z",
-    );
+    installSourceWorldSeed(db, supporting, "2026-11-25T01:30:00.000Z");
     const repeated = worlds.getCard("enrichment-world", "character:alice");
     expect(repeated?.content).toContain("作者深化");
     expect(repeated?.content.match(/ally_of_recorded/g)?.length).toBe(1);

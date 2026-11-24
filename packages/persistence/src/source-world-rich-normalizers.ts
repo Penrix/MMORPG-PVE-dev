@@ -177,10 +177,9 @@ export function normalizeHunterXHunterMindMaps(input: {
         input.canonicalByIdentity?.[identityKey(kind, name)] ?? sourceKey,
       kind,
       name,
-      aliases: [
-        text(raw.japaneseName),
-        ...stringArray(raw.aliases),
-      ].filter(Boolean),
+      aliases: [text(raw.japaneseName), ...stringArray(raw.aliases)].filter(
+        Boolean,
+      ),
       summary: description(raw),
       raw,
       sourceUrl:
@@ -193,8 +192,7 @@ export function normalizeHunterXHunterMindMaps(input: {
     });
   };
   for (const row of input.characters) addRecord(row, "character", "characters");
-  for (const row of input.factions)
-    addRecord(row, "organization", "factions");
+  for (const row of input.factions) addRecord(row, "organization", "factions");
   for (const row of input.locations) addRecord(row, "location", "locations");
   for (const row of input.nations) addRecord(row, "location", "nations");
   for (const row of input.arcs) addRecord(row, "event", "arcs");
@@ -233,7 +231,12 @@ export function normalizeHunterXHunterMindMaps(input: {
     many(id, row.teachers, "teacher_recorded", "MindMaps teachers.");
     many(id, row.allies, "ally_of_recorded", "MindMaps allies.");
     many(id, row.enemies, "enemy_of_recorded", "MindMaps enemies.");
-    many(id, row.locationIds, "location_association_recorded", "MindMaps locationIds.");
+    many(
+      id,
+      row.locationIds,
+      "location_association_recorded",
+      "MindMaps locationIds.",
+    );
     many(id, row.arcIds, "appears_in_arc_recorded", "MindMaps arcIds.");
     const village = text(row.villageLocationId);
     if (village)
@@ -261,14 +264,30 @@ export function normalizeHunterXHunterMindMaps(input: {
 
   for (const row of input.factions) {
     const id = text(row.id);
-    many(id, row.characterIds, "has_member_recorded", "MindMaps faction members.");
-    many(id, row.locationIds, "located_at_recorded", "MindMaps faction locations.");
+    many(
+      id,
+      row.characterIds,
+      "has_member_recorded",
+      "MindMaps faction members.",
+    );
+    many(
+      id,
+      row.locationIds,
+      "located_at_recorded",
+      "MindMaps faction locations.",
+    );
   }
   for (const row of input.locations) {
     const id = text(row.id);
-    many(id, row.arcIds, "appears_in_arc_recorded", "MindMaps location arcIds.");
+    many(
+      id,
+      row.arcIds,
+      "appears_in_arc_recorded",
+      "MindMaps location arcIds.",
+    );
     const nation = text(row.nationId);
-    if (nation) addRelation(id, nation, "part_of_nation_recorded", "MindMaps nationId.");
+    if (nation)
+      addRelation(id, nation, "part_of_nation_recorded", "MindMaps nationId.");
   }
   for (const row of input.abilities) {
     const id = text(row.id);
@@ -276,25 +295,70 @@ export function normalizeHunterXHunterMindMaps(input: {
   }
   for (const row of input.events) {
     const id = text(row.id);
-    many(id, row.characterIds, "involves_character_recorded", "MindMaps event characters.");
-    many(id, row.factionIds, "involves_faction_recorded", "MindMaps event factions.");
-    many(id, row.locationIds, "occurs_at_recorded", "MindMaps event locations.");
+    many(
+      id,
+      row.characterIds,
+      "involves_character_recorded",
+      "MindMaps event characters.",
+    );
+    many(
+      id,
+      row.factionIds,
+      "involves_faction_recorded",
+      "MindMaps event factions.",
+    );
+    many(
+      id,
+      row.locationIds,
+      "occurs_at_recorded",
+      "MindMaps event locations.",
+    );
     const location = text(row.locationId);
-    if (location) addRelation(id, location, "occurs_at_recorded", "MindMaps event location.");
+    if (location)
+      addRelation(
+        id,
+        location,
+        "occurs_at_recorded",
+        "MindMaps event location.",
+      );
     const arc = text(row.arcId);
-    if (arc) addRelation(id, arc, "part_of_arc_recorded", "MindMaps event arcId.");
+    if (arc)
+      addRelation(id, arc, "part_of_arc_recorded", "MindMaps event arcId.");
   }
   for (const row of input.routes) {
     const id = text(row.id);
-    many(id, row.protagonistCharacterIds, "route_protagonist_recorded", "MindMaps route protagonists.");
-    many(id, row.relatedCharacterIds, "route_character_recorded", "MindMaps route related characters.");
+    many(
+      id,
+      row.protagonistCharacterIds,
+      "route_protagonist_recorded",
+      "MindMaps route protagonists.",
+    );
+    many(
+      id,
+      row.relatedCharacterIds,
+      "route_character_recorded",
+      "MindMaps route related characters.",
+    );
     const arc = text(row.arcId);
-    if (arc) addRelation(id, arc, "route_arc_recorded", "MindMaps route arcId.");
+    if (arc)
+      addRelation(id, arc, "route_arc_recorded", "MindMaps route arcId.");
     for (const step of arrayOfObjects(row.steps)) {
       const location = text(step.locationId);
       const event = text(step.eventId);
-      if (location) addRelation(id, location, "route_step_location_recorded", "MindMaps route step.");
-      if (event) addRelation(id, event, "route_step_event_recorded", "MindMaps route step.");
+      if (location)
+        addRelation(
+          id,
+          location,
+          "route_step_location_recorded",
+          "MindMaps route step.",
+        );
+      if (event)
+        addRelation(
+          id,
+          event,
+          "route_step_event_recorded",
+          "MindMaps route step.",
+        );
     }
   }
 
@@ -491,8 +555,7 @@ function requiredUpstream(
   id: string,
 ): SourceWorldCatalogEntry["upstreams"][number] {
   const upstream = entry.upstreams.find((candidate) => candidate.id === id);
-  if (!upstream)
-    throw new Error("source.world.catalog.upstream_missing:" + id);
+  if (!upstream) throw new Error("source.world.catalog.upstream_missing:" + id);
   return upstream;
 }
 

@@ -37,13 +37,7 @@ export function withPinnedGitHubCheckout<T>(
     git("config", "extensions.worktreeConfig", "true");
     git("sparse-checkout", "init", "--cone");
     git("sparse-checkout", "set", ...input.paths);
-    git(
-      "fetch",
-      "--depth=1",
-      "--filter=blob:none",
-      "origin",
-      input.ref,
-    );
+    git("fetch", "--depth=1", "--filter=blob:none", "origin", input.ref);
     git("checkout", "-q", "--detach", "FETCH_HEAD");
     return read(root);
   } catch (error) {

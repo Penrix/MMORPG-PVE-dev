@@ -145,8 +145,7 @@ const ONE_PIECE: SourceWorldCatalogEntry = {
         "data/universes/one-piece/entities",
         "data/universes/one-piece/translations/en",
       ],
-      note:
-        "Large pinned entity graph: characters, crews, devil fruits, locations, ships, weapons, arcs, chapters and qualified temporal/epistemic relations. Repository license not detected; use as provenance-aware runtime evidence, do not vendor.",
+      note: "Large pinned entity graph: characters, crews, devil fruits, locations, ships, weapons, arcs, chapters and qualified temporal/epistemic relations. Repository license not detected; use as provenance-aware runtime evidence, do not vendor.",
     },
     {
       id: "one-piece-dataset",
@@ -276,8 +275,7 @@ const HUNTER_X_HUNTER: SourceWorldCatalogEntry = {
       repository: "LucaSartorio/MindMapsAnime",
       ref: "8ec6163cb4db76be58670e1e25cd6fe136df8fc0",
       paths: ["src/data/hunterxhunter"],
-      note:
-        "Pinned structured HxH world graph with characters, factions, locations, nations, arcs, events, Nen abilities, routes and explicit character relations. Repository license not detected; runtime evidence only.",
+      note: "Pinned structured HxH world graph with characters, factions, locations, nations, arcs, events, Nen abilities, routes and explicit character relations. Repository license not detected; runtime evidence only.",
     },
     {
       id: "hxh-roster",
@@ -287,8 +285,7 @@ const HUNTER_X_HUNTER: SourceWorldCatalogEntry = {
       repository: "slackwing/feathers",
       ref: "dd064905fdbc5b556d50a39e1dc6d23bef6a7de2",
       paths: ["foundry/website/html/hxh"],
-      note:
-        "198-character structured roster with descriptions, affiliation, arc participation, Nen types and weapons. Repository license not detected; runtime evidence only.",
+      note: "198-character structured roster with descriptions, affiliation, arc participation, Nen types and weapons. Repository license not detected; runtime evidence only.",
     },
     {
       id: "hxh-static-database",
