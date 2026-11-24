@@ -51,7 +51,7 @@ describe("Naruto Third War Konoha Source time slice", () => {
     const first = installNarutoThirdWarKonohaSlice(db, now);
     expect(first.sliceKey).toBe(NARUTO_THIRD_WAR_KONOHA_SLICE_KEY);
     expect(first.worldTime).toBe(NARUTO_THIRD_WAR_KONOHA_WORLD_TIME);
-    expect(first.createdCards).toHaveLength(6);
+    expect(first.createdCards).toHaveLength(8);
     expect(first.resolvedSourceKeys).toMatchObject({
       konoha: "village:16",
       iwa: "village:11",
@@ -87,6 +87,15 @@ describe("Naruto Third War Konoha Source time slice", () => {
       ]),
     );
 
+    const missionSystem = worlds.getCard(
+      NARUTO_SOURCE_WORLD_ID,
+      "institution:konoha-third-war-mission-assignment",
+    );
+    expect(missionSystem?.content).toContain(
+      "### 可玩入口｜接收神无毗桥任务编成",
+    );
+    expect(missionSystem?.content).toContain("来源身份：inference");
+
     const activity = worlds.getCard(
       NARUTO_SOURCE_WORLD_ID,
       "activity:team-minato-kannabi-mission",
@@ -110,6 +119,6 @@ describe("Naruto Third War Konoha Source time slice", () => {
       "2026-11-24T17:01:00.000Z",
     );
     expect(second.createdCards).toHaveLength(0);
-    expect(second.preservedCards).toHaveLength(6);
+    expect(second.preservedCards).toHaveLength(8);
   });
 });
