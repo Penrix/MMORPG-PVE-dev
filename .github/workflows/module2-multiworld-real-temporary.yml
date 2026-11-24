@@ -82,7 +82,8 @@ jobs:
           const before = JSON.parse(readFileSync("/tmp/multiworld-before.json","utf8"));
           const db = new DatabaseSync("/tmp/narralume-multiworld.sqlite", {readOnly:true});
           const after = db.prepare("SELECT corpus_id,COUNT(*) AS n FROM source_records GROUP BY corpus_id ORDER BY corpus_id").all();
-          assert.deepEqual(after, before);
+          const normalized = after.map(row => ({corpus_id: row.corpus_id, n: row.n}));
+          assert.deepEqual(normalized, before);
           assert.equal(db.prepare("SELECT COUNT(*) AS n FROM canon_entities").get().n, 0);
           db.close();
           EOF
