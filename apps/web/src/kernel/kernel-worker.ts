@@ -66,6 +66,7 @@ import {
   CollaborationWorkerSuite,
   DeliveryWorkerSuite,
   GatewayNarrativeModelClient,
+  generateSourceWorldProduction,
 } from "@narralume/narrative";
 import { HarnessSupervisor } from "@narralume/harness";
 
@@ -321,7 +322,13 @@ async function boot(): Promise<void> {
   });
   registerWorldGraphRoutes(table, database);
   registerSourceCorpusRoutes(table, database);
-  registerUnifiedSourceWorldRoutes(table, database);
+  registerUnifiedSourceWorldRoutes(table, database, {
+    generateProduction: (input) =>
+      generateSourceWorldProduction(database, input, {
+        environment: {},
+        ...(credentialedModelFetch ? { fetch: credentialedModelFetch } : {}),
+      }),
+  });
   registerProjectWorldRoutes(table, database);
   registerStoryDirectorRoutes(table, database, coordinator, {
     adoptNodeHandoff: storyDirectorWorkers.adoptNodeHandoff.bind(storyDirectorWorkers),
