@@ -286,7 +286,7 @@ const HUNTER_X_HUNTER: SourceWorldCatalogEntry = {
       sourceUrl: "https://github.com/slackwing/feathers",
       repository: "slackwing/feathers",
       ref: "dd064905fdbc5b556d50a39e1dc6d23bef6a7de2",
-      paths: ["foundry/website/html/hxh/roster.json"],
+      paths: ["foundry/website/html/hxh"],
       note:
         "198-character structured roster with descriptions, affiliation, arc participation, Nen types and weapons. Repository license not detected; runtime evidence only.",
     },
