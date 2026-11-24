@@ -2,6 +2,7 @@ import {
   WORLD_BUILDER_ATLAS_CONTRACT,
   WorldPackDocumentSchema,
   WorldPackRequestSchema,
+  worldPackAtlasKind,
   worldPackCoarseTypeForAtlasKind,
   type WorldPackDocument,
   type WorldPackRequest,
