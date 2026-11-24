@@ -3,8 +3,11 @@ import type { WorldAtlasCognitiveMother } from "@narralume/contracts";
 export type SourceWorldAdapterId =
   | "naruto-specialized-v1"
   | "one-piece-dataset-v1"
+  | "one-piece-wiki-graph-v1"
   | "bleach-database-v1"
   | "hxh-static-v1"
+  | "hxh-mindmaps-v1"
+  | "hxh-roster-v1"
   | "hxh-api-rich-v1"
   | "jikan-anime-cast-v1";
 
@@ -132,9 +135,23 @@ const ONE_PIECE: SourceWorldCatalogEntry = {
   },
   upstreams: [
     {
+      id: "one-piece-wiki-graph",
+      adapter: "one-piece-wiki-graph-v1",
+      role: "primary",
+      sourceUrl: "https://github.com/7IBO/onepiece-wiki",
+      repository: "7IBO/onepiece-wiki",
+      ref: "05ee431136259ba198c89256196a497c1d3d311d",
+      paths: [
+        "data/universes/one-piece/entities",
+        "data/universes/one-piece/translations/en",
+      ],
+      note:
+        "Large pinned entity graph: characters, crews, devil fruits, locations, ships, weapons, arcs, chapters and qualified temporal/epistemic relations. Repository license not detected; use as provenance-aware runtime evidence, do not vendor.",
+    },
+    {
       id: "one-piece-dataset",
       adapter: "one-piece-dataset-v1",
-      role: "primary",
+      role: "supporting",
       sourceUrl: "https://github.com/25thNight0901/OnePiece-dataset",
       repository: "25thNight0901/OnePiece-dataset",
       ref: "f876b1383e35d9d3fb4f45f7d8d6aa3edaaa2b07",
@@ -252,9 +269,31 @@ const HUNTER_X_HUNTER: SourceWorldCatalogEntry = {
   },
   upstreams: [
     {
+      id: "hxh-mindmaps-world",
+      adapter: "hxh-mindmaps-v1",
+      role: "primary",
+      sourceUrl: "https://github.com/LucaSartorio/MindMapsAnime",
+      repository: "LucaSartorio/MindMapsAnime",
+      ref: "8ec6163cb4db76be58670e1e25cd6fe136df8fc0",
+      paths: ["src/data/hunterxhunter"],
+      note:
+        "Pinned structured HxH world graph with characters, factions, locations, nations, arcs, events, Nen abilities, routes and explicit character relations. Repository license not detected; runtime evidence only.",
+    },
+    {
+      id: "hxh-roster",
+      adapter: "hxh-roster-v1",
+      role: "supporting",
+      sourceUrl: "https://github.com/slackwing/feathers",
+      repository: "slackwing/feathers",
+      ref: "dd064905fdbc5b556d50a39e1dc6d23bef6a7de2",
+      paths: ["foundry/website/html/hxh/roster.json"],
+      note:
+        "198-character structured roster with descriptions, affiliation, arc participation, Nen types and weapons. Repository license not detected; runtime evidence only.",
+    },
+    {
       id: "hxh-static-database",
       adapter: "hxh-static-v1",
-      role: "primary",
+      role: "supporting",
       sourceUrl: "https://github.com/OmarDarioMelendrez/hunter-x-hunter-api-ts",
       repository: "OmarDarioMelendrez/hunter-x-hunter-api-ts",
       ref: "687562028309b66e573ffde1bb707c8e782e0048",
