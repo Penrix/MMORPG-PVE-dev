@@ -13,7 +13,7 @@ function cleanRelation(value: string): string {
     .trim()
     .replace(/^[-*+]\s+/, "")
     .replace(/^[#>]+\s*/, "")
-    .replace(/[*_`]/g, "")
+    .replace(/[*`]/g, "")
     .trim();
 }
 
