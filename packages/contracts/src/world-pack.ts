@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   WorldAtlasCardKindSchema,
+  WorldAtlasReaderSemanticsSchema,
   type WorldAtlasCardKind,
 } from "./world-atlas.js";
 
@@ -88,6 +89,8 @@ export const WorldPackNodeSchema = z
   .object({
     localId: z.string().regex(/^[a-z][a-z0-9_-]{1,79}$/),
     existingCanonId: z.string().trim().min(1).nullable(),
+    /** Existing Source World card key when this batch deepens that reference object. */
+    existingSourceKey: z.string().trim().min(1).nullable().optional(),
     type: WorldPackCoarseNodeTypeSchema,
     /** Logical World Atlas card type. Optional only for old stored WorldPacks. */
     atlasKind: WorldAtlasCardKindSchema.optional(),
@@ -105,6 +108,8 @@ export const WorldPackNodeSchema = z
       "source_canon",
     ]),
     sourceNote: z.string().trim().max(3_000),
+    /** Reader-side prior; never Source objective fact or Project Canon. */
+    readerSemantics: WorldAtlasReaderSemanticsSchema.optional(),
   })
   .strict();
 export type WorldPackNode = z.infer<typeof WorldPackNodeSchema>;
@@ -302,12 +307,14 @@ export const AdoptWorldPackRequestSchema = z.object({
 });
 
 /**
- * WorldForge-style graph references: local IDs or `canon:<existing-id>`.
- * Models cannot invent database IDs; references must resolve before adoption.
+ * WorldForge-style graph references: local IDs, `canon:<existing-id>` or
+ * `source:<existing-source-key>`. Project and Source authority spaces are
+ * validated independently and must never be silently mixed.
  */
 export function worldPackReferenceProblems(
   document: WorldPackDocument,
   knownCanonIds: ReadonlySet<string>,
+  knownSourceKeys: ReadonlySet<string> = new Set<string>(),
 ): string[] {
   const problems: string[] = [];
   if (
@@ -336,15 +343,24 @@ export function worldPackReferenceProblems(
     }
     const nameKey = `${node.type}:${node.name.toLocaleLowerCase()}`;
     if (names.has(nameKey))
-      problems.push(`duplicate Canon name in package: ${node.name}`);
+      problems.push(`duplicate world-object name in package: ${node.name}`);
     names.add(nameKey);
+    if (node.existingCanonId && node.existingSourceKey)
+      problems.push(
+        `mixed authority identity: ${node.localId} cannot point at Canon and Source World simultaneously`,
+      );
     if (node.existingCanonId && !knownCanonIds.has(node.existingCanonId))
       problems.push(`unknown existing Canon entity: ${node.existingCanonId}`);
+    if (node.existingSourceKey && !knownSourceKeys.has(node.existingSourceKey))
+      problems.push(`unknown existing Source card: ${node.existingSourceKey}`);
   }
   const resolve = (ref: string) => {
     if (ref.startsWith("canon:")) {
       if (!knownCanonIds.has(ref.slice(6)))
         problems.push(`unknown Canon ref: ${ref}`);
+    } else if (ref.startsWith("source:")) {
+      if (!knownSourceKeys.has(ref.slice(7)))
+        problems.push(`unknown Source ref: ${ref}`);
     } else if (!nodes.has(ref)) {
       problems.push(`unresolved world ref: ${ref}`);
     }
