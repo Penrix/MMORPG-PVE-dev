@@ -1,6 +1,8 @@
 import {
+  WorldAtlasCognitiveMotherSchema,
   WorldAtlasReaderSemanticsSchema,
   type WorldAtlasCardKind,
+  type WorldAtlasCognitiveMother,
   type WorldAtlasReaderSemantics,
 } from "@narralume/contracts";
 import type { NarrativeDatabase } from "./database.js";
@@ -291,6 +293,38 @@ export class SqliteUnifiedSourceWorldRepository {
       )
       .all(world.canonicalCorpusId) as unknown as Array<{ sourceKey: string }>;
     return rows.map((row) => row.sourceKey);
+  }
+
+  getCognitiveMother(worldId: string): WorldAtlasCognitiveMother | null {
+    const world = this.getWorld(worldId);
+    if (!world) throw Error("source.world.not_found");
+    const corpus = this.sources.getCorpus(world.canonicalCorpusId);
+    if (!corpus) throw Error("source.world.canonical_corpus_missing");
+    const raw = corpus.metadata.cognitiveMother;
+    if (raw === undefined) return null;
+    const parsed = WorldAtlasCognitiveMotherSchema.safeParse(raw);
+    if (!parsed.success) throw Error("source.world.cognitive_mother_invalid");
+    return parsed.data;
+  }
+
+  upsertCognitiveMother(input: {
+    worldId: string;
+    cognitiveMother: WorldAtlasCognitiveMother;
+  }): WorldAtlasCognitiveMother {
+    const world = this.getWorld(input.worldId);
+    if (!world) throw Error("source.world.not_found");
+    const corpus = this.sources.getCorpus(world.canonicalCorpusId);
+    if (!corpus) throw Error("source.world.canonical_corpus_missing");
+    const cognitiveMother = WorldAtlasCognitiveMotherSchema.parse(
+      input.cognitiveMother,
+    );
+    this.sources.upsertCorpus({
+      ...corpus,
+      metadata: { ...corpus.metadata, cognitiveMother },
+      // Reader semantics do not change Source evidence import time.
+      importedAt: corpus.importedAt,
+    });
+    return cognitiveMother;
   }
 
   getReaderSemantics(
