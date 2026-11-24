@@ -1,4 +1,5 @@
 name: Branch Formatter Temporary
+# rerun after authority documentation status update
 
 on:
   push:
