@@ -142,10 +142,11 @@ export function installNarutoSourceWorld(
           "Long-form character biographies retained as separate supporting evidence. Same names are not auto-merged.",
       });
 
-    worlds.upsertCognitiveMother({
-      worldId: NARUTO_SOURCE_WORLD_ID,
-      cognitiveMother: NARUTO_COGNITIVE_MOTHER,
-    });
+    if (!worlds.getCognitiveMother(NARUTO_SOURCE_WORLD_ID))
+      worlds.upsertCognitiveMother({
+        worldId: NARUTO_SOURCE_WORLD_ID,
+        cognitiveMother: NARUTO_COGNITIVE_MOTHER,
+      });
 
     const records = listAllActiveRecords(sources, NARUTO_DATTEBAYO_CORPUS);
     const created = new Set<string>();
