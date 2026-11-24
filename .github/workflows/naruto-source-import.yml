@@ -6,6 +6,8 @@ on:
       - ".github/workflows/naruto-source-import.yml"
       - "scripts/import-naruto.ts"
       - "packages/persistence/src/naruto-source-import.ts"
+      - "packages/persistence/src/naruto-source-world.ts"
+      - "packages/narrative/src/source-world-production.ts"
       - "packages/persistence/src/source-corpus-repository.ts"
       - "packages/persistence/src/migrations/049-shared-source-corpora.ts"
   workflow_dispatch:
@@ -38,10 +40,22 @@ jobs:
           const counts = db.prepare("SELECT corpus_id,COUNT(*) AS total FROM source_records GROUP BY corpus_id ORDER BY corpus_id").all();
           const links = db.prepare("SELECT COUNT(*) AS n FROM source_relations").get().n;
           const projects = db.prepare("SELECT COUNT(*) AS n FROM canon_entities").get().n;
-          console.log({counts,sourceRelations:links,canonEntities:projects});
+          const world = db.prepare("SELECT id,canonical_corpus_id AS corpus FROM source_worlds WHERE id='naruto'").get();
+          const atlasCards = db.prepare("SELECT COUNT(*) AS n FROM source_records WHERE corpus_id='wiki:naruto'").get().n;
+          const atlasLinks = db.prepare("SELECT COUNT(*) AS n FROM source_relations WHERE corpus_id='wiki:naruto'").get().n;
+          const evidence = db.prepare("SELECT COUNT(*) AS n FROM source_world_evidence_links WHERE world_id='naruto'").get().n;
+          const cognitive = db.prepare("SELECT json_extract(metadata_json,'$.cognitiveMother.summary') AS summary FROM source_corpora WHERE id='wiki:naruto'").get();
+          const konoha = db.prepare("SELECT source_key,name FROM source_records WHERE corpus_id='wiki:naruto' AND name='Konohagakure'").all();
+          console.log({counts,sourceRelations:links,canonEntities:projects,world,atlasCards,atlasLinks,evidence,cognitive,konoha});
           assert(counts.some(c => c.corpus_id==="naruto-dattebayo" && c.total > 500), "Dattebayo data missing");
           assert(counts.some(c => c.corpus_id==="naruto-wiki-scraper" && c.total > 500), "Wiki records missing");
           assert(links > 500, "Expected actual relations, not empty attribute cards");
+          assert.equal(world?.corpus, "wiki:naruto", "Unified Naruto Source World missing");
+          assert(atlasCards > 3000, "Curated Naruto Atlas cards missing");
+          assert(atlasLinks > 500, "Curated Naruto Atlas typed links missing");
+          assert(evidence > 3000, "Naruto Atlas evidence mapping missing");
+          assert(typeof cognitive?.summary === "string" && cognitive.summary.length > 20, "Naruto Cognitive Mother missing");
+          assert.equal(konoha.length, 1, "Konohagakure canonical card missing or ambiguous");
           assert.equal(projects, 0, "Source import must not fabricate any Project Canon facts");
           db.close();
           EOF
