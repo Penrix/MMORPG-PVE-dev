@@ -63,6 +63,7 @@ const NODE_SCHEMA = {
   required: [
     "localId",
     "existingCanonId",
+    "existingSourceKey",
     "type",
     "atlasKind",
     "name",
@@ -74,13 +75,17 @@ const NODE_SCHEMA = {
     "currentActivity",
     "origin",
     "sourceNote",
+    "readerSemantics",
   ],
   properties: {
     localId: txt(
       "Local stable ID for this pack, e.g. guild_hall; never a database UUID",
     ),
     existingCanonId: nullable(
-      "Existing Canon entity UUID ONLY if updating/reusing that exact entity; else null",
+      "Existing Project Canon entity UUID ONLY when target=Project Reality; otherwise null",
+    ),
+    existingSourceKey: nullable(
+      "Existing Source World card key ONLY when target=Source World and deepening that exact card; otherwise null",
     ),
     type: {
       type: "string",
@@ -125,6 +130,60 @@ const NODE_SCHEMA = {
     sourceNote: txt(
       "Grounding/citation or note; do not pretend model recall was externally verified",
     ),
+    readerSemantics: {
+      anyOf: [
+        {
+          type: "object",
+          additionalProperties: false,
+          required: [
+            "readerPrice",
+            "preloadedExpectations",
+            "familiarRelations",
+            "naturalEntrances",
+            "attentionTriggers",
+            "basis",
+            "sourceNote",
+          ],
+          properties: {
+            readerPrice: txt(
+              "Target Reader's preloaded price for this object; not objective world value",
+            ),
+            preloadedExpectations: {
+              type: "array",
+              maxItems: 30,
+              items: txt("Expectation already activated by this object"),
+            },
+            familiarRelations: {
+              type: "array",
+              maxItems: 30,
+              items: txt("Reader-familiar relation or social grammar"),
+            },
+            naturalEntrances: {
+              type: "array",
+              maxItems: 30,
+              items: txt("Entry route that feels natural in this mother world"),
+            },
+            attentionTriggers: {
+              type: "array",
+              maxItems: 30,
+              items: txt("Anomaly that this mother world makes especially noticeable"),
+            },
+            basis: {
+              type: "string",
+              enum: [
+                "author_judgment",
+                "market_observation",
+                "model_inference",
+              ],
+            },
+            sourceNote: txt(
+              "Why this Reader-side judgement is being proposed; never call it Source Canon",
+            ),
+          },
+        },
+        { type: "null" },
+      ],
+    },
   },
 };
 
@@ -158,8 +217,8 @@ export const WORLD_PACK_MODEL_CONTRACT: JsonSchemaContract = {
           additionalProperties: false,
           required: ["fromRef", "toRef", "relation", "description", "status"],
           properties: {
-            fromRef: txt("Local node ID or canon:<existing UUID>"),
-            toRef: txt("Local node ID or canon:<existing UUID>"),
+            fromRef: txt("Local node ID, canon:<existing UUID>, or source:<existing source key>"),
+            toRef: txt("Local node ID, canon:<existing UUID>, or source:<existing source key>"),
             relation: txt(
               "owns / leads / employs / knows / competes / trades / access-through etc",
             ),
