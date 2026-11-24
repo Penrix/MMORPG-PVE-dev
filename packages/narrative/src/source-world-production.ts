@@ -274,12 +274,13 @@ export function projectSourceWorldForProduction(
     if (selected.size >= 65) break;
   }
 
-  // Empty / thin Source Worlds still get a broad fallback. This is fill, never
-  // the primary selection strategy once a concrete focus can anchor a graph.
-  for (const hit of worlds.listCards(worldId, "", { limit: 80 })) {
-    if (selected.size >= 80) break;
-    if (!selected.has(hit.sourceKey)) selected.set(hit.sourceKey, hit);
-  }
+  // Empty / genuinely thin focuses get a broad fallback. Once the local graph
+  // is thick enough, unrelated global cards would contaminate a Zone audit.
+  if (selected.size < 12)
+    for (const hit of worlds.listCards(worldId, "", { limit: 80 })) {
+      if (selected.size >= 80) break;
+      if (!selected.has(hit.sourceKey)) selected.set(hit.sourceKey, hit);
+    }
   const nodes: WorldPackDocument["nodes"] = [];
   const links: WorldPackDocument["links"] = [];
   const activities: WorldPackDocument["activities"] = [];
