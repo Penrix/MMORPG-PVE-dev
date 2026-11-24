@@ -91,11 +91,11 @@ async function main(): Promise<void> {
       : null;
     const sourceWorld = installNarutoSourceWorld(db);
     if (projectId) {
-      // Bind reference sources to ONE novel's reader context. No Canon
-      // entities, actual character abilities or future events are promoted.
+      // A novel consumes the unified curated mother world, not two duplicate
+      // raw evidence corpora. Raw Dattebayo/Wiki records remain reachable from
+      // each Source World card's evidence dossier.
       db.transaction(() => {
-        refs.bindProject(projectId, NARUTO_DATTEBAYO_CORPUS);
-        if (wikiStats) refs.bindProject(projectId, NARUTO_WIKI_CORPUS);
+        refs.bindProject(projectId, sourceWorld.canonicalCorpusId);
       });
     }
     console.log(
