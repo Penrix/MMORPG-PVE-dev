@@ -49,12 +49,14 @@ function extractAuthorAndCategory(metaLine, fallbackCategory) {
     .map((part) => part.trim())
     .filter(Boolean);
   const author = parts[0] ?? "";
-  const categoryCandidates = parts.slice(1).filter(
-    (part) =>
-      !/^(?:连载中|已完结|完结|未完结|\d+(?:\.\d+)?万?在读|\d+(?:\.\d+)?万?字)$/u.test(
-        part,
-      ),
-  );
+  const categoryCandidates = parts
+    .slice(1)
+    .filter(
+      (part) =>
+        !/^(?:连载中|已完结|完结|未完结|\d+(?:\.\d+)?万?在读|\d+(?:\.\d+)?万?字)$/u.test(
+          part,
+        ),
+    );
   const category =
     categoryCandidates.length > 0
       ? categoryCandidates.join("·")
@@ -263,7 +265,7 @@ export function mergeNewbookPool(
       url: existing.url || entry.url || "",
       latestRank: Number.isFinite(entry.rank)
         ? entry.rank
-        : existing.latestRank ?? null,
+        : (existing.latestRank ?? null),
       firstSeenAt:
         existing.firstSeenAt && existing.firstSeenAt <= date
           ? existing.firstSeenAt
@@ -274,7 +276,7 @@ export function mergeNewbookPool(
           : date,
       seenCount: isNewRunSighting
         ? (existing.seenCount ?? 1) + 1
-        : existing.seenCount ?? 1,
+        : (existing.seenCount ?? 1),
     });
     if (isNewRunSighting) {
       touchedIds.add(id);
