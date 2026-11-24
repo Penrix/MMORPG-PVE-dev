@@ -83,6 +83,24 @@ describe("World Atlas lightweight cards and typed wiki links", () => {
     simpleCard("organization:konoha", "organization", "木叶隐村");
     simpleCard("ability:sharingan", "ability", "写轮眼");
 
+    const cognitiveMother = worlds.upsertCognitiveMother({
+      worldId: "naruto",
+      cognitiveMother: {
+        summary: "火影 Reader 预装的忍者世界语法",
+        preloadedWorldGrammar: ["忍村、忍族、任务、师承"],
+        priceLogic: ["血继限界与顶级忍者天然昂贵"],
+        naturalEntrances: ["忍者学校", "任务体系"],
+        expectedInertia: ["忍村政治与战争历史继续作用"],
+        attentionLogic: ["违背忍者常识的异常能力容易被注意"],
+        basis: "author_judgment",
+        sourceNote: "Reader-side world prior",
+      },
+    });
+    expect(cognitiveMother.summary).toContain("火影 Reader");
+    expect(worlds.getCognitiveMother("naruto")?.priceLogic).toContain(
+      "血继限界与顶级忍者天然昂贵",
+    );
+
     const readerSemantics = worlds.upsertReaderSemantics({
       worldId: "naruto",
       entityKey: "ability:sharingan",
