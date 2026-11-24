@@ -1,0 +1,87 @@
+name: Module2 Multiworld Real Import Temporary
+
+on:
+  push:
+    branches:
+      - feat/module3-world-atlas-integration
+    paths:
+      - .github/workflows/module2-multiworld-real-temporary.yml
+
+permissions:
+  contents: read
+
+jobs:
+  multiworld-real:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Import Naruto specialized mother world
+        run: npm run import:naruto -- --db /tmp/narralume-multiworld.sqlite --skip-wiki
+      - name: Import One Piece, Bleach and Hunter x Hunter through generic adapters
+        run: npm run import:source-world -- --all --db /tmp/narralume-multiworld.sqlite
+      - name: Audit four installed mother worlds
+        run: |
+          node --input-type=module <<'EOF'
+          import { DatabaseSync } from "node:sqlite";
+          import assert from "node:assert/strict";
+          const db = new DatabaseSync("/tmp/narralume-multiworld.sqlite", {readOnly:true});
+          const worlds = db.prepare("SELECT id,name,canonical_corpus_id AS corpus FROM source_worlds ORDER BY id").all();
+          const canon = Object.fromEntries(worlds.map(w => [w.id, w.corpus]));
+          const counts = Object.fromEntries(worlds.map(w => [
+            w.id,
+            db.prepare("SELECT COUNT(*) AS n FROM source_records WHERE corpus_id=?").get(w.corpus).n,
+          ]));
+          const relations = Object.fromEntries(worlds.map(w => [
+            w.id,
+            db.prepare("SELECT COUNT(*) AS n FROM source_relations WHERE corpus_id=?").get(w.corpus).n,
+          ]));
+          const cognitive = Object.fromEntries(worlds.map(w => [
+            w.id,
+            db.prepare("SELECT json_extract(metadata_json,'$.cognitiveMother.summary') AS summary FROM source_corpora WHERE id=?").get(w.corpus).summary,
+          ]));
+          const projectCanon = db.prepare("SELECT COUNT(*) AS n FROM canon_entities").get().n;
+          console.log({worlds,counts,relations,cognitive,projectCanon});
+          assert.deepEqual(Object.keys(canon).sort(), ["bleach","hunter-x-hunter","naruto","one-piece"]);
+          assert(counts.naruto > 3000, "Naruto mother world unexpectedly small");
+          assert(counts["one-piece"] > 20, "One Piece adapter did not build a useful seed");
+          assert(counts.bleach > 100, "Bleach adapter did not build a useful bulk seed");
+          assert(counts["hunter-x-hunter"] > 50, "HxH cast adapter did not build a useful seed");
+          assert(relations.naruto > 500, "Naruto relations missing");
+          assert(relations["one-piece"] > 10, "One Piece typed relations missing");
+          assert(relations.bleach > 50, "Bleach typed relations missing");
+          for (const id of Object.keys(canon))
+            assert(typeof cognitive[id] === "string" && cognitive[id].length > 10, id + " Cognitive Mother missing");
+          assert.equal(projectCanon, 0, "Source imports must not fabricate Project Canon");
+          db.close();
+          EOF
+      - name: Capture counts before re-import
+        run: |
+          node --input-type=module <<'EOF' > /tmp/multiworld-before.json
+          import { DatabaseSync } from "node:sqlite";
+          const db = new DatabaseSync("/tmp/narralume-multiworld.sqlite", {readOnly:true});
+          const rows = db.prepare("SELECT corpus_id,COUNT(*) AS n FROM source_records GROUP BY corpus_id ORDER BY corpus_id").all();
+          console.log(JSON.stringify(rows));
+          db.close();
+          EOF
+      - name: Re-import generic worlds to prove idempotence
+        run: npm run import:source-world -- --all --db /tmp/narralume-multiworld.sqlite
+      - name: Verify no duplicate growth
+        run: |
+          node --input-type=module <<'EOF'
+          import { DatabaseSync } from "node:sqlite";
+          import { readFileSync } from "node:fs";
+          import assert from "node:assert/strict";
+          const before = JSON.parse(readFileSync("/tmp/multiworld-before.json","utf8"));
+          const db = new DatabaseSync("/tmp/narralume-multiworld.sqlite", {readOnly:true});
+          const after = db.prepare("SELECT corpus_id,COUNT(*) AS n FROM source_records GROUP BY corpus_id ORDER BY corpus_id").all();
+          assert.deepEqual(after, before);
+          assert.equal(db.prepare("SELECT COUNT(*) AS n FROM canon_entities").get().n, 0);
+          db.close();
+          EOF
