@@ -232,10 +232,12 @@ export function adoptSourceWorldProduction(
       reserved.add(key);
       adoptedKeys["activity:" + activity.localId] = key;
       const actorLines = activity.actorRefs.map(
-        (ref) => `参与者：${wikiRef(resolve(ref), nameForRef(ref, nodeByLocal, adoptedKeys, worlds, worldId))}`,
+        (ref) =>
+          `参与者：${wikiRef(resolve(ref), nameForRef(ref, nodeByLocal, adoptedKeys, worlds, worldId))}`,
       );
       const resourceLines = activity.resourceRefs.map(
-        (ref) => `涉及：${wikiRef(resolve(ref), nameForRef(ref, nodeByLocal, adoptedKeys, worlds, worldId))}`,
+        (ref) =>
+          `涉及：${wikiRef(resolve(ref), nameForRef(ref, nodeByLocal, adoptedKeys, worlds, worldId))}`,
       );
       worlds.upsertCard({
         worldId,
@@ -372,7 +374,7 @@ function nameForRef(
   const node = nodeByLocal.get(ref);
   if (node) return node.name;
   const key = adoptedKeys[ref];
-  return key ? worlds.getCard(worldId, key)?.record.name ?? key : ref;
+  return key ? (worlds.getCard(worldId, key)?.record.name ?? key) : ref;
 }
 
 function serviceError(

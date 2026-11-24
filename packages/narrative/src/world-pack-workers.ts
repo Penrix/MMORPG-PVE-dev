@@ -166,7 +166,9 @@ const NODE_SCHEMA = {
             attentionTriggers: {
               type: "array",
               maxItems: 30,
-              items: txt("Anomaly that this mother world makes especially noticeable"),
+              items: txt(
+                "Anomaly that this mother world makes especially noticeable",
+              ),
             },
             basis: {
               type: "string",
@@ -217,8 +219,12 @@ export const WORLD_PACK_MODEL_CONTRACT: JsonSchemaContract = {
           additionalProperties: false,
           required: ["fromRef", "toRef", "relation", "description", "status"],
           properties: {
-            fromRef: txt("Local node ID, canon:<existing UUID>, or source:<existing source key>"),
-            toRef: txt("Local node ID, canon:<existing UUID>, or source:<existing source key>"),
+            fromRef: txt(
+              "Local node ID, canon:<existing UUID>, or source:<existing source key>",
+            ),
+            toRef: txt(
+              "Local node ID, canon:<existing UUID>, or source:<existing source key>",
+            ),
             relation: txt(
               "owns / leads / employs / knows / competes / trades / access-through etc",
             ),

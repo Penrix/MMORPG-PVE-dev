@@ -382,13 +382,15 @@ export class SqliteUnifiedSourceWorldRepository {
       );
       if (!semantics.success)
         throw Error("source.world.reader_semantics_invalid");
-      return [{
-        worldId,
-        entityKey,
-        name: record.name,
-        kind: record.kind,
-        semantics: semantics.data,
-      }];
+      return [
+        {
+          worldId,
+          entityKey,
+          name: record.name,
+          kind: record.kind,
+          semantics: semantics.data,
+        },
+      ];
     });
   }
 

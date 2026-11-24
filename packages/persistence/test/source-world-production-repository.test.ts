@@ -84,8 +84,8 @@ describe("Source World production drafts", () => {
     );
     expect(adopted.status).toBe("adopted");
     expect(adopted.adoptedKeys.hospital).toBe("location:konoha-hospital");
-    expect(
-      db.raw.prepare("SELECT COUNT(*) AS n FROM projects").get(),
-    ).toEqual({ n: 0 });
+    expect(db.raw.prepare("SELECT COUNT(*) AS n FROM projects").get()).toEqual({
+      n: 0,
+    });
   });
 });

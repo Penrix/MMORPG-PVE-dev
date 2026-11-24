@@ -39,9 +39,7 @@ export type WorldAtlasCardKind = z.infer<typeof WorldAtlasCardKindSchema>;
 export const WorldAtlasCognitiveMotherSchema = z
   .object({
     summary: z.string().trim().min(1).max(8_000),
-    preloadedWorldGrammar: z
-      .array(z.string().trim().min(1).max(800))
-      .max(50),
+    preloadedWorldGrammar: z.array(z.string().trim().min(1).max(800)).max(50),
     priceLogic: z.array(z.string().trim().min(1).max(800)).max(50),
     naturalEntrances: z.array(z.string().trim().min(1).max(800)).max(50),
     expectedInertia: z.array(z.string().trim().min(1).max(800)).max(50),

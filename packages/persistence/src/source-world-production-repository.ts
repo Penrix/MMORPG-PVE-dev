@@ -139,13 +139,7 @@ export class SqliteSourceWorldProductionRepository {
          SET status='adopted',version=version+1,adopted_keys_json=?,updated_at=?
          WHERE world_id=? AND id=? AND status='draft' AND version=?`,
       )
-      .run(
-        JSON.stringify(adoptedKeys),
-        now,
-        worldId,
-        id,
-        expectedVersion,
-      );
+      .run(JSON.stringify(adoptedKeys), now, worldId, id, expectedVersion);
     if (result.changes !== 1)
       throw new SourceWorldProductionVersionError(
         "source.world.production.stale",

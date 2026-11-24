@@ -355,7 +355,11 @@ export async function runWorldWorkshops(args: {
       firstStep && args.request.intent === "advance"
         ? worldProductionWorkOrder("living", view(), args.request)
         : requestedEntry
-          ? worldProductionWorkOrder(requestedEntry.workshop, view(), args.request)
+          ? worldProductionWorkOrder(
+              requestedEntry.workshop,
+              view(),
+              args.request,
+            )
           : (check.next ??
             (steps.length === 0 && bootstrap[0]
               ? worldProductionWorkOrder(bootstrap[0], view(), args.request)

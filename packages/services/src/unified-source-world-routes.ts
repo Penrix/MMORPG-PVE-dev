@@ -31,7 +31,9 @@ import {
 
 const WorldParams = z.object({ worldId: z.string().min(1) });
 const EntityParams = WorldParams.extend({ entityKey: z.string().min(1) });
-const ProductionParams = WorldParams.extend({ productionId: z.string().min(1) });
+const ProductionParams = WorldParams.extend({
+  productionId: z.string().min(1),
+});
 const ProjectParams = WorldParams.extend({ projectId: z.string().min(1) });
 const CreateWorldBody = z.object({
   id: z.string().regex(/^[a-z0-9][a-z0-9-]{0,100}$/),

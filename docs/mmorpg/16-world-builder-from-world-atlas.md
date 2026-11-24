@@ -42,10 +42,10 @@ WorldPack 继续存在，但它只是**一次生产批次的 staging envelope**�
 
 第一模块不能再被理解为“只给某一本小说的 Project Canon 补世界”。同一套生产认知有两个目标：
 
-| Production Target | 主要输入 | 候选产物 | 作者采纳后写入 | 权限 |
-| --- | --- | --- | --- | --- |
-| **Source World Production** | 原始资料 / 已有 Source Atlas / Existing IP / 历史 | Source Card / Relation / 活动 / 价格与入口候选 | **Source World Atlas** | reference；不得自动变 Project Canon |
-| **Project Reality Expansion** | 当前 Project Reality / story world gap | WorldPack / project world delta | **Project Reality** | confirmed current after adoption |
+| Production Target             | 主要输入                                          | 候选产物                                       | 作者采纳后写入         | 权限                                |
+| ----------------------------- | ------------------------------------------------- | ---------------------------------------------- | ---------------------- | ----------------------------------- |
+| **Source World Production**   | 原始资料 / 已有 Source Atlas / Existing IP / 历史 | Source Card / Relation / 活动 / 价格与入口候选 | **Source World Atlas** | reference；不得自动变 Project Canon |
+| **Project Reality Expansion** | 当前 Project Reality / story world gap            | WorldPack / project world delta                | **Project Reality**    | confirmed current after adoption    |
 
 ```text
                      World Builder

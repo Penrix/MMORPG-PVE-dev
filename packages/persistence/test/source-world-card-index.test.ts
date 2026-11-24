@@ -120,9 +120,9 @@ describe("World Atlas lightweight cards and typed wiki links", () => {
       worlds.getReaderSemantics("naruto", "ability:sharingan")?.readerPrice,
     ).toContain("Reader");
     expect(worlds.listReaderSemantics("naruto")).toHaveLength(1);
-    expect(worlds.getCard("naruto", "ability:sharingan")?.content).not.toContain(
-      "Reader",
-    );
+    expect(
+      worlds.getCard("naruto", "ability:sharingan")?.content,
+    ).not.toContain("Reader");
 
     const saved = worlds.upsertCard({
       worldId: "naruto",

@@ -82,13 +82,9 @@ export async function generateSourceWorldProduction(
     initialWorldWorkshopOrder(request)[0] ??
     "geography";
   const op = requestedEntry
-    ? worldProductionWorkOrder(
-        requestedEntry.workshop,
-        existingWorld,
-        request,
-      )
-    : playtest.next ??
-      worldProductionWorkOrder(fallbackWorkshop, existingWorld, request);
+    ? worldProductionWorkOrder(requestedEntry.workshop, existingWorld, request)
+    : (playtest.next ??
+      worldProductionWorkOrder(fallbackWorkshop, existingWorld, request));
 
   const instruction = {
     target: "source_world",
@@ -151,10 +147,7 @@ export async function generateSourceWorldProduction(
         `Source World production cannot reference Project Canon identity: ${node.name}`,
         422,
       );
-    if (
-      node.origin === "source_canon" &&
-      !node.existingSourceKey
-    )
+    if (node.origin === "source_canon" && !node.existingSourceKey)
       throw serviceLikeError(
         "source.world.production.fabricated_canon",
         `New Source World candidate ${node.name} cannot claim source_canon without an existing Source identity`,
@@ -196,13 +189,7 @@ export async function generateSourceWorldProduction(
     knownSourceKeys,
   );
   const combined = previewProductionReality(existingWorld, merged.document);
-  if (
-    !hasWorldWorkshopOutput(
-      op.workshop,
-      existingWorld,
-      combined,
-    )
-  )
+  if (!hasWorldWorkshopOutput(op.workshop, existingWorld, combined))
     throw serviceLikeError(
       "source.world.production.no_product",
       `${op.workshop} did not produce its promised Source World objects / relations / activities`,
@@ -304,8 +291,7 @@ function projectSourceWorldForProduction(
     }
     for (const edge of card.relations) {
       if (edge.direction !== "out") continue;
-      const key =
-        edge.fromKey + "|" + edge.relation + "|" + edge.toKey;
+      const key = edge.fromKey + "|" + edge.relation + "|" + edge.toKey;
       if (seenLinks.has(key)) continue;
       seenLinks.add(key);
       links.push({
@@ -393,8 +379,7 @@ async function callSourceWorldModel(
         : {
             success: false as const,
             issues: parsed.error.issues.map(
-              (issue) =>
-                `${issue.path.join(".") || "root"}: ${issue.message}`,
+              (issue) => `${issue.path.join(".") || "root"}: ${issue.message}`,
             ),
           };
     },
@@ -403,14 +388,9 @@ async function callSourceWorldModel(
   return result.value;
 }
 
-const WORLD_ACTION_TERM_KINDS = new Set<WorldAction["requires"][number]["kind"]>([
-  "asset",
-  "permission",
-  "relationship",
-  "knowledge",
-  "ability",
-  "access",
-]);
+const WORLD_ACTION_TERM_KINDS = new Set<
+  WorldAction["requires"][number]["kind"]
+>(["asset", "permission", "relationship", "knowledge", "ability", "access"]);
 
 function readAdoptedWorldActions(
   content: string,
@@ -441,14 +421,10 @@ function readAdoptedWorldActions(
         : "available";
     const locationLine = lines.find((line) => line.startsWith("地点："));
     const locationKey = locationLine ? wikiTarget(locationLine) : null;
-    const parseTerms = (
-      prefix: "需要" | "取得",
-    ): WorldAction["requires"] => {
+    const parseTerms = (prefix: "需要" | "取得"): WorldAction["requires"] => {
       const terms: WorldAction["requires"] = [];
       for (const line of lines) {
-        const term = new RegExp(
-          "^" + prefix + "\\(([^)]+)\\)：",
-        ).exec(line);
+        const term = new RegExp("^" + prefix + "\\(([^)]+)\\)：").exec(line);
         if (!term) continue;
         const kind = term[1] as WorldAction["requires"][number]["kind"];
         const key = wikiTarget(line);

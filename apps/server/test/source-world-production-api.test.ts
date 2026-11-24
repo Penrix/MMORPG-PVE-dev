@@ -169,9 +169,7 @@ describe("Source World production target", () => {
     );
     expect(hospital.status).toBe(200);
     expect(hospital.body.content).toContain("木叶承担忍者伤病救治");
-    expect(hospital.body.content).not.toContain(
-      "医疗忍者线天然连接纲手",
-    );
+    expect(hospital.body.content).not.toContain("医疗忍者线天然连接纲手");
 
     const medic = await json(
       "GET",
@@ -194,9 +192,9 @@ describe("Source World production target", () => {
     expect(semantics.status).toBe(200);
     expect(semantics.body.semantics.readerPrice).toContain("医疗忍者线");
 
-    expect(
-      db.raw.prepare("SELECT COUNT(*) AS n FROM projects").get(),
-    ).toEqual({ n: 0 });
+    expect(db.raw.prepare("SELECT COUNT(*) AS n FROM projects").get()).toEqual({
+      n: 0,
+    });
     expect(
       db.raw.prepare("SELECT COUNT(*) AS n FROM canon_entities").get(),
     ).toEqual({ n: 0 });
