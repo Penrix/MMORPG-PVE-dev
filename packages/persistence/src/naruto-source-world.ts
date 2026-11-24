@@ -9,6 +9,7 @@ import {
 } from "./naruto-source-import.js";
 import {
   SqliteSourceCorpusRepository,
+  type SourceKind,
   type SourceRecord,
   type SourceRelationView,
 } from "./source-corpus-repository.js";
@@ -322,9 +323,10 @@ function seedNarutoReaderSemantics(
   worlds: SqliteUnifiedSourceWorldRepository,
   now: string,
 ): string[] {
-  const seeds: Array<[string, WorldAtlasReaderSemantics]> = [
+  const seeds: Array<[string, SourceKind, WorldAtlasReaderSemantics]> = [
     [
       "Konohagakure",
+      "location",
       {
         readerPrice:
           "木叶是火影最核心的长期舞台之一，政治、忍族、师承、任务与大量高价人物高度密集。",
@@ -338,6 +340,7 @@ function seedNarutoReaderSemantics(
     ],
     [
       "Uchiha",
+      "organization",
       {
         readerPrice:
           "宇智波自带高价血继、强者密度与木叶政治冲突，是 Reader 会主动盯住的忍族资产。",
@@ -351,6 +354,7 @@ function seedNarutoReaderSemantics(
     ],
     [
       "Sharingan",
+      "ability",
       {
         readerPrice:
           "写轮眼是火影 Reader 已经预装为高价的标志性瞳术，能力成长、移植与持有者身份都会被立即定价。",
@@ -364,6 +368,7 @@ function seedNarutoReaderSemantics(
     ],
     [
       "Akatsuki",
+      "organization",
       {
         readerPrice:
           "晓天然代表高危险、高战力和重大阴谋密度，Reader 会把接近、渗透或改变其成员关系视为昂贵事件。",
@@ -377,6 +382,7 @@ function seedNarutoReaderSemantics(
     ],
     [
       "Kurama",
+      "creature",
       {
         readerPrice:
           "九尾是顶级尾兽资产，与人柱力、木叶安全和重大历史事件绑定，天然拥有极高 Reader 价格。",
@@ -391,12 +397,12 @@ function seedNarutoReaderSemantics(
   ];
 
   const seeded: string[] = [];
-  for (const [name, semantics] of seeds) {
-    const matches = worlds
-      .listCards(NARUTO_SOURCE_WORLD_ID, name, { limit: 5 })
-      .filter((card) => card.name === name);
-    if (matches.length !== 1) continue;
-    const key = matches[0]!.sourceKey;
+  for (const [name, kind, semantics] of seeds) {
+    const card = worlds.findCardByReference(NARUTO_SOURCE_WORLD_ID, name, {
+      kind,
+    });
+    if (!card) continue;
+    const key = card.record.sourceKey;
     if (worlds.getReaderSemantics(NARUTO_SOURCE_WORLD_ID, key)) continue;
     worlds.upsertReaderSemantics({
       worldId: NARUTO_SOURCE_WORLD_ID,
