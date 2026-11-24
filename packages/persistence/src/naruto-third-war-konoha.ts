@@ -85,6 +85,16 @@ export function installNarutoThirdWarKonohaSlice(
               "Minato's Special Kunai Given to Kakashi",
             ),
           "当期能力：" + wiki(required.chidori.key, required.chidori.name),
+          "制度入口：" +
+            wiki(
+              "institution:konoha-third-war-mission-assignment",
+              "Konoha Third-War Mission Assignment",
+            ),
+          "任务权限：" +
+            wiki(
+              "position:kannabi-bridge-mission-assignment",
+              "Kannabi Bridge Mission Assignment",
+            ),
           "战略资源：" +
             wiki(
               "resource:iwa-kannabi-supply-line",
@@ -203,6 +213,92 @@ export function installNarutoThirdWarKonohaSlice(
             wiki(
               "resource:iwa-kannabi-supply-line",
               "Iwagakure Kannabi Supply Line",
+            ),
+        ),
+    },
+    {
+      key: "institution:konoha-third-war-mission-assignment",
+      kind: "institution" as const,
+      name: "Konoha Third-War Mission Assignment",
+      sourceUrl: OFFICIAL_MINATO_COLUMN,
+      provenance: "inference",
+      summary:
+        "把原作已明确存在的‘木叶向 Team Minato 下达战时任务’抽象成最低限度的任务分派制度入口；不推断未给出的报酬、等级细则或完整审批链。",
+      content: () =>
+        line(
+          "# Konoha Third-War Mission Assignment",
+          "",
+          "世界时间：" + NARUTO_THIRD_WAR_KONOHA_WORLD_TIME,
+          "来源身份：inference",
+          "来源说明：原作明确存在 Team Minato 被下达神无毗桥任务这一事实；本卡只把‘存在战时任务分派机制’显式化为可查询/可进入的 World Builder 制度，不补写原作未说明的薪酬、等级和行政细则。",
+          "世界内部价值：把既有忍者身份转换成具体战线任务、任务情报和临时行动权限，是木叶战时世界从‘人物列表’进入‘可以做事’的制度接口。",
+          "准入/取得：已经处于 Team Minato 的成员关系中，才能沿本切片的已知任务链领取神无毗桥任务；其他木叶忍者的分派路径不在本卡中臆造。",
+          "",
+          "运作于：" + wiki(required.konoha.key, required.konoha.name),
+          "已知执行队伍：" +
+            wiki(required.teamMinato.key, required.teamMinato.name),
+          "产生权限：" +
+            wiki(
+              "position:kannabi-bridge-mission-assignment",
+              "Kannabi Bridge Mission Assignment",
+            ),
+          "对应情报：" +
+            wiki(
+              "information:kannabi-mission-objective",
+              "Kannabi Bridge Mission Objective",
+            ),
+          "",
+          "<!-- world-builder-action:naruto-third-war-konoha:accept_kannabi_assignment -->",
+          "### 可玩入口｜接收神无毗桥任务编成",
+          "作为 Team Minato 已有成员，通过木叶战时任务分派接收这一明确任务，得到任务身份与必须知道的行动目标。",
+          "状态：available",
+          "地点：" + wiki(required.konoha.key, required.konoha.name),
+          "需要(relationship)：" +
+            wiki(required.teamMinato.key, required.teamMinato.name),
+          "取得(permission)：" +
+            wiki(
+              "position:kannabi-bridge-mission-assignment",
+              "Kannabi Bridge Mission Assignment",
+            ),
+          "取得(knowledge)：" +
+            wiki(
+              "information:kannabi-mission-objective",
+              "Kannabi Bridge Mission Objective",
+            ),
+        ),
+    },
+    {
+      key: "position:kannabi-bridge-mission-assignment",
+      kind: "position" as const,
+      name: "Kannabi Bridge Mission Assignment",
+      sourceUrl: OFFICIAL_MINATO_COLUMN,
+      provenance: "inference",
+      summary:
+        "神无毗桥任务窗口中的临时任务权限位：获得后，角色被纳入该任务并取得对应目标信息。",
+      content: () =>
+        line(
+          "# Kannabi Bridge Mission Assignment",
+          "",
+          "世界时间：" + NARUTO_THIRD_WAR_KONOHA_WORLD_TIME,
+          "来源身份：inference",
+          "来源说明：这是对原作‘Team Minato 已被正式派往破坏神无毗桥’的权限结构化表达，不声称原作存在同名行政职位。",
+          "世界内部价值：把人物从一般 Team Minato 成员变成当前神无毗桥任务的正式执行者，使地点、情报、资产与行动权限真正闭合。",
+          "准入/取得：通过木叶战时任务分派，在 Team Minato 既有成员关系基础上获得。",
+          "",
+          "由制度产生：" +
+            wiki(
+              "institution:konoha-third-war-mission-assignment",
+              "Konoha Third-War Mission Assignment",
+            ),
+          "对应任务：" +
+            wiki(
+              "activity:team-minato-kannabi-mission",
+              "Team Minato: destroy Kannabi Bridge",
+            ),
+          "获得情报：" +
+            wiki(
+              "information:kannabi-mission-objective",
+              "Kannabi Bridge Mission Objective",
             ),
         ),
     },
