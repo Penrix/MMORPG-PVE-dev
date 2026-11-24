@@ -23,6 +23,7 @@ export * from "./canon-candidate.js";
 export * from "./world-pack.js";
 export * from "./world-atlas.js";
 export * from "./world-builder-atlas.js";
+export * from "./source-world-production.js";
 export * from "./story-runtime.js";
 export * from "./story-creative-context.js";
 export * from "./creative-material.js";
