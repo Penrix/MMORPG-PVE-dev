@@ -269,7 +269,9 @@ export function projectSourceWorldForProduction(
     }
     if (selected.size >= 35) break;
   }
-  for (const key of directKeys.slice(0, 24)) {
+  const isExplicitTimeSlice = exactFocus?.record.sourceKey.startsWith("slice:") ?? false;
+  if (!isExplicitTimeSlice)
+    for (const key of directKeys.slice(0, 24)) {
     const card = worlds.getCard(worldId, key);
     if (!card) continue;
     const neighbors = card.relations
@@ -285,8 +287,8 @@ export function projectSourceWorldForProduction(
       addCard(neighbor.key);
       if (selected.size >= 65) break;
     }
-    if (selected.size >= 65) break;
-  }
+      if (selected.size >= 65) break;
+    }
 
   // Only a completely unresolved/empty entry may fall back to broad Atlas
   // context. A resolved but thin Zone is itself a production deficiency and
