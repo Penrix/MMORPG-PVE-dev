@@ -60,7 +60,7 @@ WorldPack 继续存在，但它只是**一次生产批次的 staging envelope**�
 
 已有 IP 的 Source World Production 可直接从 ZONE / HUMANIZE / CONNECT / ACTIVATE / PRICE 进入，不要求 ROOT 重造火影、海贼等世界。LLM 补出的内容在无证据时只能保持 Candidate / inference / original expansion 身份。
 
-> **当前实现状态：** Project Reality Target 已有正式 `/api/projects/:projectId/world-packs/*` 链路；Source World Target 尚未成为一等 runtime / API。本文先固定业务合同，下一轮代码改造再补正式接线，不能把“尚未实现”误写成“不属于第一模块”。
+> **当前实现状态：** 两个 production target 都已经有正式运行链。Project Reality 继续使用 `/api/projects/:projectId/world-packs/*`；Source World 使用 `/api/source-worlds/:worldId/productions/*` 的独立 generate → draft → revise → adopt 链。Source production 不创建假 Project、不写 Project Canon，并复用同一套 World Builder 工序、Atlas Audit 与 Source identity 校验。
 
 ---
 
