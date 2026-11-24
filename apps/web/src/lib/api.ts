@@ -129,6 +129,18 @@ export class ApiError extends Error {
   }
 }
 
+export function isApiErrorCode(
+  error: unknown,
+  code: string,
+  status?: number,
+): error is ApiError {
+  return (
+    error instanceof ApiError &&
+    error.code === code &&
+    (status === undefined || error.status === status)
+  );
+}
+
 export function apiErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     const key = errorLookupKey(`message.${errorCodeKey(error.code)}`);

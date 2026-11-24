@@ -48,6 +48,7 @@ import {
   registerRunRoutes,
   registerStoryRoutes,
   registerInspirationSlotRoutes,
+  type InspirationLlmGenerator,
   registerStudioRoutes,
   registerTemplateRoutes,
   seedEnvironmentModelConfig,
@@ -68,6 +69,7 @@ export interface BuildAppOptions {
   logger?: boolean;
   narrativeModelClient?: NarrativeModelClient;
   enableRunWorker?: boolean;
+  inspirationGenerateWithLlm?: InspirationLlmGenerator;
 }
 
 // prettier-ignore
@@ -334,7 +336,12 @@ export async function buildApp(
     enableBackgroundWorker,
     environment,
   });
-  registerInspirationSlotRoutes(routes, database);
+  registerInspirationSlotRoutes(routes, database, {
+    environment,
+    ...(options.inspirationGenerateWithLlm === undefined
+      ? {}
+      : { generateWithLlm: options.inspirationGenerateWithLlm }),
+  });
   registerProjectCoverRoutes(routes, database);
   registerAgentSkillRoutes(routes, database);
   registerProviderRoutes(routes, database, { environment });

@@ -40,6 +40,12 @@ export const M03_TYPE_MAPPING: Readonly<Record<string, InspirationSlotKey>> = {
 
 const SLOT_KEYS = InspirationSlotKeySchema.options;
 const TURN = /没想到|却|但|不料|结果|反而/u;
+const LLM_M03_TYPES = {
+  identity: new Set(["ROLE", "ARCH", "TRAIT"]),
+  anomalyRule: new Set(["GF", "PLAY", "RULE", "BRG"]),
+  highValueCircle: new Set(["GATE", "REL", "WORLD"]),
+  twistPressure: new Set(["REV", "SIT", "CP", "MOVE"]),
+} satisfies Record<InspirationSlotKey, ReadonlySet<string>>;
 
 type SegmentRow = {
   project_id: string;
@@ -47,6 +53,14 @@ type SegmentRow = {
   title: string;
   metadata_json: string;
 };
+
+export interface InspirationMaterialBundle {
+  index: number;
+  identityHint?: InspirationSlotItem;
+  anomalyHint: InspirationSlotItem;
+  circleHint?: InspirationSlotItem;
+  twistHint: InspirationSlotItem;
+}
 
 /** Reads imported Module-2 materials without linking to any world/Reality object. */
 export function loadM03SlotItems(
@@ -208,6 +222,76 @@ function weightedDraw(
   return items[items.length - 1]!;
 }
 
+interface CyclingDrawState {
+  round: number;
+  remaining: InspirationSlotItem[];
+}
+
+function createCyclingDrawState(): CyclingDrawState {
+  return { round: -1, remaining: [] };
+}
+
+function drawCyclingItem(
+  pool: readonly InspirationSlotItem[],
+  state: CyclingDrawState,
+  keyword: string,
+  random: () => number,
+): InspirationSlotItem {
+  if (!pool.length) throw new Error("inspiration.empty_slot_pool");
+  if (!state.remaining.length) {
+    state.round += 1;
+    state.remaining = [...pool];
+  }
+  const selected = weightedDraw(state.remaining, keyword, random);
+  state.remaining = state.remaining.filter((item) => item.id !== selected.id);
+  // A recycled source card is the same material, but a new dealt instance.
+  // This keeps source/materialId traceable while making the exact four-slot
+  // deal signature unique even when three other slots are locked.
+  return state.round === 0
+    ? selected
+    : { ...selected, id: `${selected.id}:deal-round-${state.round + 1}` };
+}
+
+interface PriorityDrawState extends CyclingDrawState {
+  phase: "primary" | "fallback";
+}
+
+function createPriorityDrawState(): PriorityDrawState {
+  return { round: -1, phase: "primary", remaining: [] };
+}
+
+function drawPriorityItem(
+  primary: readonly InspirationSlotItem[],
+  fallback: readonly InspirationSlotItem[],
+  state: PriorityDrawState,
+  keyword: string,
+  random: () => number,
+): InspirationSlotItem {
+  if (!primary.length && !fallback.length)
+    throw new Error("inspiration.empty_slot_pool");
+
+  if (!state.remaining.length) {
+    if (state.round < 0) {
+      state.round = 0;
+      state.phase = primary.length ? "primary" : "fallback";
+      state.remaining = [...(primary.length ? primary : fallback)];
+    } else if (state.phase === "primary" && fallback.length) {
+      state.phase = "fallback";
+      state.remaining = [...fallback];
+    } else {
+      state.round += 1;
+      state.phase = primary.length ? "primary" : "fallback";
+      state.remaining = [...(primary.length ? primary : fallback)];
+    }
+  }
+
+  const selected = weightedDraw(state.remaining, keyword, random);
+  state.remaining = state.remaining.filter((item) => item.id !== selected.id);
+  return state.round === 0
+    ? selected
+    : { ...selected, id: `${selected.id}:deal-round-${state.round + 1}` };
+}
+
 function makeSentence(
   slots: Record<InspirationSlotKey, InspirationSlotItem>,
 ): string {
@@ -235,7 +319,93 @@ function makeSentence(
   return sentence;
 }
 
-/** Deterministic when seed is supplied; nonlocked slot cards never repeat within a batch. */
+function materialPool(
+  channel: InspirationChannel,
+  m03: readonly InspirationSlotItem[],
+  slot: InspirationSlotKey,
+) {
+  const preferredTypes = LLM_M03_TYPES[slot];
+  const primary = m03.filter(
+    (item) =>
+      item.slot === slot &&
+      item.channels.includes(channel) &&
+      item.materialType !== null &&
+      preferredTypes.has(item.materialType),
+  );
+  const fallback = BUILTIN_INSPIRATION_SLOT_BANK.filter(
+    (item) => item.slot === slot && item.channels.includes(channel),
+  );
+  return { primary, fallback };
+}
+
+/**
+ * Deals one mold bundle per requested LLM seed. Relevant active M03 types are
+ * exhausted before the built-in fallback bank, then a new deal round opens.
+ * Every bundle keeps the source item intact so the generated slots can write
+ * sourceLibrary/materialId/materialType back for auditability.
+ */
+export function dealMaterialBundlesForLlm(
+  database: NarrativeDatabase,
+  request: InspirationRollRequest,
+): InspirationMaterialBundle[] {
+  const input = InspirationRollRequestSchema.parse(request);
+  const m03 = input.useM03 ? loadM03SlotItems(database, input.projectId) : [];
+  const random = seededRandom(input.seed);
+  const keyword = input.topic ?? input.keyword ?? "";
+  const states = Object.fromEntries(
+    SLOT_KEYS.map((slot) => [slot, createPriorityDrawState()]),
+  ) as Record<InspirationSlotKey, PriorityDrawState>;
+  const pools = Object.fromEntries(
+    SLOT_KEYS.map((slot) => [slot, materialPool(input.channel, m03, slot)]),
+  ) as Record<
+    InspirationSlotKey,
+    { primary: InspirationSlotItem[]; fallback: InspirationSlotItem[] }
+  >;
+  const locked = input.lockedSlots ?? {};
+  const signatures = new Set<string>();
+
+  return Array.from({ length: input.count }, (_, offset) => {
+    const draw = (slot: InspirationSlotKey): InspirationSlotItem => {
+      const fixed = locked[slot];
+      if (fixed) return fixed;
+      const pool = pools[slot];
+      return drawPriorityItem(
+        pool.primary,
+        pool.fallback,
+        states[slot],
+        keyword,
+        random,
+      );
+    };
+    const identityHint = draw("identity");
+    const anomalyHint = draw("anomalyRule");
+    const circleHint = draw("highValueCircle");
+    const twistHint = draw("twistPressure");
+    const signature = [
+      identityHint.id,
+      anomalyHint.id,
+      circleHint.id,
+      twistHint.id,
+    ].join("|");
+    if (signatures.has(signature)) {
+      throw new Error("inspiration.duplicate_material_bundle");
+    }
+    signatures.add(signature);
+    return {
+      index: offset + 1,
+      identityHint,
+      anomalyHint,
+      circleHint,
+      twistHint,
+    };
+  });
+}
+
+/**
+ * Deterministic when seed is supplied. Each unlocked slot is nonrepeating
+ * until its pool is exhausted; later shuffle rounds may reuse source cards,
+ * while dealt item IDs keep every four-slot signature globally unique.
+ */
 export function rollInspirationSeeds(
   database: NarrativeDatabase,
   request: InspirationRollRequest,
@@ -248,29 +418,32 @@ export function rollInspirationSeeds(
     item.channels.includes(input.channel),
   );
   const locked = input.lockedSlots ?? {};
-  for (const slot of SLOT_KEYS) {
-    if (
-      !locked[slot] &&
-      available.filter((item) => item.slot === slot).length < input.count
-    ) {
-      throw new Error("inspiration.insufficient_slot_pool:" + slot);
-    }
-  }
-  const used = Object.fromEntries(
-    SLOT_KEYS.map((slot) => [slot, new Set<string>()]),
-  ) as Record<InspirationSlotKey, Set<string>>;
+  const keyword = input.keyword ?? input.topic ?? "";
+  const states = Object.fromEntries(
+    SLOT_KEYS.map((slot) => [slot, createCyclingDrawState()]),
+  ) as Record<InspirationSlotKey, CyclingDrawState>;
+  const pools = Object.fromEntries(
+    SLOT_KEYS.map((slot) => [
+      slot,
+      available.filter((item) => item.slot === slot),
+    ]),
+  ) as Record<InspirationSlotKey, InspirationSlotItem[]>;
+  const signatures = new Set<string>();
+
   const cards = Array.from({ length: input.count }, (_, index) => {
     const slots = Object.fromEntries(
       SLOT_KEYS.map((slot) => {
         if (locked[slot]) return [slot, locked[slot]];
-        const eligible = available.filter(
-          (item) => item.slot === slot && !used[slot].has(item.id),
-        );
-        const selected = weightedDraw(eligible, input.keyword ?? "", random);
-        used[slot].add(selected.id);
-        return [slot, selected];
+        return [
+          slot,
+          drawCyclingItem(pools[slot], states[slot], keyword, random),
+        ];
       }),
     ) as Record<InspirationSlotKey, InspirationSlotItem>;
+    const signature = SLOT_KEYS.map((slot) => slots[slot].id).join("|");
+    if (signatures.has(signature))
+      throw new Error("inspiration.duplicate_slot_signature");
+    signatures.add(signature);
     const sentence = makeSentence(slots);
     return InspirationSeedCardSchema.parse({
       id:
@@ -306,6 +479,8 @@ export function rollInspirationSeeds(
   });
   return InspirationRollResponseSchema.parse({
     channel: input.channel,
+    mode: "local",
+    topic: input.topic ?? null,
     cards,
     poolStats: stats,
   });

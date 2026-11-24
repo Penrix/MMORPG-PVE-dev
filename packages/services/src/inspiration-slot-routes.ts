@@ -7,11 +7,16 @@ import {
   ProjectSchema,
 } from "@narralume/contracts";
 import { randomUuid } from "@narralume/domain";
+import type { FetchLike } from "@narralume/llm";
 import {
   SqliteStoryRepository,
   type NarrativeDatabase,
 } from "@narralume/persistence";
 import { z } from "zod";
+import {
+  generateInspirationSeedsWithLlm,
+  type InspirationLlmGenerator,
+} from "./inspiration-llm-generator.js";
 import { bootstrapProject } from "./project-bootstrap.js";
 import {
   inspirationPoolStats,
@@ -25,9 +30,16 @@ const CatalogQuerySchema = z.object({
   projectId: z.string().trim().min(1).optional(),
 });
 
+export interface InspirationSlotRouteOptions {
+  environment?: Readonly<Record<string, string | undefined>>;
+  fetch?: FetchLike;
+  generateWithLlm?: InspirationLlmGenerator;
+}
+
 export function registerInspirationSlotRoutes(
   app: RouteApp,
   database: NarrativeDatabase,
+  options: InspirationSlotRouteOptions = {},
 ): void {
   app.route("GET", "/api/inspirations/catalog", (request) => {
     const { projectId } = CatalogQuerySchema.parse(request.query);
@@ -42,8 +54,16 @@ export function registerInspirationSlotRoutes(
     });
   });
 
-  app.route("POST", "/api/inspirations/roll", (request) => {
+  app.route("POST", "/api/inspirations/roll", async (request) => {
     const input = InspirationRollRequestSchema.parse(request.body);
+    if (input.mode === "llm") {
+      const generator =
+        options.generateWithLlm ?? generateInspirationSeedsWithLlm;
+      return generator(database, input, {
+        environment: options.environment ?? {},
+        ...(options.fetch === undefined ? {} : { fetch: options.fetch }),
+      });
+    }
     return rollInspirationSeeds(database, input);
   });
 

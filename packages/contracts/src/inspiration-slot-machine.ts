@@ -3,6 +3,9 @@ import { z } from "zod";
 export const InspirationChannelSchema = z.enum(["male", "female", "hybrid"]);
 export type InspirationChannel = z.infer<typeof InspirationChannelSchema>;
 
+export const InspirationRollModeSchema = z.enum(["local", "llm"]);
+export type InspirationRollMode = z.infer<typeof InspirationRollModeSchema>;
+
 export const InspirationSlotKeySchema = z.enum([
   "identity",
   "anomalyRule",
@@ -79,7 +82,9 @@ export type InspirationSeedCard = z.infer<typeof InspirationSeedCardSchema>;
 export const InspirationRollRequestSchema = z
   .object({
     channel: InspirationChannelSchema.default("male"),
-    count: z.number().int().min(1).max(12).default(6),
+    count: z.number().int().min(1).max(30).default(24),
+    mode: InspirationRollModeSchema.default("local"),
+    topic: z.string().trim().max(200).optional(),
     keyword: z.string().trim().max(200).optional(),
     projectId: z.string().trim().min(1).optional(),
     useM03: z.boolean().default(true),
@@ -127,6 +132,8 @@ export const InspirationPoolStatsSchema = z.object({
 
 export const InspirationRollResponseSchema = z.object({
   channel: InspirationChannelSchema,
+  mode: InspirationRollModeSchema.default("local"),
+  topic: z.string().nullable().default(null),
   cards: z.array(InspirationSeedCardSchema),
   poolStats: InspirationPoolStatsSchema,
 });

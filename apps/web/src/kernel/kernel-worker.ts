@@ -254,7 +254,10 @@ async function boot(): Promise<void> {
   });
 
   const table = new RouteTable();
-  registerInspirationSlotRoutes(table, database);
+  registerInspirationSlotRoutes(table, database, {
+    environment: {},
+    ...(credentialedModelFetch ? { fetch: credentialedModelFetch } : {}),
+  });
   registerStoryRoutes(table, database, {
     coordinator,
     enableBackgroundWorker: true,
