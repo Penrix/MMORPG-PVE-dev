@@ -119,6 +119,23 @@ describe("Source World production target", () => {
       ).status,
     ).toBe(201);
 
+    const cognitive = await json(
+      "PUT",
+      "/api/source-worlds/naruto/cognitive-mother",
+      {
+        summary: "火影 Reader 预装的忍者世界底盘",
+        preloadedWorldGrammar: ["忍村、忍族、任务、师承"],
+        priceLogic: ["血继限界、尾兽与顶级忍者天然高价"],
+        naturalEntrances: ["忍者学校", "任务体系"],
+        expectedInertia: ["忍村政治和战争历史持续作用"],
+        attentionLogic: ["突破忍界常识的能力会迅速被注意"],
+        basis: "author_judgment",
+        sourceNote: "Reader-side world prior",
+      },
+    );
+    expect(cognitive.status).toBe(200);
+    expect(cognitive.body.cognitiveMother.summary).toContain("火影 Reader");
+
     const generated = await json(
       "POST",
       "/api/source-worlds/naruto/productions/generate",
