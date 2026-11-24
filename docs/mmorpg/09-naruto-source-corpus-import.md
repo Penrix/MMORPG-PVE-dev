@@ -104,15 +104,15 @@ npm run audit:naruto -- --focus Sharingan
 
 统一母体的真实落库结果：
 
-| 层 | 实际结果 |
-| --- | ---: |
-| Dattebayo Raw Source records | 3,371 |
-| Wiki 唯一长档案 | 1,255 |
-| `wiki:naruto` canonical Atlas cards | **3,371** |
-| canonical typed relations | **4,779** |
-| exact evidence mappings | **3,371** |
-| Project Canon 自动写入 | **0** |
-| 首次安装后再次导入新增 canonical cards | **0** |
+| 层                                     |  实际结果 |
+| -------------------------------------- | --------: |
+| Dattebayo Raw Source records           |     3,371 |
+| Wiki 唯一长档案                        |     1,255 |
+| `wiki:naruto` canonical Atlas cards    | **3,371** |
+| canonical typed relations              | **4,779** |
+| exact evidence mappings                | **3,371** |
+| Project Canon 自动写入                 |     **0** |
+| 首次安装后再次导入新增 canonical cards |     **0** |
 
 Reader-side 语义不再靠全文搜索猜身份。对象级种子通过 **exact name/key + card kind** 解析，真实数据已命中：
 
@@ -141,18 +141,18 @@ Reader-side 语义不再靠全文搜索猜身份。对象级种子通过 **exact
 
 十 Family 当前结果：
 
-| Family | 状态 | 当前含义 |
-| --- | --- | --- |
-| PEOPLE | present | 已有人物并进入关系网 |
-| SPACE | present | 木叶及相邻地点已接到人物关系 |
-| ORGANIZATION | present | 组织已通过人物/地区运行 |
-| POWER | present | 忍术/血继等力量已连接人物 |
-| ASSET | **missing** | 没有可占有、交换、争夺的具体资产 |
-| ECONOMY | **missing** | 没有生产、运输、交易、消费网络 |
-| ACTIVITY | **missing** | 没有指定时点正在推进的真实事务 |
-| INFORMATION | **missing** | 缺谁知道、隐瞒、传播、误判什么 |
-| VALUE | **missing** | 缺世界内部社会价格，不是 Reader price |
-| PLAYABLE | **thin** | 有关系图，但缺明确进入/取得/学习/经营/争夺动作 |
+| Family       | 状态        | 当前含义                                       |
+| ------------ | ----------- | ---------------------------------------------- |
+| PEOPLE       | present     | 已有人物并进入关系网                           |
+| SPACE        | present     | 木叶及相邻地点已接到人物关系                   |
+| ORGANIZATION | present     | 组织已通过人物/地区运行                        |
+| POWER        | present     | 忍术/血继等力量已连接人物                      |
+| ASSET        | **missing** | 没有可占有、交换、争夺的具体资产               |
+| ECONOMY      | **missing** | 没有生产、运输、交易、消费网络                 |
+| ACTIVITY     | **missing** | 没有指定时点正在推进的真实事务                 |
+| INFORMATION  | **missing** | 缺谁知道、隐瞒、传播、误判什么                 |
+| VALUE        | **missing** | 缺世界内部社会价格，不是 Reader price          |
+| PLAYABLE     | **thin**    | 有关系图，但缺明确进入/取得/学习/经营/争夺动作 |
 
 当前审计给出的第一项 `nextWorkshop` 是 **`events`**，原因是“世界中没有当前正在推进的事务”。
 
