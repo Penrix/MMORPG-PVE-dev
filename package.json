@@ -51,6 +51,7 @@
     "verify:ci": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run test:evidence && npm run licenses:check",
     "verify:release": "npm run verify:ci && npm run test:e2e && npm run test:release:recovery && npm run test:real:matrix",
     "import:naruto": "tsx scripts/import-naruto.ts",
+    "audit:naruto": "tsx scripts/audit-naruto-world.ts",
     "import:creative-materials": "tsx scripts/import-creative-materials.ts",
     "import:creative-methods": "tsx scripts/import-creative-materials.ts"
   },
