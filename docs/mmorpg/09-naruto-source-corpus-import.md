@@ -1,10 +1,12 @@
-# 火影原作母体导入｜NarraLume 原生 SQLite（第一批）
+# 火影原作母体｜Raw Evidence 导入 + Unified Source World Atlas 安装
 
-> **STATUS: IMPLEMENTATION REFERENCE / SOURCE IMPORT.** 本文记录火影 Source Corpus 导入与迁移事实，不定义当前 Source World 的存储哲学；当前 Module 2 核心服从 13～15。
+> **STATUS: LIVE IMPLEMENTATION / NARUTO VERTICAL.** 本文记录火影 Raw Source Corpus 导入、统一 `naruto` Source World Atlas 安装与局部 Zone 审计。语义与权限边界服从 28，Atlas 存储服从 13～15，World Builder 生产服从 16。
 
-> 工作分支：`feat/naruto-source-corpus-import`，基于 MMORPG World Builder 开发分支，**不是 World Builder 第一模块完成声明**。
+> 当前工作分支：`feat/module3-world-atlas-integration`。**Raw 数据量不等于 World Design 完成度。**
 >
-> **当前产物是可执行导入器、数据库存储/查询与 API。** GitHub 仓库不会自动改变作者电脑上的 `narralume.sqlite`；需在安装 NarraLume 的本地环境执行一次导入命令。原作资料不随公开仓库提交。
+> `npm run import:naruto` 现在执行两层动作：先导入 Dattebayo / Wiki Raw Evidence，再建立统一 `naruto` Source World（canonical corpus=`wiki:naruto`）。首次安装会把 Dattebayo 的稳定记录投影成可编辑 Atlas Card + typed relations + evidence mapping，并写入世界级 Cognitive Mother；以后重跑只补新缺口，**不会覆盖作者已经人工深化的卡片或 Cognitive Mother**。Wiki 长传记仍作为 supporting evidence 单独保留，不按同名自动合并。
+>
+> GitHub 仓库不会自动改变作者电脑上的 `narralume.sqlite`；需在安装 NarraLume 的本地环境执行一次导入命令。原作资料本体不随公开仓库提交。
 
 ## 为什么这样放
 
@@ -67,10 +69,39 @@ npm run import:naruto -- --offline ./downloads/naruto --project <projectId>
 
 不需要 Wiki 补充档案时可加 `--skip-wiki`。
 
+## 统一 Naruto Source World 的实际形状
+
+```text
+Dattebayo structured records ─┐
+                              ├─ Raw Evidence（永远保留 provenance）
+Naruto Wiki long biographies ─┘
+              │
+              ▼
+        installNarutoSourceWorld
+              │
+              ├─ Source World: naruto
+              ├─ canonical corpus: wiki:naruto
+              ├─ Card Markdown = 可编辑内容真相
+              ├─ typed source_relations = 可重建索引
+              ├─ evidence mapping = 原料取证链
+              └─ Cognitive Mother = Reader-side 预装世界语法
+```
+
+首次自动铺底解决的是“**让原料成为一个可查询的母体世界**”，不是凭空补齐全部世界运行内容。Dattebayo 能稳定提供大量 People / Village / Clan / Team / Kekkei / Jutsu 关系，但经济、当前事务、社会价格、准入权限、信息流、可玩取得路径等 Family 仍可能为空或很薄。它们应由 Module 1 在具体 Zone 内发现缺口并继续生产，不能从百科数量反推“世界已完成”。
+
+对具体局部做只读验收：
+
+```bash
+npm run audit:naruto -- --focus Konohagakure
+npm run audit:naruto -- --focus Sharingan
+```
+
+审计输出当前局部图的对象/关系数量、十 World Family 覆盖、People-centered 连通度以及下一项建议 Workshop。**focus 足够厚时只沿局部关系展开，不再用全库随机卡补满上下文。**
+
 ## 读取与检索
 
 - `GET /api/source-corpora`：全部已安装原生母体与数量。
-- `GET /api/projects/:projectId/source-corpora`：本小说已绑定的原生母体。
+- `GET /api/projects/:projectId/source-corpora`：本小说已绑定的母体 corpus。CLI 使用 `--project` 时绑定统一 `wiki:naruto`，Raw Dattebayo/Wiki 通过 Atlas evidence dossier 追溯，不再重复挂给小说。
 - `POST /api/projects/:projectId/source-corpora/:corpusId`：`{"enabled":true}`，绑定已有来源。
 - `GET /api/projects/:projectId/source-reference?q=Itachi&kind=character`：跨本项目已绑定母体检索。
 - `GET /api/projects/:projectId/source-reference/naruto-dattebayo/character%3A1293`：人物完整原始字段及关联组织、能力、村子、队伍的来源边。
@@ -100,7 +131,9 @@ npm run import:naruto -- --offline ./downloads/naruto --project <projectId>
 - `akatsuki.json` 和 `kara.json` 是特殊角色列表，存在并非真正成员的记录。故仅写 `listed_in_specialty_dataset`，**不冒充“晓组织成员”**。
 - 人物 `jutsu[]` 中明显网页污染条目会跳过建立实体，但原始字段完整保留。能力检索边是来源声明，不是能力在任何时期都可用的确认事实。
 - 新小说的 Project Reality 仍依靠 NarraLume 原有第二模块及未来 World Builder 处理，不以加载一份资料推定所有现实已经存在。
-- 第一批完成的是**母体入库/关系检索**，后续如果需要时间切片、UI全文档案跨来源合并或自动转化为同人项目的已采用世界事实，要专门实现与验收，不得自动升级为已完成。
+- 统一 Atlas 的首次铺底仍主要继承上游能明确提供的身份和关系。**时间切片、经济/资源流、当前 Activity、社会价格、准入权限、信息网络与 Playable Content 不能因数据库里已有 3,000+ 卡就假定完成**；这些正是具体 Zone 的 World Builder 后续工作。
+- Raw Wiki 同名人物不会自动并入 canonical identity。当前自动映射只使用 Dattebayo 稳定 source key 的一对一 projection；其他证据必须显式核验/映射。
+- Source World 是可复用母体，Project Reality 仍是单书当前唯一事实。任何 Source 安装/深化都不得自动写入 Project Canon。
 
 ## 验收动作
 
