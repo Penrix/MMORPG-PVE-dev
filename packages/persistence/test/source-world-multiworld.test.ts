@@ -123,6 +123,169 @@ describe("generic multi-world Source seed installer", () => {
   });
 });
 
+
+describe("Source World evidence enrichment", () => {
+  it("lets later evidence thicken an existing canonical graph without overwriting author text", () => {
+    db = new NodeNarrativeDatabase();
+    db.migrate();
+
+    const base: SourceWorldSeed = {
+      world: {
+        id: "enrichment-world",
+        name: "Enrichment World",
+        kind: "fictional",
+        canonicalCorpusId: "wiki:enrichment-world",
+        canonicalTitle: "Enrichment World Atlas",
+        description: "test",
+        cognitiveMother: {
+          summary: "Reader prior.",
+          preloadedWorldGrammar: [],
+          priceLogic: [],
+          naturalEntrances: [],
+          expectedInertia: [],
+          attentionLogic: [],
+          basis: "author_judgment",
+          sourceNote: "test",
+        },
+      },
+      corpora: [
+        {
+          id: "enrichment-base",
+          title: "Base",
+          sourceUrl: "https://example.invalid/base",
+          rightsNotice: "test",
+          importer: "test",
+          metadata: {},
+          evidenceRole: "primary",
+          sourceNote: "base",
+          records: [
+            {
+              sourceKey: "person:alice",
+              canonicalKey: "character:alice",
+              kind: "character",
+              name: "Alice",
+              raw: {},
+              originCollection: "people",
+            },
+            {
+              sourceKey: "guild:old",
+              canonicalKey: "organization:old",
+              kind: "organization",
+              name: "Old Guild",
+              raw: {},
+              originCollection: "groups",
+            },
+          ],
+          relations: [
+            {
+              fromKey: "person:alice",
+              toKey: "guild:old",
+              relation: "member_of_recorded",
+              sourceNote: "base relation",
+            },
+          ],
+        },
+      ],
+    };
+
+    installSourceWorldSeed(db, base, now);
+    const worlds = new SqliteUnifiedSourceWorldRepository(db);
+    const first = worlds.getCard("enrichment-world", "character:alice");
+    expect(first?.relations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          relation: "member_of_recorded",
+          otherName: "Old Guild",
+        }),
+      ]),
+    );
+
+    worlds.upsertCard({
+      worldId: "enrichment-world",
+      entityKey: "character:alice",
+      kind: "character",
+      name: "Alice",
+      content:
+        (first?.content ?? "# Alice") +
+        "\n\n## 作者深化\n这段人工正文必须在后续 evidence 导入后继续存在。",
+      now: "2026-11-25T01:10:00.000Z",
+    });
+
+    const supporting: SourceWorldSeed = {
+      world: base.world,
+      corpora: [
+        {
+          id: "enrichment-support",
+          title: "Support",
+          sourceUrl: "https://example.invalid/support",
+          rightsNotice: "test",
+          importer: "test",
+          metadata: {},
+          evidenceRole: "supporting",
+          sourceNote: "support",
+          records: [
+            {
+              sourceKey: "hero:alice",
+              canonicalKey: "character:alice",
+              kind: "character",
+              name: "Alice",
+              raw: {},
+              originCollection: "heroes",
+            },
+            {
+              sourceKey: "guild:new",
+              canonicalKey: "organization:new",
+              kind: "organization",
+              name: "New Guild",
+              raw: {},
+              originCollection: "groups",
+            },
+          ],
+          relations: [
+            {
+              fromKey: "hero:alice",
+              toKey: "guild:new",
+              relation: "ally_of_recorded",
+              sourceNote: "support relation",
+            },
+          ],
+        },
+      ],
+    };
+
+    installSourceWorldSeed(
+      db,
+      supporting,
+      "2026-11-25T01:20:00.000Z",
+    );
+    const enriched = worlds.getCard("enrichment-world", "character:alice");
+    expect(enriched?.content).toContain("作者深化");
+    expect(enriched?.content).toContain("自动证据关系");
+    expect(enriched?.content.match(/ally_of_recorded/g)?.length).toBe(1);
+    expect(enriched?.relations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          relation: "member_of_recorded",
+          otherName: "Old Guild",
+        }),
+        expect.objectContaining({
+          relation: "ally_of_recorded",
+          otherName: "New Guild",
+        }),
+      ]),
+    );
+
+    installSourceWorldSeed(
+      db,
+      supporting,
+      "2026-11-25T01:30:00.000Z",
+    );
+    const repeated = worlds.getCard("enrichment-world", "character:alice");
+    expect(repeated?.content).toContain("作者深化");
+    expect(repeated?.content.match(/ally_of_recorded/g)?.length).toBe(1);
+  });
+});
+
 describe("multi-world normalizers", () => {
   it("normalizes One Piece characters, crews, ships and abilities", () => {
     const seed = normalizeOnePieceDataset({
