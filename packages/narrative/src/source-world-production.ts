@@ -218,9 +218,29 @@ export function projectSourceWorldForProduction(
   worldId: string,
   request: WorldPackRequest,
 ): WorldPackDocument {
-  const focusHits = request.focus
+  const exactFocus = request.focus
+    ? worlds.findCardByReference(worldId, request.focus)
+    : null;
+  const fuzzyFocusHits = request.focus
     ? worlds.listCards(worldId, request.focus, { limit: 30 })
     : [];
+  const focusHits = [
+    ...(exactFocus
+      ? [
+          {
+            corpusId: exactFocus.record.corpusId,
+            sourceKey: exactFocus.record.sourceKey,
+            name: exactFocus.record.name,
+            kind: exactFocus.record.kind,
+            summary: exactFocus.record.summary,
+            originCollection: exactFocus.record.originCollection,
+          },
+        ]
+      : []),
+    ...fuzzyFocusHits.filter(
+      (hit) => hit.sourceKey !== exactFocus?.record.sourceKey,
+    ),
+  ];
   const selected = new Map(
     focusHits.map((hit) => [hit.sourceKey, hit]),
   );
