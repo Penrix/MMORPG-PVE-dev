@@ -211,53 +211,70 @@ export function installSourceWorldSeed(
       });
     }
 
+    const touchedCanonicalKeys = new Set(
+      [...projectionByEvidence.values()].map((projection) => projection.canonicalKey),
+    );
+    const canonicalRelations = collectCanonicalEvidenceRelations(
+      db,
+      seed.world.id,
+    );
+    const relationsByCanonical = new Map<string, CanonicalEvidenceRelation[]>();
+    for (const relation of canonicalRelations) {
+      const list = relationsByCanonical.get(relation.fromCanonical) ?? [];
+      list.push(relation);
+      relationsByCanonical.set(relation.fromCanonical, list);
+    }
+
     let unresolvedRelations = 0;
-    for (const canonicalKey of created) {
-      const projection = [...projectionByEvidence.values()].find(
+    for (const canonicalKey of touchedCanonicalKeys) {
+      const card = worlds.getCard(seed.world.id, canonicalKey);
+      if (!card) continue;
+      const representative = [...projectionByEvidence.values()].find(
         (candidate) => candidate.canonicalKey === canonicalKey,
       );
-      if (!projection) continue;
-      const corpus = seed.corpora.find(
-        (candidate) => candidate.id === projection.corpusId,
+      if (!representative) continue;
+
+      const relationLines = (relationsByCanonical.get(canonicalKey) ?? []).map(
+        (edge) =>
+          edge.relation +
+          "：[[" +
+          edge.toCanonical +
+          "|" +
+          edge.toName +
+          "]]",
       );
-      if (!corpus) continue;
-      const sourceToCanonical = new Map(
-        corpus.records
-          .filter((record) => record.canonicalKey)
-          .map((record) => [record.sourceKey, record.canonicalKey!] as const),
+      const baseContent = created.has(canonicalKey)
+        ? renderSeedCard(
+            representative.record,
+            representative.corpusId,
+            [],
+          )
+        : migrateLegacySeedRelationSection(card.content);
+      const nextContent = upsertManagedRelationSection(
+        baseContent,
+        relationLines,
       );
-      const outgoing = corpus.relations.filter(
-        (edge) => edge.fromKey === projection.record.sourceKey,
-      );
-      const relationLines: string[] = [];
-      for (const edge of outgoing) {
-        const targetCanonical = sourceToCanonical.get(edge.toKey);
-        if (!targetCanonical) {
-          unresolvedRelations += 1;
-          continue;
-        }
-        const targetName =
-          canonicalName.get(targetCanonical) ??
-          sources.getRecord(seed.world.canonicalCorpusId, targetCanonical)
-            ?.name ??
-          targetCanonical;
-        relationLines.push(
-          edge.relation + "：[[" + targetCanonical + "|" + targetName + "]]",
-        );
-      }
+      if (nextContent === card.content) continue;
       worlds.upsertCard({
         worldId: seed.world.id,
         entityKey: canonicalKey,
-        kind: projection.record.kind,
-        name: projection.record.name,
-        aliases: projection.record.aliases ?? [],
-        content: renderSeedCard(
-          projection.record,
-          projection.corpusId,
-          relationLines,
-        ),
+        kind: card.record.kind,
+        name: card.record.name,
+        aliases: card.record.aliases,
+        content: nextContent,
         now,
       });
+    }
+
+    for (const corpus of seed.corpora) {
+      const mappedKeys = new Set(
+        corpus.records
+          .filter((record) => record.canonicalKey)
+          .map((record) => record.sourceKey),
+      );
+      for (const edge of corpus.relations)
+        if (!mappedKeys.has(edge.fromKey) || !mappedKeys.has(edge.toKey))
+          unresolvedRelations += 1;
     }
 
     const evidenceLinks = (
@@ -286,6 +303,93 @@ export function installSourceWorldSeed(
       unresolvedRelations,
     };
   });
+}
+
+interface CanonicalEvidenceRelation {
+  fromCanonical: string;
+  toCanonical: string;
+  relation: string;
+  toName: string;
+}
+
+function collectCanonicalEvidenceRelations(
+  db: NarrativeDatabase,
+  worldId: string,
+): CanonicalEvidenceRelation[] {
+  const rows = db.raw
+    .prepare(
+      `
+      SELECT DISTINCT
+        source_link.canonical_key AS fromCanonical,
+        target_link.canonical_key AS toCanonical,
+        rel.relation AS relation,
+        target_record.name AS toName
+      FROM source_world_evidence_links source_link
+      JOIN source_relations rel
+        ON rel.corpus_id=source_link.evidence_corpus_id
+       AND rel.from_key=source_link.evidence_key
+      JOIN source_world_evidence_links target_link
+        ON target_link.world_id=source_link.world_id
+       AND target_link.evidence_corpus_id=rel.corpus_id
+       AND target_link.evidence_key=rel.to_key
+      JOIN source_worlds world
+        ON world.id=source_link.world_id
+      JOIN source_records target_record
+        ON target_record.corpus_id=world.canonical_corpus_id
+       AND target_record.source_key=target_link.canonical_key
+      WHERE source_link.world_id=?
+        AND source_link.review_status<>'rejected'
+        AND target_link.review_status<>'rejected'
+      ORDER BY source_link.canonical_key,rel.relation,target_link.canonical_key
+      `,
+    )
+    .all(worldId) as unknown as CanonicalEvidenceRelation[];
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const key =
+      row.fromCanonical + "\0" + row.relation + "\0" + row.toCanonical;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+const MANAGED_RELATION_START = "<!-- source-world-seed-relations:start -->";
+const MANAGED_RELATION_END = "<!-- source-world-seed-relations:end -->";
+
+function upsertManagedRelationSection(
+  content: string,
+  relationLines: readonly string[],
+): string {
+  const managed = relationLines.length
+    ? [
+        MANAGED_RELATION_START,
+        "## 自动证据关系",
+        "以下关系由已挂接的 Source Evidence 重建；可人工补充正文，但此区块会在再次导入时刷新。",
+        ...relationLines,
+        MANAGED_RELATION_END,
+      ].join("\n")
+    : "";
+
+  const start = content.indexOf(MANAGED_RELATION_START);
+  const end = content.indexOf(MANAGED_RELATION_END);
+  if (start >= 0 && end >= start) {
+    const tail = end + MANAGED_RELATION_END.length;
+    return [content.slice(0, start).trimEnd(), managed, content.slice(tail).trim()]
+      .filter(Boolean)
+      .join("\n\n");
+  }
+  if (!managed) return content.trimEnd();
+  return content.trimEnd() + "\n\n" + managed;
+}
+
+function migrateLegacySeedRelationSection(content: string): string {
+  if (
+    !content.includes("状态：上游 Source assertion 的整理投影") ||
+    content.includes(MANAGED_RELATION_START)
+  )
+    return content;
+  return content.replace(/\n## 已记录关系\n[\s\S]*$/, "").trimEnd();
 }
 
 function validateSeed(seed: SourceWorldSeed): void {
