@@ -56,7 +56,7 @@ jobs:
             echo "::endgroup::"
           done
 
-      - name: Bootstrap hosted Chrome CDP for Fanqie and Ciweimao
+      - name: Bootstrap Xvfb display for hosted Chrome
         shell: bash
         run: |
           mkdir -p "$HOME/.config/google-chrome/Default"
@@ -64,6 +64,10 @@ jobs:
           Xvfb :99 -screen 0 1920x1080x24 >/tmp/newbook-xvfb.log 2>&1 &
           echo "DISPLAY=:99" >> "$GITHUB_ENV"
 
+      - name: Start hosted Chrome CDP for Fanqie and Ciweimao
+        shell: bash
+        run: |
+          export DISPLAY=:99
           set +e
           npm install -g agent-browser
           install_code=$?
