@@ -2,6 +2,8 @@
 
 > **STATUS: CURRENT AUTHORITY / MODULE 2 ↔ MODULE 3 BOUNDARY.** 本文定义 Source World reference、Project Reality current truth、POV/知识边界以及 Settlement 单一确认写回。第三模块不能另造第二套 Reality。
 
+> **阅读前置：先读 [28 世界语义总入口](28-world-semantic-layers-and-production-targets.md)。** 本文中的 Source Atlas / Project Reality 是 Runtime 读写层；“原生母体 / 认知母体 / Project Reality”的语义分权不能被这里的 context transport 层压平。
+>
 > 本文件定义第三模块与当前第二模块的读写合同。
 > Source World 是母体 reference；Project Reality 是当前项目事实；Novel Studio 不拥有第三套世界真相。
 
@@ -59,6 +61,27 @@ Source Atlas reference
 ```
 
 Source Atlas 不是项目当前事实，更不是项目未来。母体卡片与 Project Reality 冲突时，必须服从 Project Reality。
+
+### 2.5 这里的“三层 Context”不是世界语义三分法
+
+上表的 `Project Reality Current / Source Atlas Baseline / Source Atlas Full Card` 是**给模型传上下文的 Runtime 分层**。
+
+世界语义仍按 28：
+
+```text
+Original Mother
+= 世界本来怎样成立
+
+Cognitive Mother
+= Reader 已怎样理解、期待、定价
+
+Project Reality
+= 本书当前唯一确认事实
+```
+
+Cognitive Mother 不能因为当前 Adapter 尚未有独立字段就被删除。它未来只应进入 **author / director / Reader-product 侧语义**，不得因此泄漏给 character POV，也不得被写成 Source objective fact 或 Project Canon。
+
+**当前代码状态：Cognitive Mother 尚未成为一等 ContextSource。** 本文记录权限边界，不虚报已接线。
 
 ## 3. POV / 人物认知边界
 

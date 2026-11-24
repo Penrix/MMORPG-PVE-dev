@@ -6,6 +6,22 @@
 >
 > 当前工程仓库：`Penrix/MMORPG-PVE-dev`。历史仓库 `Penrix/MMORPG-PVE` 不再接受当前 Module 1 / 2 / 3 正式实现。
 
+## -1. 世界语义先于数据库结构
+
+**先读：[28 世界语义总入口](28-world-semantic-layers-and-production-targets.md)。**
+
+任何无上下文窗口必须先恢复：
+
+```text
+原生母体 = 世界本来怎样成立
+认知母体 = Reader 进入前已经怎样理解、期待、定价
+Project Reality = 本书到当前真正发生的唯一 Current
+```
+
+这三者是语义身份，不是三张必须独立建表的数据库。尤其禁止从“13 讲 Card + Typed Link”反推“Source World 只是百科仓库”，也禁止把 `VALUE` 或 Source Fact 直接当成认知母体。
+
+第一模块同时存在两个合法生产目标：**Source World Production** 与 **Project Reality Expansion**。生产认知共用，Authority / 写入目标不同。当前代码已完整跑通后者，前者尚未成为一等运行路径，见 28 / 16。
+
 ## 0. 当前总架构
 
 ```text
@@ -54,6 +70,7 @@ Module 3：这些已经存在的人接下来演什么故事？
 
 | 模块         | 文档                                                                                                    | 当前权威                                                                                                                  |
 | ------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| World Semantics | [28 原生母体 × 认知母体 × Project Reality × 双生产目标](28-world-semantic-layers-and-production-targets.md) | **世界语义总入口。** 先决定“这是什么世界语义、谁有 Authority”，再讨论存储/生产/读取；同时记录当前代码尚未显影的 Source World production target 与 Cognitive Mother Runtime |
 | Module 2     | [13 World Atlas 轻量核心](13-world-atlas-lightweight-core.md)                                           | Source World 怎样保存：Card + typed links + derived index                                                                 |
 | Module 2     | [14 World Atlas Content Framework](14-world-atlas-content-framework-v01.md)                             | 世界应该有什么；v0.1～v0.7 是 Content Schema，不是 SQL Schema                                                             |
 | Module 2     | [15 People-Centered Narrative Axis](15-people-centered-narrative-axis.md)                               | 人是默认叙事展开中心，其他世界对象通过人与人 / 人与世界关系进入故事                                                       |
@@ -134,7 +151,9 @@ Upgrade Ladder
 
 ```text
 CURRENT.md
+→ 28
 → 13
+→ 14
 → 15
 → 16
 → 17
@@ -149,8 +168,10 @@ CURRENT.md
 
 ```text
 CURRENT.md
-→ 13 / 14 / 15
+→ 28
+→ 14 / 15
 → 16
+→ 13 / 17（确认 Source / Project 写入边界）
 → 01 / 04 / 05 / 06 / 07（仅查实现）
 ```
 
@@ -158,6 +179,7 @@ CURRENT.md
 
 ```text
 CURRENT.md
+→ 28
 → 13
 → 14
 → 15
@@ -206,7 +228,17 @@ World Arbiter
 
 ### Module 1
 
-创造世界内容，但**不替第三模块预写剧情**。
+创造世界内容，但**不替第三模块预写剧情**。同一套 World Builder 有两个合法 production target：
+
+```text
+Source World Production
+→ 建设可被多项目重复引用的原生母体 Atlas
+
+Project Reality Expansion
+→ 为某一本正在运行的小说补真实世界缺口
+```
+
+两者共用十 Family / People-centered / 活动 / 价格 / 入口等生产认知，但 Authority 和写入目标不同。**当前实现主要是一等支持 Project Reality target；Source World target 是下一步代码缺口，不能因为尚未接线就从业务定义里删除。**
 
 ### Module 2
 

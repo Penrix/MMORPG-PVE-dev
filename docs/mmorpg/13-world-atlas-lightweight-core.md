@@ -2,7 +2,9 @@
 
 > **STATUS: CURRENT AUTHORITY / MODULE 2 STORAGE CORE.** 本文定义 Source World / World Atlas 当前“怎样存”。除非有更新的明确裁决，否则旧专业百科、专项 SQL 或知识图谱设计不得覆盖本文。
 
-> **这是当前第二模块开发的最新裁决。若与 10～12 或更早设计冲突，以本文为准。**
+> **阅读前置：先读 [28 世界语义总入口](28-world-semantic-layers-and-production-targets.md)。** 本文只裁决 Source World / World Atlas **怎样存**；它不定义“世界语义本体”的全部层次。原生母体、认知母体、Project Reality 的 Authority 分权以 28 为准。
+>
+> **这是当前第二模块 Source World 存储的最新裁决。若与 10～12 或更早存储设计冲突，以本文为准。**
 >
 > 第二模块不是“专业知识图谱数据库”，也不是把小说运行时 Reality 的复杂事实模型提前搬进原生母体世界。它首先是一个**面向长篇小说作者与 LLM 的世界资料卡片库**。
 
@@ -10,9 +12,20 @@
 
 ## 0. 一句话定义
 
-**原生母体世界 = 可长期编辑的文字卡片 + 有语义的卡片链接 + 可重建的关系索引/图谱。**
+**Source World / World Atlas 的存储核心 = 可长期编辑的文字卡片 + 有语义的卡片链接 + 可重建的关系索引/图谱。**
 
 作者看到并维护的是完整资料卡；程序与 LLM 从卡片中的语义链接得到结构化关系；关系图只是索引的浏览方式。
+
+这里不能反向推导：
+
+```text
+Card + Typed Link
+= 原生母体的全部语义
+= 认知母体
+= Project Reality
+```
+
+**Card + Typed Link 是 Source World 的当前存储形状，不是把所有世界语义压平后的 Ontology。** 原生母体主要由 Source Atlas 承载；认知母体属于 Reader-side semantic layer；Project Reality 继续由项目 Canon / Narrative State 承载。
 
 ```text
 世界卡片（资料真相）

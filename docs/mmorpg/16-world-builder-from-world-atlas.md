@@ -2,6 +2,8 @@
 
 > **STATUS: CURRENT AUTHORITY / MODULE 1.** 当前固定：World Builder = World Atlas Content Producer。第一模块创造世界里真实存在的人、地、组织、力量、资产、活动、价格与入口，并把它们接入人物社会网络；不为第三模块临时预写剧情。
 
+> **阅读前置：先读 [28 世界语义总入口](28-world-semantic-layers-and-production-targets.md)。** 本文负责“怎样生产”，28 负责“生产的是哪一种世界语义、写到哪里、谁有 Authority”。
+>
 > **本文件是第一模块当前最高优先级工程合同。**
 >
 > 第二模块已经确定：
@@ -35,6 +37,30 @@ Playable / Valuable Connections
 ```
 
 WorldPack 继续存在，但它只是**一次生产批次的 staging envelope**，不是世界的最终本体，也不是与 World Atlas 竞争的第二套世界模型。
+
+### 0.5 两个合法 production target｜同一套 World Builder，不同 Authority
+
+第一模块不能再被理解为“只给某一本小说的 Project Canon 补世界”。同一套生产认知有两个目标：
+
+| Production Target | 主要输入 | 候选产物 | 作者采纳后写入 | 权限 |
+| --- | --- | --- | --- | --- |
+| **Source World Production** | 原始资料 / 已有 Source Atlas / Existing IP / 历史 | Source Card / Relation / 活动 / 价格与入口候选 | **Source World Atlas** | reference；不得自动变 Project Canon |
+| **Project Reality Expansion** | 当前 Project Reality / story world gap | WorldPack / project world delta | **Project Reality** | confirmed current after adoption |
+
+```text
+                     World Builder
+                    /             \
+                   ▼               ▼
+        Source World Target    Project Reality Target
+                   │               │
+          reusable mother       one novel current
+```
+
+两边共用十 Family、People-centered、CONNECT / ACTIVATE / PRICE / AUDIT 等生产认知。**区别是输入 Authority、证据要求和写入目标，不是两套世界设计理论。**
+
+已有 IP 的 Source World Production 可直接从 ZONE / HUMANIZE / CONNECT / ACTIVATE / PRICE 进入，不要求 ROOT 重造火影、海贼等世界。LLM 补出的内容在无证据时只能保持 Candidate / inference / original expansion 身份。
+
+> **当前实现状态：** Project Reality Target 已有正式 `/api/projects/:projectId/world-packs/*` 链路；Source World Target 尚未成为一等 runtime / API。本文先固定业务合同，下一轮代码改造再补正式接线，不能把“尚未实现”误写成“不属于第一模块”。
 
 ---
 
@@ -176,7 +202,7 @@ Playable Content
 ## 4. 第一模块新的生产状态机
 
 ```text
-[空世界 / 已有 Source World]
+[空世界 / 已有 Source World / 当前 Project Reality]
         │
         ▼
 ① ROOT
@@ -470,6 +496,6 @@ atlasKind  = 真正的 World Atlas Card Type
 
 ## 9. 当前第一模块定义
 
-> **World Builder 是一个开放式世界内容生产引擎。它读取现有 World Atlas / Project Reality，依据 v0.1～v0.7 的世界设计认知发现结构性缺口，选择实际世界对象作为生产目标，生成新的 Card/Relation/Activity 候选，并持续把世界从“有设定”推进到“有人、有关系、有资产、有行动、有价格、有入口、可持续产生故事”。**
+> **World Builder 是一个开放式世界内容生产引擎。它读取现有 Source World / World Atlas 或 Project Reality，依据 v0.1～v0.7 的世界设计认知发现结构性缺口，选择实际世界对象作为生产目标，生成新的 Card/Relation/Activity 候选；当 target=Source World 时建设可复用原生母体，当 target=Project Reality 时扩张具体小说 Current。两者都持续把世界从“有设定”推进到“有人、有关系、有资产、有行动、有价格、有入口、可持续产生故事”，但绝不混淆 Authority 与写入位置。**
 
 这就是第一模块接下来所有代码改造的总方向。
