@@ -6,6 +6,7 @@ import {
   WORLD_ATLAS_RELATIONS,
   WORLD_ATLAS_SEMANTIC_LAYERS,
   WorldAtlasCardKindSchema,
+  WorldAtlasCognitiveMotherSchema,
   WorldAtlasReaderSemanticsSchema,
   WorldPackDocumentSchema,
   WorldPackRequestSchema,
@@ -82,6 +83,7 @@ const CreateCardBody = z.object({
   content: z.string().trim().min(1).max(200_000),
 });
 const UpdateCardBody = CreateCardBody.omit({ entityKey: true });
+const CognitiveMotherBody = WorldAtlasCognitiveMotherSchema;
 const ReaderSemanticsBody = WorldAtlasReaderSemanticsSchema;
 
 /** Global source-world wiki: one Naruto identity, many evidence datasets.
@@ -155,6 +157,34 @@ export function registerUnifiedSourceWorldRoutes(
     const { worldId } = WorldParams.parse(request.params);
     return requireWorld(worldId);
   });
+
+  app.route(
+    "GET",
+    "/api/source-worlds/:worldId/cognitive-mother",
+    async (request) => {
+      const { worldId } = WorldParams.parse(request.params);
+      requireWorld(worldId);
+      return {
+        worldId,
+        cognitiveMother: worlds.getCognitiveMother(worldId),
+      };
+    },
+  );
+  app.route(
+    "PUT",
+    "/api/source-worlds/:worldId/cognitive-mother",
+    async (request) => {
+      const { worldId } = WorldParams.parse(request.params);
+      requireWorld(worldId);
+      return {
+        worldId,
+        cognitiveMother: worlds.upsertCognitiveMother({
+          worldId,
+          cognitiveMother: CognitiveMotherBody.parse(request.body),
+        }),
+      };
+    },
+  );
 
   app.route("GET", "/api/source-worlds/:worldId/cards", async (request) => {
     const { worldId } = WorldParams.parse(request.params);
