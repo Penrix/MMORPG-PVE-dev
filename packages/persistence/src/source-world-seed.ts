@@ -3,7 +3,6 @@ import type { NarrativeDatabase } from "./database.js";
 import {
   SqliteSourceCorpusRepository,
   type SourceKind,
-  type SourceRecord,
 } from "./source-corpus-repository.js";
 import {
   SqliteUnifiedSourceWorldRepository,
