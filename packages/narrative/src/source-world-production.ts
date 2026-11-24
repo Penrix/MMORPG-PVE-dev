@@ -158,6 +158,31 @@ export async function generateSourceWorldProduction(
         `New Source World candidate ${node.name} cannot claim source_canon without an existing Source identity`,
         422,
       );
+    if (node.existingSourceKey) {
+      const existing = worlds.getCard(input.worldId, node.existingSourceKey);
+      if (!existing)
+        throw serviceLikeError(
+          "source.world.production.source_missing",
+          `Existing Source card not found: ${node.existingSourceKey}`,
+          422,
+        );
+      const allowedNames = new Set([
+        existing.record.name,
+        ...existing.record.aliases,
+      ]);
+      if (!allowedNames.has(node.name))
+        throw serviceLikeError(
+          "source.world.production.identity_changed",
+          `Source identity ${node.existingSourceKey} is ${existing.record.name}, not ${node.name}`,
+          422,
+        );
+      if (existing.record.kind !== worldPackAtlasKind(node))
+        throw serviceLikeError(
+          "source.world.production.kind_changed",
+          `Source identity ${node.existingSourceKey} kind is ${existing.record.kind}, not ${worldPackAtlasKind(node)}`,
+          422,
+        );
+    }
   }
 
   const merged = applyWorldProductionDelta(
