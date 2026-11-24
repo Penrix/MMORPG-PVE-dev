@@ -116,6 +116,7 @@ export * from "./inspiration-llm-generator.js";
 export * from "./inspiration-slot-routes.js";
 export * from "./market-radar-service.js";
 export * from "./market-radar-routes.js";
+export * from "./m03-library-routes.js";
 export * from "./story-context.js";
 export * from "./project-overview-service.js";
 export * from "./assistant-tool-registry.js";

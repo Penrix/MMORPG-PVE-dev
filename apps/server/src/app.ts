@@ -54,6 +54,7 @@ import {
   type InspirationLlmGenerator,
   parseNewbookJsonl,
   registerMarketRadarRoutes,
+  registerM03LibraryRoutes,
   type MarketRadarLlmOverride,
   type NewbookPoolLoader,
   registerStudioRoutes,
@@ -375,6 +376,7 @@ export async function buildApp(
       ? {}
       : { generateOverride: options.marketRadarGenerateOverride }),
   });
+  registerM03LibraryRoutes(routes, database);
   registerProjectCoverRoutes(routes, database);
   registerAgentSkillRoutes(routes, database);
   registerProviderRoutes(routes, database, { environment });
