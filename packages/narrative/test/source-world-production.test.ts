@@ -4,7 +4,10 @@ import {
   SqliteUnifiedSourceWorldRepository,
 } from "@narralume/persistence";
 import { NodeNarrativeDatabase } from "@narralume/persistence/node";
-import { generateSourceWorldProduction } from "../src/source-world-production.js";
+import {
+  generateSourceWorldProduction,
+  projectSourceWorldForProduction,
+} from "../src/source-world-production.js";
 
 let db: NodeNarrativeDatabase | null = null;
 const now = "2026-11-24T15:00:00.000Z";
@@ -48,6 +51,85 @@ afterEach(() => {
 });
 
 describe("Source World World Builder target", () => {
+  it("expands a concrete Naruto focus through people into clans and powers", () => {
+    const worlds = seedWorld();
+    for (const card of [
+      {
+        entityKey: "village:3",
+        kind: "location" as const,
+        name: "Konohagakure",
+        content: "# Konohagakure\n\n木叶隐村。",
+      },
+      {
+        entityKey: "clan:45",
+        kind: "organization" as const,
+        name: "Uchiha",
+        content: "# Uchiha\n\n宇智波一族。",
+      },
+      {
+        entityKey: "kekkei:5",
+        kind: "ability" as const,
+        name: "Sharingan",
+        content: "# Sharingan\n\n写轮眼。",
+      },
+    ])
+      worlds.upsertCard({
+        worldId: "naruto",
+        ...card,
+        now,
+      });
+    worlds.upsertCard({
+      worldId: "naruto",
+      entityKey: "character:1293",
+      kind: "character",
+      name: "Itachi Uchiha",
+      content: [
+        "# Itachi Uchiha",
+        "",
+        "village_affiliation_recorded：[[village:3|Konohagakure]]",
+        "clan_member_recorded：[[clan:45|Uchiha]]",
+        "kekkei_genkai_recorded：[[kekkei:5|Sharingan]]",
+      ].join("\n"),
+      now,
+    });
+
+    const view = projectSourceWorldForProduction(worlds, "naruto", {
+      requestId: "00000000-0000-4000-8000-000000000457",
+      scale: "W1",
+      premise: "深化木叶村",
+      worldTime: "第三次忍界大战前",
+      focus: "Konohagakure",
+      genre: "火影同人",
+      scarcity: "",
+      instruction: "",
+      parentAreaId: null,
+    });
+
+    expect(view.nodes.map((node) => node.name)).toEqual(
+      expect.arrayContaining([
+        "Konohagakure",
+        "Itachi Uchiha",
+        "Uchiha",
+        "Sharingan",
+      ]),
+    );
+    expect(
+      view.nodes.find((node) => node.name === "Itachi Uchiha")?.areaRef,
+    ).toBe("source:village:3");
+    expect(view.links).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          fromRef: "source:character:1293",
+          toRef: "source:clan:45",
+        }),
+        expect.objectContaining({
+          fromRef: "source:character:1293",
+          toRef: "source:kekkei:5",
+        }),
+      ]),
+    );
+  });
+
   it("projects existing Source identities instead of pretending they are Project Canon", async () => {
     seedWorld();
     const document = await generateSourceWorldProduction(
