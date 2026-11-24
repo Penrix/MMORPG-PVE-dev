@@ -830,6 +830,7 @@ export function applyWorldProductionDelta(
   knownCanonIds: ReadonlySet<string>,
   workshop: WorldWorkshop,
   subjectRef: string | null,
+  knownSourceKeys: ReadonlySet<string> = new Set<string>(),
 ): { document: WorldPackDocument; step: WorldProductionStep } {
   const nodeMap = new Map(current.nodes.map((n) => [n.localId, n]));
   const changes = new Set<string>();
@@ -840,7 +841,8 @@ export function applyWorldProductionDelta(
       (previous.type !== incoming.type ||
         atlasKindOf(previous) !== atlasKindOf(incoming) ||
         previous.name !== incoming.name ||
-        previous.existingCanonId !== incoming.existingCanonId)
+        previous.existingCanonId !== incoming.existingCanonId ||
+        previous.existingSourceKey !== incoming.existingSourceKey)
     ) {
       throw new Error("world.production.identity_changed: " + incoming.localId);
     }
@@ -897,7 +899,11 @@ export function applyWorldProductionDelta(
     ].slice(0, 70),
     dimensionSignals: [...dimensions.values()].slice(0, 30),
   };
-  const problems = worldPackReferenceProblems(document, knownCanonIds);
+  const problems = worldPackReferenceProblems(
+    document,
+    knownCanonIds,
+    knownSourceKeys,
+  );
   if (problems.length)
     throw new Error("world.production.bad_graph: " + problems.join("; "));
   if (
