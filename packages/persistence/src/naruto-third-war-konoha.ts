@@ -12,12 +12,10 @@ export const NARUTO_THIRD_WAR_KONOHA_SLICE_KEY =
 export const NARUTO_THIRD_WAR_KONOHA_WORLD_TIME =
   "第三次忍界大战｜神无毗桥作战阶段";
 
-const OFFICIAL_MINATO_COLUMN =
-  "https://naruto-official.com/en/news/01_1517";
+const OFFICIAL_MINATO_COLUMN = "https://naruto-official.com/en/news/01_1517";
 const OFFICIAL_KAKASHI_CHRONICLES =
   "https://naruto-official.com/en/anime/naruto2/list/01_563";
-const NARUTOPEDIA_KANNABI =
-  "https://naruto.fandom.com/wiki/Kannabi_Bridge";
+const NARUTOPEDIA_KANNABI = "https://naruto.fandom.com/wiki/Kannabi_Bridge";
 
 export interface NarutoThirdWarKonohaSliceReport {
   sliceKey: string;
@@ -73,7 +71,8 @@ export function installNarutoThirdWarKonohaSlice(
           "母体地点：" + wiki(required.konoha.key, required.konoha.name),
           "敌对方向：" + wiki(required.iwa.key, required.iwa.name),
           "战场经过：" + wiki(required.kusa.key, required.kusa.name),
-          "执行队伍：" + wiki(required.teamMinato.key, required.teamMinato.name),
+          "执行队伍：" +
+            wiki(required.teamMinato.key, required.teamMinato.name),
           "相关人物：" + wiki(required.minato.key, required.minato.name),
           "相关人物：" + wiki(required.kakashi.key, required.kakashi.name),
           "相关人物：" + wiki(required.obito.key, required.obito.name),
@@ -196,8 +195,7 @@ export function installNarutoThirdWarKonohaSlice(
       name: "Kannabi Bridge Mission Objective",
       sourceUrl: OFFICIAL_MINATO_COLUMN,
       provenance: "source_canon",
-      summary:
-        "破坏神无毗桥、切断岩隐补给线，以减缓岩隐推进的任务目标。",
+      summary: "破坏神无毗桥、切断岩隐补给线，以减缓岩隐推进的任务目标。",
       content: () =>
         line(
           "# Kannabi Bridge Mission Objective",

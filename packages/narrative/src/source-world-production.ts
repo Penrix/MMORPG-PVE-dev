@@ -269,24 +269,25 @@ export function projectSourceWorldForProduction(
     }
     if (selected.size >= 35) break;
   }
-  const isExplicitTimeSlice = exactFocus?.record.sourceKey.startsWith("slice:") ?? false;
+  const isExplicitTimeSlice =
+    exactFocus?.record.sourceKey.startsWith("slice:") ?? false;
   if (!isExplicitTimeSlice)
     for (const key of directKeys.slice(0, 24)) {
-    const card = worlds.getCard(worldId, key);
-    if (!card) continue;
-    const neighbors = card.relations
-      .map((edge) => ({
-        key: edge.direction === "out" ? edge.toKey : edge.fromKey,
-        kind: edge.otherKind,
-      }))
-      .sort((a, b) => {
-        const rank = (kind: string) => (kind === "character" ? 1 : 0);
-        return rank(a.kind) - rank(b.kind);
-      });
-    for (const neighbor of neighbors) {
-      addCard(neighbor.key);
-      if (selected.size >= 65) break;
-    }
+      const card = worlds.getCard(worldId, key);
+      if (!card) continue;
+      const neighbors = card.relations
+        .map((edge) => ({
+          key: edge.direction === "out" ? edge.toKey : edge.fromKey,
+          kind: edge.otherKind,
+        }))
+        .sort((a, b) => {
+          const rank = (kind: string) => (kind === "character" ? 1 : 0);
+          return rank(a.kind) - rank(b.kind);
+        });
+      for (const neighbor of neighbors) {
+        addCard(neighbor.key);
+        if (selected.size >= 65) break;
+      }
       if (selected.size >= 65) break;
     }
 

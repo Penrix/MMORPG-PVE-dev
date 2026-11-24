@@ -199,15 +199,15 @@ Naruto Original Mother（全时代资料）
 
 这一批没有把所有补充都冒充 Source Canon。
 
-| 内容 | Authority | 处理 |
-| --- | --- | --- |
-| Team Minato / Minato / Kakashi / Obito / Rin 等既有身份 | Source reference | 复用原 canonical Source key，不复制身份 |
-| 木叶 / 岩隐 / 草隐 | Source reference | 复用既有地点 |
-| 神无毗桥、岩隐补给线、Team Minato 破坏补给线任务 | source-backed curated view | 将既有事实结构化为 location / resource / activity / information |
-| Minato 交给 Kakashi 的特殊苦无 | source-backed curated view | 结构化为本时点具体 asset，并接入持有人 |
-| Kakashi 在该窗口可用的 Chidori | source-backed current slice | 只显式纳入该时点已确认能力，不继承人物全生命周期 `jutsu[]` |
-| `Konoha Third-War Mission Assignment` | **inference** | 只把“木叶确实向 Team Minato 下达了这一任务”抽象成最低限度任务分派接口；不编薪酬、任务等级、完整审批制度 |
-| `Kannabi Bridge Mission Assignment` | **inference** | 将“被正式纳入本任务”结构化成临时 permission；明确不声称原作存在同名行政职位 |
+| 内容                                                    | Authority                   | 处理                                                                                                    |
+| ------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Team Minato / Minato / Kakashi / Obito / Rin 等既有身份 | Source reference            | 复用原 canonical Source key，不复制身份                                                                 |
+| 木叶 / 岩隐 / 草隐                                      | Source reference            | 复用既有地点                                                                                            |
+| 神无毗桥、岩隐补给线、Team Minato 破坏补给线任务        | source-backed curated view  | 将既有事实结构化为 location / resource / activity / information                                         |
+| Minato 交给 Kakashi 的特殊苦无                          | source-backed curated view  | 结构化为本时点具体 asset，并接入持有人                                                                  |
+| Kakashi 在该窗口可用的 Chidori                          | source-backed current slice | 只显式纳入该时点已确认能力，不继承人物全生命周期 `jutsu[]`                                              |
+| `Konoha Third-War Mission Assignment`                   | **inference**               | 只把“木叶确实向 Team Minato 下达了这一任务”抽象成最低限度任务分派接口；不编薪酬、任务等级、完整审批制度 |
+| `Kannabi Bridge Mission Assignment`                     | **inference**               | 将“被正式纳入本任务”结构化成临时 permission；明确不声称原作存在同名行政职位                             |
 
 这里的原则是：
 
@@ -246,22 +246,22 @@ nextWorkshop = null
 
 最终真实 Actions 运行 `45440341412` 在固定上游数据上 **success**。最终切片投影为：
 
-| 项目 | 实际结果 |
-| --- | ---: |
-| nodes | **17** |
-| typed links | **53** |
-| ongoing activities | **1** |
-| executable interactions | **1** |
-| character | 4 |
-| location | 4 |
-| organization | 1 |
-| ability | 1 |
-| item | 1 |
-| resource | 1 |
-| information | 1 |
-| event | 1 |
-| institution | 1 |
-| position | 1 |
+| 项目                    | 实际结果 |
+| ----------------------- | -------: |
+| nodes                   |   **17** |
+| typed links             |   **53** |
+| ongoing activities      |    **1** |
+| executable interactions |    **1** |
+| character               |        4 |
+| location                |        4 |
+| organization            |        1 |
+| ability                 |        1 |
+| item                    |        1 |
+| resource                |        1 |
+| information             |        1 |
+| event                   |        1 |
+| institution             |        1 |
+| position                |        1 |
 
 十个 World Family 最终全部为 `present`：
 
