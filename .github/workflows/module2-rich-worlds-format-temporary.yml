@@ -1,5 +1,5 @@
 name: Module2 Rich Worlds Format Temporary
-# Rerun from current rich-import HEAD.
+# Rerun after final preflight fixes.
 
 on:
   push:
