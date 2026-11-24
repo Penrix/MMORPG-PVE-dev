@@ -1,4 +1,5 @@
 name: Branch Formatter Temporary
+# Re-triggered after removing the invalid Naruto formatter.
 
 on:
   push:
