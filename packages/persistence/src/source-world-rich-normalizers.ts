@@ -93,7 +93,7 @@ export function normalizeOnePieceWikiGraph(input: {
         "/data/universes/one-piece/entities/" +
         type +
         "/" +
-        text(entity.slug) || sourceKey.split(":").slice(1).join(":") +
+        (text(entity.slug) || sourceKey.split(":").slice(1).join(":")) +
         ".json",
       originCollection: "entities/" + type,
     });
