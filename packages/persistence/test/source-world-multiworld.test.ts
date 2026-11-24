@@ -3,8 +3,11 @@ import {
   installSourceWorldSeed,
   normalizeBleachDatabase,
   normalizeHunterXHunterJikan,
+  normalizeHunterXHunterMindMaps,
+  normalizeHunterXHunterRoster,
   normalizeHunterXHunterStatic,
   normalizeOnePieceDataset,
+  normalizeOnePieceWikiGraph,
   SqliteCanonRepository,
   SqliteUnifiedSourceWorldRepository,
   type SourceWorldSeed,
@@ -287,6 +290,229 @@ describe("Source World evidence enrichment", () => {
 });
 
 describe("multi-world normalizers", () => {
+  it("normalizes the rich One Piece graph with stable identity bridges and epistemic raw evidence", () => {
+    const seed = normalizeOnePieceWikiGraph({
+      translations: {
+        "character.monkey-d-luffy.name.common": "Monkey D. Luffy",
+        "crew.straw-hat-pirates.name": "Straw Hat Pirates",
+        "devil-fruit.gomu-gomu-no-mi.name.common": "Gomu Gomu no Mi",
+        "arc.egghead.name.common": "Egghead",
+      },
+      canonicalByIdentity: {
+        ["character\0monkey d. luffy"]: "character:legacy-luffy",
+      },
+      entities: [
+        {
+          id: "character:monkey-d-luffy",
+          type: "character",
+          slug: "monkey-d-luffy",
+          canonical_name_key: "character.monkey-d-luffy.name.common",
+          properties: {
+            bounty: [{ value: 3000000000, since: "manga-chapter:1053" }],
+          },
+          relations: [
+            { type: "member-of", target: "crew:straw-hat-pirates" },
+            { type: "ate-fruit", target: "devil-fruit:gomu-gomu-no-mi" },
+          ],
+        },
+        {
+          id: "crew:straw-hat-pirates",
+          type: "crew",
+          slug: "straw-hat-pirates",
+          canonical_name_key: "crew.straw-hat-pirates.name",
+          properties: {},
+          relations: [],
+        },
+        {
+          id: "devil-fruit:gomu-gomu-no-mi",
+          type: "devil-fruit",
+          slug: "gomu-gomu-no-mi",
+          canonical_name_key: "devil-fruit.gomu-gomu-no-mi.name.common",
+          properties: {
+            classification: [
+              {
+                value: "paramecia",
+                epistemic_status: "believed_by_world",
+                actual_value: "mythical_zoan",
+              },
+            ],
+          },
+          relations: [],
+        },
+        {
+          id: "arc:egghead",
+          type: "arc",
+          slug: "egghead",
+          canonical_name_key: "arc.egghead.name.common",
+          properties: {},
+          relations: [],
+        },
+      ],
+    });
+    const corpus = seed.corpora[0]!;
+    expect(corpus.records).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceKey: "character:monkey-d-luffy",
+          canonicalKey: "character:legacy-luffy",
+          name: "Monkey D. Luffy",
+          kind: "character",
+        }),
+        expect.objectContaining({
+          sourceKey: "devil-fruit:gomu-gomu-no-mi",
+          kind: "ability",
+        }),
+        expect.objectContaining({ sourceKey: "arc:egghead", kind: "event" }),
+      ]),
+    );
+    const fruit = corpus.records.find(
+      (record) => record.sourceKey === "devil-fruit:gomu-gomu-no-mi",
+    );
+    expect(JSON.stringify(fruit?.raw)).toContain("believed_by_world");
+    expect(JSON.stringify(fruit?.raw)).toContain("mythical_zoan");
+    expect(corpus.relations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          relation: "member-of",
+          toKey: "crew:straw-hat-pirates",
+        }),
+        expect.objectContaining({
+          relation: "ate-fruit",
+          toKey: "devil-fruit:gomu-gomu-no-mi",
+        }),
+      ]),
+    );
+  });
+
+  it("normalizes the rich HxH world graph into people, organizations, places, powers, events and routes", () => {
+    const seed = normalizeHunterXHunterMindMaps({
+      canonicalByIdentity: {
+        ["character\0gon freecss"]: "character:legacy-gon",
+      },
+      characters: [
+        {
+          id: "char-hxh-gon",
+          name: "Gon Freecss",
+          factionIds: ["faction-hxh-hunter-association"],
+          jutsuIds: ["jutsu-hxh-jajanken"],
+          locationIds: ["loc-hxh-whale-island"],
+          arcIds: ["arc-hxh-hunter-exam"],
+          allies: ["char-hxh-killua"],
+        },
+        { id: "char-hxh-killua", name: "Killua Zoldyck" },
+      ],
+      factions: [
+        {
+          id: "faction-hxh-hunter-association",
+          name: "Hunter Association",
+          characterIds: ["char-hxh-gon"],
+        },
+      ],
+      locations: [{ id: "loc-hxh-whale-island", name: "Whale Island" }],
+      nations: [],
+      arcs: [{ id: "arc-hxh-hunter-exam", name: "Hunter Exam Arc" }],
+      events: [
+        {
+          id: "ev-hxh-exam-begins",
+          name: "Hunter Exam begins",
+          characterIds: ["char-hxh-gon"],
+          locationId: "loc-hxh-whale-island",
+          arcId: "arc-hxh-hunter-exam",
+        },
+      ],
+      abilities: [
+        {
+          id: "jutsu-hxh-jajanken",
+          name: "Jajanken",
+          characterIds: ["char-hxh-gon"],
+        },
+      ],
+      routes: [
+        {
+          id: "route-hxh-gon-journey",
+          name: "Gon's journey",
+          protagonistCharacterIds: ["char-hxh-gon"],
+          steps: [
+            {
+              locationId: "loc-hxh-whale-island",
+              eventId: "ev-hxh-exam-begins",
+            },
+          ],
+        },
+      ],
+    });
+    const corpus = seed.corpora[0]!;
+    expect(corpus.records).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          canonicalKey: "character:legacy-gon",
+          kind: "character",
+        }),
+        expect.objectContaining({ kind: "organization" }),
+        expect.objectContaining({ kind: "location" }),
+        expect.objectContaining({ kind: "ability" }),
+        expect.objectContaining({ kind: "event" }),
+        expect.objectContaining({ kind: "activity" }),
+      ]),
+    );
+    expect(corpus.relations.map((edge) => edge.relation)).toEqual(
+      expect.arrayContaining([
+        "member_of_recorded",
+        "ability_listed",
+        "location_association_recorded",
+        "appears_in_arc_recorded",
+        "ally_of_recorded",
+        "involves_character_recorded",
+        "occurs_at_recorded",
+        "route_protagonist_recorded",
+        "route_step_location_recorded",
+        "route_step_event_recorded",
+      ]),
+    );
+  });
+
+  it("uses the HxH roster as supporting affiliation, arc, Nen and weapon evidence", () => {
+    const seed = normalizeHunterXHunterRoster({
+      canonicalByIdentity: {
+        ["character\0gon freecss"]: "character:legacy-gon",
+        ["organization\0hunter association"]:
+          "organization:legacy-hunter-association",
+      },
+      roster: [
+        {
+          slug: "gon",
+          name: "Gon Freecss",
+          affiliation: "Hunter Association",
+          nen_types: ["enhancement"],
+          arcs: ["hunter-exam"],
+          weapons: ["fishing-rod"],
+          description: "A boy from Whale Island.",
+        },
+      ],
+    });
+    expect(seed.corpora[0]?.records).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          canonicalKey: "character:legacy-gon",
+          name: "Gon Freecss",
+        }),
+        expect.objectContaining({
+          canonicalKey: "organization:legacy-hunter-association",
+        }),
+        expect.objectContaining({ kind: "ability" }),
+        expect.objectContaining({ kind: "item" }),
+      ]),
+    );
+    expect(seed.corpora[0]?.relations.map((edge) => edge.relation)).toEqual(
+      expect.arrayContaining([
+        "affiliation_recorded",
+        "appears_in_arc_recorded",
+        "nen_type_recorded",
+        "weapon_recorded",
+      ]),
+    );
+  });
+
   it("normalizes One Piece characters, crews, ships and abilities", () => {
     const seed = normalizeOnePieceDataset({
       characters: [
