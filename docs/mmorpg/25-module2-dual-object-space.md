@@ -401,12 +401,12 @@ source_relations      Cognitive Mother
 
 当前第一批 Catalog：
 
-| Source World | Canonical Corpus | 主导 Adapter |
-| --- | --- | --- |
-| 火影忍者 | `wiki:naruto` | 现有 specialized Naruto importer |
-| 海贼王 | `wiki:one-piece` | `one-piece-dataset-v1` |
-| 死神 | `wiki:bleach` | `bleach-database-v1` |
-| 全职猎人 | `wiki:hunter-x-hunter` | `hxh-static-v1` |
+| Source World | Canonical Corpus       | 主导 Adapter                     |
+| ------------ | ---------------------- | -------------------------------- |
+| 火影忍者     | `wiki:naruto`          | 现有 specialized Naruto importer |
+| 海贼王       | `wiki:one-piece`       | `one-piece-dataset-v1`           |
+| 死神         | `wiki:bleach`          | `bleach-database-v1`             |
+| 全职猎人     | `wiki:hunter-x-hunter` | `hxh-static-v1`                  |
 
 新增第五、第六个母体时，默认动作应该是：
 
@@ -456,12 +456,12 @@ canonical Source identity
 
 真实 GitHub Actions 使用固定上游版本，把四个母体安装进**同一个临时 NarraLume SQLite**，得到：
 
-| Source World | Canonical cards | Typed relations |
-| --- | ---: | ---: |
-| Naruto | **3,371** | **4,779** |
-| One Piece | **63** | **83** |
-| Bleach | **358** | **899** |
-| Hunter x Hunter | **183** | **227** |
+| Source World    | Canonical cards | Typed relations |
+| --------------- | --------------: | --------------: |
+| Naruto          |       **3,371** |       **4,779** |
+| One Piece       |          **63** |          **83** |
+| Bleach          |         **358** |         **899** |
+| Hunter x Hunter |         **183** |         **227** |
 
 同时确认：
 
@@ -570,4 +570,3 @@ GET /api/source-worlds/catalog
 ```
 
 这才是当前第二模块 World Object Space 的长期扩容方式。
-
