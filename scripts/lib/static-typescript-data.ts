@@ -95,7 +95,7 @@ function evaluateStatic(node: ts.Expression): StaticLiteral | undefined {
   // safe; the helper itself is never executed.
   if (ts.isCallExpression(node) && node.arguments.length === 1) {
     const only = node.arguments[0];
-    if (only && ts.isExpression(only)) return evaluateStatic(only);
+    if (only) return evaluateStatic(only);
   }
 
   return undefined;
