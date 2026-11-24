@@ -6,6 +6,7 @@ import {
   WORLD_ATLAS_NARRATIVE_AXIS,
   WORLD_ATLAS_SEMANTIC_LAYERS,
   WorldAtlasCardKindSchema,
+  WorldAtlasCognitiveMotherSchema,
   WorldAtlasReaderSemanticsSchema,
   inverseWorldAtlasRelation,
   worldAtlasCardTemplate,
@@ -53,6 +54,18 @@ describe("World Atlas content framework", () => {
     expect(WORLD_ATLAS_SEMANTIC_LAYERS.projectReality.authority).toBe(
       "current",
     );
+    expect(
+      WorldAtlasCognitiveMotherSchema.parse({
+        summary: "火影 Reader 已预装的忍者世界底盘",
+        preloadedWorldGrammar: ["忍村、忍族、任务与师承天然相连"],
+        priceLogic: ["血继限界与顶级忍者天然高价"],
+        naturalEntrances: ["忍者学校", "任务体系", "忍族"],
+        expectedInertia: ["忍村之间的政治与战争历史继续产生影响"],
+        attentionLogic: ["违反忍者常识的能力会迅速被高层注意"],
+        basis: "author_judgment",
+        sourceNote: "World-level Reader prior",
+      }).summary,
+    ).toContain("火影 Reader");
     expect(
       WorldAtlasReaderSemanticsSchema.parse({
         readerPrice: "写轮眼在火影读者认知里天然高价",
