@@ -42,7 +42,7 @@ describe("World Atlas lightweight cards and typed wiki links", () => {
 
   it("keeps the Markdown card as truth and rebuilds source_relations as a derived index", () => {
     db = new NodeNarrativeDatabase();
-    expect(db.migrate()).toBe(56);
+    expect(db.migrate()).toBe(57);
 
     const sources = new SqliteSourceCorpusRepository(db);
     const worlds = new SqliteUnifiedSourceWorldRepository(db);
@@ -82,6 +82,29 @@ describe("World Atlas lightweight cards and typed wiki links", () => {
     simpleCard("character:naruto", "character", "漩涡鸣人");
     simpleCard("organization:konoha", "organization", "木叶隐村");
     simpleCard("ability:sharingan", "ability", "写轮眼");
+
+    const readerSemantics = worlds.upsertReaderSemantics({
+      worldId: "naruto",
+      entityKey: "ability:sharingan",
+      semantics: {
+        readerPrice: "火影 Reader 已经预装的高价血继能力",
+        preloadedExpectations: ["宇智波", "复制与洞察"],
+        familiarRelations: ["写轮眼与宇智波一族"],
+        naturalEntrances: ["忍族", "移植", "师承"],
+        attentionTriggers: ["非宇智波者持有写轮眼"],
+        basis: "author_judgment",
+        sourceNote: "Reader-side semantics only",
+      },
+      now,
+    });
+    expect(readerSemantics.entityKey).toBe("ability:sharingan");
+    expect(
+      worlds.getReaderSemantics("naruto", "ability:sharingan")?.readerPrice,
+    ).toContain("Reader");
+    expect(worlds.listReaderSemantics("naruto")).toHaveLength(1);
+    expect(worlds.getCard("naruto", "ability:sharingan")?.content).not.toContain(
+      "Reader",
+    );
 
     const saved = worlds.upsertCard({
       worldId: "naruto",
