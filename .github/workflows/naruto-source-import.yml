@@ -73,8 +73,9 @@ jobs:
           assert.equal(family.information, "present");
           assert.equal(family.value, "present");
           assert.equal(family.power, "present", "Time-valid Chidori should be connected through the current mission");
-          assert.equal(family.playable, "thin");
-          assert.equal(audit.nextWorkshop, "playability");
+          assert.equal(family.playable, "present", "Mission assignment should expose a concrete permission/knowledge path");
+          assert.equal(audit.nextWorkshop, null);
+          assert.equal(audit.nextReason, null);
           EOF
       - name: Check full records and original-source isolation
         run: |
