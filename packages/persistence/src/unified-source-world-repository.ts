@@ -1,3 +1,8 @@
+import {
+  WorldAtlasReaderSemanticsSchema,
+  type WorldAtlasCardKind,
+  type WorldAtlasReaderSemantics,
+} from "@narralume/contracts";
 import type { NarrativeDatabase } from "./database.js";
 import {
   SqliteSourceCorpusRepository,
@@ -52,6 +57,14 @@ export interface SourceWorldCard {
 export interface SourceWorldCardSaveResult {
   card: SourceWorldCard;
   unresolvedLinks: Array<{ relation: string; target: string }>;
+}
+
+export interface SourceWorldReaderSemanticEntry {
+  worldId: string;
+  entityKey: string;
+  name: string;
+  kind: WorldAtlasCardKind;
+  semantics: WorldAtlasReaderSemantics;
 }
 
 /** A single original WORLD may have multiple upstream source corpora.
@@ -261,6 +274,86 @@ export class SqliteUnifiedSourceWorldRepository {
             },
           ]
         : [];
+    });
+  }
+
+  listCardKeys(worldId: string): string[] {
+    const world = this.getWorld(worldId);
+    if (!world) throw Error("source.world.not_found");
+    const rows = this.db.raw
+      .prepare(
+        `SELECT r.source_key AS sourceKey
+         FROM source_records r
+         LEFT JOIN source_record_presence presence
+           ON presence.corpus_id=r.corpus_id AND presence.source_key=r.source_key
+         WHERE r.corpus_id=? AND COALESCE(presence.active,1)=1
+         ORDER BY r.source_key`,
+      )
+      .all(world.canonicalCorpusId) as unknown as Array<{ sourceKey: string }>;
+    return rows.map((row) => row.sourceKey);
+  }
+
+  getReaderSemantics(
+    worldId: string,
+    entityKey: string,
+  ): WorldAtlasReaderSemantics | null {
+    const world = this.getWorld(worldId);
+    if (!world) throw Error("source.world.not_found");
+    const record = this.sources.getRecord(world.canonicalCorpusId, entityKey);
+    if (!record) return null;
+    const raw = record.raw.readerSemantics;
+    if (raw === undefined) return null;
+    const parsed = WorldAtlasReaderSemanticsSchema.safeParse(raw);
+    if (!parsed.success) throw Error("source.world.reader_semantics_invalid");
+    return parsed.data;
+  }
+
+  upsertReaderSemantics(input: {
+    worldId: string;
+    entityKey: string;
+    semantics: WorldAtlasReaderSemantics;
+    now: string;
+  }): SourceWorldReaderSemanticEntry {
+    const world = this.getWorld(input.worldId);
+    if (!world) throw Error("source.world.not_found");
+    const record = this.sources.getRecord(
+      world.canonicalCorpusId,
+      input.entityKey,
+    );
+    if (!record) throw Error("source.world.card.not_found");
+    const semantics = WorldAtlasReaderSemanticsSchema.parse(input.semantics);
+    this.sources.upsertRecord({
+      ...record,
+      raw: { ...record.raw, readerSemantics: semantics },
+      importedAt: input.now,
+    });
+    return {
+      worldId: input.worldId,
+      entityKey: input.entityKey,
+      name: record.name,
+      kind: record.kind,
+      semantics,
+    };
+  }
+
+  listReaderSemantics(worldId: string): SourceWorldReaderSemanticEntry[] {
+    const world = this.getWorld(worldId);
+    if (!world) throw Error("source.world.not_found");
+    return this.listCardKeys(worldId).flatMap((entityKey) => {
+      const record = this.sources.getRecord(world.canonicalCorpusId, entityKey);
+      if (!record || record.raw.readerSemantics === undefined) return [];
+      const semantics = WorldAtlasReaderSemanticsSchema.safeParse(
+        record.raw.readerSemantics,
+      );
+      if (!semantics.success)
+        throw Error("source.world.reader_semantics_invalid");
+      return [{
+        worldId,
+        entityKey,
+        name: record.name,
+        kind: record.kind,
+        semantics: semantics.data,
+      }];
     });
   }
 
