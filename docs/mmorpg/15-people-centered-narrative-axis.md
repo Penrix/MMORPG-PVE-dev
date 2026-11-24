@@ -1,5 +1,7 @@
 # 第二模块｜People-Centered Narrative Axis（2026-11-21，第二模块第一原则）
 
+> **STATUS: CURRENT AUTHORITY / PEOPLE-CENTERED NARRATIVE AXIS.** 十个 World Family 负责内容覆盖；People-centered 负责小说叙事展开。第三模块默认从“人以及人与世界对象的关系”进入故事。
+
 > **这是 World Atlas 在“世界内容框架”之上的叙事重心裁决。**
 >
 > [14：World Atlas 世界内容框架](14-world-atlas-content-framework-v01.md)回答“一个世界应该有什么”；本文回答“这些世界内容在小说中为什么不是平权地被使用，以及为什么【人】必须成为第二条叙事轴的中心”。

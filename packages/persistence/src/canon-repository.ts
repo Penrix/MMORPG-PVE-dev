@@ -67,7 +67,10 @@ export class SqliteCanonRepository {
         entity.projectId,
         entity.type,
         entity.name,
-        entity.worldScopeId ?? null,
+        // Migration 052 made world_scope_id NOT NULL and uses "" for the
+        // project's default/unscoped world. Passing NULL bypasses the schema
+        // default and breaks every legacy Canon insert after the migration.
+        entity.worldScopeId ?? "",
         JSON.stringify(entity.aliases),
         entity.description,
         JSON.stringify(entity.attributes),

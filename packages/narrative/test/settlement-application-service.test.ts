@@ -7,13 +7,25 @@ import {
 import { buildChapterRecipe } from "@narralume/harness";
 import {
   SqliteCanonRepository,
+  SqliteDocumentRepository,
   SqliteNarrativeStateRepository,
   SqliteProjectRepository,
   SqliteReviewRepository,
   SqliteRunRepository,
   SqliteStoryRepository,
+  WorldAtlasStoryContextBuilder,
 } from "@narralume/persistence";
 import { NodeNarrativeDatabase } from "@narralume/persistence/node";
+import {
+  applySettlementToCreativeFrameState,
+  buildStoryCreativeFrameContext,
+  finalizeStoryCreativeFrameState,
+  stageStoryCreativeFrameState,
+} from "../src/story-creative-context.js";
+import {
+  StoryChapterProductionHandoffSchema,
+  stageStoryChapterProductionHandoff,
+} from "../src/story-production-handoff.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -164,6 +176,42 @@ describe("SettlementApplicationService", () => {
         timelineEventId: "change-1:timeline:0",
         belief: "suspected",
       }),
+    ]);
+  });
+
+  it("accepted settlement facts are immediately visible through Project Reality without duplicate writes", () => {
+    seedChangeSet("change-reality", settlementPayload("awake"));
+    new SettlementApplicationService(database).apply({
+      projectId: "p1",
+      changeSetId: "change-reality",
+      now,
+    });
+
+    const context = new WorldAtlasStoryContextBuilder(database).build({
+      projectId: "p1",
+      entityIds: ["hero"],
+    });
+    expect(context.current[0]).toMatchObject({
+      authority: "confirmed",
+      sourceType: "project_reality",
+    });
+    expect(context.current[0]!.content).toContain('"condition"');
+    expect(context.current[0]!.content).toContain('"awake"');
+    expect(context.current[0]!.content).toContain('"trusts"');
+    expect(context.current[0]!.content).toContain('"Hero wakes"');
+
+    // Settlement remains the single write path. Current Reality projects the
+    // accepted Canon fact, native relationship and native timeline event
+    // instead of duplicating them into another truth table.
+    expect(
+      database.raw
+        .prepare(
+          "SELECT COUNT(*) AS count FROM project_reality_revisions WHERE project_id=?",
+        )
+        .get("p1"),
+    ).toEqual({ count: 0 });
+    expect(state.listCurrentRelationships("p1")).toEqual([
+      expect.objectContaining({ relation: "trusts" }),
     ]);
   });
 
@@ -449,6 +497,264 @@ describe("SettlementApplicationService", () => {
     );
   });
 });
+
+// prettier-ignore
+describe("accepted settlement creative-state write-back", () => {
+  it("settles payoff stakes, charges open stakes and carries retained gains into chapter two", () => {
+    stageCreativeChapter();
+    seedChangeSet("change-creative", settlementPayload("awake"));
+    new SettlementApplicationService(database).apply({
+      projectId: "p1",
+      changeSetId: "change-creative",
+      now,
+    });
+
+    const story = new SqliteStoryRepository(database);
+    const settled = chapterCreativeState();
+    expect(settled.status).toBe("settled");
+    expect(settled.stakeLedger.map((stake) => stake.state)).toEqual([
+      "settled",
+      "escalating",
+    ]);
+    expect(settled.expectationThreads.map((thread) => thread.phase)).toEqual([
+      "settled",
+      "charging",
+    ]);
+    expect(settled.retainedAssets).toContain("新的任务资格");
+    expect(settled.realityFingerprint).toBe("reality:accepted");
+
+    const next = buildStoryCreativeFrameContext(
+      story.listOutline("p1"),
+      "chapter-2",
+    );
+    expect(next.inheritedState.retainedAssets).toContain("新的任务资格");
+    expect(next.inheritedState.activeStakeLedger.map((stake) => stake.entityId)).toEqual([
+      "hero",
+    ]);
+    expect(next.inheritedState.openExpectationThreads.map((thread) => thread.id)).toEqual([
+      "thread:future",
+    ]);
+    expect(next.inheritedState.sourceStates.at(-1)?.frameOutlineNodeId).toBe("chapter-1");
+  });
+
+  it("resolves a manual settlement run through its linked document", () => {
+    stageCreativeChapter();
+    const story = new SqliteStoryRepository(database);
+    new SqliteDocumentRepository(database).insert({
+      id: "document:manual",
+      projectId: "p1",
+      kind: "chapter",
+      title: "Manual chapter",
+      outlineNodeId: "chapter-1",
+      currentVersionId: null,
+      archivedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    });
+    const recipe = buildChapterRecipe("manual-settlement", 0);
+    new SqliteRunRepository(database).create({
+      id: "manual-settlement",
+      projectId: "p1",
+      recipe: recipe.name,
+      recipeVersion: recipe.version,
+      mode: "manual",
+      targetOutlineNodeId: null,
+      policy: { documentId: "document:manual" },
+      budgetLimit: {
+        maxInputTokens: 10_000,
+        maxOutputTokens: 10_000,
+        maxCalls: 10,
+        maxCostUsd: null,
+        maxWallTimeMs: 60_000,
+      },
+      steps: recipe.steps,
+      now,
+    });
+    seedChangeSet("change-manual", settlementPayload("awake"), "manual-settlement");
+    new SettlementApplicationService(database).apply({
+      projectId: "p1",
+      changeSetId: "change-manual",
+      now,
+    });
+    expect(chapterCreativeState().status).toBe("settled");
+    expect(story.requireOutlineNode("p1", "chapter-1").metadata.storyProductionHandoff).toBeDefined();
+  });
+
+  it("leaves the creative snapshot untouched after rejection or a locked Canon conflict", () => {
+    stageCreativeChapter();
+    const before = chapterCreativeState();
+    seedChangeSet("change-rejected", settlementPayload("awake"));
+    const service = new SettlementApplicationService(database);
+    service.reject({ projectId: "p1", changeSetId: "change-rejected", now });
+    expect(chapterCreativeState()).toEqual(before);
+
+    canon.insertFact(createCanonFact({
+      id: "locked-condition-creative",
+      projectId: "p1",
+      subjectId: "hero",
+      predicate: "condition",
+      value: "asleep",
+      authority: "locked",
+      sourceType: "test",
+      now,
+    }));
+    seedChangeSet("change-locked-creative", settlementPayload("awake", {
+      operation: "supersede",
+      factId: "locked-condition-creative",
+    }));
+    expect(() => service.apply({
+      projectId: "p1",
+      changeSetId: "change-locked-creative",
+      now,
+    })).toThrow(SettlementConflictError);
+    expect(chapterCreativeState()).toEqual(before);
+    expect(reviews.requireCanonChangeSet("p1", "change-locked-creative").status).toBe("candidate");
+  });
+
+  it("keeps ordinary chapters without a handoff compatible", () => {
+    seedChangeSet("change-ordinary", settlementPayload("awake"));
+    new SettlementApplicationService(database).apply({
+      projectId: "p1",
+      changeSetId: "change-ordinary",
+      now,
+    });
+    expect(new SqliteStoryRepository(database).requireOutlineNode("p1", "chapter-1").metadata.mmorpgCreativeState).toBeUndefined();
+  });
+
+  it("supports inherited states and optional one-step upgrade advancement without mutating input", () => {
+    const original = creativeState();
+    const handoff = creativeHandoff();
+    const next = applySettlementToCreativeFrameState({
+      currentState: original,
+      handoff,
+      frameOutlineNodeId: "chapter-2",
+      updatedAt: "2026-08-10T00:05:00.000Z",
+      advanceUpgradeStep: true,
+    });
+    expect(next.frameOutlineNodeId).toBe("chapter-2");
+    expect(next.upgradeLedger?.currentStepId).toBe("step:two");
+    expect(original.upgradeLedger?.currentStepId).toBe("step:one");
+    expect(next.digest).not.toBe(original.digest);
+  });
+});
+
+// prettier-ignore
+function creativeState() {
+  const stake = (id: string, entityId: string) => ({
+    id,
+    entityId,
+    currentBelief: "还没有能力",
+    currentInterest: "自己的资格",
+    stakeAction: "押注复核",
+    stakeAssets: ["资格"],
+    commitmentCost: "声誉",
+    escalationPlan: "提高下注",
+    payoffReaction: "重新估值",
+    settlementChange: "实际给出资格",
+    state: "seeded" as const,
+  });
+  const thread = (id: string) => ({
+    id,
+    targetEmotion: "得意",
+    targetOutcome: "主角获得资格",
+    readerKnowledgeSummary: "读者知道优势",
+    payoffCondition: "专业复核通过",
+    reactionTargetEntityIds: ["rival"],
+    retainedGainTarget: "新的任务资格",
+    phase: "seeding" as const,
+  });
+  return finalizeStoryCreativeFrameState({
+    version: "story-creative-frame-state.v1",
+    authority: "creative-state",
+    projectId: "p1",
+    frameOutlineNodeId: "chapter-1",
+    status: "in_progress",
+    upgradeLedger: {
+      protagonistEntityId: "hero",
+      road: "任务升级",
+      currentStepId: "step:one",
+      currentPosition: "普通忍者",
+      stageGoal: "获取资格",
+      settlementTarget: "获得任务资格",
+      steps: [
+        { id: "step:one", title: "复核", targetGain: "资格", gate: "通过复核", targetCircle: "忍者" },
+        { id: "step:two", title: "高级任务", targetGain: "高级待遇", gate: "进入任务", targetCircle: "上忍" },
+      ],
+    },
+    stakeLedger: [stake("stake:payoff", "rival"), stake("stake:charge", "hero")],
+    expectationThreads: [thread("thread:payoff"), thread("thread:future")],
+    retainedAssets: ["旧资格"],
+    unresolvedQuestions: [],
+    sourceStoryUnitDigests: ["story-unit:1"],
+    realityFingerprint: "reality:before",
+    updatedAt: now,
+  });
+}
+
+// prettier-ignore
+function creativeHandoff() {
+  const directive = (action: "payoff" | "charge", order: number) => ({
+    sceneId: `scene:${order}`,
+    readerOrder: order,
+    action,
+    readerTime: "scene" as const,
+    expectationThreadIds: action === "charge" ? ["thread:future"] : ["thread:payoff"],
+    reasons: ["推进故事"],
+    embodimentTargets: ["实际动作"],
+    payoffThreadIds: action === "payoff" ? ["thread:payoff"] : [],
+    reactionTargetEntityIds: action === "payoff" ? ["rival"] : ["hero"],
+    retainedGainOpportunity: action === "payoff" ? "新的任务资格" : null,
+    informationReleased: "读者得知结果",
+    informationWithheld: "下一步仍未揭晓",
+    focusShiftThreadIds: [],
+    nextExpectationSeed: null,
+    chapterBoundary: "continue" as const,
+  });
+  return StoryChapterProductionHandoffSchema.parse({
+    version: "story-chapter-production-handoff.v1",
+    authority: "locked-story-design",
+    projectId: "p1",
+    storySceneExpansionDigest: "expansion:1",
+    storyReaderTimePlanDigest: "reader:1",
+    realityFingerprint: "reality:accepted",
+    chapterTitle: "Chapter",
+    chapterGoal: "资格复核",
+    povEntityId: "hero",
+    plannedEntityIds: ["hero", "rival"],
+    targetCharacters: 800,
+    sourceSceneIds: ["scene:1", "scene:2"],
+    lockedScenePlan: {
+      chapterGoal: "资格复核",
+      povEntityId: "hero",
+      scenes: [{
+        title: "结算",
+        goal: "资格",
+        conflict: "旧认知",
+        turn: "事实出现",
+        outcome: "资格取得",
+        locationId: null,
+        participants: ["hero", "rival"],
+        targetCharacters: 800,
+      }],
+      continuityRisks: [],
+    },
+    readerTimeDirectives: [directive("payoff", 1), directive("charge", 2)],
+    digest: "handoff:1",
+  });
+}
+
+// prettier-ignore
+function stageCreativeChapter(): void {
+  const story = new SqliteStoryRepository(database);
+  stageStoryChapterProductionHandoff(story, "chapter-1", creativeHandoff(), now);
+  stageStoryCreativeFrameState(story, creativeState(), now);
+}
+
+// prettier-ignore
+function chapterCreativeState() {
+  const node = new SqliteStoryRepository(database).requireOutlineNode("p1", "chapter-1");
+  return node.metadata.mmorpgCreativeState as ReturnType<typeof creativeState>;
+}
 
 function seedChangeSet(
   id: string,

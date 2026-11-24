@@ -1,0 +1,179 @@
+name: Collect Male Newbook Rankings (Every 3 Days)
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run every 3 days at 19:17 UTC (03:17 Asia/Shanghai).
+    # Note: GitHub Actions only fires scheduled workflows from the default branch (main).
+    - cron: "17 19 */3 * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: newbook-rankings-radar
+  cancel-in-progress: true
+
+jobs:
+  collect-newbooks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Prepare raw output directory
+        shell: bash
+        run: |
+          rm -rf .newbook-raw
+          mkdir -p .newbook-raw
+          echo "BROWSER_READY=0" >> "$GITHUB_ENV"
+          echo "COLLECTION_PARTIAL=0" >> "$GITHUB_ENV"
+
+      - name: Collect Qidian male newbook rankings (mobile SSR)
+        shell: bash
+        run: |
+          for board in signnewbook pubnewbook newauthor sanjiang; do
+            echo "::group::Qidian ${board}"
+            set +e
+            node tools/newbook-radar/vendor/oh-story/qidian-rank-scraper.js \
+              --type "$board" \
+              --mode mobile \
+              --outdir .newbook-raw
+            code=$?
+            set -e
+            if [ "$code" -ne 0 ]; then
+              echo "::warning::Qidian ${board} failed (exit ${code})"
+              echo "COLLECTION_PARTIAL=1" >> "$GITHUB_ENV"
+            fi
+            echo "::endgroup::"
+          done
+
+      - name: Bootstrap hosted Chrome CDP for Fanqie and Ciweimao
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.config/google-chrome/Default"
+          printf '{"profile":{"name":"Default"}}\n' > "$HOME/.config/google-chrome/Default/Preferences"
+          Xvfb :99 -screen 0 1920x1080x24 >/tmp/newbook-xvfb.log 2>&1 &
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
+
+          set +e
+          npm install -g agent-browser
+          install_code=$?
+          if [ "$install_code" -ne 0 ]; then
+            echo "::warning::agent-browser install failed; skipping browser sources"
+            echo "COLLECTION_PARTIAL=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          node tools/newbook-radar/vendor/oh-story/setup-cdp-chrome.js 9222
+          first_code=$?
+          if [ "$first_code" -eq 0 ]; then
+            echo "BROWSER_READY=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          node tools/newbook-radar/vendor/oh-story/setup-cdp-chrome.js 9222 --reset --yes
+          second_code=$?
+          if [ "$second_code" -eq 0 ]; then
+            echo "BROWSER_READY=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          echo "::warning::Chrome CDP unavailable; continuing with Qidian SSR data"
+          echo "COLLECTION_PARTIAL=1" >> "$GITHUB_ENV"
+          exit 0
+
+      - name: Collect Fanqie male newbook rankings (channel=1, type=1)
+        if: env.BROWSER_READY == '1'
+        shell: bash
+        run: |
+          set +e
+          node tools/newbook-radar/vendor/oh-story/fanqie-rank-scraper.js \
+            --channel 1 \
+            --type 1 \
+            --top 50 \
+            --outdir .newbook-raw
+          code=$?
+          set -e
+          if [ "$code" -ne 0 ]; then
+            echo "::warning::Fanqie male newbook collection was partial (exit ${code})"
+            echo "COLLECTION_PARTIAL=1" >> "$GITHUB_ENV"
+          fi
+          exit 0
+
+      - name: Collect Ciweimao newbook ranking (with full MIP intros)
+        if: env.BROWSER_READY == '1'
+        shell: bash
+        run: |
+          set +e
+          node tools/newbook-radar/vendor/oh-story/ciweimao-rank-scraper.js \
+            --type newbook \
+            --outdir .newbook-raw
+          code=$?
+          set -e
+          if [ "$code" -ne 0 ]; then
+            echo "::warning::Ciweimao newbook collection was partial (exit ${code})"
+            echo "COLLECTION_PARTIAL=1" >> "$GITHUB_ENV"
+          fi
+          exit 0
+
+      - name: Merge time-tagged cumulative newbook pool
+        shell: bash
+        run: |
+          extra_args=()
+          if [ "$COLLECTION_PARTIAL" = "1" ]; then
+            extra_args+=(--partial)
+          fi
+          node tools/newbook-radar/build-newbook-pool.mjs \
+            --input .newbook-raw \
+            --existing datasets/newbook-rankings/newbooks.jsonl \
+            --outdir datasets/newbook-rankings \
+            "${extra_args[@]}"
+
+      - name: Upload snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: newbook-rankings-snapshot
+          path: |
+            datasets/newbook-rankings/newbooks.jsonl
+            datasets/newbook-rankings/status.json
+
+      - name: Commit refreshed newbook pool
+        shell: bash
+        run: |
+          if git diff --quiet -- datasets/newbook-rankings/newbooks.jsonl datasets/newbook-rankings/status.json && [ -z "$(git ls-files --others --exclude-standard -- datasets/newbook-rankings/)" ]; then
+            echo "No changes in newbook rankings pool."
+            exit 0
+          fi
+
+          cp datasets/newbook-rankings/newbooks.jsonl /tmp/newbooks.jsonl
+          cp datasets/newbook-rankings/status.json /tmp/newbooks-status.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          branch="${GITHUB_REF_NAME}"
+          for attempt in 1 2 3; do
+            git fetch origin "$branch"
+            git reset --hard "origin/$branch"
+            mkdir -p datasets/newbook-rankings
+            cp /tmp/newbooks.jsonl datasets/newbook-rankings/newbooks.jsonl
+            cp /tmp/newbooks-status.json datasets/newbook-rankings/status.json
+            git add datasets/newbook-rankings/newbooks.jsonl datasets/newbook-rankings/status.json
+            git commit -m "data(rankings): refresh 3-day male newbook pool [skip ci]"
+            if git push origin "HEAD:${branch}"; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "::error::Failed to push refreshed newbook pool after 3 retries"
+          exit 1

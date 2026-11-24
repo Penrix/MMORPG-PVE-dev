@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { WorldPackDocument, WorldPackRequest } from "@narralume/contracts";
+import type {
+  WorldAtlasCardKind,
+  WorldPackDocument,
+  WorldPackRequest,
+} from "@narralume/contracts";
 import {
   applyWorldProductionDelta,
+  auditWorldAtlasProduction,
   emptyWorldDocument,
   playtestWorld,
   worldWorkOrderInput,
@@ -20,13 +25,15 @@ const req: WorldPackRequest = {
 };
 const node = (
   id: string,
-  type: "location" | "organization" | "character" | "item" | "rule",
+  type: "location" | "organization" | "character" | "item" | "rule" | "concept",
   name: string,
   areaRef: string | null = null,
+  atlasKind?: WorldAtlasCardKind,
 ) => ({
   localId: id,
   existingCanonId: null,
   type,
+  ...(atlasKind ? { atlasKind } : {}),
   name,
   description: name + "具有持续而具体的世界生活",
   areaRef,
@@ -86,8 +93,8 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
         },
       ],
     };
-    // Every world needs concrete public powers; playable action chains are
-    // optional diagnostics rather than mandatory game-runtime mechanics.
+    // Public power is required only while absent. This is a create-mode
+    // textual world, so an explicit WorldAction chain is not a hard gate.
     expect(playtestWorld(doc, req).next?.workshop).toBe("power");
     doc = {
       ...doc,
@@ -215,5 +222,92 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
     expect(check.next?.workshop).toBe("people");
     expect(check.independentActivities).toEqual([]);
     expect(check.controlledResources).toEqual([]);
+  });
+  it("audits Atlas families by relationships instead of counting named nodes", () => {
+    const doc: WorldPackDocument = {
+      ...emptyWorldDocument(),
+      nodes: [
+        node("market", "location", "紫霄坊市"),
+        node("guild", "organization", "三江商会", "market"),
+        node("chief", "character", "叶掌柜", "market"),
+        node("ore", "item", "千年紫金矿", "market"),
+      ],
+      links: [
+        link("guild", "market", "operates"),
+        link("chief", "guild", "leads"),
+      ],
+    };
+    const first = auditWorldAtlasProduction(doc);
+    expect(
+      first.families.find((entry) => entry.family === "people")?.status,
+    ).toBe("present");
+    expect(
+      first.families.find((entry) => entry.family === "asset")?.status,
+    ).toBe("thin");
+    expect(first.orphanWorldObjects).toContain("ore");
+
+    const connected: WorldPackDocument = {
+      ...doc,
+      links: [...doc.links, link("chief", "ore", "owns")],
+    };
+    const second = auditWorldAtlasProduction(connected);
+    expect(
+      second.families.find((entry) => entry.family === "asset")?.status,
+    ).toBe("present");
+    expect(second.peopleConnectedWorldObjects).toContain("ore");
+    expect(second.orphanWorldObjects).not.toContain("ore");
+  });
+
+  it("puts Atlas targets and people questions into every real work order", () => {
+    const doc = {
+      ...emptyWorldDocument(),
+      nodes: [node("market", "location", "紫霄坊市")],
+    };
+    const need = playtestWorld(doc, req).next!;
+    const instruction = worldWorkOrderInput(need, doc);
+    expect(need.targetFamilies.length).toBeGreaterThan(0);
+    expect(need.peopleQuestions.length).toBeGreaterThan(0);
+    expect(instruction).toMatchObject({
+      atlasTarget: {
+        families: need.targetFamilies,
+        suggestedCardKinds: need.suggestedCardKinds,
+      },
+    });
+    expect(instruction).toMatchObject({
+      atlasTarget: {
+        peopleQuestions: need.peopleQuestions,
+        completionRule: need.completionRule,
+      },
+    });
+  });
+  it("keeps information cards distinct from assets and power after coarse staging", () => {
+    const doc: WorldPackDocument = {
+      ...emptyWorldDocument(),
+      nodes: [
+        node("market", "location", "紫霄坊市"),
+        node("chief", "character", "叶掌柜", "market"),
+        node("secret", "concept", "矿脉密报", "market", "information"),
+        node("ore", "item", "千年紫金矿", "market", "resource"),
+        node("skill", "rule", "炼器术", "market", "ability"),
+      ],
+      links: [
+        link("chief", "secret", "知道"),
+        link("chief", "ore", "拥有"),
+        link("chief", "skill", "掌握"),
+      ],
+    };
+    const audit = auditWorldAtlasProduction(doc);
+    expect(
+      audit.families.find((entry) => entry.family === "information")?.status,
+    ).toBe("present");
+    expect(
+      audit.families.find((entry) => entry.family === "asset")?.status,
+    ).toBe("present");
+    expect(
+      audit.families.find((entry) => entry.family === "power")?.status,
+    ).toBe("present");
+    expect(audit.peopleConnectedWorldObjects).toEqual(
+      expect.arrayContaining(["secret", "ore", "skill"]),
+    );
   });
 });

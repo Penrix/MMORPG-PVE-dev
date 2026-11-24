@@ -1,5 +1,7 @@
 # WorldForge 真源码整体移植｜模拟引擎、Agent 与 NarraLume 桥接
 
+> **STATUS: IMPLEMENTATION REFERENCE / PORT RECORD.** WorldForge 移植能力是可复用的实现资产，不等于当前 Story Director 权限模型。尤其不得从 WorldForge/Agent 机制反推出“人物自治高于作者编剧”。
+
 > **2026-11-20 工作实况。** 之前仅移植 `causality.ts`、`registry.ts` 两个算法，现在已将 **WorldForge 的完整纯 TypeScript 模拟运行依赖链**按实际源码文件迁入；不把临时模拟结果写回用户的正式小说世界。当前 PR 仍属 Draft，须按最新 Actions 验证通过才可合并。
 
 ## 代码从哪里来

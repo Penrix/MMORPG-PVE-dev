@@ -87,6 +87,10 @@ import {
 } from "@narralume/harness";
 import { StoryStatePacketBuilder } from "./story-state-packet.js";
 import {
+  WorldAtlasStoryContextBuilder,
+  worldAtlasSourcesForAccess,
+} from "@narralume/persistence";
+import {
   REVIEW_CONTRACT,
   ReviewResultSchema,
   SCENE_PLAN_CONTRACT,
@@ -104,6 +108,7 @@ import {
   requireActiveProject,
   requireActiveRunCommit,
 } from "./project-guard.js";
+import { parseStoryChapterProductionHandoff } from "./story-production-handoff.js";
 
 export class ChapterWorkerSuite {
   private readonly automation: SqliteAutomationRepository;
@@ -120,6 +125,7 @@ export class ChapterWorkerSuite {
   private readonly compiler: ContextCompiler;
   private readonly templates: SqliteTemplateRepository;
   private readonly storyState: StoryStatePacketBuilder;
+  private readonly worldAtlasContext: WorldAtlasStoryContextBuilder;
   private readonly settlementApplication: SettlementApplicationService;
 
   constructor(
@@ -149,6 +155,7 @@ export class ChapterWorkerSuite {
       this.state,
       this.story,
     );
+    this.worldAtlasContext = new WorldAtlasStoryContextBuilder(database);
     this.settlementApplication = new SettlementApplicationService(database);
   }
 
@@ -279,6 +286,18 @@ export class ChapterWorkerSuite {
         }
       : null;
     const documentReview = this.documentReviewTarget(snapshot);
+    const storyProductionHandoff = parseStoryChapterProductionHandoff(
+      target.metadata.storyProductionHandoff,
+    );
+    if (
+      storyProductionHandoff &&
+      storyProductionHandoff.projectId !== run.projectId
+    ) {
+      throw permanent(
+        "story.production_handoff.project_mismatch",
+        "The locked story-production handoff belongs to another project",
+      );
+    }
     const plannedEntityIds = [
       ...new Set([
         ...(Array.isArray(target.metadata.plannedEntityIds)
@@ -286,6 +305,7 @@ export class ChapterWorkerSuite {
               (id): id is string => typeof id === "string",
             )
           : []),
+        ...(storyProductionHandoff?.plannedEntityIds ?? []),
         ...(target.povEntityId ? [target.povEntityId] : []),
       ]),
     ];
@@ -297,6 +317,10 @@ export class ChapterWorkerSuite {
           "A chapter entity is no longer available; update the chapter plan",
         );
       return entity;
+    });
+    const worldAtlasContext = this.worldAtlasContext.build({
+      projectId: run.projectId,
+      entityIds: plannedEntityIds,
     });
     const entitySources = (authorView: boolean): ContextSource[] =>
       plannedEntities.map((entity) => ({
@@ -344,6 +368,20 @@ export class ChapterWorkerSuite {
         sourceId: target.id,
       },
     ];
+    if (storyProductionHandoff) {
+      sources.push({
+        id: `story-production-handoff:${storyProductionHandoff.digest}`,
+        kind: "author-intent",
+        label: "S06/S07 锁定叙事生产交接",
+        content: JSON.stringify(storyProductionHandoff),
+        authority: "locked",
+        priority: 100,
+        required: true,
+        compressible: false,
+        sourceType: "story_production_handoff",
+        sourceId: storyProductionHandoff.digest,
+      });
+    }
     const activeStyle = this.delivery.getActiveStyleProfile(run.projectId);
     if (activeStyle) {
       sources.push({
@@ -623,6 +661,9 @@ export class ChapterWorkerSuite {
       stableContextInventory([
         ...sources,
         ...entitySources(true),
+        ...worldAtlasContext.current,
+        ...worldAtlasContext.reference,
+        ...worldAtlasContext.referenceDetail,
         ...authorStoryStatePacket.sources,
       ]),
     );
@@ -654,9 +695,23 @@ export class ChapterWorkerSuite {
       ].includes(purpose)
         ? authorStoryStatePacket
         : draftStoryStatePacket;
+      const authorPurpose = [
+        "scene-plan",
+        "semantic-review",
+        "chapter-settlement",
+      ].includes(purpose);
+      const characterBoundPurpose =
+        statePacket === draftStoryStatePacket &&
+        draftStoryStatePacket !== authorStoryStatePacket;
+      const atlasAccess = authorPurpose
+        ? "author"
+        : characterBoundPurpose
+          ? "character"
+          : "narrative";
       const purposeSources = [
         ...sources,
         ...entitySources(statePacket === authorStoryStatePacket),
+        ...worldAtlasSourcesForAccess(worldAtlasContext, atlasAccess),
         ...statePacket.sources,
       ];
       const purposeInventoryDigest = sha256(
@@ -741,6 +796,22 @@ export class ChapterWorkerSuite {
           author: authorStoryStatePacket.fingerprint,
           draft: draftStoryStatePacket.fingerprint,
         },
+        worldAtlasContext: {
+          counts: worldAtlasContext.counts,
+          povBoundary:
+            draftStoryStatePacket === authorStoryStatePacket
+              ? "author-view"
+              : "character-filtered",
+          currentSourceIds: worldAtlasContext.current.map(
+            (source) => source.id,
+          ),
+          referenceSourceIds: worldAtlasContext.reference.map(
+            (source) => source.id,
+          ),
+          referenceDetailSourceIds: worldAtlasContext.referenceDetail.map(
+            (source) => source.id,
+          ),
+        },
         retrievalEmbedding: {
           model: queryEmbedding.model,
           modelId: queryEmbedding.modelId,
@@ -756,6 +827,32 @@ export class ChapterWorkerSuite {
     step: NarrativeRunStep,
     signal: AbortSignal,
   ): Promise<StepExecutionResult> {
+    const targetId = snapshot.run.targetOutlineNodeId;
+    const target = targetId
+      ? this.story.requireOutlineNode(snapshot.run.projectId, targetId)
+      : null;
+    const storyProductionHandoff = parseStoryChapterProductionHandoff(
+      target?.metadata.storyProductionHandoff,
+    );
+    if (storyProductionHandoff) {
+      if (storyProductionHandoff.projectId !== snapshot.run.projectId) {
+        throw permanent(
+          "story.production_handoff.project_mismatch",
+          "The locked story-production handoff belongs to another project",
+        );
+      }
+      return {
+        artifactKind: "scene-plan",
+        output: {
+          ...storyProductionHandoff.lockedScenePlan,
+          storyProductionHandoffDigest: storyProductionHandoff.digest,
+          source: "story-reader-time-handoff",
+          generation: { mode: "locked-handoff", attempts: 0 },
+        },
+        usage: zeroUsage(),
+      };
+    }
+
     const context = requiredArtifact(snapshot, "context.compile");
     const writingReference = chapterWritingReference(context);
     const result = await this.model.structured(
@@ -852,6 +949,13 @@ export class ChapterWorkerSuite {
               "<scene-plan>",
               JSON.stringify(plan),
               "</scene-plan>",
+              typeof plan.storyProductionHandoffDigest === "string"
+                ? [
+                    "<locked-story-production-rule>",
+                    "这份 scene-plan 来自 S06 Scene Expansion + S07 Reader Time 的锁定交接。你现在只负责把它演成正文：不得重排场景、替换人物选择、提前释放 withheld 信息、把 skip/none 内容重新写回，也不得把下一期待提前兑现。",
+                    "</locked-story-production-rule>",
+                  ].join("\n")
+                : "",
               ...(continuationPrefix
                 ? [
                     "<existing-beginning>",

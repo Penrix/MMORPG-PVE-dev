@@ -1,4 +1,9 @@
 import type {
+  InspirationChannel,
+  InspirationRollRequest,
+  InspirationRollResponse,
+  InspirationCatalogResponse,
+  CreateProjectFromInspirationRequest,
   WorldAtlasCardKind,
   WorldPackDocument,
   WorldPackRecord,
@@ -122,6 +127,18 @@ export class ApiError extends Error {
     this.status = status;
     this.details = details;
   }
+}
+
+export function isApiErrorCode(
+  error: unknown,
+  code: string,
+  status?: number,
+): error is ApiError {
+  return (
+    error instanceof ApiError &&
+    error.code === code &&
+    (status === undefined || error.status === status)
+  );
 }
 
 export function apiErrorMessage(error: unknown): string {
@@ -811,7 +828,9 @@ export type RunStepKind =
   | "canon.stage"
   | "world.context"
   | "world.generate"
-  | "world.stage";
+  | "world.stage"
+  | "story.director.design"
+  | "story.director.rehearse";
 
 export interface NarrativeRun {
   id: string;
@@ -3965,4 +3984,36 @@ export async function reindexAtlasCard(
     `/api/source-worlds/${encodeURIComponent(worldId)}/cards/${encodeURIComponent(entityKey)}/reindex`,
     jsonRequest("POST", {}),
   );
+}
+
+/* 四槽灵感老虎机：与后端合同共享请求/响应类型。 */
+export async function getInspirationCatalog(
+  query: { projectId?: string; channel?: InspirationChannel } = {},
+  signal?: AbortSignal,
+): Promise<InspirationCatalogResponse> {
+  // catalog 服务端当前只接受 projectId；频道由 roll 决定。
+  const params = new URLSearchParams();
+  if (query.projectId) params.set("projectId", query.projectId);
+  const suffix = params.size ? `?${params.toString()}` : "";
+  return requestJson(`/api/inspirations/catalog${suffix}`, signal ? { signal } : {});
+}
+
+export async function rollInspirationSeeds(
+  input: InspirationRollRequest,
+  signal?: AbortSignal,
+): Promise<InspirationRollResponse> {
+  return requestJson("/api/inspirations/roll", {
+    ...jsonRequest("POST", input),
+    ...(signal ? { signal } : {}),
+  });
+}
+
+export async function createProjectFromInspiration(
+  input: CreateProjectFromInspirationRequest,
+  signal?: AbortSignal,
+): Promise<{ project: Project; outlineNodeId: string }> {
+  return requestJson("/api/inspirations/create-project", {
+    ...jsonRequest("POST", input),
+    ...(signal ? { signal } : {}),
+  });
 }

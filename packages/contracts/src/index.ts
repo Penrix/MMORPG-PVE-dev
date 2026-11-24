@@ -22,6 +22,11 @@ export * from "./agent-skills.js";
 export * from "./canon-candidate.js";
 export * from "./world-pack.js";
 export * from "./world-atlas.js";
+export * from "./world-builder-atlas.js";
+export * from "./story-runtime.js";
+export * from "./story-creative-context.js";
+export * from "./creative-material.js";
+export * from "./inspiration-slot-machine.js";
 
 export const HealthResponseSchema = z.object({
   status: z.literal("ok"),

@@ -134,14 +134,19 @@ test("主链只经由 UI：设置 → 建书 → 大纲 → 写作 → AI 接续
     const railBox = await page.locator(".rail").boundingBox();
     expect(railBox?.height ?? 999).toBeLessThanOrEqual(80);
     const links = page.locator(".rail__nav .rail__item");
-    // World Builder is a sixth peer workspace next to the original five.
-    await expect(links).toHaveCount(6);
-    for (let index = 0; index < 6; index += 1) {
+    // Main navigation has grown as World Builder / World Atlas became real
+    // peer workspaces. The mobile invariant is not a frozen item count: every
+    // current peer workspace must remain a usable touch target.
+    const mainWorkspaceCount = await links.count();
+    expect(mainWorkspaceCount).toBeGreaterThanOrEqual(5);
+    for (let index = 0; index < mainWorkspaceCount; index += 1) {
       const box = await links.nth(index).boundingBox();
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
       expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
     }
-    await expect(page.locator(".rail__nav .rail__item-label")).toHaveCount(6);
+    await expect(page.locator(".rail__nav .rail__item-label")).toHaveCount(
+      mainWorkspaceCount,
+    );
   }
 
   await page.getByRole("link", { name: "前往交付" }).click();

@@ -73,6 +73,8 @@ export const RunStepKindSchema = z.enum([
   "world.context",
   "world.generate",
   "world.stage",
+  "story.director.design",
+  "story.director.rehearse",
 ]);
 
 export const ChapterStepKindSchema = RunStepKindSchema.extract([

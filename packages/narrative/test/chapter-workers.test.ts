@@ -24,8 +24,10 @@ import { NodeNarrativeDatabase } from "@narralume/persistence/node";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  buildStoryChapterProductionHandoff,
   ChapterWorkerSuite,
   GatewayNarrativeModelClient,
+  stageStoryChapterProductionHandoff,
   type NarrativeModelClient,
 } from "../src/index.js";
 
@@ -130,6 +132,128 @@ beforeEach(() => {
 afterEach(() => database.close());
 
 describe("ChapterWorkerSuite", () => {
+  it("uses a locked S07 handoff instead of calling the scene-plan model again", async () => {
+    const story = new SqliteStoryRepository(database);
+    const handoff = buildStoryChapterProductionHandoff({
+      expansion: {
+        version: "story-scene-expansion.v1",
+        authority: "speculative",
+        projectId: "p1",
+        storyUnitDesignDigest: "story-unit:locked",
+        storyUnitEventId: "event:locked",
+        arbitrationDigest: "arbiter:locked",
+        realityFingerprint: "reality:locked",
+        eventProblem: "林昼如何让第一条遗忘规则真正被Reader看见",
+        scenes: [
+          {
+            id: "scene:locked",
+            order: 1,
+            phase: "during",
+            title: "灯塔熄灭",
+            participantEntityIds: ["hero"],
+            locationObjectId: null,
+            localProblem: "灯灭后父亲开始否认空椅子的主人",
+            pressure: "林昼亲眼看见现实与父亲认知发生错位",
+            observableStart: "林昼进入灯塔，父亲仍记得空椅子的主人",
+            interaction: "灯塔熄灭，父亲随即否认失踪者存在",
+            informationMove: "Reader与林昼同时确认遗忘规则第一次生效",
+            expectationMove: "第一条世界规则由猜测变成可验证异常",
+            projectedRealityUse: "父亲在S05 Reality中确实发生认知变化",
+            endState: "林昼掌握第一条可验证的遗忘规则",
+            nextSceneCause: null,
+          },
+        ],
+        digest: "scene-expansion:locked",
+      },
+      readerTimePlan: {
+        version: "story-reader-time-plan.v1",
+        authority: "speculative",
+        projectId: "p1",
+        expectationStateDigest: "expectation:locked",
+        storySceneExpansionDigest: "scene-expansion:locked",
+        realityFingerprint: "reality:locked",
+        sceneIds: ["scene:locked"],
+        decisions: [
+          {
+            sceneId: "scene:locked",
+            readerOrder: 1,
+            action: "seed",
+            readerTime: "scene",
+            expectationThreadIds: ["thread:memory-rule"],
+            reasons: ["让第一条规则通过现实变化进入Reader视野"],
+            deepenScarcityEvidenceIds: [],
+            reinforceBeliefIds: [],
+            widenGapBeliefIds: [],
+            embodimentTargets: ["父亲前后认知差必须通过动作和对白具体出现"],
+            payoffThreadIds: [],
+            reactionTargetEntityIds: [],
+            retainedGainOpportunity: "林昼获得可继续验证世界规则的第一条线索",
+            informationReleased: "灯塔熄灭会改变人的记忆",
+            informationWithheld: "规则为何存在、影响边界仍未知",
+            focusShiftThreadIds: [],
+            nextExpectationSeed: "下一次熄灯还会夺走谁",
+            terminalExpectationReason: null,
+            chapterBoundary: "chapter_end",
+          },
+        ],
+        digest: "reader-time:locked",
+      },
+      chapterTitle: "雾港失灯",
+      chapterGoal: "让遗忘规则第一次被Reader和林昼共同确认",
+      povEntityId: "hero",
+      targetCharacters: 1200,
+    });
+    stageStoryChapterProductionHandoff(
+      story,
+      chapterId,
+      handoff,
+      "2026-08-10T00:00:01.000Z",
+    );
+
+    const model = scriptedModel(
+      "雾从海面推上石阶。林昼走进灯塔。\n\n灯灭的一刻，父亲忽然看向空椅子，问她为何给一个不存在的人留座。",
+    );
+    const recipe = buildChapterRecipe("locked-story-handoff", 0);
+    runs.create({
+      id: "locked-story-handoff",
+      projectId: "p1",
+      mode: "autopilot",
+      recipe: recipe.name,
+      recipeVersion: recipe.version,
+      targetOutlineNodeId: chapterId,
+      policy: { minChapterCharacters: 20 },
+      steps: recipe.steps,
+      now,
+    });
+    const supervisor = new HarnessSupervisor(
+      runs,
+      new ChapterWorkerSuite(database, model, () => new Date(now)).registry(),
+      { now: () => new Date(now) },
+    );
+
+    expect(await supervisor.processNext("locked-handoff-test")).toBe(true);
+    expect(await supervisor.processNext("locked-handoff-test")).toBe(true);
+
+    const snapshot = runs.getSnapshot("locked-story-handoff");
+    const plan = snapshot.steps.find(
+      (step) => step.kind === "scene.plan",
+    )?.outputArtifact;
+    expect(plan).toMatchObject({
+      source: "story-reader-time-handoff",
+      storyProductionHandoffDigest: handoff.digest,
+      chapterGoal: "让遗忘规则第一次被Reader和林昼共同确认",
+    });
+    expect(
+      model.structured.mock.calls.some((call) => call[2] === "scene-plan"),
+    ).toBe(false);
+
+    const context = snapshot.steps.find(
+      (step) => step.kind === "context.compile",
+    )?.outputArtifact;
+    expect(JSON.stringify(context)).toContain("S06/S07 锁定叙事生产交接");
+    expect(JSON.stringify(context)).toContain("下一次熄灯还会夺走谁");
+  });
+
   it("persists attributed accounts, suspicions and unresolved questions with the committed source version", async () => {
     const manuscript =
       "林昼踏进灯塔。\n\n父亲说：“我一年前没能救起河坝边的孩子。”\n\n林昼怀疑护士拿过刀片，但归家的碎片还没有解释。";

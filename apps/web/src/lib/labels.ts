@@ -108,6 +108,8 @@ export function runStepLabel(kind: RunStepKind): string {
     "world.context": "装配世界资料与已有Reality",
     "world.generate": "生产完整世界包",
     "world.stage": "保存世界包候选",
+    "story.director.design": getLocale() === "en" ? "Design story unit" : "设计故事单元",
+    "story.director.rehearse": getLocale() === "en" ? "Rehearse story" : "排演故事并构建交接",
   };
   return world[kind] ?? kind;
 }

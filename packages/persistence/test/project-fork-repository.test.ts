@@ -22,7 +22,7 @@ afterEach(() => {
 
 function setup() {
   db = new NodeNarrativeDatabase();
-  expect(db.migrate()).toBe(54);
+  expect(db.migrate()).toBe(56);
   const project = new SqliteProjectRepository(db);
   project.insert(createProject({ id: "novel", title: "同人世界 Fork", now }));
   project.insert(createProject({ id: "other", title: "别的小说", now }));

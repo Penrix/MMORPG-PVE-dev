@@ -9,6 +9,7 @@ import {
   Network,
   PenLine,
   Radar,
+  Sparkles,
 
   Truck,
   type LucideIcon,
@@ -35,6 +36,17 @@ export interface WorkspaceDef {
 }
 
 export const WORKSPACES: WorkspaceDef[] = [
+  {
+    id: "inspirations",
+    path: "/inspirations",
+    projectScoped: false,
+    label: "shell.nav.inspirations",
+    en: "SPARK",
+    index: "S0",
+    icon: Sparkles,
+    blurb: "shell.nav.inspirationsBlurb",
+    seal: "灵",
+  },
   {
     id: "shelf",
     path: "/shelf",

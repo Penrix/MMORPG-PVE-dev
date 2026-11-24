@@ -2,6 +2,8 @@ import type { shell as shellZh } from "../zh/shell";
 
 export const shell: typeof shellZh = {
   nav: {
+    inspirations: "Inspiration Slots",
+    inspirationsBlurb: "Roll four story hooks, lock favorites, create a book",
     shelf: "Shelf",
     shelfBlurb: "Catalog, search, and create books",
     overview: "Overview",

@@ -1,5 +1,7 @@
 # 第二模块｜世界 Fork / Diff、人物人格锚点与 Reality Checkout（2026-11-20）
 
+> **STATUS: CURRENT SUPPORT / FORK-DIFF SEMANTICS.** Source mother world → Project Reality Fork/Diff、稳定身份与人物内核语义仍有效；不得把“人物内核稳定”解释成 Character Agent 对作者 Story Line 的否决权。
+
 > 用户明确提出：**原生母体到项目世界可理解成 Fork；项目实际变化只看 Diff；原著人物的人设标签不应随着平行世界剧情随意改写，否则 OOC。**
 >
 > 本页是 [10：第二模块认知和错误纠正](10-module2-cognition-and-error-guardrails.md) 的最新补充。优先级：用户最新明确纠正 > 当前代码事实 > 旧设计结论。第一模块仍暂停。

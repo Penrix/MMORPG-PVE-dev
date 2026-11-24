@@ -65,6 +65,64 @@
 .world-builder__results header { margin-bottom: 18px; }
 .world-builder__running { padding: 13px; background: var(--paper-sunk); line-height: 1.8; }
 .world-builder__results .bible-ai__sets { display: grid; gap: 15px; }
+.world-builder__atlas-audit {
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid var(--hairline);
+  background: var(--paper-sunk);
+}
+.world-builder__atlas-audit-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+.world-builder__atlas-audit-head small {
+  display: block;
+  color: var(--ink-faint);
+  margin-bottom: 3px;
+}
+.world-builder__atlas-audit-head strong { font-size: 14px; }
+.world-builder__atlas-audit-head > span {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.world-builder__atlas-family-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+}
+.world-builder__atlas-family {
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--hairline-soft);
+  background: var(--paper);
+}
+.world-builder__atlas-family span,
+.world-builder__atlas-family strong {
+  display: block;
+}
+.world-builder__atlas-family span {
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+.world-builder__atlas-family strong {
+  margin-top: 3px;
+  font-size: 12px;
+}
+.world-builder__atlas-family[data-status="present"] strong { color: var(--vera); }
+.world-builder__atlas-family[data-status="thin"] strong { color: var(--ink-soft); }
+.world-builder__atlas-family[data-status="missing"] strong { color: var(--conflict); }
+.world-builder__atlas-next {
+  margin: 10px 0 5px;
+  line-height: 1.65;
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  .world-builder__atlas-family-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (max-width: 980px) {
   .world-builder__layout { grid-template-columns: minmax(0, 1fr); }
 }

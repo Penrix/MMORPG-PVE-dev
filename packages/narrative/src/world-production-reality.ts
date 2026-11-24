@@ -3,11 +3,12 @@ import type {
   CanonFact,
   RelationshipEvent,
 } from "@narralume/domain";
-import type {
-  WorldPackDocument,
-  WorldPackNode,
-  WorldPackActivity,
-  WorldAction,
+import {
+  WorldAtlasCardKindSchema,
+  type WorldPackDocument,
+  type WorldPackNode,
+  type WorldPackActivity,
+  type WorldAction,
 } from "@narralume/contracts";
 
 /**
@@ -34,11 +35,15 @@ export function projectExistingWorldForProduction(input: {
   const nodes: WorldPackNode[] = input.entities.map((e) => {
     const content = record(latest(e.id, "world.content")?.value);
     const attrs = e.attributes;
+    const atlasKind = WorldAtlasCardKindSchema.safeParse(
+      attrs.atlasKind ?? content.atlasKind,
+    );
     const area = latest(e.id, "world.area")?.objectEntityId;
     return {
       localId: ref(e.id),
       existingCanonId: e.id,
       type: e.type,
+      ...(atlasKind.success ? { atlasKind: atlasKind.data } : {}),
       name: e.name,
       description:
         e.description ??
