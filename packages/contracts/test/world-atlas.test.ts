@@ -4,7 +4,9 @@ import {
   WORLD_ATLAS_CARD_TYPES,
   WORLD_ATLAS_CONTENT_FAMILIES,
   WORLD_ATLAS_NARRATIVE_AXIS,
+  WORLD_ATLAS_SEMANTIC_LAYERS,
   WorldAtlasCardKindSchema,
+  WorldAtlasReaderSemanticsSchema,
   inverseWorldAtlasRelation,
   worldAtlasCardTemplate,
   worldAtlasCardType,
@@ -39,6 +41,29 @@ describe("World Atlas content framework", () => {
     expect(worldAtlasNarrativePriority("organization")).toBeLessThan(
       worldAtlasNarrativePriority("ability"),
     );
+  });
+
+  it("keeps original truth, Reader prior and project current as separate semantic authorities", () => {
+    expect(WORLD_ATLAS_SEMANTIC_LAYERS.originalMother.authority).toBe(
+      "reference",
+    );
+    expect(WORLD_ATLAS_SEMANTIC_LAYERS.cognitiveMother.authority).toBe(
+      "reader-semantic",
+    );
+    expect(WORLD_ATLAS_SEMANTIC_LAYERS.projectReality.authority).toBe(
+      "current",
+    );
+    expect(
+      WorldAtlasReaderSemanticsSchema.parse({
+        readerPrice: "写轮眼在火影读者认知里天然高价",
+        preloadedExpectations: ["血继限界", "宇智波"],
+        familiarRelations: ["宇智波与木叶政治关系"],
+        naturalEntrances: ["忍族", "忍者学校", "任务体系"],
+        attentionTriggers: ["非宇智波者使用写轮眼"],
+        basis: "author_judgment",
+        sourceNote: "Reader-side judgement, not Source Canon",
+      }).basis,
+    ).toBe("author_judgment");
   });
 
   it("accepts every registered card kind through the shared validation schema", () => {
