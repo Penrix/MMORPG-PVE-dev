@@ -11,6 +11,7 @@ on:
       - "packages/persistence/src/naruto-source-import.ts"
       - "packages/persistence/src/naruto-source-world.ts"
       - "packages/narrative/src/source-world-production.ts"
+      - "scripts/audit-naruto-world.ts"
       - "packages/persistence/src/source-corpus-repository.ts"
       - "packages/persistence/src/migrations/049-shared-source-corpora.ts"
   workflow_dispatch:
@@ -34,6 +35,18 @@ jobs:
         run: npm test -- naruto-source-import
       - name: Download pinned Naruto data and import into real NarraLume SQLite
         run: npm run import:naruto -- --db /tmp/narralume-naruto-smoke.sqlite
+      - name: Audit real Konohagakure local graph
+        run: |
+          npx tsx scripts/audit-naruto-world.ts --db /tmp/narralume-naruto-smoke.sqlite --focus Konohagakure > /tmp/naruto-konoha-audit.json
+          cat /tmp/naruto-konoha-audit.json
+          node --input-type=module <<'EOF'
+          import { readFileSync } from "node:fs";
+          import assert from "node:assert/strict";
+          const audit = JSON.parse(readFileSync("/tmp/naruto-konoha-audit.json","utf8"));
+          assert.equal(audit.focus, "Konohagakure");
+          assert(audit.selected.nodes > 5, "Konoha focus did not expand into a local graph");
+          assert(audit.selected.sample.some(x => x.name === "Konohagakure"), "Konoha focus missing from its own graph");
+          EOF
       - name: Check full records and original-source isolation
         run: |
           node --input-type=module <<'EOF'
