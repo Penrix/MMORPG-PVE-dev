@@ -16,6 +16,7 @@ import {
   type WorldPackRequest,
 } from "@narralume/contracts";
 import {
+  SOURCE_WORLD_CATALOG,
   SqliteProjectRepository,
   SqliteSourceCorpusRepository,
   SqliteSourceWorldProductionRepository,
@@ -123,6 +124,18 @@ export function registerUnifiedSourceWorldRoutes(
   const now = () => new Date().toISOString();
 
   app.route("GET", "/api/source-worlds", async () => worlds.listWorlds());
+  app.route("GET", "/api/source-worlds/catalog", async () =>
+    SOURCE_WORLD_CATALOG.map((entry) => {
+      const installed = worlds.getWorld(entry.id);
+      return {
+        ...entry,
+        installed: installed !== null,
+        installedCardCount: installed
+          ? worlds.listCardKeys(entry.id).length
+          : 0,
+      };
+    }),
+  );
   app.route("GET", "/api/source-worlds/framework", async () => ({
     version: "0.1",
     contentFamilies: WORLD_ATLAS_CONTENT_FAMILIES,
