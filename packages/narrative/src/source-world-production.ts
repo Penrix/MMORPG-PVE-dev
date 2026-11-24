@@ -237,9 +237,7 @@ export function projectSourceWorldForProduction(
         },
       ]
     : fuzzyFocusHits;
-  const selected = new Map(
-    focusHits.map((hit) => [hit.sourceKey, hit]),
-  );
+  const selected = new Map(focusHits.map((hit) => [hit.sourceKey, hit]));
 
   const addCard = (key: string): void => {
     if (selected.has(key) || selected.size >= 80) return;

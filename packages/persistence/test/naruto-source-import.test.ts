@@ -176,10 +176,7 @@ describe("Naruto mother-world import into the ONE NarraLume SQLite", () => {
       content: "# Itachi Uchiha\n\n作者人工深化后的卡片，重新导入不能覆盖。",
       now: "2026-11-24T16:00:00.000Z",
     });
-    const second = installNarutoSourceWorld(
-      db,
-      "2026-11-24T16:01:00.000Z",
-    );
+    const second = installNarutoSourceWorld(db, "2026-11-24T16:01:00.000Z");
     expect(second.createdCards).toBe(0);
     expect(second.preservedCards).toBe(first.sourceRecords);
     expect(
@@ -188,10 +185,7 @@ describe("Naruto mother-world import into the ONE NarraLume SQLite", () => {
 
     // Supporting Wiki evidence is installed as a corpus but deliberately not
     // same-name merged into the canonical identity.
-    const dossier = worlds.getDossier(
-      NARUTO_SOURCE_WORLD_ID,
-      "character:1293",
-    );
+    const dossier = worlds.getDossier(NARUTO_SOURCE_WORLD_ID, "character:1293");
     expect(
       dossier?.evidence.some(
         (item) => item.evidenceCorpusId === NARUTO_WIKI_CORPUS,

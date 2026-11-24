@@ -426,9 +426,7 @@ export class SqliteUnifiedSourceWorldRepository {
           kind: options.kind,
           limit: 200,
         })
-        .filter(
-          (hit) => hit.sourceKey === ref || hit.name === ref,
-        );
+        .filter((hit) => hit.sourceKey === ref || hit.name === ref);
       if (matches.length !== 1) return null;
       return this.getCard(worldId, matches[0]!.sourceKey);
     }

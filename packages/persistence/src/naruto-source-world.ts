@@ -84,8 +84,7 @@ export function installNarutoSourceWorld(
   const sources = new SqliteSourceCorpusRepository(db);
   const worlds = new SqliteUnifiedSourceWorldRepository(db);
   const dattebayo = sources.getCorpus(NARUTO_DATTEBAYO_CORPUS);
-  if (!dattebayo)
-    throw new Error("naruto.source_world.dattebayo_missing");
+  if (!dattebayo) throw new Error("naruto.source_world.dattebayo_missing");
 
   return db.transaction(() => {
     let world = worlds.getWorld(NARUTO_SOURCE_WORLD_ID);
@@ -230,7 +229,8 @@ export function installNarutoSourceWorld(
         NARUTO_DATTEBAYO_CORPUS,
         ...(wiki ? [NARUTO_WIKI_CORPUS] : []),
       ],
-      cognitiveMother: worlds.getCognitiveMother(NARUTO_SOURCE_WORLD_ID) !== null,
+      cognitiveMother:
+        worlds.getCognitiveMother(NARUTO_SOURCE_WORLD_ID) !== null,
       seededReaderSemantics,
     };
   });
@@ -274,11 +274,12 @@ function renderNarutoSourceCard(
   if (relations.length) {
     lines.push("", "## 已记录关系");
     for (const edge of relations)
-      lines.push(
-        `${edge.relation}：[[${edge.toKey}|${edge.otherName}]]`,
-      );
+      lines.push(`${edge.relation}：[[${edge.toKey}|${edge.otherName}]]`);
   }
-  return lines.filter((line) => line !== "").join("\n\n").replace(/\n\n- /g, "\n- ");
+  return lines
+    .filter((line) => line !== "")
+    .join("\n\n")
+    .replace(/\n\n- /g, "\n- ");
 }
 
 function flattenRaw(raw: Record<string, unknown>): string[] {
@@ -330,12 +331,24 @@ function seedNarutoReaderSemantics(
       {
         readerPrice:
           "木叶是火影最核心的长期舞台之一，政治、忍族、师承、任务与大量高价人物高度密集。",
-        preloadedExpectations: ["火影体系", "忍族政治", "任务与师承", "木叶核心人物"],
+        preloadedExpectations: [
+          "火影体系",
+          "忍族政治",
+          "任务与师承",
+          "木叶核心人物",
+        ],
         familiarRelations: ["忍村与忍族", "火影与上忍", "老师与队伍"],
-        naturalEntrances: ["忍者学校", "任务体系", "医院", "忍族", "行政与暗部"],
+        naturalEntrances: [
+          "忍者学校",
+          "任务体系",
+          "医院",
+          "忍族",
+          "行政与暗部",
+        ],
         attentionTriggers: ["低位人物突然获得高阶权限", "改变木叶重大历史节点"],
         basis: "author_judgment",
-        sourceNote: "Reader-side Naruto fanfiction pricing; not Source objective fact.",
+        sourceNote:
+          "Reader-side Naruto fanfiction pricing; not Source objective fact.",
       },
     ],
     [
@@ -347,9 +360,14 @@ function seedNarutoReaderSemantics(
         preloadedExpectations: ["写轮眼", "族内强者", "木叶政治", "灭族历史"],
         familiarRelations: ["宇智波与木叶", "族人与写轮眼", "家族内部关系"],
         naturalEntrances: ["族人身份", "警务系统", "师承与队伍", "血继研究"],
-        attentionTriggers: ["非传统写轮眼持有者", "灭族轨迹被改变", "族内权力重新定价"],
+        attentionTriggers: [
+          "非传统写轮眼持有者",
+          "灭族轨迹被改变",
+          "族内权力重新定价",
+        ],
         basis: "author_judgment",
-        sourceNote: "Reader-side Naruto fanfiction pricing; not Source objective fact.",
+        sourceNote:
+          "Reader-side Naruto fanfiction pricing; not Source objective fact.",
       },
     ],
     [
@@ -359,11 +377,20 @@ function seedNarutoReaderSemantics(
         readerPrice:
           "写轮眼是火影 Reader 已经预装为高价的标志性瞳术，能力成长、移植与持有者身份都会被立即定价。",
         preloadedExpectations: ["瞳术成长", "复制与洞察", "万花筒", "宇智波"],
-        familiarRelations: ["写轮眼与宇智波", "瞳术与战斗", "移植与非宇智波持有者"],
+        familiarRelations: [
+          "写轮眼与宇智波",
+          "瞳术与战斗",
+          "移植与非宇智波持有者",
+        ],
         naturalEntrances: ["血继觉醒", "训练", "移植", "战斗与研究"],
-        attentionTriggers: ["低位人物提前觉醒", "非宇智波者异常掌握", "突破已知进阶路径"],
+        attentionTriggers: [
+          "低位人物提前觉醒",
+          "非宇智波者异常掌握",
+          "突破已知进阶路径",
+        ],
         basis: "author_judgment",
-        sourceNote: "Reader-side Naruto fanfiction pricing; not Source objective fact.",
+        sourceNote:
+          "Reader-side Naruto fanfiction pricing; not Source objective fact.",
       },
     ],
     [
@@ -372,12 +399,22 @@ function seedNarutoReaderSemantics(
       {
         readerPrice:
           "晓天然代表高危险、高战力和重大阴谋密度，Reader 会把接近、渗透或改变其成员关系视为昂贵事件。",
-        preloadedExpectations: ["S级叛忍", "尾兽计划", "核心成员", "高强度战斗"],
+        preloadedExpectations: [
+          "S级叛忍",
+          "尾兽计划",
+          "核心成员",
+          "高强度战斗",
+        ],
         familiarRelations: ["晓成员之间", "晓与尾兽", "晓与各忍村"],
         naturalEntrances: ["叛忍网络", "情报追踪", "任务冲突", "卧底与招募"],
-        attentionTriggers: ["提前接触核心成员", "改变成员命运", "低位人物被晓注意"],
+        attentionTriggers: [
+          "提前接触核心成员",
+          "改变成员命运",
+          "低位人物被晓注意",
+        ],
         basis: "author_judgment",
-        sourceNote: "Reader-side Naruto fanfiction pricing; not Source objective fact.",
+        sourceNote:
+          "Reader-side Naruto fanfiction pricing; not Source objective fact.",
       },
     ],
     [
@@ -388,10 +425,16 @@ function seedNarutoReaderSemantics(
           "九尾是顶级尾兽资产，与人柱力、木叶安全和重大历史事件绑定，天然拥有极高 Reader 价格。",
         preloadedExpectations: ["九尾", "人柱力", "尾兽力量", "木叶灾难史"],
         familiarRelations: ["九尾与人柱力", "尾兽与忍村", "封印与力量"],
-        naturalEntrances: ["封印体系", "人柱力关系", "尾兽研究", "战争与村级安全"],
+        naturalEntrances: [
+          "封印体系",
+          "人柱力关系",
+          "尾兽研究",
+          "战争与村级安全",
+        ],
         attentionTriggers: ["异常接触尾兽", "封印被改变", "人柱力命运偏离"],
         basis: "author_judgment",
-        sourceNote: "Reader-side Naruto fanfiction pricing; not Source objective fact.",
+        sourceNote:
+          "Reader-side Naruto fanfiction pricing; not Source objective fact.",
       },
     ],
   ];

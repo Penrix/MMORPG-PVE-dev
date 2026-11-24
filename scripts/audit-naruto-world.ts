@@ -17,11 +17,7 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const dbPath = resolve(
   option("--db") ??
     process.env.NARRATIVE_DB_PATH ??
-    resolve(
-      root,
-      process.env.NARRATIVE_DATA_DIR ?? "data",
-      "narralume.sqlite",
-    ),
+    resolve(root, process.env.NARRATIVE_DATA_DIR ?? "data", "narralume.sqlite"),
 );
 const focus = option("--focus") ?? "Konohagakure";
 const worldTime = option("--world-time") ?? "原作全时代参考";
@@ -49,7 +45,10 @@ try {
   const audit = auditWorldAtlasProduction(view);
   const counts = new Map<string, number>();
   for (const node of view.nodes)
-    counts.set(node.atlasKind ?? node.type, (counts.get(node.atlasKind ?? node.type) ?? 0) + 1);
+    counts.set(
+      node.atlasKind ?? node.type,
+      (counts.get(node.atlasKind ?? node.type) ?? 0) + 1,
+    );
 
   console.log(
     JSON.stringify(
@@ -61,7 +60,9 @@ try {
           links: view.links.length,
           activities: view.activities.length,
           interactions: view.interactions?.length ?? 0,
-          kinds: Object.fromEntries([...counts].sort(([a], [b]) => a.localeCompare(b))),
+          kinds: Object.fromEntries(
+            [...counts].sort(([a], [b]) => a.localeCompare(b)),
+          ),
           sample: view.nodes.slice(0, 30).map((node) => ({
             ref: node.localId,
             kind: node.atlasKind ?? node.type,
