@@ -175,8 +175,8 @@ export function adoptSourceWorldProduction(
       worlds.upsertCard({
         worldId,
         entityKey: key,
-        kind: worldPackAtlasKind(node),
-        name: node.name,
+        kind: existing?.record.kind ?? worldPackAtlasKind(node),
+        name: existing?.record.name ?? node.name,
         aliases: existing?.record.aliases ?? [],
         content: existing
           ? appendManagedExpansion(existing.content, expansion)
