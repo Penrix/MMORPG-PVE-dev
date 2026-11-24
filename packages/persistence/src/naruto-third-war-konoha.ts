@@ -47,6 +47,7 @@ export function installNarutoThirdWarKonohaSlice(
     kakashi: requireCard(worlds, "Kakashi Hatake", "character"),
     obito: requireCard(worlds, "Obito Uchiha", "character"),
     rin: requireCard(worlds, "Rin Nohara", "character"),
+    chidori: requireCard(worlds, "Chidori", "ability"),
   };
 
   const line = (...parts: string[]) => parts.join("\n");
@@ -83,6 +84,7 @@ export function installNarutoThirdWarKonohaSlice(
               "item:kakashi-minato-special-kunai",
               "Minato's Special Kunai Given to Kakashi",
             ),
+          "当期能力：" + wiki(required.chidori.key, required.chidori.name),
           "战略资源：" +
             wiki(
               "resource:iwa-kannabi-supply-line",
@@ -225,6 +227,7 @@ export function installNarutoThirdWarKonohaSlice(
           "参与者：" + wiki(required.teamMinato.key, required.teamMinato.name),
           "行动者：" + wiki(required.kakashi.key, required.kakashi.name),
           "涉及：" + wiki("location:kannabi-bridge", "Kannabi Bridge"),
+          "涉及：" + wiki(required.chidori.key, required.chidori.name),
           "涉及：" +
             wiki(
               "resource:iwa-kannabi-supply-line",
