@@ -164,7 +164,7 @@ describe("inspiration API", () => {
     expect(catalog.m03TypeMapping.GF).toBe("anomalyRule");
   });
 
-  it("rolls six local cards, then locks identity and rerolls the remaining slots", async () => {
+  it("locks identity and returns only the chain that identity belongs to", async () => {
     const { app } = await setup();
     const first = await app.inject({
       method: "POST",
@@ -195,21 +195,13 @@ describe("inspiration API", () => {
     });
     expect(reroll.statusCode, reroll.body).toBe(200);
     const cards = reroll.json().cards;
-    expect(cards).toHaveLength(8);
-    expect(
-      cards.every(
-        (card: { slots: { identity: unknown } }) =>
-          JSON.stringify(card.slots.identity) === JSON.stringify(locked),
-      ),
-    ).toBe(true);
-    expect(
-      new Set(
-        cards.map(
-          (card: { slots: { anomalyRule: { id: string } } }) =>
-            card.slots.anomalyRule.id,
-        ),
-      ).size,
-    ).toBe(8);
+    // A locked slot pins the story it came from; the other three slots are
+    // not recombined from other chains.
+    expect(cards).toHaveLength(1);
+    expect(cards[0].chainId).toBe(original.cards[0].chainId);
+    expect(JSON.stringify(cards[0].slots.identity)).toBe(
+      JSON.stringify(locked),
+    );
   });
 
   it("routes one 24-card 火影 LLM batch through the injected generator and preserves locked slots", async () => {
@@ -308,8 +300,8 @@ describe("inspiration API", () => {
     expect(book).toMatchObject({
       kind: "book",
       summary: card.sentence,
-      goal: card.starterBlueprint.targetCircle,
-      conflict: card.starterBlueprint.openingTension,
+      goal: card.starterBlueprint.firstTake,
+      conflict: card.starterBlueprint.inbound,
     });
     expect(book?.metadata.starterBlueprint).toEqual(card.starterBlueprint);
     const bible = await app.inject({

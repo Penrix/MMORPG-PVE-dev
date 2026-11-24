@@ -86,7 +86,7 @@ describe("inspiration slot machine", () => {
     }
   });
 
-  it("builds twelve complete, nonhollow, deterministic seeds without repeated unlocked cards", () => {
+  it("deals twelve complete, deterministic chains without mixing stories", () => {
     const input = {
       channel: "male" as const,
       count: 12,
@@ -96,27 +96,29 @@ describe("inspiration slot machine", () => {
     };
     const first = rollInspirationSeeds(database, input);
     expect(rollInspirationSeeds(database, input)).toEqual(first);
+    expect(first.cards).toHaveLength(12);
     for (const card of first.cards) {
-      expect(card.sentence).toMatch(
-        /我是.+偶然发现自己.+借此闯入.+没想到|却|但|结果|不料|反而/u,
+      expect(card.chainId).toBeTruthy();
+      expect(card.sentence).toContain(
+        card.starterBlueprint.protagonistIdentity,
       );
-      expect(card.starterBlueprint.protagonistIdentity).toBeTruthy();
-      expect(card.starterBlueprint.targetCircle).toBeTruthy();
+      expect(card.sentence).toMatch(/没想到|却|但|不料|结果|反而/u);
+      expect(card.starterBlueprint.firstTake).toBeTruthy();
+      expect(card.starterBlueprint.inbound).toBeTruthy();
+      for (const key of [
+        "identity",
+        "anomalyRule",
+        "highValueCircle",
+        "twistPressure",
+      ] as const) {
+        expect(card.slots[key].id).toContain(card.chainId!);
+      }
     }
-    for (const key of [
-      "identity",
-      "anomalyRule",
-      "highValueCircle",
-      "twistPressure",
-    ] as const) {
-      expect(new Set(first.cards.map((card) => card.slots[key].id)).size).toBe(
-        12,
-      );
-    }
+    expect(new Set(first.cards.map((card) => card.chainId)).size).toBe(12);
   });
 
   for (const count of [24, 30]) {
-    it(`rolls ${count} local cards across shuffle rounds with globally unique four-slot signatures`, () => {
+    it(`caps a ${count}-card local request at the number of real chains`, () => {
       const result = rollInspirationSeeds(database, {
         channel: "male",
         count,
@@ -124,13 +126,13 @@ describe("inspiration slot machine", () => {
         useM03: false,
         seed: "large-batch-" + count,
       });
-      expect(result.cards).toHaveLength(count);
+      expect(result.cards.length).toBe(12);
       expect(result.mode).toBe("local");
-      expect(new Set(result.cards.map(signature)).size).toBe(count);
+      expect(new Set(result.cards.map(signature)).size).toBe(12);
     });
   }
 
-  it("keeps a 30-card batch unique even when three slots are locked", () => {
+  it("treats locked slots as a chain filter instead of recombining stories", () => {
     const baseline = rollInspirationSeeds(database, {
       channel: "male",
       count: 1,
@@ -150,15 +152,14 @@ describe("inspiration slot machine", () => {
         highValueCircle: baseline.slots.highValueCircle,
       },
     });
-    expect(new Set(result.cards.map(signature)).size).toBe(30);
-    expect(
-      result.cards.every(
-        (card) =>
-          card.slots.identity.id === baseline.slots.identity.id &&
-          card.slots.anomalyRule.id === baseline.slots.anomalyRule.id &&
-          card.slots.highValueCircle.id === baseline.slots.highValueCircle.id,
-      ),
-    ).toBe(true);
+    expect(result.cards).toHaveLength(1);
+    const [card] = result.cards;
+    expect(card!.chainId).toBe(baseline.chainId);
+    expect(card!.slots.identity.id).toBe(baseline.slots.identity.id);
+    expect(card!.slots.anomalyRule.id).toBe(baseline.slots.anomalyRule.id);
+    expect(card!.slots.highValueCircle.id).toBe(
+      baseline.slots.highValueCircle.id,
+    );
   });
 
   it("does not leak male or female cards into other channels", () => {
@@ -180,7 +181,7 @@ describe("inspiration slot machine", () => {
     }
   });
 
-  it("preserves locked items byte-for-byte and rotates the remaining three slots", () => {
+  it("keeps a locked phrase and deals only the chain that contains it", () => {
     const baseline = rollInspirationSeeds(database, {
       channel: "female",
       count: 1,
@@ -197,15 +198,11 @@ describe("inspiration slot machine", () => {
       useM03: true,
       lockedSlots: { highValueCircle: locked },
     });
-    expect(
-      rolled.cards.every(
-        (card) =>
-          JSON.stringify(card.slots.highValueCircle) === JSON.stringify(locked),
-      ),
-    ).toBe(true);
-    expect(
-      new Set(rolled.cards.map((card) => card.slots.identity.id)).size,
-    ).toBe(10);
+    expect(rolled.cards).toHaveLength(1);
+    expect(JSON.stringify(rolled.cards[0]!.slots.highValueCircle)).toBe(
+      JSON.stringify(locked),
+    );
+    expect(rolled.cards[0]!.chainId).toBe(baseline.chainId);
   });
 
   it("mixes imported active M03 cards, tracks material IDs and rejects retired cards", () => {
@@ -247,11 +244,13 @@ describe("inspiration slot machine", () => {
       useM03: true,
     });
     expect(result.poolStats.m03Count).toBe(1);
+    // Local mode deals whole chains from built-in packs. Project material is
+    // counted for the pool but is not spliced into another world's chain.
     expect(
-      result.cards.some(
-        (card) =>
-          card.slots.anomalyRule.sourceLibrary === "M03" &&
-          card.slots.anomalyRule.materialId === "GF-0099",
+      result.cards.every((card) =>
+        Object.values(card.slots).every(
+          (slot) => slot.sourceLibrary === "slot-bank",
+        ),
       ),
     ).toBe(true);
   });

@@ -106,8 +106,12 @@ export function registerInspirationSlotRoutes(
         outlineNodeId,
         {
           summary: card.sentence,
-          goal: card.starterBlueprint.targetCircle,
-          conflict: card.starterBlueprint.openingTension,
+          goal:
+            card.starterBlueprint.firstTake ??
+            card.starterBlueprint.targetCircle,
+          conflict:
+            card.starterBlueprint.inbound ??
+            card.starterBlueprint.openingTension,
           metadata: {
             inspirationCardId: card.id,
             inspirationSeed: card.sentence,
