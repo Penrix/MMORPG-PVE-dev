@@ -41,4 +41,5 @@ export * from "./project-reality-context.js";
 export * from "./project-fork-repository.js";
 export * from "./naruto-source-import.js";
 export * from "./naruto-source-world.js";
+export * from "./naruto-third-war-konoha.js";
 export * from "./source-card-links.js";
