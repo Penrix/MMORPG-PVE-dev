@@ -158,6 +158,153 @@ Reader-side 语义不再靠全文搜索猜身份。对象级种子通过 **exact
 
 这不是让系统立刻凭空造一堆“当前事件”。现有 Raw Source 是**全时代混合参考**，因此下一轮生产必须先给具体时间切片，例如“三战时期木叶”；不能把不同年代人物同时当作 Current。全时代母体负责保留可追溯对象与历史惯性，具体时点的 Activity / Value / Access / Information / Economy 再由 Module 1 在该时间切片内生产并经过 Source draft → review → adopt。
 
+## 2026-11-24 Third War Konoha｜第一个时间切片可运行 Zone
+
+在全时代 Konohagakure 审计暴露 `ACTIVITY / ASSET / ECONOMY / INFORMATION / VALUE / PLAYABLE` 缺口后，没有继续向全时代木叶硬填内容，而是建立第一个显式时间切片：
+
+```text
+slice:konoha-third-war-kannabi
+= 第三次忍界大战｜木叶·神无毗桥任务窗口
+worldTime = 第三次忍界大战｜神无毗桥作战阶段
+```
+
+显式安装：
+
+```bash
+npm run seed:naruto-third-war-konoha -- --db ./data/narralume.sqlite
+npm run audit:naruto -- \
+  --focus "第三次忍界大战｜木叶·神无毗桥任务窗口" \
+  --world-time "第三次忍界大战｜神无毗桥作战阶段"
+```
+
+### 时间切片不是第二个火影世界
+
+`slice:*` 是 Original Mother 内部的**指定时点局部视图锚点**：
+
+```text
+Naruto Original Mother（全时代资料）
+                │
+                ├─ Konohagakure / all-era reference
+                │
+                └─ slice:konoha-third-war-kannabi
+                         │
+                         ├─ 只显式纳入本时点对象
+                         ├─ 只读取本时点确认/整理出的关系
+                         └─ 不沿木叶全时代关系做通用二跳
+```
+
+因此即使母体数据库里同时存在后世人物、后期忍术或未来组织状态，三战 slice 也不会因为“都和木叶有关”而自动拉进当前视图。这个隔离已经有回归测试：全时代木叶存在未来人物时，三战 slice 未显式纳入该人物，就不会进入切片投影。
+
+### Source-backed fact 与 World Builder inference 分权
+
+这一批没有把所有补充都冒充 Source Canon。
+
+| 内容 | Authority | 处理 |
+| --- | --- | --- |
+| Team Minato / Minato / Kakashi / Obito / Rin 等既有身份 | Source reference | 复用原 canonical Source key，不复制身份 |
+| 木叶 / 岩隐 / 草隐 | Source reference | 复用既有地点 |
+| 神无毗桥、岩隐补给线、Team Minato 破坏补给线任务 | source-backed curated view | 将既有事实结构化为 location / resource / activity / information |
+| Minato 交给 Kakashi 的特殊苦无 | source-backed curated view | 结构化为本时点具体 asset，并接入持有人 |
+| Kakashi 在该窗口可用的 Chidori | source-backed current slice | 只显式纳入该时点已确认能力，不继承人物全生命周期 `jutsu[]` |
+| `Konoha Third-War Mission Assignment` | **inference** | 只把“木叶确实向 Team Minato 下达了这一任务”抽象成最低限度任务分派接口；不编薪酬、任务等级、完整审批制度 |
+| `Kannabi Bridge Mission Assignment` | **inference** | 将“被正式纳入本任务”结构化成临时 permission；明确不声称原作存在同名行政职位 |
+
+这里的原则是：
+
+> **原作已发生的事实可以被结构化；为了让世界可查询、可进入而补出的机制只能保持 inference，除非以后找到直接证据。**
+
+### 从静态资料到可运行 Zone 的三次 AUDIT 回路
+
+真实全量数据不是一次“补齐十格”。它实际按缺口推进：
+
+```text
+第一轮
+ACTIVITY / ASSET / ECONOMY / INFORMATION / VALUE 缺失
+PLAYABLE thin
+        ↓
+建立神无毗桥时间切片
+        ↓
+Activity / Economy / Information / Value 出现
+Asset 因未进入 slice view 仍 thin
+        ↓
+把 Kakashi 当期特殊苦无显式纳入
+        ↓
+Asset present
+Power missing
+        ↓
+只纳入当期 Chidori
+        ↓
+Power present
+Playable thin
+        ↓
+把已存在的“任务被下达”事实抽象为 inference 级任务分派入口
+        ↓
+Playable present
+        ↓
+nextWorkshop = null
+```
+
+最终真实 Actions 运行 `45440341412` 在固定上游数据上 **success**。最终切片投影为：
+
+| 项目 | 实际结果 |
+| --- | ---: |
+| nodes | **17** |
+| typed links | **53** |
+| ongoing activities | **1** |
+| executable interactions | **1** |
+| character | 4 |
+| location | 4 |
+| organization | 1 |
+| ability | 1 |
+| item | 1 |
+| resource | 1 |
+| information | 1 |
+| event | 1 |
+| institution | 1 |
+| position | 1 |
+
+十个 World Family 最终全部为 `present`：
+
+```text
+PEOPLE        present
+SPACE         present
+ORGANIZATION  present
+POWER         present
+ASSET         present
+ECONOMY       present
+ACTIVITY      present
+INFORMATION   present
+VALUE         present
+PLAYABLE      present
+
+nextWorkshop = null
+nextReason   = null
+```
+
+这只表示**“神无毗桥任务窗口”这一块局部世界已经达到当前 World Builder 的最小可运行标准**，绝不表示“火影世界设计完成”或“三战木叶全部完成”。
+
+这个切片第一次证明了当前 Module 1 → Module 2 链路可以把：
+
+```text
+全时代母体百科
+   ↓
+指定时间位置
+   ↓
+当前人物 / 地点 / 力量
+   ↓
+正在发生的事务
+   ↓
+真实资产与物流
+   ↓
+知情关系与世界价格
+   ↓
+权限与进入路径
+   ↓
+一个可供小说进入的局部 World Zone
+```
+
+连续落进同一个 Source World，而不污染 Project Reality，也不借未来资料偷渡当前状态。
+
 ## 读取与检索
 
 - `GET /api/source-corpora`：全部已安装原生母体与数量。
