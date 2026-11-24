@@ -106,6 +106,7 @@ export async function generateSourceWorldProduction(
       name: world.name,
       kind: world.kind,
       description: world.description,
+      cognitiveMother: worlds.getCognitiveMother(input.worldId),
     },
     outputRules: [
       "existingCanonId must always be null for Source World production",
