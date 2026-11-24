@@ -215,11 +215,13 @@ function projectSourceWorldForProduction(
   );
   const nodes: WorldPackDocument["nodes"] = [];
   const links: WorldPackDocument["links"] = [];
+  const activities: WorldPackDocument["activities"] = [];
   const seenLinks = new Set<string>();
 
   for (const hit of selected.values()) {
     const card = worlds.getCard(worldId, hit.sourceKey);
     if (!card) continue;
+    const fields = readAdoptedWorldFields(card.content);
     nodes.push({
       localId: "source:" + hit.sourceKey,
       existingCanonId: null,
@@ -229,14 +231,41 @@ function projectSourceWorldForProduction(
       name: hit.name,
       description: card.content.slice(0, 3_500),
       areaRef: null,
-      value: "",
-      access: "",
-      motive: "",
-      currentActivity: "",
+      value: fields.value,
+      access: fields.access,
+      motive: fields.motive,
+      currentActivity: fields.currentActivity,
       origin: "source_canon",
       sourceNote: "Existing Source World Atlas reference",
       readerSemantics: worlds.getReaderSemantics(worldId, hit.sourceKey),
     });
+    if (hit.kind === "activity") {
+      const actorRefs = card.relations
+        .filter(
+          (edge) =>
+            edge.direction === "out" &&
+            ["参与者", "行动者"].includes(edge.relation),
+        )
+        .map((edge) => "source:" + edge.toKey);
+      const resourceRefs = card.relations
+        .filter(
+          (edge) =>
+            edge.direction === "out" &&
+            ["涉及", "使用", "争夺"].includes(edge.relation),
+        )
+        .map((edge) => "source:" + edge.toKey);
+      if (actorRefs.length > 0 && fields.activityStage) {
+        activities.push({
+          localId: "source-activity-" + safeInternalId(hit.sourceKey),
+          actorRefs,
+          description: card.record.name,
+          reason: fields.activityReason,
+          resourceRefs,
+          stage: fields.activityStage,
+          worldTime: fields.worldTime || request.worldTime,
+        });
+      }
+    }
     for (const edge of card.relations) {
       if (edge.direction !== "out") continue;
       const key =
@@ -260,7 +289,7 @@ function projectSourceWorldForProduction(
         : "Source World Atlas currently has no curated cards",
     nodes,
     links,
-    activities: [],
+    activities,
     interactions: [],
     openThreads: [],
     dimensionSignals: [],
@@ -336,6 +365,46 @@ async function callSourceWorldModel(
     { maxRepairAttempts: 1 },
   );
   return result.value;
+}
+
+function readAdoptedWorldFields(content: string): {
+  value: string;
+  access: string;
+  motive: string;
+  currentActivity: string;
+  activityStage: "ongoing" | "potential" | "ended" | null;
+  activityReason: string;
+  worldTime: string;
+} {
+  const lines = content.split(/\r?\n/);
+  const field = (label: string) => {
+    const prefix = label + "：";
+    const found = lines.find((line) => line.trimStart().startsWith(prefix));
+    return found ? found.trimStart().slice(prefix.length).trim() : "";
+  };
+  const stage = field("阶段");
+  return {
+    value: field("世界内部价值"),
+    access: field("准入/取得"),
+    motive: field("自身目标/作用"),
+    currentActivity: field("当前事务"),
+    activityStage:
+      stage === "ongoing" || stage === "potential" || stage === "ended"
+        ? stage
+        : null,
+    activityReason: field("原因"),
+    worldTime: field("世界时间"),
+  };
+}
+
+function safeInternalId(value: string): string {
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 60) || "source_activity"
+  );
 }
 
 function serviceLikeError(
