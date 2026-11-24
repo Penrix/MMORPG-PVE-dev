@@ -62,7 +62,9 @@ function rawUrl(
   );
 }
 
-async function loadSeed(entry: SourceWorldCatalogEntry): Promise<SourceWorldSeed> {
+async function loadSeed(
+  entry: SourceWorldCatalogEntry,
+): Promise<SourceWorldSeed> {
   if (entry.id === "one-piece") {
     const source = upstream(entry, "one-piece-dataset");
     const characters = await fetchJson(rawUrl(source, "characters.json"));
@@ -81,8 +83,7 @@ async function loadSeed(entry: SourceWorldCatalogEntry): Promise<SourceWorldSeed
   }
   if (entry.id === "hunter-x-hunter") {
     const source = upstream(entry, "jikan-hxh-2011-cast");
-    if (!source.endpoint)
-      throw new Error("Jikan upstream endpoint is missing");
+    if (!source.endpoint) throw new Error("Jikan upstream endpoint is missing");
     return normalizeHunterXHunterJikan(await fetchJson(source.endpoint));
   }
   throw new Error(
@@ -145,7 +146,11 @@ async function main(): Promise<void> {
   const dbPath = resolve(
     option("--db") ??
       process.env.NARRATIVE_DB_PATH ??
-      resolve(root, process.env.NARRATIVE_DATA_DIR ?? "data", "narralume.sqlite"),
+      resolve(
+        root,
+        process.env.NARRATIVE_DATA_DIR ?? "data",
+        "narralume.sqlite",
+      ),
   );
   const projectId = option("--project");
 
@@ -157,8 +162,7 @@ async function main(): Promise<void> {
     const reports = [];
     for (const seed of seeds) {
       const report = installSourceWorldSeed(db, seed);
-      if (projectId)
-        sources.bindProject(projectId, report.canonicalCorpusId);
+      if (projectId) sources.bindProject(projectId, report.canonicalCorpusId);
       reports.push({
         ...report,
         cardCount: worlds.listCardKeys(report.worldId).length,

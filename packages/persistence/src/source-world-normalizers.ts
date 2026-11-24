@@ -208,17 +208,15 @@ export function normalizeBleachDatabase(input: {
       const name =
         text(nameValue?.english) || text(nameValue?.romaji) || text(row.name);
       if (!id || !name) continue;
-      const characterKey =
-        "character:" + collection + ":" + id.toLowerCase();
+      const characterKey = "character:" + collection + ":" + id.toLowerCase();
       addRecord({
         sourceKey: characterKey,
         canonicalKey: characterKey,
         kind: "character",
         name,
-        aliases: [
-          text(nameValue?.romaji),
-          text(nameValue?.kanji),
-        ].filter(Boolean),
+        aliases: [text(nameValue?.romaji), text(nameValue?.kanji)].filter(
+          Boolean,
+        ),
         summary: text(row.description),
         raw: row,
         sourceUrl: rawUrl(upstream, "data/" + collection + ".json"),
@@ -409,8 +407,7 @@ function requiredUpstream(
   id: string,
 ): SourceWorldCatalogEntry["upstreams"][number] {
   const upstream = entry.upstreams.find((candidate) => candidate.id === id);
-  if (!upstream)
-    throw new Error("source.world.catalog.upstream_missing:" + id);
+  if (!upstream) throw new Error("source.world.catalog.upstream_missing:" + id);
   return upstream;
 }
 

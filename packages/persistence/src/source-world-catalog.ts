@@ -137,8 +137,7 @@ const ONE_PIECE: SourceWorldCatalogEntry = {
       repository: "25thNight0901/OnePiece-dataset",
       ref: "f876b1383e35d9d3fb4f45f7d8d6aa3edaaa2b07",
       paths: ["characters.json", "pirate-crews.json"],
-      note:
-        "Structured seed for characters, crews, ships and listed abilities. Community evidence, not official canon.",
+      note: "Structured seed for characters, crews, ships and listed abilities. Community evidence, not official canon.",
     },
     {
       id: "one-piece-interaction-data",
@@ -148,8 +147,7 @@ const ONE_PIECE: SourceWorldCatalogEntry = {
       repository: "jonaszeu/one-piece-interaction-data",
       ref: "b2008e5a5c45cd96fbe96786f48fb65b1e18c147",
       paths: ["one_piece_interactions_1-1085.csv"],
-      note:
-        "Large interaction evidence across manga chapters 1-1085; registered for later relation enrichment, not blindly promoted.",
+      note: "Large interaction evidence across manga chapters 1-1085; registered for later relation enrichment, not blindly promoted.",
     },
   ],
 };
@@ -206,8 +204,7 @@ const BLEACH: SourceWorldCatalogEntry = {
         "data/quincy.json",
         "data/humans.json",
       ],
-      note:
-        "Large structured community dataset with race, organization/status and primary-skill fields.",
+      note: "Large structured community dataset with race, organization/status and primary-skill fields.",
     },
   ],
 };
@@ -258,8 +255,7 @@ const HUNTER_X_HUNTER: SourceWorldCatalogEntry = {
       role: "primary",
       sourceUrl: "https://jikan.moe/",
       endpoint: "https://api.jikan.moe/v4/anime/11061/characters",
-      note:
-        "Auth-less broad cast seed from Jikan/MyAnimeList metadata. Character identity/role evidence only; Nen/world mechanics require richer sources later.",
+      note: "Auth-less broad cast seed from Jikan/MyAnimeList metadata. Character identity/role evidence only; Nen/world mechanics require richer sources later.",
     },
     {
       id: "hxh-api-rich",
@@ -268,8 +264,7 @@ const HUNTER_X_HUNTER: SourceWorldCatalogEntry = {
       sourceUrl: "https://github.com/akocero/node_hxh_api",
       repository: "akocero/node_hxh_api",
       ref: "5d6e33f59e49129fd544ee9f744833d7d5922707",
-      note:
-        "Rich community API advertises ~248 characters, groups and Nen fields; requires API key, so catalogued as later enrichment rather than mandatory import.",
+      note: "Rich community API advertises ~248 characters, groups and Nen fields; requires API key, so catalogued as later enrichment rather than mandatory import.",
     },
   ],
 };

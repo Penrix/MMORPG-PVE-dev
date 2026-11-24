@@ -36,11 +36,7 @@ export interface SourceWorldSeedCorpus {
   importer: string;
   metadata: Record<string, unknown>;
   evidenceRole:
-    | "primary"
-    | "supporting"
-    | "alternate_version"
-    | "historical"
-    | "other";
+    "primary" | "supporting" | "alternate_version" | "historical" | "other";
   sourceNote: string;
   records: SourceWorldSeedRecord[];
   relations: SourceWorldSeedRelation[];
@@ -142,9 +138,7 @@ export function installSourceWorldSeed(
         description: seed.world.description,
         createdAt: now,
       });
-    else if (
-      existingWorld.canonicalCorpusId !== seed.world.canonicalCorpusId
-    )
+    else if (existingWorld.canonicalCorpusId !== seed.world.canonicalCorpusId)
       throw new Error("source.world.seed.canonical_corpus_conflict");
 
     for (const corpus of seed.corpora)
@@ -248,12 +242,7 @@ export function installSourceWorldSeed(
             ?.name ??
           targetCanonical;
         relationLines.push(
-          edge.relation +
-            "：[[" +
-            targetCanonical +
-            "|" +
-            targetName +
-            "]]",
+          edge.relation + "：[[" + targetCanonical + "|" + targetName + "]]",
         );
       }
       worlds.upsertCard({
@@ -344,8 +333,7 @@ function renderSeedCard(
   if (rawLines.length)
     lines.push("", "## 原始字段摘录", ...rawLines.map((line) => "- " + line));
 
-  if (relationLines.length)
-    lines.push("", "## 已记录关系", ...relationLines);
+  if (relationLines.length) lines.push("", "## 已记录关系", ...relationLines);
 
   return lines.filter(Boolean).join("\n");
 }

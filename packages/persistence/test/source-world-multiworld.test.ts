@@ -102,9 +102,9 @@ describe("generic multi-world Source seed installer", () => {
         }),
       ]),
     );
-    expect(new SqliteCanonRepository(db).listEntities("missing-project")).toEqual(
-      [],
-    );
+    expect(
+      new SqliteCanonRepository(db).listEntities("missing-project"),
+    ).toEqual([]);
 
     worlds.upsertCard({
       worldId: "demo-world",
@@ -114,11 +114,7 @@ describe("generic multi-world Source seed installer", () => {
       content: "# Alice\n\n作者人工深化，重导入不得覆盖。",
       now: "2026-11-25T01:01:00.000Z",
     });
-    const second = installSourceWorldSeed(
-      db,
-      seed,
-      "2026-11-25T01:02:00.000Z",
-    );
+    const second = installSourceWorldSeed(db, seed, "2026-11-25T01:02:00.000Z");
     expect(second.createdCards).toBe(0);
     expect(worlds.getCard("demo-world", "character:1")?.content).toContain(
       "作者人工深化",
