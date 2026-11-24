@@ -286,7 +286,7 @@ const HUNTER_X_HUNTER: SourceWorldCatalogEntry = {
       note:
         "Rich community API advertises ~248 characters, groups and Nen fields; requires API key, so catalogued as later enrichment rather than mandatory import.",
     },
-  ]
+  ],
 };
 
 export const SOURCE_WORLD_CATALOG: readonly SourceWorldCatalogEntry[] = [
