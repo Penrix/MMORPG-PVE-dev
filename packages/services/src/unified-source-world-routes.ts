@@ -7,18 +7,30 @@ import {
   WORLD_ATLAS_SEMANTIC_LAYERS,
   WorldAtlasCardKindSchema,
   WorldAtlasReaderSemanticsSchema,
+  WorldPackDocumentSchema,
+  WorldPackRequestSchema,
+  UpdateSourceWorldProductionDraftRequestSchema,
+  AdoptSourceWorldProductionDraftRequestSchema,
+  type WorldPackDocument,
+  type WorldPackRequest,
 } from "@narralume/contracts";
 import {
   SqliteProjectRepository,
   SqliteSourceCorpusRepository,
+  SqliteSourceWorldProductionRepository,
   SqliteUnifiedSourceWorldRepository,
   type NarrativeDatabase,
 } from "@narralume/persistence";
 import type { RouteApp } from "./route-app.js";
 import { ServiceError } from "./service-error.js";
+import {
+  adoptSourceWorldProduction,
+  validateSourceWorldProductionDocument,
+} from "./source-world-production-service.js";
 
 const WorldParams = z.object({ worldId: z.string().min(1) });
 const EntityParams = WorldParams.extend({ entityKey: z.string().min(1) });
+const ProductionParams = WorldParams.extend({ productionId: z.string().min(1) });
 const ProjectParams = WorldParams.extend({ projectId: z.string().min(1) });
 const CreateWorldBody = z.object({
   id: z.string().regex(/^[a-z0-9][a-z0-9-]{0,100}$/),
@@ -76,12 +88,23 @@ const ReaderSemanticsBody = WorldAtlasReaderSemanticsSchema;
  * No operation here writes a novel's Canon/Timeline, nor merges two raw
  * people by name. Authors explicitly choose corresponding source records.
  */
+export type SourceWorldProductionGenerator = (input: {
+  worldId: string;
+  request: WorldPackRequest;
+}) => Promise<WorldPackDocument>;
+
+export interface UnifiedSourceWorldRouteOptions {
+  generateProduction?: SourceWorldProductionGenerator;
+}
+
 export function registerUnifiedSourceWorldRoutes(
   app: RouteApp,
   db: NarrativeDatabase,
+  options: UnifiedSourceWorldRouteOptions = {},
 ): void {
   const worlds = new SqliteUnifiedSourceWorldRepository(db);
   const sources = new SqliteSourceCorpusRepository(db);
+  const productions = new SqliteSourceWorldProductionRepository(db);
   const projects = new SqliteProjectRepository(db);
   const requireWorld = (id: string) => {
     const world = worlds.getWorld(id);
@@ -255,6 +278,114 @@ export function registerUnifiedSourceWorldRoutes(
       return { card, unresolvedLinks };
     },
   );
+  app.route(
+    "POST",
+    "/api/source-worlds/:worldId/productions/generate",
+    async (request) => {
+      const { worldId } = WorldParams.parse(request.params);
+      requireWorld(worldId);
+      const input = WorldPackRequestSchema.parse(request.body);
+      if (input.scale === "W1" && !input.focus)
+        throw new ServiceError(
+          "source.world.production.focus_required",
+          "W1 Source World production requires a concrete focus object / zone / circle",
+          422,
+        );
+      const replay = productions.byRequest(worldId, input.requestId);
+      if (replay) return replay;
+      if (!options.generateProduction)
+        throw new ServiceError(
+          "source.world.production.generator_unavailable",
+          "Source World production generator is unavailable",
+          501,
+        );
+      const generated = WorldPackDocumentSchema.parse(
+        await options.generateProduction({ worldId, request: input }),
+      );
+      return {
+        status: 201,
+        body: productions.insert({
+          id: `source-world:${worldId}:${input.requestId}`,
+          worldId,
+          request: input,
+          document: generated,
+          now: now(),
+        }),
+      };
+    },
+  );
+  app.route(
+    "GET",
+    "/api/source-worlds/:worldId/productions",
+    async (request) => {
+      const { worldId } = WorldParams.parse(request.params);
+      requireWorld(worldId);
+      return productions.list(worldId);
+    },
+  );
+  app.route(
+    "GET",
+    "/api/source-worlds/:worldId/productions/:productionId",
+    async (request) => {
+      const { worldId, productionId } = ProductionParams.parse(request.params);
+      requireWorld(worldId);
+      const draft = productions.get(worldId, productionId);
+      if (!draft)
+        throw new ServiceError(
+          "source.world.production.not_found",
+          "Source World production draft not found",
+          404,
+        );
+      return draft;
+    },
+  );
+  app.route(
+    "PUT",
+    "/api/source-worlds/:worldId/productions/:productionId",
+    async (request) => {
+      const { worldId, productionId } = ProductionParams.parse(request.params);
+      requireWorld(worldId);
+      const input = UpdateSourceWorldProductionDraftRequestSchema.parse(
+        request.body,
+      );
+      const problems = validateSourceWorldProductionDocument(
+        input.document,
+        new Set(worlds.listCardKeys(worldId)),
+      );
+      if (problems.length)
+        throw new ServiceError(
+          "source.world.production.bad_references",
+          problems.join("; "),
+          422,
+        );
+      return productions.revise({
+        worldId,
+        id: productionId,
+        expectedVersion: input.expectedVersion,
+        document: input.document,
+        now: now(),
+      });
+    },
+  );
+  app.route(
+    "POST",
+    "/api/source-worlds/:worldId/productions/:productionId/adopt",
+    async (request) => {
+      const { worldId, productionId } = ProductionParams.parse(request.params);
+      requireWorld(worldId);
+      const input = AdoptSourceWorldProductionDraftRequestSchema.parse(
+        request.body,
+      );
+      return adoptSourceWorldProduction(
+        db,
+        worldId,
+        productionId,
+        input.expectedVersion,
+        now(),
+      );
+    },
+  );
+
   app.route(
     "POST",
     "/api/source-worlds/:worldId/evidence-corpora",
