@@ -77,6 +77,31 @@ export function adoptSourceWorldProduction(
           `Existing Source card not found: ${key}`,
           422,
         );
+      if (node.existingSourceKey) {
+        const existing = worlds.getCard(worldId, key);
+        if (!existing)
+          throw serviceError(
+            "source.world.production.source_missing",
+            `Existing Source card not found: ${key}`,
+            422,
+          );
+        const allowedNames = new Set([
+          existing.record.name,
+          ...existing.record.aliases,
+        ]);
+        if (!allowedNames.has(node.name))
+          throw serviceError(
+            "source.world.production.identity_changed",
+            `Source identity ${key} is ${existing.record.name}, not ${node.name}`,
+            422,
+          );
+        if (existing.record.kind !== worldPackAtlasKind(node))
+          throw serviceError(
+            "source.world.production.kind_changed",
+            `Source identity ${key} kind is ${existing.record.kind}, not ${worldPackAtlasKind(node)}`,
+            422,
+          );
+      }
       reserved.add(key);
       adoptedKeys[node.localId] = key;
     }
