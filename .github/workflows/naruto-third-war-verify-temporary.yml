@@ -1,4 +1,5 @@
 name: Naruto Third War Verify Temporary
+# Final rerun after seed-script typecheck fix.
 
 on:
   push:
