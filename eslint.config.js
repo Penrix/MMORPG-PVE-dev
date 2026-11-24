@@ -16,6 +16,8 @@ export default tseslint.config(
       // Vendored upstream WorldForge engine retains its own style and type conventions.
       // Our NarraLume adapter and tests remain fully linted.
       "packages/narrative/src/vendor/worldforge/full/**",
+      "tools/newbook-radar/vendor/**",
+      "datasets/**",
       "*.sqlite*",
     ],
   },

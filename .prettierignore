@@ -10,4 +10,6 @@ docs/mmorpg/research/
 packages/narrative/src/vendor/
 
 packages/services/src/vendor/
+tools/newbook-radar/vendor/
+datasets/newbook-rankings/
 # Sources below are copied under MIT licenses: formatting them would alter upstream code identity.

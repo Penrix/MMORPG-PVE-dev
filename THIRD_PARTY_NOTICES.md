@@ -112,3 +112,10 @@ The first live bridge is `packages/narrative/src/worldforge-faction-bridge.ts`: 
 ### Study-only AGPL reference
 
 `ExplosiveCoderflome/AI-Novel-Writing-Assistant` was reviewed for its World/NovelWorld and StoryWorldSlice/WorldContextGateway architecture. Its current repository license is AGPL-3.0-only with additional commercial-authorization language. **No source code from that project is copied into this fork.** Similar context-projection ideas, where used, are independently implemented.
+
+## oh-story-claudecode (newbook ranking collector scripts)
+
+- Upstream repository: https://github.com/Penrix/oh-story-claudecode (MIT License, Copyright (c) 2025-2026 oh-story-claudecode)
+- Copied executable collector scripts in `tools/newbook-radar/vendor/oh-story/`:
+  `qidian-rank-scraper.js`, `fanqie-rank-scraper.js`, `ciweimao-rank-scraper.js`, `cdp-utils.js`, `setup-cdp-chrome.js`, plus verbatim `LICENSE`.
+- Used strictly for scheduled male newbook ranking collection into `datasets/newbook-rankings/` to feed TR-I-01 market trend analysis and M03 material curation.
