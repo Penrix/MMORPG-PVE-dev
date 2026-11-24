@@ -222,6 +222,11 @@ function projectSourceWorldForProduction(
     const card = worlds.getCard(worldId, hit.sourceKey);
     if (!card) continue;
     const fields = readAdoptedWorldFields(card.content);
+    const areaEdge = card.relations.find(
+      (edge) =>
+        edge.direction === "out" &&
+        ["位于", "发生于", "活动于"].includes(edge.relation),
+    );
     nodes.push({
       localId: "source:" + hit.sourceKey,
       existingCanonId: null,
@@ -230,7 +235,7 @@ function projectSourceWorldForProduction(
       atlasKind: hit.kind,
       name: hit.name,
       description: card.content.slice(0, 3_500),
-      areaRef: null,
+      areaRef: areaEdge ? "source:" + areaEdge.toKey : null,
       value: fields.value,
       access: fields.access,
       motive: fields.motive,
