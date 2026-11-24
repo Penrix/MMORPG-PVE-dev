@@ -36,6 +36,26 @@ export type WorldAtlasCardKind = z.infer<typeof WorldAtlasCardKindSchema>;
  * the target Reader is expected to pre-understand / pre-price an IP, era,
  * industry or type-world object before the current novel teaches anything new.
  */
+export const WorldAtlasCognitiveMotherSchema = z
+  .object({
+    summary: z.string().trim().min(1).max(8_000),
+    preloadedWorldGrammar: z
+      .array(z.string().trim().min(1).max(800))
+      .max(50),
+    priceLogic: z.array(z.string().trim().min(1).max(800)).max(50),
+    naturalEntrances: z.array(z.string().trim().min(1).max(800)).max(50),
+    expectedInertia: z.array(z.string().trim().min(1).max(800)).max(50),
+    attentionLogic: z.array(z.string().trim().min(1).max(800)).max(50),
+    basis: z.enum(["author_judgment", "market_observation", "model_inference"]),
+    sourceNote: z.string().trim().max(5_000),
+  })
+  .strict();
+
+export type WorldAtlasCognitiveMother = z.infer<
+  typeof WorldAtlasCognitiveMotherSchema
+>;
+
+/** Object-level projection of the world-level Cognitive Mother. */
 export const WorldAtlasReaderSemanticsSchema = z
   .object({
     readerPrice: z.string().trim().max(5_000),
