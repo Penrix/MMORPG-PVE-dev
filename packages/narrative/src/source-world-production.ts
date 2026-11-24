@@ -213,7 +213,7 @@ export async function generateSourceWorldProduction(
   };
 }
 
-function projectSourceWorldForProduction(
+export function projectSourceWorldForProduction(
   worlds: SqliteUnifiedSourceWorldRepository,
   worldId: string,
   request: WorldPackRequest,
@@ -221,12 +221,65 @@ function projectSourceWorldForProduction(
   const focusHits = request.focus
     ? worlds.listCards(worldId, request.focus, { limit: 30 })
     : [];
-  const broadHits = worlds.listCards(worldId, "", { limit: 70 });
   const selected = new Map(
-    [...focusHits, ...broadHits]
-      .slice(0, 80)
-      .map((hit) => [hit.sourceKey, hit]),
+    focusHits.map((hit) => [hit.sourceKey, hit]),
   );
+
+  const addCard = (key: string): void => {
+    if (selected.has(key) || selected.size >= 80) return;
+    const card = worlds.getCard(worldId, key);
+    if (!card) return;
+    selected.set(key, {
+      corpusId: card.record.corpusId,
+      sourceKey: card.record.sourceKey,
+      name: card.record.name,
+      kind: card.record.kind,
+      summary: card.record.summary,
+      originCollection: card.record.originCollection,
+    });
+  };
+
+  // W1 around an existing mother-world object must pull an actual local graph,
+  // not "focus card + alphabetically unrelated global cards". First take the
+  // people/objects directly connected to the focus, then follow a limited
+  // second hop from those people into clans, teams, powers and other assets.
+  const directKeys: string[] = [];
+  for (const hit of focusHits) {
+    const card = worlds.getCard(worldId, hit.sourceKey);
+    if (!card) continue;
+    for (const edge of card.relations) {
+      const key = edge.direction === "out" ? edge.toKey : edge.fromKey;
+      if (!directKeys.includes(key)) directKeys.push(key);
+      addCard(key);
+      if (selected.size >= 35) break;
+    }
+    if (selected.size >= 35) break;
+  }
+  for (const key of directKeys.slice(0, 24)) {
+    const card = worlds.getCard(worldId, key);
+    if (!card) continue;
+    const neighbors = card.relations
+      .map((edge) => ({
+        key: edge.direction === "out" ? edge.toKey : edge.fromKey,
+        kind: edge.otherKind,
+      }))
+      .sort((a, b) => {
+        const rank = (kind: string) => (kind === "character" ? 1 : 0);
+        return rank(a.kind) - rank(b.kind);
+      });
+    for (const neighbor of neighbors) {
+      addCard(neighbor.key);
+      if (selected.size >= 65) break;
+    }
+    if (selected.size >= 65) break;
+  }
+
+  // Empty / thin Source Worlds still get a broad fallback. This is fill, never
+  // the primary selection strategy once a concrete focus can anchor a graph.
+  for (const hit of worlds.listCards(worldId, "", { limit: 80 })) {
+    if (selected.size >= 80) break;
+    if (!selected.has(hit.sourceKey)) selected.set(hit.sourceKey, hit);
+  }
   const nodes: WorldPackDocument["nodes"] = [];
   const links: WorldPackDocument["links"] = [];
   const activities: WorldPackDocument["activities"] = [];
@@ -240,7 +293,9 @@ function projectSourceWorldForProduction(
     const areaEdge = card.relations.find(
       (edge) =>
         edge.direction === "out" &&
-        ["位于", "发生于", "活动于"].includes(edge.relation),
+        ["位于", "发生于", "活动于", "village_affiliation_recorded"].includes(
+          edge.relation,
+        ),
     );
     nodes.push({
       localId: "source:" + hit.sourceKey,
@@ -290,7 +345,7 @@ function projectSourceWorldForProduction(
       }
     }
     for (const edge of card.relations) {
-      if (edge.direction !== "out") continue;
+      if (edge.direction !== "out" || !selected.has(edge.toKey)) continue;
       const key = edge.fromKey + "|" + edge.relation + "|" + edge.toKey;
       if (seenLinks.has(key)) continue;
       seenLinks.add(key);
