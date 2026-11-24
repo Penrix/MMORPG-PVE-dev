@@ -120,6 +120,20 @@ export function adoptSourceWorldProduction(
       list.push({ relation: link.relation, targetKey });
       outgoing.set(fromKey, list);
     }
+    for (const node of draft.document.nodes) {
+      if (!node.areaRef) continue;
+      const fromKey = adoptedKeys[node.localId]!;
+      const targetKey = resolve(node.areaRef);
+      const list = outgoing.get(fromKey) ?? [];
+      if (
+        !list.some(
+          (relation) =>
+            relation.relation === "位于" && relation.targetKey === targetKey,
+        )
+      )
+        list.push({ relation: "位于", targetKey });
+      outgoing.set(fromKey, list);
+    }
 
     // Phase 1: create/update every candidate node without cross-node typed
     // links. This guarantees all new target identities exist before reindexing.
