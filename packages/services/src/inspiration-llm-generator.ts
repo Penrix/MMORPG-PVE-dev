@@ -97,7 +97,10 @@ export async function generateInspirationSeedsWithLlm(
   request: InspirationRollRequest,
   options: InspirationLlmGeneratorOptions = {},
 ): Promise<InspirationRollResponse> {
-  const input = InspirationRollRequestSchema.parse({ ...request, mode: "llm" });
+  const input = InspirationRollRequestSchema.parse({
+    ...request,
+    mode: "llm",
+  });
   const bundles = dealMaterialBundlesForLlm(database, input);
   const topic =
     input.topic?.trim() ||
@@ -122,19 +125,23 @@ export async function generateInspirationSeedsWithLlm(
     generated = validationSchema.parse(raw);
   } else {
     const gateway = buildGateway(database, options);
-    const assignment = new SqliteAssignmentRepository(database).resolve("writing");
+    const assignment = new SqliteAssignmentRepository(database).resolve(
+      "writing",
+    );
     if (!assignment) throw new InspirationModelUnavailableError();
     const modelRequest: ModelRequest = {
       model: assignment.model.modelId,
       instructions:
         "你是中国商业类型小说的灵感发牌器。必须严格执行用户给出的四槽模具与 JSON 合同，不得把任务改成自由脑暴。",
       messages: [{ role: "user", content: prompt }],
-      temperature: samplingNumber(assignment.model.sampling.temperature) ?? 0.9,
+      temperature:
+        samplingNumber(assignment.model.sampling.temperature) ?? 0.9,
       ...(samplingNumber(assignment.model.sampling.topP) === null
         ? {}
         : { topP: samplingNumber(assignment.model.sampling.topP)! }),
       maxOutputTokens: Math.min(
-        assignment.model.maxOutputTokens ?? Math.max(8_000, input.count * 360),
+        assignment.model.maxOutputTokens ??
+          Math.max(8_000, input.count * 360),
         16_000,
       ),
       responseSchema,
@@ -177,7 +184,8 @@ function buildGateway(
   database: NarrativeDatabase,
   options: InspirationLlmGeneratorOptions,
 ): ModelGateway {
-  const resolved = new SqliteAssignmentRepository(database).resolve("writing");
+  const resolved =
+    new SqliteAssignmentRepository(database).resolve("writing");
   if (!resolved) throw new InspirationModelUnavailableError();
   const environment = options.environment ?? {};
   const credential = resolveCredential(resolved.provider, environment);
@@ -460,10 +468,22 @@ function llmResponseSchema(count: number): JsonSchemaContract {
               index: { type: "integer", minimum: 1, maximum: count },
               identity: { type: "string", minLength: 2, maxLength: 160 },
               anomalyRule: { type: "string", minLength: 2, maxLength: 180 },
-              highValueCircle: { type: "string", minLength: 2, maxLength: 180 },
-              twistPressure: { type: "string", minLength: 2, maxLength: 220 },
+              highValueCircle: {
+                type: "string",
+                minLength: 2,
+                maxLength: 180,
+              },
+              twistPressure: {
+                type: "string",
+                minLength: 2,
+                maxLength: 220,
+              },
               sentence: { type: "string", minLength: 12, maxLength: 600 },
-              suggestedTitle: { type: "string", minLength: 1, maxLength: 120 },
+              suggestedTitle: {
+                type: "string",
+                minLength: 1,
+                maxLength: 120,
+              },
             },
           },
         },
