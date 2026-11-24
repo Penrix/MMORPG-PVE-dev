@@ -266,29 +266,24 @@ export function adoptSourceWorldProduction(
       const lines = [
         `### 可玩入口｜${action.name}`,
         action.action,
+        `状态：${action.state}`,
         action.locationRef
           ? `地点：${wikiRef(resolve(action.locationRef), nameForRef(action.locationRef, nodeByLocal, adoptedKeys, worlds, worldId))}`
           : "",
-        action.requires.length
-          ? "需要：" +
-            action.requires
-              .map((term) =>
-                wikiRef(
-                  resolve(term.ref),
-                  nameForRef(term.ref, nodeByLocal, adoptedKeys, worlds, worldId),
-                ),
-              )
-              .join("、")
-          : "",
-        "可能取得：" +
-          action.yields
-            .map((term) =>
-              wikiRef(
-                resolve(term.ref),
-                nameForRef(term.ref, nodeByLocal, adoptedKeys, worlds, worldId),
-              ),
-            )
-            .join("、"),
+        ...action.requires.map(
+          (term) =>
+            `需要(${term.kind})：${wikiRef(
+              resolve(term.ref),
+              nameForRef(term.ref, nodeByLocal, adoptedKeys, worlds, worldId),
+            )}`,
+        ),
+        ...action.yields.map(
+          (term) =>
+            `取得(${term.kind})：${wikiRef(
+              resolve(term.ref),
+              nameForRef(term.ref, nodeByLocal, adoptedKeys, worlds, worldId),
+            )}`,
+        ),
       ].filter(Boolean);
       worlds.upsertCard({
         worldId,
