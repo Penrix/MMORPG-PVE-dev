@@ -4,6 +4,8 @@ export type SourceWorldAdapterId =
   | "naruto-specialized-v1"
   | "one-piece-dataset-v1"
   | "bleach-database-v1"
+  | "hxh-static-v1"
+  | "hxh-api-rich-v1"
   | "jikan-anime-cast-v1";
 
 export interface SourceWorldUpstreamManifest {
@@ -250,23 +252,41 @@ const HUNTER_X_HUNTER: SourceWorldCatalogEntry = {
   },
   upstreams: [
     {
+      id: "hxh-static-database",
+      adapter: "hxh-static-v1",
+      role: "primary",
+      sourceUrl:
+        "https://github.com/OmarDarioMelendrez/hunter-x-hunter-api-ts",
+      repository: "OmarDarioMelendrez/hunter-x-hunter-api-ts",
+      ref: "687562028309b66e573ffde1bb707c8e782e0048",
+      paths: [
+        "src/data/hunters.json",
+        "src/data/ryodan.json",
+        "src/data/chimeraAnts.json",
+      ],
+      note:
+        "Pinned static community dataset with Hunters, Phantom Troupe, Chimera Ants, Nen types, abilities, professions and family fields. Mandatory reproducible seed.",
+    },
+    {
       id: "jikan-hxh-2011-cast",
       adapter: "jikan-anime-cast-v1",
-      role: "primary",
+      role: "supporting",
       sourceUrl: "https://jikan.moe/",
       endpoint: "https://api.jikan.moe/v4/anime/11061/characters",
-      note: "Auth-less broad cast seed from Jikan/MyAnimeList metadata. Character identity/role evidence only; Nen/world mechanics require richer sources later.",
+      note:
+        "Optional online cast enrichment only. Never required for deterministic Source World installation.",
     },
     {
       id: "hxh-api-rich",
-      adapter: "jikan-anime-cast-v1",
+      adapter: "hxh-api-rich-v1",
       role: "supporting",
       sourceUrl: "https://github.com/akocero/node_hxh_api",
       repository: "akocero/node_hxh_api",
       ref: "5d6e33f59e49129fd544ee9f744833d7d5922707",
-      note: "Rich community API advertises ~248 characters, groups and Nen fields; requires API key, so catalogued as later enrichment rather than mandatory import.",
+      note:
+        "Rich community API advertises ~248 characters, groups and Nen fields; requires API key, so catalogued as later enrichment rather than mandatory import.",
     },
-  ],
+  ]
 };
 
 export const SOURCE_WORLD_CATALOG: readonly SourceWorldCatalogEntry[] = [
