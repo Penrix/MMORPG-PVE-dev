@@ -130,6 +130,72 @@ describe("Source World World Builder target", () => {
     );
   });
 
+  it("keeps an explicit time-slice focus isolated from all-era second-hop contamination", () => {
+    const worlds = seedWorld();
+    for (const card of [
+      {
+        entityKey: "village:konoha",
+        kind: "location" as const,
+        name: "Konohagakure",
+        content: "# Konohagakure\n\n木叶隐村。",
+      },
+      {
+        entityKey: "character:kakashi",
+        kind: "character" as const,
+        name: "Kakashi Hatake",
+        content:
+          "# Kakashi Hatake\n\nvillage_affiliation_recorded：[[village:konoha|Konohagakure]]",
+      },
+      {
+        entityKey: "character:boruto",
+        kind: "character" as const,
+        name: "Boruto Uzumaki",
+        content:
+          "# Boruto Uzumaki\n\nvillage_affiliation_recorded：[[village:konoha|Konohagakure]]",
+      },
+    ])
+      worlds.upsertCard({
+        worldId: "naruto",
+        ...card,
+        now,
+      });
+    worlds.upsertCard({
+      worldId: "naruto",
+      entityKey: "slice:third-war-konoha",
+      kind: "event",
+      name: "第三次忍界大战｜木叶切片",
+      content: [
+        "# 第三次忍界大战｜木叶切片",
+        "",
+        "世界时间：第三次忍界大战",
+        "母体地点：[[village:konoha|Konohagakure]]",
+        "当期人物：[[character:kakashi|Kakashi Hatake]]",
+      ].join("\n"),
+      now,
+    });
+
+    const view = projectSourceWorldForProduction(worlds, "naruto", {
+      requestId: "00000000-0000-4000-8000-000000000458",
+      scale: "W1",
+      premise: "审计三战时期木叶",
+      worldTime: "第三次忍界大战",
+      focus: "第三次忍界大战｜木叶切片",
+      genre: "火影同人",
+      scarcity: "",
+      instruction: "",
+      parentAreaId: null,
+    });
+
+    expect(view.nodes.map((node) => node.name)).toEqual(
+      expect.arrayContaining([
+        "第三次忍界大战｜木叶切片",
+        "Konohagakure",
+        "Kakashi Hatake",
+      ]),
+    );
+    expect(view.nodes.map((node) => node.name)).not.toContain("Boruto Uzumaki");
+  });
+
   it("projects existing Source identities instead of pretending they are Project Canon", async () => {
     seedWorld();
     const document = await generateSourceWorldProduction(
