@@ -255,8 +255,7 @@ const HUNTER_X_HUNTER: SourceWorldCatalogEntry = {
       id: "hxh-static-database",
       adapter: "hxh-static-v1",
       role: "primary",
-      sourceUrl:
-        "https://github.com/OmarDarioMelendrez/hunter-x-hunter-api-ts",
+      sourceUrl: "https://github.com/OmarDarioMelendrez/hunter-x-hunter-api-ts",
       repository: "OmarDarioMelendrez/hunter-x-hunter-api-ts",
       ref: "687562028309b66e573ffde1bb707c8e782e0048",
       paths: [
@@ -264,8 +263,7 @@ const HUNTER_X_HUNTER: SourceWorldCatalogEntry = {
         "src/data/ryodan.json",
         "src/data/chimeraAnts.json",
       ],
-      note:
-        "Pinned static community dataset with Hunters, Phantom Troupe, Chimera Ants, Nen types, abilities, professions and family fields. Mandatory reproducible seed.",
+      note: "Pinned static community dataset with Hunters, Phantom Troupe, Chimera Ants, Nen types, abilities, professions and family fields. Mandatory reproducible seed.",
     },
     {
       id: "jikan-hxh-2011-cast",
@@ -273,8 +271,7 @@ const HUNTER_X_HUNTER: SourceWorldCatalogEntry = {
       role: "supporting",
       sourceUrl: "https://jikan.moe/",
       endpoint: "https://api.jikan.moe/v4/anime/11061/characters",
-      note:
-        "Optional online cast enrichment only. Never required for deterministic Source World installation.",
+      note: "Optional online cast enrichment only. Never required for deterministic Source World installation.",
     },
     {
       id: "hxh-api-rich",
@@ -283,8 +280,7 @@ const HUNTER_X_HUNTER: SourceWorldCatalogEntry = {
       sourceUrl: "https://github.com/akocero/node_hxh_api",
       repository: "akocero/node_hxh_api",
       ref: "5d6e33f59e49129fd544ee9f744833d7d5922707",
-      note:
-        "Rich community API advertises ~248 characters, groups and Nen fields; requires API key, so catalogued as later enrichment rather than mandatory import.",
+      note: "Rich community API advertises ~248 characters, groups and Nen fields; requires API key, so catalogued as later enrichment rather than mandatory import.",
     },
   ],
 };

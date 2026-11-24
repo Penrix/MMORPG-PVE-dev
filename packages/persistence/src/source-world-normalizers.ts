@@ -396,9 +396,7 @@ export function normalizeHunterXHunterStatic(input: {
       sourceUrl: rawUrl(
         upstream,
         "src/data/" +
-          (collection.id === "chimeraAnts"
-            ? "chimeraAnts"
-            : collection.id) +
+          (collection.id === "chimeraAnts" ? "chimeraAnts" : collection.id) +
           ".json",
       ),
       originCollection: collection.id,
@@ -427,9 +425,7 @@ export function normalizeHunterXHunterStatic(input: {
         sourceUrl: rawUrl(
           upstream,
           "src/data/" +
-            (collection.id === "chimeraAnts"
-              ? "chimeraAnts"
-              : collection.id) +
+            (collection.id === "chimeraAnts" ? "chimeraAnts" : collection.id) +
             ".json",
         ),
         originCollection: collection.id,

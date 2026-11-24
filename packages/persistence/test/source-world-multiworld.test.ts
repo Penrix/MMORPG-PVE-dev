@@ -263,9 +263,18 @@ describe("multi-world normalizers", () => {
     expect(corpus.records).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "character", name: "Gon Freecss" }),
-        expect.objectContaining({ kind: "character", name: "Chrollo Lucilfer" }),
-        expect.objectContaining({ kind: "organization", name: "Hunter Association" }),
-        expect.objectContaining({ kind: "organization", name: "Phantom Troupe" }),
+        expect.objectContaining({
+          kind: "character",
+          name: "Chrollo Lucilfer",
+        }),
+        expect.objectContaining({
+          kind: "organization",
+          name: "Hunter Association",
+        }),
+        expect.objectContaining({
+          kind: "organization",
+          name: "Phantom Troupe",
+        }),
         expect.objectContaining({ kind: "organization", name: "Chimera Ants" }),
         expect.objectContaining({ kind: "ability", name: "Enhancement Nen" }),
         expect.objectContaining({ kind: "ability", name: "Jajanken" }),
