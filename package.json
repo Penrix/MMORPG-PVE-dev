@@ -50,6 +50,8 @@
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run test:evidence && npm run licenses:check && npm run build",
     "verify:ci": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run test:evidence && npm run licenses:check",
     "verify:release": "npm run verify:ci && npm run test:e2e && npm run test:release:recovery && npm run test:real:matrix",
+    "import:source-world": "tsx scripts/import-source-world.ts",
+    "import:source-worlds": "tsx scripts/import-source-world.ts --all",
     "import:naruto": "tsx scripts/import-naruto.ts",
     "audit:naruto": "tsx scripts/audit-naruto-world.ts",
     "seed:naruto-third-war-konoha": "tsx scripts/seed-naruto-third-war-konoha.ts",
