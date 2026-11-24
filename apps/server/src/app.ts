@@ -21,6 +21,7 @@ import {
   CollaborationWorkerSuite,
   DeliveryWorkerSuite,
   GatewayNarrativeModelClient,
+  generateSourceWorldProduction,
   type NarrativeModelClient,
 } from "@narralume/narrative";
 import {
@@ -40,6 +41,7 @@ import {
   registerSourceCorpusRoutes,
   registerUnifiedSourceWorldRoutes,
   registerProjectWorldRoutes,
+  type SourceWorldProductionGenerator,
   registerDeliveryRoutes,
   registerLongNovelRoutes,
   registerProjectCoverRoutes,
@@ -70,6 +72,7 @@ export interface BuildAppOptions {
   narrativeModelClient?: NarrativeModelClient;
   enableRunWorker?: boolean;
   inspirationGenerateWithLlm?: InspirationLlmGenerator;
+  sourceWorldGenerateProduction?: SourceWorldProductionGenerator;
 }
 
 // prettier-ignore
@@ -380,7 +383,14 @@ export async function buildApp(
   });
   registerWorldGraphRoutes(routes, database);
   registerSourceCorpusRoutes(routes, database);
-  registerUnifiedSourceWorldRoutes(routes, database);
+  registerUnifiedSourceWorldRoutes(routes, database, {
+    generateProduction:
+      options.sourceWorldGenerateProduction ??
+      ((input) =>
+        generateSourceWorldProduction(database, input, {
+          environment,
+        })),
+  });
   registerProjectWorldRoutes(routes, database);
   registerStoryDirectorRoutes(routes, database, coordinator, {
     adoptNodeHandoff: storyDirectorWorkers.adoptNodeHandoff.bind(
