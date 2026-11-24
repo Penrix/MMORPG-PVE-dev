@@ -18,7 +18,7 @@ function thirdWarFixture(): NarutoData {
   return {
     characters: [
       { id: 1, name: "Minato Namikaze", jutsu: [] },
-      { id: 2, name: "Kakashi Hatake", jutsu: [] },
+      { id: 2, name: "Kakashi Hatake", jutsu: ["Chidori"] },
       { id: 3, name: "Obito Uchiha", jutsu: [] },
       { id: 4, name: "Rin Nohara", jutsu: [] },
     ],
@@ -61,6 +61,7 @@ describe("Naruto Third War Konoha Source time slice", () => {
       kakashi: "character:2",
       obito: "character:3",
       rin: "character:4",
+      chidori: "jutsu:Chidori",
     });
 
     const worlds = new SqliteUnifiedSourceWorldRepository(db);
