@@ -57,6 +57,7 @@ import { migration053 } from "./migrations/053-source-world-encyclopedia.js";
 import { migration054 } from "./migrations/054-unified-source-world.js";
 import { migration055 } from "./migrations/055-repair-scoped-canon-fts.js";
 import { migration056 } from "./migrations/056-project-reality-event-version-overlay.js";
+import { migration057 } from "./migrations/057-source-world-production-drafts.js";
 
 export interface Migration {
   readonly version: number;
@@ -135,6 +136,7 @@ const MIGRATIONS: readonly Migration[] = [
   migration054,
   migration055,
   migration056,
+  migration057,
 ];
 
 export const LATEST_MIGRATION_VERSION = MIGRATIONS.at(-1)?.version ?? 0;
