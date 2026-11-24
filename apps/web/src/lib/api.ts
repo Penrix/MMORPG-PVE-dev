@@ -4095,3 +4095,73 @@ export async function createProjectFromBenchmarkProposal(
     ...(signal ? { signal } : {}),
   });
 }
+
+/* 第二模块：全局 M03 素材库（5519 张）统计、检索与单卡读取。 */
+export interface M03LibraryStatsDto {
+  total: number;
+  embeddingCount: number;
+  byTier: Record<string, number>;
+  byStatus: Record<string, number>;
+  types: Array<{ type: string; count: number }>;
+}
+
+export interface M03LibraryCardDto {
+  id: string;
+  libraryId: string;
+  materialId: string;
+  materialType: string;
+  name: string;
+  summary: string;
+  content?: string;
+  status: string;
+  curationTier: "curated" | "coarse" | "market_trend";
+  curationStage: string | null;
+  trendWeight: number;
+  callWhen: string[];
+  tags: string[];
+  sourcePath: string;
+  updatedAt: string;
+}
+
+export async function getM03LibraryStats(
+  signal?: AbortSignal,
+): Promise<M03LibraryStatsDto> {
+  return requestJson("/api/m03/stats", signal ? { signal } : {});
+}
+
+export async function listM03LibraryCards(
+  query: {
+    q?: string;
+    type?: string;
+    tier?: "all" | "curated" | "coarse" | "market_trend";
+    status?: "all" | "active" | "candidate" | "merged" | "retired";
+    limit?: number;
+    offset?: number;
+  } = {},
+  signal?: AbortSignal,
+): Promise<{
+  total: number;
+  limit: number;
+  offset: number;
+  cards: M03LibraryCardDto[];
+}> {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.type) params.set("type", query.type);
+  if (query.tier) params.set("tier", query.tier);
+  if (query.status) params.set("status", query.status);
+  if (query.limit !== undefined) params.set("limit", String(query.limit));
+  if (query.offset !== undefined) params.set("offset", String(query.offset));
+  const suffix = params.size ? `?${params.toString()}` : "";
+  return requestJson(`/api/m03/cards${suffix}`, signal ? { signal } : {});
+}
+
+export async function getM03LibraryCard(
+  id: string,
+  signal?: AbortSignal,
+): Promise<M03LibraryCardDto> {
+  return requestJson(
+    `/api/m03/cards/${encodeURIComponent(id)}`,
+    signal ? { signal } : {},
+  );
+}

@@ -1,480 +1,997 @@
+/* ==========================================================================
+   第二模块：世界资料库 & M03 素材库
+   编辑式纸面：单一顶栏、左目录 340px、右阅读舞台；默认阅读，编辑按需展开。
+   ========================================================================== */
+
 .world-atlas {
-  min-height: 100%;
-  padding-bottom: 48px;
-}
+  /* 把本模块使用的语义变量对齐到现有纸/墨令牌，避免未定义变量导致无边线。 */
+  --surface: var(--paper);
+  --surface-raised: var(--paper-raised);
+  --surface-sunken: var(--paper-sunk);
+  --line: var(--hairline);
+  --line-strong: color-mix(in srgb, var(--ink) 26%, transparent);
+  --text: var(--ink);
+  --text-secondary: var(--ink-soft);
+  --text-tertiary: var(--ink-faint);
 
-.world-atlas__principle {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 18px 28px 0;
-  padding: 12px 16px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
   background: var(--surface-raised);
-  color: var(--text-secondary);
+  color: var(--text);
+  font-family: var(--font-serif);
 }
 
-.world-atlas__axes {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
-  gap: 12px;
-  margin: 10px 28px 0;
+.world-atlas button,
+.world-atlas input,
+.world-atlas select,
+.world-atlas textarea {
+  font-family: inherit;
 }
 
-.world-atlas__axes section {
-  min-width: 0;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--surface);
-}
+/* --- 顶栏 ------------------------------------------------------------- */
 
-.world-atlas__axes section > small {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--text-tertiary);
-}
-
-.world-atlas__axes section > strong {
-  display: block;
-  margin-bottom: 8px;
-}
-
-.world-atlas__axes section > div {
+.world-atlas__topbar {
   display: flex;
+  flex: 0 0 auto;
   flex-wrap: wrap;
-  gap: 5px;
-}
-
-.world-atlas__axes section span {
-  padding: 3px 7px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--text-secondary);
-  font-size: 11px;
-}
-
-.world-atlas__axes p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.world-atlas__layout {
-  display: grid;
-  grid-template-columns: minmax(190px, 0.75fr) minmax(240px, 1fr) minmax(420px, 2.2fr);
-  gap: 16px;
-  padding: 16px 28px;
-}
-
-.world-atlas__worlds,
-.world-atlas__cards,
-.world-atlas__editor {
-  min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface);
-}
-
-.world-atlas__worlds,
-.world-atlas__cards {
-  padding: 14px;
-  align-self: start;
-  max-height: calc(100vh - 180px);
-  overflow: auto;
-}
-
-.world-atlas__editor {
-  padding: 18px;
-}
-
-.world-atlas__section-head {
-  display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 14px;
-}
-
-.world-atlas__section-head h2 {
-  margin: 2px 0 0;
-  font-size: 18px;
-}
-
-.world-atlas__section-head small {
-  color: var(--text-tertiary);
-}
-
-.world-atlas__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.world-atlas__new-world {
-  display: grid;
-  gap: 8px;
-  padding: 10px 0 14px;
-}
-
-.world-atlas__new-world input,
-.world-atlas__new-world select,
-.world-atlas__filters input,
-.world-atlas__filters select,
-.world-atlas__meta input,
-.world-atlas__meta select {
-  width: 100%;
-}
-
-.world-atlas__world-list,
-.world-atlas__card-list {
-  display: grid;
-  gap: 7px;
-}
-
-.world-atlas__world,
-.world-atlas__card-row {
-  width: 100%;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.world-atlas__world {
-  display: grid;
-  gap: 3px;
-  padding: 10px;
-}
-
-.world-atlas__world:hover,
-.world-atlas__world[aria-pressed="true"],
-.world-atlas__card-row:hover,
-.world-atlas__card-row[aria-pressed="true"] {
-  border-color: var(--line-strong);
+  gap: 10px 18px;
+  min-height: 62px;
+  padding: 10px clamp(14px, 2vw, 28px);
+  border-bottom: 1px solid var(--line);
   background: var(--surface-raised);
 }
 
-.world-atlas__world span,
-.world-atlas__card-row small {
-  color: var(--text-tertiary);
-}
-
-.world-atlas__filters {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.world-atlas__filters label {
+.world-atlas__tabs {
   display: flex;
-  align-items: center;
-  gap: 7px;
+  min-width: 0;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
 }
 
-.world-atlas__card-row {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 3px 8px;
-  padding: 9px 10px;
+.world-atlas__tab {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 13px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 140ms ease,
+    background-color 140ms ease;
 }
 
-.world-atlas__card-row small {
-  grid-column: 1 / -1;
+.world-atlas__tab:hover {
+  color: var(--text);
+}
+
+.world-atlas__tab[aria-selected="true"] {
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.world-atlas__tab-meta {
+  max-width: 280px;
   overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+  font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.world-atlas__kind {
-  align-self: center;
-  padding: 2px 6px;
+.world-atlas__toolbar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.world-atlas__select {
+  height: 32px;
+  max-width: 250px;
+  padding: 0 28px 0 10px;
   border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.world-atlas__select:focus-visible,
+.world-atlas__search:focus-within,
+.world-atlas__field input:focus-visible,
+.world-atlas__field select:focus-visible,
+.world-atlas__markdown:focus-visible,
+.world-atlas__newworld input:focus-visible,
+.world-atlas__newworld select:focus-visible {
+  outline: none;
+  border-color: var(--vera-hairline);
+  box-shadow: 0 0 0 3px var(--vera-soft);
+}
+
+.world-atlas__select--block {
+  width: 100%;
+  max-width: none;
+}
+
+.world-atlas .btn {
+  height: 32px;
+  padding: 0 11px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+/* 新建世界：紧凑内联条，不占常驻版面。 */
+.world-atlas__newworld {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px clamp(14px, 2vw, 28px);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.world-atlas__newworld input,
+.world-atlas__newworld select {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: 12.5px;
+}
+
+.world-atlas__newworld input {
+  flex: 1 1 260px;
+  max-width: 380px;
+}
+
+.world-atlas__newworld .error-note {
+  flex-basis: 100%;
+}
+
+/* --- 双栏骨架 --------------------------------------------------------- */
+
+.world-atlas__split {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: 340px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.world-atlas__directory {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.world-atlas__directory-head {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 10px;
+  padding: 16px 14px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* --- 搜索 / 筛选 ------------------------------------------------------ */
+
+.world-atlas__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-raised);
+  color: var(--text-tertiary);
+}
+
+.world-atlas__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
+}
+
+.world-atlas__search input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.world-atlas__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.world-atlas__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border: 1px solid transparent;
   border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  line-height: 1.5;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.world-atlas__pill:hover {
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.world-atlas__pill[aria-pressed="true"] {
+  border-color: var(--line-strong);
+  background: var(--surface-raised);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.world-atlas__pill-count {
+  color: var(--text-tertiary);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+
+/* --- 卡片目录 --------------------------------------------------------- */
+
+.world-atlas__list {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  padding: 6px 8px 14px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.world-atlas__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "name badge"
+    "summary summary";
+  gap: 2px 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-left: 2px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.world-atlas__row:hover {
+  background: var(--surface-raised);
+}
+
+.world-atlas__row[aria-pressed="true"] {
+  border-color: var(--vera-hairline);
+  border-left-color: var(--vera);
+  background: var(--vera-soft);
+}
+
+.world-atlas__row-name {
+  grid-area: name;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.world-atlas__row-badge {
+  grid-area: badge;
+  align-self: center;
+  color: var(--text-tertiary);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.world-atlas__row-summary {
+  display: -webkit-box;
+  grid-area: summary;
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.world-atlas__row--m03 {
+  grid-template-areas:
+    "name badge"
+    "id id"
+    "summary summary";
+}
+
+.world-atlas__row-id {
+  grid-area: id;
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.world-atlas__listfoot {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--text-tertiary);
+  font-size: 11px;
+  text-align: right;
+}
+
+.world-atlas__pager {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--line);
   color: var(--text-tertiary);
   font-size: 11px;
 }
 
-.world-atlas__meta {
-  display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(130px, 0.55fr) minmax(220px, 1.2fr);
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.world-atlas__meta label {
-  display: grid;
-  gap: 5px;
+.world-atlas__page-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 11.5px;
+  cursor: pointer;
 }
 
-.world-atlas__aliases {
+.world-atlas__page-btn:hover:not(:disabled) {
+  border-color: var(--line);
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.world-atlas__page-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.world-atlas__hint {
+  padding: 12px 10px;
+  color: var(--text-tertiary);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+/* --- 阅读舞台 --------------------------------------------------------- */
+
+.world-atlas__stage {
+  min-width: 0;
+  min-height: 0;
+  padding: 26px clamp(20px, 3vw, 44px) 64px;
+  overflow-y: auto;
+  background: var(--surface-raised);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.world-atlas__reader,
+.world-atlas__edit {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.world-atlas__stage-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.world-atlas__reader > .world-atlas__stage-head,
+.world-atlas__edit > .world-atlas__stage-head {
+  margin-bottom: 22px;
+}
+
+.world-atlas__stage-title {
   min-width: 0;
 }
 
-.world-atlas__link-tip {
+.world-atlas__headline {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 10px;
-  padding: 10px 12px;
-  border-left: 3px solid var(--line-strong);
-  background: var(--surface-raised);
-  color: var(--text-secondary);
-  font-size: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
 }
 
-.world-atlas__link-tip code {
+.world-atlas__title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.world-atlas__kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.world-atlas__stage-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.world-atlas__icon-btn {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.world-atlas__icon-btn:hover:not(:disabled) {
+  border-color: var(--vera-hairline);
+  background: var(--vera-soft);
+  color: var(--vera);
+}
+
+.world-atlas__icon-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.world-atlas__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-tertiary);
+  font-size: 10.5px;
+  font-weight: 400;
+  line-height: 1.6;
   white-space: nowrap;
+}
+
+.world-atlas__badge--curated {
+  border-color: color-mix(in srgb, var(--canon) 38%, transparent);
+  background: color-mix(in srgb, var(--canon) 8%, transparent);
+  color: var(--canon);
+}
+
+.world-atlas__badge--trend {
+  border-color: var(--vera-hairline);
+  background: var(--vera-soft);
+  color: var(--vera);
+}
+
+.world-atlas__aliases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 9px;
+}
+
+.world-atlas__alias {
+  padding: 1px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* --- 阅读模式正文 ----------------------------------------------------- */
+
+.world-atlas__prose {
+  max-width: 74ch;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.world-atlas__prose p {
+  margin: 0 0 0.95em;
+  white-space: pre-line;
+}
+
+.world-atlas__prose p:last-child {
+  margin-bottom: 0;
+}
+
+.world-atlas__prose h3 {
+  margin: 1.75em 0 0.55em;
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+.world-atlas__prose h4 {
+  margin: 1.4em 0 0.4em;
+  color: var(--text-secondary);
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.world-atlas__prose ul {
+  margin: 0 0 1em;
+  padding-left: 1.25em;
+}
+
+.world-atlas__prose li {
+  margin-bottom: 0.3em;
+}
+
+.world-atlas__prose blockquote {
+  margin: 0 0 1em;
+  padding-left: 14px;
+  border-left: 2px solid var(--vera-hairline);
+  color: var(--text-secondary);
+  font-family: var(--font-quote);
+}
+
+.world-atlas__inline-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--vera);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.world-atlas__inline-link:hover {
+  color: var(--vera-deep);
+  text-decoration-style: solid;
+}
+
+.world-atlas__muted {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* --- 关系图谱 --------------------------------------------------------- */
+
+.world-atlas__relations {
+  margin-top: 34px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.world-atlas__relations-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 14px;
+  color: var(--text-tertiary);
+}
+
+.world-atlas__relations-head h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.world-atlas__relations-head span {
+  font-size: 11.5px;
+}
+
+.world-atlas__relation-groups {
+  display: grid;
+  gap: 9px;
+}
+
+.world-atlas__relation-group {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.world-atlas__relation-label {
+  padding-top: 4px;
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+  text-align: right;
+}
+
+.world-atlas__relation-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.world-atlas__relation-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.5;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.world-atlas__relation-link span {
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+.world-atlas__relation-link:hover {
+  border-color: var(--vera-hairline);
+  background: var(--vera-soft);
+  color: var(--vera);
+}
+
+/* --- 编辑模式 --------------------------------------------------------- */
+
+.world-atlas__edit {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.world-atlas__meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) 180px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.world-atlas__field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+
+.world-atlas__field--wide {
+  grid-column: 1 / -1;
+}
+
+.world-atlas__field input,
+.world-atlas__field select {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13.5px;
 }
 
 .world-atlas__markdown {
   width: 100%;
   min-height: 420px;
+  padding: 16px 18px;
   resize: vertical;
-  padding: 16px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--surface-sunken, var(--surface));
+  border-radius: 10px;
+  background: var(--surface);
   color: var(--text);
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 14px;
   line-height: 1.7;
+  tab-size: 2;
+}
+
+.world-atlas__help {
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+}
+
+.world-atlas__help summary {
+  padding: 9px 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.world-atlas__help[open] summary {
+  margin-bottom: 9px;
+  border-bottom: 1px solid var(--line);
+}
+
+.world-atlas__help p {
+  margin: 0 0 11px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.world-atlas__help code,
+.world-atlas__unresolved code {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.world-atlas__editfoot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .world-atlas__unresolved {
   display: grid;
   gap: 6px;
-  margin-top: 12px;
-  padding: 12px;
+  padding: 11px 12px;
   border: 1px dashed var(--line-strong);
-  border-radius: 10px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.world-atlas__unresolved--inline {
+  margin-bottom: 20px;
+}
+
+.world-atlas__unresolved strong {
+  font-size: 12px;
 }
 
 .world-atlas__unresolved p {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 12px;
+  line-height: 1.6;
 }
 
-.world-atlas__relations {
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
-}
-
-.world-atlas__relations-title {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.world-atlas__relations-title > div {
-  display: grid;
-  gap: 2px;
-}
-
-.world-atlas__relations-title small {
-  color: var(--text-tertiary);
-}
-
-.world-atlas__relation-center {
-  width: max-content;
-  max-width: 100%;
-  margin: 18px auto;
-  padding: 10px 18px;
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  background: var(--surface-raised);
-  font-weight: 700;
-}
-
-.world-atlas__relation-groups {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 10px;
-}
-
-.world-atlas__relation-group {
-  padding: 10px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-}
-
-.world-atlas__relation-group > span {
-  display: block;
-  margin-bottom: 7px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.world-atlas__relation-group > div {
+.world-atlas__unresolved > div {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-}
-
-.world-atlas__relation-group button {
-  display: inline-flex;
-  align-items: center;
   gap: 5px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 5px 8px;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
 }
 
-.world-atlas__relation-group button:hover {
-  background: var(--surface-raised);
-}
+/* --- M03 阅读 --------------------------------------------------------- */
 
-.world-atlas__relation-group button small {
+.world-atlas__m03meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 9px;
   color: var(--text-tertiary);
+  font-size: 11.5px;
 }
 
-.world-atlas__empty,
-.world-atlas__welcome {
+.world-atlas__m03meta code {
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.world-atlas__section {
+  margin-bottom: 26px;
+}
+
+.world-atlas__section:last-child {
+  margin-bottom: 0;
+}
+
+.world-atlas__section > h2 {
+  margin: 0 0 8px;
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.world-atlas__section > p {
+  margin: 0;
+  max-width: 74ch;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.world-atlas__callwhen {
+  margin: 0;
+  max-width: 74ch;
+  padding-left: 18px;
   color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.8;
 }
 
-.world-atlas__welcome {
+.world-atlas__callwhen li {
+  margin-bottom: 4px;
+}
+
+.world-atlas__m03body {
+  max-width: 80ch;
+  padding-top: 2px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* --- 空状态 ----------------------------------------------------------- */
+
+.world-atlas__blank {
   display: grid;
   justify-items: center;
   align-content: center;
-  min-height: 520px;
+  gap: 10px;
+  min-height: 60vh;
+  max-width: 440px;
+  margin: 0 auto;
+  color: var(--text-tertiary);
   text-align: center;
 }
 
-.world-atlas__welcome h2 {
-  margin: 12px 0 4px;
+.world-atlas__blank h2 {
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
 }
 
-.world-atlas__welcome p {
-  max-width: 520px;
+.world-atlas__blank p {
+  margin: 0 0 12px;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.75;
 }
+
+/* --- 响应式 ----------------------------------------------------------- */
 
 @media (max-width: 1180px) {
-  .world-atlas__layout {
-    grid-template-columns: 220px minmax(0, 1fr);
+  .world-atlas__split {
+    grid-template-columns: 300px minmax(0, 1fr);
   }
 
-  .world-atlas__editor {
-    grid-column: 1 / -1;
-  }
-
-  .world-atlas__worlds,
-  .world-atlas__cards {
-    max-height: 420px;
+  .world-atlas__tab-meta {
+    max-width: 180px;
   }
 }
 
-@media (max-width: 760px) {
-  .world-atlas__principle {
-    margin-inline: 14px;
+@media (max-width: 900px) {
+  .world-atlas {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .world-atlas__topbar {
     flex-wrap: wrap;
   }
 
-  .world-atlas__layout {
-    grid-template-columns: 1fr;
-    padding-inline: 14px;
+  .world-atlas__split {
+    display: block;
   }
 
-  .world-atlas__editor {
-    grid-column: auto;
+  .world-atlas__directory {
+    max-height: 52vh;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .world-atlas__stage {
+    padding: 22px 18px 48px;
+    overflow: visible;
   }
 
   .world-atlas__meta {
+    grid-template-columns: minmax(0, 1fr) 160px;
+  }
+
+  .world-atlas__relation-group {
     grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .world-atlas__relation-label {
+    padding-top: 0;
+    text-align: left;
   }
 }
 
-
-.world-atlas__framework {
-  display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(260px, 2fr) auto;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-  padding: 11px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface-raised);
-}
-
-.world-atlas__framework > div:first-child {
-  display: grid;
-  gap: 3px;
-}
-
-.world-atlas__framework > div:first-child span {
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.world-atlas__framework-sections {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.world-atlas__framework-sections span {
-  padding: 3px 7px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--text-tertiary);
-  font-size: 11px;
-}
-
-.world-atlas__relation-hints {
-  display: grid;
-  gap: 6px;
-  margin: -2px 0 10px;
-}
-
-.world-atlas__relation-hints > small {
-  color: var(--text-tertiary);
-}
-
-.world-atlas__relation-hints > div {
-  display: flex;
-  gap: 5px;
-  overflow-x: auto;
-  padding-bottom: 3px;
-}
-
-.world-atlas__relation-hints code {
-  flex: 0 0 auto;
-  padding: 3px 7px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 11px;
-}
-
-@media (max-width: 900px) {
-  .world-atlas__framework {
-    grid-template-columns: 1fr;
+@media (max-width: 620px) {
+  .world-atlas__tab-meta {
+    display: none;
   }
 
-  .world-atlas__framework .btn {
-    justify-self: start;
+  .world-atlas__toolbar {
+    width: 100%;
   }
-}
 
+  .world-atlas__select {
+    flex: 1;
+    max-width: none;
+  }
 
-@media (max-width: 900px) {
-  .world-atlas__axes {
+  .world-atlas__meta {
     grid-template-columns: 1fr;
   }
 }
