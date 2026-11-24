@@ -98,6 +98,66 @@ npm run audit:naruto -- --focus Sharingan
 
 审计输出当前局部图的对象/关系数量、十 World Family 覆盖、People-centered 连通度以及下一项建议 Workshop。**focus 足够厚时只沿局部关系展开，不再用全库随机卡补满上下文。**
 
+## 2026-11-24 Naruto Vertical｜真实母体 + 木叶 Zone 验收
+
+真实 Actions 纵向运行已完成一轮可复现验收：Raw Evidence → Unified Source World → Konoha 局部图 → 十 Family Audit。代表性成功运行：[`45432452445`](https://github.com/Penrix/MMORPG-PVE-dev/actions/runs/45432452445)。
+
+统一母体的真实落库结果：
+
+| 层 | 实际结果 |
+| --- | ---: |
+| Dattebayo Raw Source records | 3,371 |
+| Wiki 唯一长档案 | 1,255 |
+| `wiki:naruto` canonical Atlas cards | **3,371** |
+| canonical typed relations | **4,779** |
+| exact evidence mappings | **3,371** |
+| Project Canon 自动写入 | **0** |
+| 首次安装后再次导入新增 canonical cards | **0** |
+
+Reader-side 语义不再靠全文搜索猜身份。对象级种子通过 **exact name/key + card kind** 解析，真实数据已命中：
+
+- `village:16` / Konohagakure
+- `clan:45` / Uchiha
+- `kekkei:29` / Sharingan
+- `org:akatsuki` / Akatsuki
+- `beast:711` / Kurama
+
+这次真实数据还撞出并修复了一个 Module 2 底座 Bug：typed-link parser 原先会把 relation identifier 中的 `_` 当 Markdown 强调符删除，例如 `village_affiliation_recorded` 会变成 `villageaffiliationrecorded`。现在机器关系标识保留原样，并有回归测试。
+
+### Konohagakure 第一轮局部图
+
+精确锁定 `Konohagakure` 后，从该 Source 对象沿人物中心关系展开一跳/二跳，而不是拿全文命中或全库随机卡填上下文。真实审计得到：
+
+- 65 个局部对象
+- 75 条局部 typed relations
+- 34 个 character
+- 12 个 organization
+- 17 个 ability
+- 2 个 location
+- 31 个非人物世界对象已经连接到具体人物
+- orphan world objects = 0
+- current activities = 0
+- playable interactions = 0
+
+十 Family 当前结果：
+
+| Family | 状态 | 当前含义 |
+| --- | --- | --- |
+| PEOPLE | present | 已有人物并进入关系网 |
+| SPACE | present | 木叶及相邻地点已接到人物关系 |
+| ORGANIZATION | present | 组织已通过人物/地区运行 |
+| POWER | present | 忍术/血继等力量已连接人物 |
+| ASSET | **missing** | 没有可占有、交换、争夺的具体资产 |
+| ECONOMY | **missing** | 没有生产、运输、交易、消费网络 |
+| ACTIVITY | **missing** | 没有指定时点正在推进的真实事务 |
+| INFORMATION | **missing** | 缺谁知道、隐瞒、传播、误判什么 |
+| VALUE | **missing** | 缺世界内部社会价格，不是 Reader price |
+| PLAYABLE | **thin** | 有关系图，但缺明确进入/取得/学习/经营/争夺动作 |
+
+当前审计给出的第一项 `nextWorkshop` 是 **`events`**，原因是“世界中没有当前正在推进的事务”。
+
+这不是让系统立刻凭空造一堆“当前事件”。现有 Raw Source 是**全时代混合参考**，因此下一轮生产必须先给具体时间切片，例如“三战时期木叶”；不能把不同年代人物同时当作 Current。全时代母体负责保留可追溯对象与历史惯性，具体时点的 Activity / Value / Access / Information / Economy 再由 Module 1 在该时间切片内生产并经过 Source draft → review → adopt。
+
 ## 读取与检索
 
 - `GET /api/source-corpora`：全部已安装原生母体与数量。
