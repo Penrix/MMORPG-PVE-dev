@@ -4,7 +4,9 @@ import {
   WORLD_ATLAS_CONTENT_FAMILIES,
   WORLD_ATLAS_NARRATIVE_AXIS,
   WORLD_ATLAS_RELATIONS,
+  WORLD_ATLAS_SEMANTIC_LAYERS,
   WorldAtlasCardKindSchema,
+  WorldAtlasReaderSemanticsSchema,
 } from "@narralume/contracts";
 import {
   SqliteProjectRepository,
@@ -68,6 +70,7 @@ const CreateCardBody = z.object({
   content: z.string().trim().min(1).max(200_000),
 });
 const UpdateCardBody = CreateCardBody.omit({ entityKey: true });
+const ReaderSemanticsBody = WorldAtlasReaderSemanticsSchema;
 
 /** Global source-world wiki: one Naruto identity, many evidence datasets.
  * No operation here writes a novel's Canon/Timeline, nor merges two raw
@@ -97,6 +100,7 @@ export function registerUnifiedSourceWorldRoutes(
     version: "0.1",
     contentFamilies: WORLD_ATLAS_CONTENT_FAMILIES,
     narrativeAxis: WORLD_ATLAS_NARRATIVE_AXIS,
+    semanticLayers: WORLD_ATLAS_SEMANTIC_LAYERS,
     cardTypes: WORLD_ATLAS_CARD_TYPES,
     relations: WORLD_ATLAS_RELATIONS,
   }));
@@ -179,6 +183,59 @@ export function registerUnifiedSourceWorldRoutes(
         ...body,
         now: now(),
       });
+    },
+  );
+  app.route(
+    "GET",
+    "/api/source-worlds/:worldId/reader-semantics",
+    async (request) => {
+      const { worldId } = WorldParams.parse(request.params);
+      requireWorld(worldId);
+      return worlds.listReaderSemantics(worldId);
+    },
+  );
+  app.route(
+    "GET",
+    "/api/source-worlds/:worldId/cards/:entityKey/reader-semantics",
+    async (request) => {
+      const { worldId, entityKey } = EntityParams.parse(request.params);
+      requireWorld(worldId);
+      const semantics = worlds.getReaderSemantics(worldId, entityKey);
+      if (!worlds.getCard(worldId, entityKey))
+        throw new ServiceError(
+          "source.world.card_not_found",
+          "World Atlas card not found",
+          404,
+        );
+      return { worldId, entityKey, semantics };
+    },
+  );
+  app.route(
+    "PUT",
+    "/api/source-worlds/:worldId/cards/:entityKey/reader-semantics",
+    async (request) => {
+      const { worldId, entityKey } = EntityParams.parse(request.params);
+      requireWorld(worldId);
+      const semantics = ReaderSemanticsBody.parse(request.body);
+      try {
+        return worlds.upsertReaderSemantics({
+          worldId,
+          entityKey,
+          semantics,
+          now: now(),
+        });
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message === "source.world.card.not_found"
+        )
+          throw new ServiceError(
+            "source.world.card_not_found",
+            "World Atlas card not found",
+            404,
+          );
+        throw error;
+      }
     },
   );
   app.route(
