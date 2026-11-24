@@ -45,26 +45,36 @@ jobs:
           const hxh = count("hunter-x-hunter");
           const find = (corpus, name) =>
             db.prepare("SELECT source_key AS sourceKey,name,kind FROM source_records WHERE corpus_id=? AND name=? LIMIT 1").get(corpus,name);
+          const findKey = (corpus, sourceKey) =>
+            db.prepare("SELECT source_key AS sourceKey,name,kind FROM source_records WHERE corpus_id=? AND source_key=? LIMIT 1").get(corpus,sourceKey);
           const checks = {
             luffy: find(onePiece.corpus, "Monkey D. Luffy"),
             gomu: find(onePiece.corpus, "Gomu Gomu no Mi"),
             egghead: find(onePiece.corpus, "Egghead"),
             enma: find(onePiece.corpus, "Enma"),
-            chapter1044: find(onePiece.corpus, "Manga Chapter 1044"),
+            chapter1044: findKey(onePiece.corpus, "manga-chapter:1044"),
             gon: find(hxh.corpus, "Gon Freecss"),
             hunterAssociation: find(hxh.corpus, "Hunter Association"),
             whaleIsland: find(hxh.corpus, "Whale Island"),
             jajanken: find(hxh.corpus, "Jajanken"),
             hunterExam: find(hxh.corpus, "Hunter Exam"),
           };
+          const luffyEvidence = db.prepare("SELECT COUNT(*) AS n FROM source_world_evidence_links WHERE world_id='one-piece' AND canonical_key=?").get(checks.luffy.sourceKey).n;
+          const luffyRelations = db.prepare("SELECT COUNT(*) AS n FROM source_relations WHERE corpus_id=? AND from_key=?").get(onePiece.corpus,checks.luffy.sourceKey).n;
+          const gonEvidence = db.prepare("SELECT COUNT(*) AS n FROM source_world_evidence_links WHERE world_id='hunter-x-hunter' AND canonical_key=?").get(checks.gon.sourceKey).n;
+          const gonRelations = db.prepare("SELECT COUNT(*) AS n FROM source_relations WHERE corpus_id=? AND from_key=?").get(hxh.corpus,checks.gon.sourceKey).n;
           const canon = db.prepare("SELECT COUNT(*) AS n FROM canon_entities").get().n;
-          console.log({onePiece,hxh,checks,projectCanon:canon});
+          console.log({onePiece,hxh,checks,luffyEvidence,luffyRelations,gonEvidence,gonRelations,projectCanon:canon});
           assert(onePiece.cards > 3500, "One Piece rich graph unexpectedly thin");
           assert(onePiece.relations > 1000, "One Piece rich relations unexpectedly thin");
           assert(hxh.cards > 300, "HxH rich graph unexpectedly thin");
           assert(hxh.relations > 300, "HxH rich relations unexpectedly thin");
           for (const [key,value] of Object.entries(checks))
             assert(value, "missing representative object: " + key);
+          assert(luffyEvidence >= 2, "Luffy rich + legacy evidence did not converge on one canonical identity");
+          assert(luffyRelations >= 2, "Luffy rich relations did not thicken the bridged canonical card");
+          assert(gonEvidence >= 3, "Gon rich + roster + static evidence did not converge on one canonical identity");
+          assert(gonRelations >= 8, "Gon rich relations did not thicken the bridged canonical card");
           assert.equal(canon,0,"Source import must not write Project Canon");
           db.close();
           EOF
