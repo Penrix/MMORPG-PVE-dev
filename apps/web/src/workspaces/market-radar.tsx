@@ -101,55 +101,65 @@ export function MarketRadarWorkspace() {
 
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMarketData = useCallback(
-    async (signal?: AbortSignal) => {
-      const [booksData, trendsData] = await Promise.all([
-        getMarketRadarBooks(
-          {
-            windowDays,
-            platform,
-            ...(search.trim() ? { search: search.trim() } : {}),
-            limit: 150,
-          },
-          signal,
-        ),
-        getMarketM03Trends(signal),
-      ]);
-      if (signal?.aborted) return;
-      setBooksResp(booksData);
-      setM03Trends(trendsData.cards);
-      setSelectedBook((current) => {
-        if (
-          current &&
-          booksData.books.some((item) => item.id === current.id)
-        ) {
-          return current;
-        }
-        return booksData.books[0] ?? null;
-      });
-    },
-    [platform, search, windowDays],
-  );
+  const applyMarketData = (
+    booksData: MarketRadarBooksResponse,
+    trendsData: { total: number; cards: MarketM03Material[] },
+  ) => {
+    setBooksResp(booksData);
+    setM03Trends(trendsData.cards);
+    setSelectedBook((current) => {
+      if (current && booksData.books.some((item) => item.id === current.id)) {
+        return current;
+      }
+      return booksData.books[0] ?? null;
+    });
+  };
 
   const loadBooks = useCallback(async () => {
     setLoadingBooks(true);
     setError(null);
     try {
-      await fetchMarketData();
+      const [booksData, trendsData] = await Promise.all([
+        getMarketRadarBooks({
+          windowDays,
+          platform,
+          ...(search.trim() ? { search: search.trim() } : {}),
+          limit: 150,
+        }),
+        getMarketM03Trends(),
+      ]);
+      applyMarketData(booksData, trendsData);
     } catch (caught) {
       setError(apiErrorMessage(caught));
     } finally {
       setLoadingBooks(false);
     }
-  }, [fetchMarketData]);
+  }, [platform, search, windowDays]);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchMarketData(controller.signal).catch((caught) => {
-      if (!controller.signal.aborted) setError(apiErrorMessage(caught));
-    });
+    Promise.all([
+      getMarketRadarBooks(
+        {
+          windowDays,
+          platform,
+          ...(search.trim() ? { search: search.trim() } : {}),
+          limit: 150,
+        },
+        controller.signal,
+      ),
+      getMarketM03Trends(controller.signal),
+    ])
+      .then(([booksData, trendsData]) => {
+        if (!controller.signal.aborted) {
+          applyMarketData(booksData, trendsData);
+        }
+      })
+      .catch((caught) => {
+        if (!controller.signal.aborted) setError(apiErrorMessage(caught));
+      });
     return () => controller.abort();
-  }, [fetchMarketData]);
+  }, [platform, search, windowDays]);
 
   const handleRunTr01 = async () => {
     setAnalyzingTr01(true);

@@ -163,10 +163,14 @@ export function parseNewbookJsonl(
       const parsed = JSON.parse(statusJson) as {
         updatedAt?: unknown;
         snapshotDate?: unknown;
+        observedDate?: unknown;
       };
       if (typeof parsed.updatedAt === "string") updatedAt = parsed.updatedAt;
-      if (typeof parsed.snapshotDate === "string")
+      if (typeof parsed.snapshotDate === "string") {
         snapshotDate = parsed.snapshotDate;
+      } else if (typeof parsed.observedDate === "string") {
+        snapshotDate = parsed.observedDate;
+      }
     } catch {
       // Ignore invalid status JSON.
     }
