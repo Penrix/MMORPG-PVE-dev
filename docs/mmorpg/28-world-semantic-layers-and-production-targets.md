@@ -174,7 +174,7 @@ Source Atlas 是原生母体资料的主要工程载体。
 - 不能把“Reader 很熟”改写成“角色知道”；
 - 不要求本文立即新增独立 SQL 表。
 
-**当前代码尚未把认知母体做成一等 Runtime 对象。** 在代码完成前，文档和数据设计必须至少保留这条语义边界，不得把它重新吞回 `value`、Source Fact 或普通标签。
+**当前代码已经把认知母体做成第二模块的一等可查询语义，但仍与 Source objective fact / Project Reality 分权。** 世界级 Cognitive Mother 通过 Source World canonical corpus metadata 保存；对象级 Reader Semantics 通过 Source record namespaced metadata 保存；二者都有独立合同与 API，且不会自动进入 Project Canon 或角色知识。
 
 ### 4.3 Project Reality 的当前载体
 
@@ -310,13 +310,26 @@ Cognitive Mother
 - World Builder 从已有对象继续生产的内部能力；
 - Project Reality → World Builder → WorldPack → Project Reality 的项目增量链。
 
-### 尚未成为一等运行路径
+### 本轮已经补齐
 
-- `Source World → World Builder → Source World` 的正式 production target / API；
-- Cognitive Mother 的一等查询 / 表达合同；
-- Source objective fact 与 Reader-side price 的显式 Runtime 分权。
+- `Source World → World Builder → Source World` 正式 production target；
+- 独立于 Project 的 Source production draft / review / adopt 链；
+- Server 与 Browser Kernel 两端都能调用同一 Source World generator；
+- 世界级 Cognitive Mother 的合同、持久化与 GET / PUT API；
+- 对象级 Reader Semantics 的合同、持久化与 GET / PUT API；
+- `source:<stable-key>` 与 `canon:<project-id>` 的 Authority 分离；
+- Source identity 的 key / canonical name-or-alias / kind 校验；
+- Source candidate 不能把模型推断冒充 `source_canon`；
+- Atlas Card Markdown 继续是真相，Reader-side 语义不会混入客观正文；
+- 已采纳的 value / access / current activity / area / playable entry 可以从 Markdown 重新投影回下一轮 World Builder。
 
-**因此后续修改代码时，不得把“文档已确定”误报成“实现已完成”。**
+### 仍然没有做
+
+- Cognitive Mother **没有**自动成为 Module 3 的 `ContextSource`；当前仍只作为第二模块 Reader-side semantic layer，由 Source World production 显式读取；
+- 没有为 Cognitive Mother 新建重型知识图谱或专用大表；
+- 没有做专门的 Source World 作者 UI 工作台，本轮只补齐正式 API / Browser Kernel 路径。
+
+**因此后续窗口不得再把“Source World production / Cognitive Mother 尚未实现”当成当前状态。**
 
 ---
 
