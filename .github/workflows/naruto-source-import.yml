@@ -72,9 +72,9 @@ jobs:
           assert.equal(family.economy, "present");
           assert.equal(family.information, "present");
           assert.equal(family.value, "present");
-          assert.equal(family.power, "missing", "Time slice must not borrow all-era future powers");
+          assert.equal(family.power, "present", "Time-valid Chidori should be connected through the current mission");
           assert.equal(family.playable, "thin");
-          assert.equal(audit.nextWorkshop, "power");
+          assert.equal(audit.nextWorkshop, "playability");
           EOF
       - name: Check full records and original-source isolation
         run: |
