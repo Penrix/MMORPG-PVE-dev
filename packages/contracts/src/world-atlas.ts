@@ -29,6 +29,47 @@ export const WorldAtlasCardKindSchema = z.enum([
 
 export type WorldAtlasCardKind = z.infer<typeof WorldAtlasCardKindSchema>;
 
+/**
+ * Reader-side semantics for an existing world object.
+ *
+ * This is NOT Source objective truth and NOT Project Reality. It records how
+ * the target Reader is expected to pre-understand / pre-price an IP, era,
+ * industry or type-world object before the current novel teaches anything new.
+ */
+export const WorldAtlasReaderSemanticsSchema = z
+  .object({
+    readerPrice: z.string().trim().max(5_000),
+    preloadedExpectations: z.array(z.string().trim().min(1).max(500)).max(30),
+    familiarRelations: z.array(z.string().trim().min(1).max(500)).max(30),
+    naturalEntrances: z.array(z.string().trim().min(1).max(500)).max(30),
+    attentionTriggers: z.array(z.string().trim().min(1).max(500)).max(30),
+    basis: z.enum(["author_judgment", "market_observation", "model_inference"]),
+    sourceNote: z.string().trim().max(3_000),
+  })
+  .strict();
+
+export type WorldAtlasReaderSemantics = z.infer<
+  typeof WorldAtlasReaderSemanticsSchema
+>;
+
+export const WORLD_ATLAS_SEMANTIC_LAYERS = {
+  originalMother: {
+    id: "original-mother",
+    authority: "reference",
+    question: "世界在主角介入以前本来怎样成立？",
+  },
+  cognitiveMother: {
+    id: "cognitive-mother",
+    authority: "reader-semantic",
+    question: "目标 Reader 进入以前已经怎样理解、期待和定价？",
+  },
+  projectReality: {
+    id: "project-reality",
+    authority: "current",
+    question: "这一本书到当前时点真正发生并确认了什么？",
+  },
+} as const;
+
 export type WorldAtlasContentFamily =
   | "space"
   | "people"
