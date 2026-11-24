@@ -1,10 +1,6 @@
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  installNarutoThirdWarKonohaSlice,
-  NARUTO_THIRD_WAR_KONOHA_SLICE_KEY,
-  NARUTO_THIRD_WAR_KONOHA_WORLD_TIME,
-} from "@narralume/persistence";
+import { installNarutoThirdWarKonohaSlice } from "@narralume/persistence";
 import { NodeNarrativeDatabase } from "@narralume/persistence/node";
 
 function option(name: string): string | undefined {
@@ -27,8 +23,6 @@ try {
     JSON.stringify(
       {
         database: dbPath,
-        sliceKey: NARUTO_THIRD_WAR_KONOHA_SLICE_KEY,
-        worldTime: NARUTO_THIRD_WAR_KONOHA_WORLD_TIME,
         ...report,
       },
       null,
