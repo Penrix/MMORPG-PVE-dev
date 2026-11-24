@@ -1,12 +1,18 @@
 name: Naruto original-source real import smoke
 
 on:
+  push:
+    branches:
+      - feat/module3-world-atlas-integration
   pull_request:
     paths:
       - ".github/workflows/naruto-source-import.yml"
       - "scripts/import-naruto.ts"
       - "packages/persistence/src/naruto-source-import.ts"
       - "packages/persistence/src/naruto-source-world.ts"
+      - "packages/persistence/src/naruto-third-war-konoha.ts"
+      - "packages/persistence/test/naruto-third-war-konoha.test.ts"
+      - "scripts/seed-naruto-third-war-konoha.ts"
       - "packages/narrative/src/source-world-production.ts"
       - "scripts/audit-naruto-world.ts"
       - "packages/persistence/src/source-corpus-repository.ts"
@@ -28,8 +34,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - name: Verify Naruto source importer invariants
-        run: npm test -- naruto-source-import
+      - name: Verify Naruto source importer and time-slice invariants
+        run: npm test -- naruto-source-import naruto-third-war-konoha source-world-production
       - name: Download pinned Naruto data and import into real NarraLume SQLite
         run: npm run import:naruto -- --db /tmp/narralume-naruto-smoke.sqlite
       - name: Audit real Konohagakure local graph
@@ -43,6 +49,32 @@ jobs:
           assert.equal(audit.focus, "Konohagakure");
           assert(audit.selected.nodes > 5, "Konoha focus did not expand into a local graph");
           assert(audit.selected.sample.some(x => x.name === "Konohagakure"), "Konoha focus missing from its own graph");
+          EOF
+      - name: Seed and audit Third War Konoha time slice
+        run: |
+          npm run seed:naruto-third-war-konoha -- --db /tmp/narralume-naruto-smoke.sqlite
+          npx tsx scripts/audit-naruto-world.ts \
+            --db /tmp/narralume-naruto-smoke.sqlite \
+            --focus "第三次忍界大战｜木叶·神无毗桥任务窗口" \
+            --world-time "第三次忍界大战｜神无毗桥作战阶段" \
+            > /tmp/naruto-third-war-audit.json
+          cat /tmp/naruto-third-war-audit.json
+          node --input-type=module <<'EOF'
+          import { readFileSync } from "node:fs";
+          import assert from "node:assert/strict";
+          const audit = JSON.parse(readFileSync("/tmp/naruto-third-war-audit.json","utf8"));
+          const family = Object.fromEntries(audit.families.map(x => [x.family, x.status]));
+          assert.equal(audit.focus, "第三次忍界大战｜木叶·神无毗桥任务窗口");
+          assert.equal(family.people, "present");
+          assert.equal(family.organization, "present");
+          assert.equal(family.activity, "present");
+          assert.equal(family.asset, "present");
+          assert.equal(family.economy, "present");
+          assert.equal(family.information, "present");
+          assert.equal(family.value, "present");
+          assert.equal(family.power, "missing", "Time slice must not borrow all-era future powers");
+          assert.equal(family.playable, "thin");
+          assert.equal(audit.nextWorkshop, "power");
           EOF
       - name: Check full records and original-source isolation
         run: |
