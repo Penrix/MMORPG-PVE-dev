@@ -78,6 +78,11 @@ export function installNarutoThirdWarKonohaSlice(
           "相关人物：" + wiki(required.obito.key, required.obito.name),
           "相关人物：" + wiki(required.rin.key, required.rin.name),
           "关键地点：" + wiki("location:kannabi-bridge", "Kannabi Bridge"),
+          "战场资产：" +
+            wiki(
+              "item:kakashi-minato-special-kunai",
+              "Minato's Special Kunai Given to Kakashi",
+            ),
           "战略资源：" +
             wiki(
               "resource:iwa-kannabi-supply-line",
