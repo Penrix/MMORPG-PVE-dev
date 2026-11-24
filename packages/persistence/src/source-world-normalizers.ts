@@ -324,6 +324,187 @@ export function normalizeBleachDatabase(input: {
   ]);
 }
 
+export function normalizeHunterXHunterStatic(input: {
+  hunters: unknown;
+  ryodan: unknown;
+  chimeraAnts: unknown;
+}): SourceWorldSeed {
+  const entry = requiredCatalog("hunter-x-hunter");
+  const upstream = requiredUpstream(entry, "hxh-static-database");
+  const records = new Map<string, SourceWorldSeedRecord>();
+  const relations: SourceWorldSeedRelation[] = [];
+  const relationIds = new Set<string>();
+
+  const addRecord = (record: SourceWorldSeedRecord): void => {
+    if (!records.has(record.sourceKey)) records.set(record.sourceKey, record);
+  };
+  const addRelation = (
+    fromKey: string,
+    toKey: string,
+    relation: string,
+    sourceNote: string,
+  ): void => {
+    const id = fromKey + "|" + relation + "|" + toKey;
+    if (relationIds.has(id)) return;
+    relationIds.add(id);
+    relations.push({ fromKey, toKey, relation, sourceNote });
+  };
+
+  const collections: Array<{
+    id: "hunters" | "ryodan" | "chimeraAnts";
+    rows: JsonObject[];
+    organization: { key: string; name: string; relation: string };
+  }> = [
+    {
+      id: "hunters",
+      rows: arrayOfObjects(input.hunters),
+      organization: {
+        key: "org:hunter-association",
+        name: "Hunter Association",
+        relation: "hunter_association_context",
+      },
+    },
+    {
+      id: "ryodan",
+      rows: arrayOfObjects(input.ryodan),
+      organization: {
+        key: "org:phantom-troupe",
+        name: "Phantom Troupe",
+        relation: "phantom_troupe_roster_recorded",
+      },
+    },
+    {
+      id: "chimeraAnts",
+      rows: arrayOfObjects(input.chimeraAnts),
+      organization: {
+        key: "org:chimera-ants",
+        name: "Chimera Ants",
+        relation: "chimera_ant_group_recorded",
+      },
+    },
+  ];
+
+  for (const collection of collections) {
+    addRecord({
+      sourceKey: collection.organization.key,
+      canonicalKey: "organization:" + collection.organization.key,
+      kind: "organization",
+      name: collection.organization.name,
+      summary:
+        "Collection-level organization/group context supplied by the pinned Hunter x Hunter community dataset.",
+      raw: { collection: collection.id },
+      sourceUrl: rawUrl(
+        upstream,
+        "src/data/" +
+          (collection.id === "chimeraAnts"
+            ? "chimeraAnts"
+            : collection.id) +
+          ".json",
+      ),
+      originCollection: collection.id,
+    });
+
+    for (const row of collection.rows) {
+      const id = numberText(row._id);
+      const name = text(row.name);
+      if (!id || !name) continue;
+      const characterKey =
+        "character:" + collection.id.toLowerCase() + ":" + id;
+      addRecord({
+        sourceKey: characterKey,
+        canonicalKey: characterKey,
+        kind: "character",
+        name,
+        aliases: [
+          ...stringArray(row.also_known_as),
+          text(row.japanese_name),
+        ].filter(Boolean),
+        summary:
+          "Hunter x Hunter character record from pinned static " +
+          collection.id +
+          " dataset.",
+        raw: row,
+        sourceUrl: rawUrl(
+          upstream,
+          "src/data/" +
+            (collection.id === "chimeraAnts"
+              ? "chimeraAnts"
+              : collection.id) +
+            ".json",
+        ),
+        originCollection: collection.id,
+      });
+      addRelation(
+        characterKey,
+        collection.organization.key,
+        collection.organization.relation,
+        "Collection membership/context from pinned upstream dataset; interpret according to source collection rather than as universal current membership.",
+      );
+
+      for (const nenType of stringArray(row.nen_type)) {
+        const nenKey = "nen-type:" + slug(nenType);
+        addRecord({
+          sourceKey: nenKey,
+          canonicalKey: "ability:" + nenKey,
+          kind: "ability",
+          name: nenType + " Nen",
+          summary: "Nen category listed by upstream character record.",
+          raw: { nenType },
+          sourceUrl: upstream.sourceUrl,
+          originCollection: collection.id + ".nen_type",
+        });
+        addRelation(
+          characterKey,
+          nenKey,
+          "nen_type_recorded",
+          "Verbatim upstream nen_type[] entry.",
+        );
+      }
+
+      for (const ability of stringArray(row.abilities)) {
+        const abilityKey = "ability:" + slug(ability);
+        addRecord({
+          sourceKey: abilityKey,
+          canonicalKey: abilityKey,
+          kind: "ability",
+          name: ability,
+          summary: "Named ability listed by upstream character record.",
+          raw: { name: ability },
+          sourceUrl: upstream.sourceUrl,
+          originCollection: collection.id + ".abilities",
+        });
+        addRelation(
+          characterKey,
+          abilityKey,
+          "ability_listed",
+          "Verbatim upstream abilities[] entry; mechanics and time availability remain source-bound.",
+        );
+      }
+    }
+  }
+
+  return seed(entry, [
+    {
+      id: upstream.id,
+      title: "Hunter x Hunter pinned static community database",
+      sourceUrl: upstream.sourceUrl,
+      rightsNotice:
+        "Community-maintained dataset. Preserve pinned repository provenance; imported assertions are not official franchise canon verification.",
+      importer: "hxh-static-v1",
+      metadata: {
+        repository: upstream.repository,
+        ref: upstream.ref,
+        paths: upstream.paths,
+      },
+      evidenceRole: "primary",
+      sourceNote:
+        "Deterministic static seed covering Hunters, Phantom Troupe, Chimera Ants, Nen types and named abilities.",
+      records: [...records.values()],
+      relations,
+    },
+  ]);
+}
+
 export function normalizeHunterXHunterJikan(
   response: unknown,
 ): SourceWorldSeed {
