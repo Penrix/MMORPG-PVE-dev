@@ -283,6 +283,13 @@ describe("Source World evidence enrichment", () => {
 describe("multi-world normalizers", () => {
   it("normalizes the rich One Piece graph with stable identity bridges and epistemic raw evidence", () => {
     const seed = normalizeOnePieceWikiGraph({
+      hakiVocabulary: {
+        values: {
+          observation: { labels: { en: "Observation Haki" } },
+          armament: { labels: { en: "Armament Haki" } },
+          conqueror: { labels: { en: "Conqueror's Haki" } },
+        },
+      },
       translations: {
         "character.monkey-d-luffy.name.common": "Monkey D. Luffy",
         "crew.straw-hat-pirates.name": "Straw Hat Pirates",
@@ -300,6 +307,10 @@ describe("multi-world normalizers", () => {
           canonical_name_key: "character.monkey-d-luffy.name.common",
           properties: {
             bounty: [{ value: 3000000000, since: "manga-chapter:1053" }],
+            haki_types: [
+              { value: "observation", since: "manga-chapter:597" },
+              { value: "armament", since: "manga-chapter:597" },
+            ],
           },
           relations: [
             { type: "member-of", target: "crew:straw-hat-pirates" },
@@ -327,6 +338,8 @@ describe("multi-world normalizers", () => {
                 actual_value: "mythical_zoan",
               },
             ],
+            awakened: [{ value: true, since: "manga-chapter:1044" }],
+            awakening_outcome: [{ value: "nika-form" }],
           },
           relations: [],
         },
@@ -353,6 +366,28 @@ describe("multi-world normalizers", () => {
           sourceKey: "devil-fruit:gomu-gomu-no-mi",
           kind: "ability",
         }),
+        expect.objectContaining({
+          sourceKey: "rule:one-piece:haki-system",
+          kind: "rule",
+          name: "Haki System",
+        }),
+        expect.objectContaining({
+          sourceKey: "rule:one-piece:haki:observation",
+          kind: "rule",
+          name: "Observation Haki",
+        }),
+        expect.objectContaining({
+          sourceKey: "rule:one-piece:devil-fruit-system",
+          kind: "rule",
+        }),
+        expect.objectContaining({
+          sourceKey: "rule:one-piece:devil-fruit-class:paramecia",
+          kind: "rule",
+        }),
+        expect.objectContaining({
+          sourceKey: "rule:one-piece:devil-fruit-class:mythical-zoan",
+          kind: "rule",
+        }),
         expect.objectContaining({ sourceKey: "arc:egghead", kind: "event" }),
       ]),
     );
@@ -370,6 +405,21 @@ describe("multi-world normalizers", () => {
         expect.objectContaining({
           relation: "ate-fruit",
           toKey: "devil-fruit:gomu-gomu-no-mi",
+        }),
+        expect.objectContaining({
+          fromKey: "character:monkey-d-luffy",
+          relation: "haki_type_recorded",
+          toKey: "rule:one-piece:haki:observation",
+        }),
+        expect.objectContaining({
+          fromKey: "devil-fruit:gomu-gomu-no-mi",
+          relation: "devil_fruit_class_recorded",
+          toKey: "rule:one-piece:devil-fruit-class:mythical-zoan",
+        }),
+        expect.objectContaining({
+          fromKey: "devil-fruit:gomu-gomu-no-mi",
+          relation: "awakening_recorded",
+          toKey: "rule:one-piece:devil-fruit-awakening",
         }),
       ]),
     );
@@ -413,8 +463,30 @@ describe("multi-world normalizers", () => {
       ],
       abilities: [
         {
+          id: "jutsu-hxh-nen",
+          name: "Nen",
+          type: "nen",
+          tags: ["fondamentale", "aura"],
+          longDescription: {
+            en: "Aura flows from the body's Aura Nodes; Nen is the system that controls it.",
+          },
+        },
+        {
+          id: "jutsu-hxh-ten",
+          name: "Ten",
+          type: "nen",
+          tags: ["fondamentale"],
+        },
+        {
+          id: "jutsu-hxh-gyo",
+          name: "Gyo",
+          type: "nen",
+          tags: ["avanzata"],
+        },
+        {
           id: "jutsu-hxh-jajanken",
           name: "Jajanken",
+          type: "enhancement",
           characterIds: ["char-hxh-gon"],
         },
       ],
@@ -442,6 +514,16 @@ describe("multi-world normalizers", () => {
         expect.objectContaining({ kind: "organization" }),
         expect.objectContaining({ kind: "location" }),
         expect.objectContaining({ kind: "ability" }),
+        expect.objectContaining({
+          sourceKey: "rule:hxh:nen-system",
+          kind: "rule",
+          name: "Nen System",
+        }),
+        expect.objectContaining({
+          sourceKey: "rule:hxh:nen-category:enhancement",
+          kind: "rule",
+          name: "Enhancement Nen",
+        }),
         expect.objectContaining({ kind: "event" }),
         expect.objectContaining({ kind: "activity" }),
       ]),
@@ -458,6 +540,11 @@ describe("multi-world normalizers", () => {
         "route_protagonist_recorded",
         "route_step_location_recorded",
         "route_step_event_recorded",
+        "power_branch_of_recorded",
+        "part_of_power_system_recorded",
+        "nen_category_recorded",
+        "fundamental_of_recorded",
+        "advanced_application_of_recorded",
       ]),
     );
   });
