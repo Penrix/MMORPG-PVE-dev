@@ -956,7 +956,12 @@ describe("object-grounded story authoring runtime", () => {
         stakeEntryIds: ["stake:runtime:medic"],
         reactionTargetEntityIds: ["medic"],
         informationReleaseSteps: [],
-        phaseTargets: [],
+        phaseTargets: [{
+          phase: "during" as const,
+          entityIds: ["xiuxin", "medic"],
+          authorIntent: "让专业人物亲自见证异常并形成独立判断",
+          expectationMovement: "把Reader已经看见的异常推进成世界内可见价格",
+        }],
         realityQuestion: "当前医疗职责与人物认知是否支持改判",
         observableStart: "秀信展示异常恢复与控制",
         expectedChange: "医疗忍者产生新的专业估值",
