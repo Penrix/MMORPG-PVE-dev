@@ -455,6 +455,7 @@ describe("StoryAuthoringService", () => {
           expect(serialized).toContain("意淫展开不是单选");
           expect(serialized).toContain("wish:reprice:recognition");
           expect(serialized).toContain("wish:reprice:circle");
+          expect(serialized).toContain("每种承重各算各的");
           const checked = validate({
             status: "READY",
             objectAnchorIds: ["object:xiuxin", "object:medic"],
@@ -471,8 +472,13 @@ describe("StoryAuthoringService", () => {
                 storyMove: "让医疗忍者亲自见证异常并开始重新估值",
               },
             ],
-            bearingEvidenceRefs: [
-              surfaceRef(objectField, "object:medic", "duty"),
+            bearingEvidence: [
+              {
+                requirementId: "bearing:medic-duty",
+                evidenceRefs: [
+                  surfaceRef(objectField, "object:medic", "duty"),
+                ],
+              },
             ],
             campNetwork: [
               {
@@ -611,8 +617,13 @@ describe("StoryAuthoringService", () => {
       )?.phase,
     ).toBe("realizing");
     expect(result.value.wishFulfillment?.threads).toHaveLength(2);
-    expect(result.value.bearingEvidenceRefs).toEqual([
-      surfaceRef(objectField, "object:medic", "duty"),
+    expect(result.value.bearingEvidence).toEqual([
+      {
+        requirementId: "bearing:medic-duty",
+        evidenceRefs: [
+          surfaceRef(objectField, "object:medic", "duty"),
+        ],
+      },
     ]);
     expect(result.value.authority).toBe("speculative");
   });
