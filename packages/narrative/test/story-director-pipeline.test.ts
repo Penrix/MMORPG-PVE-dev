@@ -219,12 +219,15 @@ function unitFor(field: StoryObjectField, status: "READY" | "BLOCKED_WORLD_GAP" 
       toPhase: "realizing",
       storyMove: "让医疗忍者亲自观察并开始改判",
     }] : [],
-    bearingEvidenceRefs: status === "READY" ? [
-      (() => {
-        const object = field.objects.find((item) => item.id === "object:medic")!;
-        return storyObjectSurfaceRef(object.id, object.surfaces[0]!);
-      })(),
-    ] : [],
+    bearingEvidence: status === "READY" ? [{
+      requirementId: "bearing:medic",
+      evidenceRefs: [
+        (() => {
+          const object = field.objects.find((item) => item.id === "object:medic")!;
+          return storyObjectSurfaceRef(object.id, object.surfaces[0]!);
+        })(),
+      ],
+    }] : [],
     upgradeLedger: ledger, campNetwork: [
       { entityId: "hero", camp: "主角", currentGoal: "升级", storyRole: "主动测试", currentBelief: "自己能做到", currentInterest: "拿高价任务" },
       { entityId: "medic", camp: "专业观察者", currentGoal: "按流程工作", storyRole: "旧认知下注", currentBelief: "秀信只是普通伤员", currentInterest: "维持专业判断" },
