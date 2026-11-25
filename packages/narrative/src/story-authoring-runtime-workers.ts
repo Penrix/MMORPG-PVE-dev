@@ -11,6 +11,7 @@ import {
   StoryUnitReactionTargetSchema,
   StoryStakeLedgerEntrySchema,
   StoryWorldGapSchema,
+  WishFulfillmentBearingEvidenceSchema,
   WishFulfillmentThreadAdvanceSchema,
   type ExpectationDesign,
   type StoryAuthoringSearch,
@@ -61,7 +62,7 @@ const StoryUnitDesignOutputSchema = z.object({
   storyProblem: z.string().min(1),
   worldGaps: z.array(StoryWorldGapSchema),
   wishFulfillmentAdvances: z.array(WishFulfillmentThreadAdvanceSchema),
-  bearingEvidenceRefs: z.array(z.string().min(1)),
+  bearingEvidence: z.array(WishFulfillmentBearingEvidenceSchema),
   campNetwork: z.array(StoryUnitCampMemberSchema),
   stakeLedger: z.array(StoryStakeLedgerEntrySchema),
   reactionTargets: z.array(StoryUnitReactionTargetSchema),
@@ -223,6 +224,7 @@ function searchOutputIssues(
 function storyUnitOutputIssues(
   value: StoryUnitDesignOutput,
   field: StoryObjectField,
+  creativeContext: StoryCreativeContext,
 ): string[] {
   const issues: string[] = [];
   const allowedObjects = new Set(field.objects.map((object) => object.id));
@@ -256,9 +258,66 @@ function storyUnitOutputIssues(
     value.informationRelease.map((item) => item.step),
   );
 
-  for (const evidenceRef of value.bearingEvidenceRefs) {
-    if (!allowedSurfaces.has(evidenceRef)) {
-      issues.push(`bearingEvidenceRefs: unknown surfaceRef ${evidenceRef}`);
+  const wishFrame = creativeContext.wishFulfillment;
+  const advancedThreadIds = new Set(
+    value.wishFulfillmentAdvances.map((advance) => advance.threadId),
+  );
+  const bearingRequirementById = new Map(
+    wishFrame?.bearingRequirements.map((requirement) => [
+      requirement.id,
+      requirement,
+    ]) ?? [],
+  );
+  const bearingBindingIds = new Set<string>();
+  for (const binding of value.bearingEvidence) {
+    if (bearingBindingIds.has(binding.requirementId)) {
+      issues.push(
+        `bearingEvidence: duplicate requirementId ${binding.requirementId}`,
+      );
+    }
+    bearingBindingIds.add(binding.requirementId);
+    const requirement = bearingRequirementById.get(binding.requirementId);
+    if (!requirement) {
+      issues.push(
+        `bearingEvidence: unknown requirementId ${binding.requirementId}`,
+      );
+    } else if (
+      !requirement.threadIds.some((threadId) =>
+        advancedThreadIds.has(threadId),
+      )
+    ) {
+      issues.push(
+        `bearingEvidence: requirement ${binding.requirementId} is unrelated to advanced threads`,
+      );
+    }
+    for (const evidenceRef of binding.evidenceRefs) {
+      if (!allowedSurfaces.has(evidenceRef)) {
+        issues.push(
+          `bearingEvidence[${binding.requirementId}]: unknown surfaceRef ${evidenceRef}`,
+        );
+      }
+    }
+  }
+  if (value.status === "READY" && wishFrame) {
+    for (const threadId of advancedThreadIds) {
+      const related = wishFrame.bearingRequirements.filter((requirement) =>
+        requirement.threadIds.includes(threadId),
+      );
+      if (related.length === 0) {
+        issues.push(
+          `wishFulfillmentAdvances: thread ${threadId} has no bearing requirement`,
+        );
+      }
+      for (const requirement of related) {
+        if (
+          requirement.status !== "grounded" &&
+          !bearingBindingIds.has(requirement.id)
+        ) {
+          issues.push(
+            `bearingEvidence: missing requirement ${requirement.id} for thread ${threadId}`,
+          );
+        }
+      }
     }
   }
   for (const objectId of value.objectAnchorIds) {
@@ -658,7 +717,7 @@ export class StoryAuthoringService {
           "Expectation Design 已经给出 Reader 需求、目标情绪、稀缺性方向、固有认知、主角优势、反应与收益方向。不得偷换这笔交易。",
           "creativeContext.wishFulfillment 是三模块共享的男频纵轴。Reader意淫什么、男主自己想要什么、怎么意淫、怎样实现、靠什么Reality承重，都必须继续参与当前Story设计。",
           "意淫展开不是单选。同一个高价人物/能力可以同时拥有认可、师承、需要、私人准入、公开背书、偏爱、政治联盟、拥有、命运改写等多条thread；当前StoryUnit只推进真正该推进的若干条，但不得把整束关系压成一个desiredRelation。",
-          "READY时 wishFulfillmentAdvances 必须指出本轮具体推进哪些thread以及Story怎样推进；bearingEvidenceRefs必须引用 Object Field 真实 surface ref，说明这轮幻想靠什么Reality、Reader预装价格、关系、规则或权限承重。",
+          "READY时 wishFulfillmentAdvances 必须指出本轮具体推进哪些thread以及Story怎样推进。bearingEvidence必须逐条写 requirementId + evidenceRefs：每个尚未grounded、且关联到本轮推进thread的承重要求都要用 Object Field 真实 surface ref 单独证明。证明‘这个人很贵’不能顺手证明‘她会给私人准入/政治背书/偏爱/命运改写’，每种承重各算各的。",
           "如果缺少关键承重就返回 BLOCKED_WORLD_GAP，让 Module 1 补世界。禁止用副作用、失败、净亏损、情感债或‘太爽所以要平衡’替代意淫承重。",
           "三阵营首先是编剧工具：只从 Object Field 中已经存在的人物划分当前友方/敌方/中立/其他利益位置。禁止为了‘需要一个识货人/反派/妹妹位’在第三模块临时造功能NPC。",
           "配角反应是爽点，但反应必须先定价。stakeLedger 是核心：每个关键配角先写 currentBelief/currentInterest，再写他因此做出的 stakeAction、压上的 stakeAssets、撤退成本、后续怎样加注，最后才设计 payoffReaction 与 settlementChange。不是只写‘他觉得主角不行’。",
@@ -702,7 +761,7 @@ export class StoryAuthoringService {
       },
       STORY_UNIT_DESIGN_CONTRACT,
       zodValidator(StoryUnitDesignOutputSchema, (value) =>
-        storyUnitOutputIssues(value, request.field),
+        storyUnitOutputIssues(value, request.field, request.creativeContext),
       ),
       signal,
     );
@@ -722,7 +781,7 @@ export class StoryAuthoringService {
         storyProblem: result.value.storyProblem,
         worldGaps: result.value.worldGaps,
         wishFulfillmentAdvances: result.value.wishFulfillmentAdvances,
-        bearingEvidenceRefs: result.value.bearingEvidenceRefs,
+        bearingEvidence: result.value.bearingEvidence,
         upgradeLedger: request.upgradeLedger,
         campNetwork: result.value.campNetwork,
         stakeLedger: result.value.stakeLedger,
