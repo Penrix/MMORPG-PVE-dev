@@ -249,6 +249,26 @@ describe("Module 3 World Atlas context adapter", () => {
           JSON.stringify(surface.value).includes("低位进入高价忍者圈"),
       ),
     ).toBe(true);
+
+    const abilitySurface = context.objects[0]!.surfaces.find(
+      (surface) => surface.facet === "ability" && surface.slotKey === "profile",
+    )!;
+    expect(abilitySurface.bearingKinds).toEqual(
+      expect.arrayContaining(["reality", "rule", "qualification"]),
+    );
+    const valueSurface = context.objects[0]!.surfaces.find(
+      (surface) =>
+        surface.facet === "value" &&
+        surface.slotKey === "appraisal:hero-value",
+    )!;
+    expect(valueSurface.bearingKinds).toEqual(
+      expect.arrayContaining(["reality", "price", "scarcity", "access"]),
+    );
+    const readerSurface = context.objects[0]!.surfaces.find(
+      (surface) => surface.facet === "reader_semantics",
+    )!;
+    expect(readerSurface.bearingKinds).toEqual(["reader_prior"]);
+
     expect(JSON.stringify(context.objects[0])).not.toContain(
       "原著未来会离开木叶",
     );
