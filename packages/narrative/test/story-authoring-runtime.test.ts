@@ -61,6 +61,13 @@ function field(scale: StoryObjectField["scale"] = "S03"): StoryObjectField {
             slotKey: "duty",
             value: "负责伤员复核",
           },
+          {
+            authority: "confirmed",
+            sourceId: "world-reality:medic",
+            facet: "value",
+            slotKey: "professional_price",
+            value: "医疗忍者的专业评级会影响伤员后续资源与任务资格",
+          },
         ],
         sourceRefs: ["world-reality:medic"],
       },
@@ -251,6 +258,15 @@ function creativeContextWithWish(currentField: StoryObjectField) {
           evidenceRefs: [],
           status: "candidate",
           raisesPriceBecause: "专业人物自己的判断变化能给男主制造可信社会价格",
+        },
+        {
+          id: "bearing:runtime:price",
+          threadIds: ["wish:runtime:recognition"],
+          kind: "price",
+          requirement: "这个专业人物的评级必须真的能改变男主后续资源与任务价格",
+          evidenceRefs: [],
+          status: "candidate",
+          raisesPriceBecause: "不是随便一个路人夸一句，而是有现实后果的专业改判",
         },
       ],
       settlementTargets: [
@@ -950,13 +966,28 @@ describe("object-grounded story authoring runtime", () => {
       characterExecutionRule: "characterization-constrained-performance" as const,
     };
 
+    const advances = [{
+      threadId: "wish:runtime:recognition",
+      toPhase: "realizing" as const,
+      storyMove: "让医疗忍者亲眼见证并开始改判",
+    }];
+    const medicDuty = surfaceRef(objectField, "object:medic", "duty");
+    const medicPrice = surfaceRef(
+      objectField,
+      "object:medic",
+      "professional_price",
+    );
+
     expect(() =>
       finalizeStoryUnitDesign(
         {
           ...baseDraft,
           wishFulfillmentAdvances: [],
-          bearingEvidenceRefs: [
-            surfaceRef(objectField, "object:medic", "duty"),
+          bearingEvidence: [
+            {
+              requirementId: "bearing:runtime:medic",
+              evidenceRefs: [medicDuty],
+            },
           ],
         },
         objectField,
@@ -969,29 +1000,48 @@ describe("object-grounded story authoring runtime", () => {
       finalizeStoryUnitDesign(
         {
           ...baseDraft,
-          wishFulfillmentAdvances: [{
-            threadId: "wish:runtime:recognition",
-            toPhase: "realizing",
-            storyMove: "让医疗忍者亲眼见证并开始改判",
-          }],
-          bearingEvidenceRefs: [],
+          wishFulfillmentAdvances: advances,
+          bearingEvidence: [
+            {
+              requirementId: "bearing:runtime:medic",
+              evidenceRefs: [medicDuty],
+            },
+          ],
         },
         objectField,
         exp,
         context,
       ),
-    ).toThrow("story_authoring.ready_without_bearing_evidence");
+    ).toThrow(
+      "story_authoring.missing_bearing_evidence:bearing:runtime:price",
+    );
+
+    expect(() =>
+      finalizeStoryUnitDesign(
+        {
+          ...baseDraft,
+          wishFulfillmentAdvances: advances,
+          bearingEvidenceRefs: [medicDuty],
+        },
+        objectField,
+        exp,
+        context,
+      ),
+    ).toThrow("story_authoring.ambiguous_flat_bearing_evidence");
 
     const accepted = finalizeStoryUnitDesign(
       {
         ...baseDraft,
-        wishFulfillmentAdvances: [{
-          threadId: "wish:runtime:recognition",
-          toPhase: "realizing",
-          storyMove: "让医疗忍者亲眼见证并开始改判",
-        }],
-        bearingEvidenceRefs: [
-          surfaceRef(objectField, "object:medic", "duty"),
+        wishFulfillmentAdvances: advances,
+        bearingEvidence: [
+          {
+            requirementId: "bearing:runtime:medic",
+            evidenceRefs: [medicDuty],
+          },
+          {
+            requirementId: "bearing:runtime:price",
+            evidenceRefs: [medicPrice],
+          },
         ],
       },
       objectField,
@@ -1004,6 +1054,16 @@ describe("object-grounded story authoring runtime", () => {
       )?.phase,
     ).toBe("realizing");
     expect(accepted.wishFulfillment?.threads).toHaveLength(2);
+    expect(
+      accepted.wishFulfillment?.bearingRequirements.find(
+        (requirement) => requirement.id === "bearing:runtime:medic",
+      ),
+    ).toMatchObject({ status: "grounded", evidenceRefs: [medicDuty] });
+    expect(
+      accepted.wishFulfillment?.bearingRequirements.find(
+        (requirement) => requirement.id === "bearing:runtime:price",
+      ),
+    ).toMatchObject({ status: "grounded", evidenceRefs: [medicPrice] });
   });
 
   it("allows S03 to stop on a real world gap instead of inventing a seed", () => {
