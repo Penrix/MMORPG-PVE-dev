@@ -210,7 +210,7 @@ export async function generateSourceWorldProduction(
   input: SourceWorldProductionGenerateInput,
   options: SourceWorldProductionGenerateOptions = {},
 ): Promise<WorldPackDocument> {
-  const request = WorldPackRequestSchema.parse(input.request);
+  let request = WorldPackRequestSchema.parse(input.request);
   const worlds = new SqliteUnifiedSourceWorldRepository(database);
   const world = worlds.getWorld(input.worldId);
   if (!world)
@@ -236,6 +236,91 @@ export async function generateSourceWorldProduction(
       422,
     );
   }
+
+  if (
+    !request.wishFulfillment &&
+    (!options.generateOverride || options.planWishFulfillmentOverride)
+  ) {
+    const planningPrompt = JSON.stringify(
+      {
+        sourceWorld: {
+          id: world.id,
+          name: world.name,
+          kind: world.kind,
+          description: world.description,
+          cognitiveMother: worlds.getCognitiveMother(input.worldId),
+        },
+        authorRequest: {
+          premise: request.premise,
+          focus: request.focus,
+          genre: request.genre,
+          worldTime: request.worldTime,
+          instruction: request.instruction,
+        },
+        selectionPolicy: WORLD_BUILDER_SELECTION_POLICY,
+        wishFulfillmentRootGuard: WISH_FULFILLMENT_ROOT_GUARD,
+        currentSourceObjects: existingWorld.nodes.map((node) => ({
+          ref: node.localId,
+          sourceKey: node.existingSourceKey,
+          name: node.name,
+          kind: node.atlasKind ?? node.type,
+          value: node.value,
+          access: node.access,
+          motive: node.motive,
+          currentActivity: node.currentActivity,
+          readerSemantics: node.readerSemantics,
+          description: node.description.slice(0, 1_500),
+        })),
+        currentSourceRelations: existingWorld.links,
+      },
+      null,
+      2,
+    );
+    const plannedRaw = options.planWishFulfillmentOverride
+      ? await options.planWishFulfillmentOverride({
+          worldId: input.worldId,
+          request,
+          prompt: planningPrompt,
+          existingWorld,
+        })
+      : await callSourceWorldWishPlanner(
+          database,
+          planningPrompt,
+          existingWorld,
+          options,
+        );
+    const planned = SourceWishFulfillmentPlanningOutputSchema.safeParse(
+      plannedRaw,
+    );
+    if (!planned.success) {
+      throw serviceLikeError(
+        "source.world.production.invalid_wish_fulfillment_plan",
+        planned.error.issues
+          .map(
+            (issue) =>
+              `${issue.path.join(".") || "root"}: ${issue.message}`,
+          )
+          .join("; "),
+        422,
+      );
+    }
+    const planningIssues = sourceWishPlanningIssues(
+      planned.data,
+      existingWorld,
+    );
+    if (planningIssues.length > 0) {
+      throw serviceLikeError(
+        "source.world.production.invalid_wish_fulfillment_plan",
+        planningIssues.join("; "),
+        422,
+      );
+    }
+    request = WorldPackRequestSchema.parse({
+      ...request,
+      wishFulfillment: finalizeSourceReusableWishFulfillment(planned.data),
+    });
+  }
+
   const wishFulfillmentOrder = request.wishFulfillment
     ? worldProductionWorkOrderForWishFulfillment(
         request.wishFulfillment,
@@ -361,6 +446,7 @@ export async function generateSourceWorldProduction(
     op.workshop,
     op.subjectRef,
     knownSourceKeys,
+    op,
   );
   const combined = previewProductionReality(existingWorld, merged.document);
   if (!hasWorldWorkshopOutput(op.workshop, existingWorld, combined))
@@ -379,6 +465,8 @@ export async function generateSourceWorldProduction(
           workshop: op.workshop,
           subjectRef: op.subjectRef,
           changedRefs: merged.step.changedRefs,
+          wishFulfillmentThreadIds: op.wishFulfillmentThreadIds,
+          bearingRequirementIds: op.bearingRequirementIds,
         },
       ],
       playtestedPaths: playtestWorld(combined, request).interactionPaths,
