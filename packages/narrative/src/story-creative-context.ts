@@ -419,24 +419,43 @@ function wishGainMatches(targetGain: string, retainedGain: string): boolean {
 
 function settleWishFulfillment(
   current: StoryCreativeFrameState["wishFulfillment"],
-  retainedGains: readonly string[],
+  confirmedRealityClaims: readonly string[],
+  plannedRetainedGains: readonly string[],
 ): StoryCreativeFrameState["wishFulfillment"] {
-  if (!current || retainedGains.length === 0) return current;
+  if (!current || confirmedRealityClaims.length === 0) return current;
+
+  const realizedTargets = current.settlementTargets.filter((target) =>
+    confirmedRealityClaims.some((claim) =>
+      wishGainMatches(target.targetGain, claim),
+    ),
+  );
+  if (realizedTargets.length === 0) return current;
+
+  const realizedThreadIds = new Set(
+    realizedTargets.map((target) => target.threadId),
+  );
   const retainedThreadIds = new Set(
-    current.settlementTargets
+    realizedTargets
       .filter((target) =>
-        retainedGains.some((gain) => wishGainMatches(target.targetGain, gain)),
+        plannedRetainedGains.some((gain) =>
+          wishGainMatches(target.targetGain, gain),
+        ),
       )
       .map((target) => target.threadId),
   );
-  if (retainedThreadIds.size === 0) return current;
+
   return {
     ...current,
-    threads: current.threads.map((thread) =>
-      retainedThreadIds.has(thread.id)
-        ? { ...thread, phase: "retained" as const }
-        : thread,
-    ),
+    threads: current.threads.map((thread) => {
+      if (thread.phase === "retained") return thread;
+      if (retainedThreadIds.has(thread.id)) {
+        return { ...thread, phase: "retained" as const };
+      }
+      if (realizedThreadIds.has(thread.id)) {
+        return { ...thread, phase: "realized" as const };
+      }
+      return thread;
+    }),
   };
 }
 
@@ -446,6 +465,11 @@ export interface ApplySettlementToCreativeFrameStateInput {
   handoff: StoryChapterProductionHandoff;
   frameOutlineNodeId: string;
   updatedAt: string;
+  /**
+   * Claims actually confirmed by the accepted Grounded Settlement.
+   * Planned payoff / retained-gain directions are not Reality evidence.
+   */
+  confirmedRealityClaims: readonly string[];
   advanceUpgradeStep?: boolean;
 }
 
@@ -466,7 +490,7 @@ export function applySettlementToCreativeFrameState(
   const seedEntityIds = new Set<string>();
   const payoffThreadIds = new Set<string>();
   const chargingThreadIds = new Set<string>();
-  const retainedGains: string[] = [];
+  const plannedRetainedGains: string[] = [];
 
   for (const directive of handoff.readerTimeDirectives) {
     if (directive.action === "payoff") {
@@ -479,7 +503,7 @@ export function applySettlementToCreativeFrameState(
       directive.reactionTargetEntityIds.forEach((id) => seedEntityIds.add(id));
     }
     if (directive.retainedGainOpportunity?.trim()) {
-      retainedGains.push(directive.retainedGainOpportunity);
+      plannedRetainedGains.push(directive.retainedGainOpportunity);
     }
   }
 
@@ -501,7 +525,8 @@ export function applySettlementToCreativeFrameState(
       : ledger,
     wishFulfillment: settleWishFulfillment(
       currentState.wishFulfillment,
-      retainedGains,
+      input.confirmedRealityClaims,
+      plannedRetainedGains,
     ),
     stakeLedger: currentState.stakeLedger.map((entry) => {
       if (entry.state === "settled") return entry;
@@ -522,7 +547,14 @@ export function applySettlementToCreativeFrameState(
       }
       return thread;
     }),
-    retainedAssets: [...currentState.retainedAssets, ...retainedGains],
+    retainedAssets: [
+      ...currentState.retainedAssets,
+      ...plannedRetainedGains.filter((gain) =>
+        input.confirmedRealityClaims.some((claim) =>
+          wishGainMatches(gain, claim),
+        ),
+      ),
+    ],
     realityFingerprint: handoff.realityFingerprint,
     updatedAt: input.updatedAt,
   });
