@@ -1,9 +1,20 @@
 import type {
+  BenchmarkIncubateRequest,
+  BenchmarkIncubateResponse,
+  CreateProjectFromBenchmarkProposalRequest,
+  CreateProjectFromBenchmarkProposalResponse,
   InspirationChannel,
   InspirationRollRequest,
   InspirationRollResponse,
   InspirationCatalogResponse,
   CreateProjectFromInspirationRequest,
+  MarketM03Material,
+  MarketPlatform,
+  MarketRadarBooksResponse,
+  SaveMarketM03Request,
+  SaveMarketM03Response,
+  Tr01AnalyzeRequest,
+  Tr01AnalyzeResponse,
   WorldAtlasCardKind,
   WorldPackDocument,
   WorldPackRecord,
@@ -4016,4 +4027,141 @@ export async function createProjectFromInspiration(
     ...jsonRequest("POST", input),
     ...(signal ? { signal } : {}),
   });
+}
+
+/* 市场新书雷达 · TR-01 高权重入 M03 · 对标微创新开书。 */
+export async function getMarketRadarBooks(
+  query: {
+    windowDays?: number;
+    platform?: MarketPlatform;
+    category?: string;
+    search?: string;
+    limit?: number;
+  } = {},
+  signal?: AbortSignal,
+): Promise<MarketRadarBooksResponse> {
+  const params = new URLSearchParams();
+  if (query.windowDays !== undefined) params.set("windowDays", String(query.windowDays));
+  if (query.platform) params.set("platform", query.platform);
+  if (query.category) params.set("category", query.category);
+  if (query.search) params.set("search", query.search);
+  if (query.limit !== undefined) params.set("limit", String(query.limit));
+  const suffix = params.size ? `?${params.toString()}` : "";
+  return requestJson(`/api/market-radar/books${suffix}`, signal ? { signal } : {});
+}
+
+export async function getMarketM03Trends(
+  signal?: AbortSignal,
+): Promise<{ total: number; cards: MarketM03Material[] }> {
+  return requestJson("/api/market-radar/m03-trends", signal ? { signal } : {});
+}
+
+export async function runTr01MarketAnalysis(
+  input: Partial<Tr01AnalyzeRequest>,
+  signal?: AbortSignal,
+): Promise<Tr01AnalyzeResponse> {
+  return requestJson("/api/market-radar/tr01-analyze", {
+    ...jsonRequest("POST", input),
+    ...(signal ? { signal } : {}),
+  });
+}
+
+export async function saveMarketM03Trends(
+  input: SaveMarketM03Request,
+  signal?: AbortSignal,
+): Promise<SaveMarketM03Response> {
+  return requestJson("/api/market-radar/m03-trends/save", {
+    ...jsonRequest("POST", input),
+    ...(signal ? { signal } : {}),
+  });
+}
+
+export async function incubateBenchmarkBook(
+  input: Partial<BenchmarkIncubateRequest>,
+  signal?: AbortSignal,
+): Promise<BenchmarkIncubateResponse> {
+  return requestJson("/api/market-radar/benchmark-incubate", {
+    ...jsonRequest("POST", input),
+    ...(signal ? { signal } : {}),
+  });
+}
+
+export async function createProjectFromBenchmarkProposal(
+  input: CreateProjectFromBenchmarkProposalRequest,
+  signal?: AbortSignal,
+): Promise<CreateProjectFromBenchmarkProposalResponse> {
+  return requestJson("/api/market-radar/create-project", {
+    ...jsonRequest("POST", input),
+    ...(signal ? { signal } : {}),
+  });
+}
+
+/* 第二模块：全局 M03 素材库（5519 张）统计、检索与单卡读取。 */
+export interface M03LibraryStatsDto {
+  total: number;
+  embeddingCount: number;
+  byTier: Record<string, number>;
+  byStatus: Record<string, number>;
+  types: Array<{ type: string; count: number }>;
+}
+
+export interface M03LibraryCardDto {
+  id: string;
+  libraryId: string;
+  materialId: string;
+  materialType: string;
+  name: string;
+  summary: string;
+  content?: string;
+  status: string;
+  curationTier: "curated" | "coarse" | "market_trend";
+  curationStage: string | null;
+  trendWeight: number;
+  callWhen: string[];
+  tags: string[];
+  sourcePath: string;
+  updatedAt: string;
+}
+
+export async function getM03LibraryStats(
+  signal?: AbortSignal,
+): Promise<M03LibraryStatsDto> {
+  return requestJson("/api/m03/stats", signal ? { signal } : {});
+}
+
+export async function listM03LibraryCards(
+  query: {
+    q?: string;
+    type?: string;
+    tier?: "all" | "curated" | "coarse" | "market_trend";
+    status?: "all" | "active" | "candidate" | "merged" | "retired";
+    limit?: number;
+    offset?: number;
+  } = {},
+  signal?: AbortSignal,
+): Promise<{
+  total: number;
+  limit: number;
+  offset: number;
+  cards: M03LibraryCardDto[];
+}> {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.type) params.set("type", query.type);
+  if (query.tier) params.set("tier", query.tier);
+  if (query.status) params.set("status", query.status);
+  if (query.limit !== undefined) params.set("limit", String(query.limit));
+  if (query.offset !== undefined) params.set("offset", String(query.offset));
+  const suffix = params.size ? `?${params.toString()}` : "";
+  return requestJson(`/api/m03/cards${suffix}`, signal ? { signal } : {});
+}
+
+export async function getM03LibraryCard(
+  id: string,
+  signal?: AbortSignal,
+): Promise<M03LibraryCardDto> {
+  return requestJson(
+    `/api/m03/cards/${encodeURIComponent(id)}`,
+    signal ? { signal } : {},
+  );
 }

@@ -1,4 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import cors from "@fastify/cors";
 import { HealthResponseSchema } from "@narralume/contracts";
@@ -49,6 +52,11 @@ import {
   registerStoryRoutes,
   registerInspirationSlotRoutes,
   type InspirationLlmGenerator,
+  parseNewbookJsonl,
+  registerMarketRadarRoutes,
+  registerM03LibraryRoutes,
+  type MarketRadarLlmOverride,
+  type NewbookPoolLoader,
   registerStudioRoutes,
   registerTemplateRoutes,
   seedEnvironmentModelConfig,
@@ -70,6 +78,25 @@ export interface BuildAppOptions {
   narrativeModelClient?: NarrativeModelClient;
   enableRunWorker?: boolean;
   inspirationGenerateWithLlm?: InspirationLlmGenerator;
+  marketRadarGenerateOverride?: MarketRadarLlmOverride;
+  loadNewbookPool?: NewbookPoolLoader;
+}
+
+const DEFAULT_NEWBOOK_DATASET_DIR = fileURLToPath(
+  new URL("../../../datasets/newbook-rankings", import.meta.url),
+);
+
+function loadLocalNewbookPool(): ReturnType<NewbookPoolLoader> {
+  const jsonlPath = resolve(DEFAULT_NEWBOOK_DATASET_DIR, "newbooks.jsonl");
+  if (!existsSync(jsonlPath)) {
+    return { updatedAt: null, snapshotDate: null, books: [] };
+  }
+  const statusPath = resolve(DEFAULT_NEWBOOK_DATASET_DIR, "status.json");
+  const jsonl = readFileSync(jsonlPath, "utf8");
+  const status = existsSync(statusPath)
+    ? readFileSync(statusPath, "utf8")
+    : null;
+  return parseNewbookJsonl(jsonl, status);
 }
 
 // prettier-ignore
@@ -342,6 +369,14 @@ export async function buildApp(
       ? {}
       : { generateWithLlm: options.inspirationGenerateWithLlm }),
   });
+  registerMarketRadarRoutes(routes, database, {
+    environment,
+    loadNewbookPool: options.loadNewbookPool ?? loadLocalNewbookPool,
+    ...(options.marketRadarGenerateOverride === undefined
+      ? {}
+      : { generateOverride: options.marketRadarGenerateOverride }),
+  });
+  registerM03LibraryRoutes(routes, database);
   registerProjectCoverRoutes(routes, database);
   registerAgentSkillRoutes(routes, database);
   registerProviderRoutes(routes, database, { environment });

@@ -2,6 +2,8 @@ import type { shell as shellZh } from "../zh/shell";
 
 export const shell: typeof shellZh = {
   nav: {
+    marketRadar: "Market Radar",
+    marketRadarBlurb: "Newbook radar, TR-01 trends to M03, benchmark micro-innovation",
     inspirations: "Inspiration Slots",
     inspirationsBlurb: "Roll four story hooks, lock favorites, create a book",
     shelf: "Shelf",

@@ -27,6 +27,7 @@ export * from "./story-runtime.js";
 export * from "./story-creative-context.js";
 export * from "./creative-material.js";
 export * from "./inspiration-slot-machine.js";
+export * from "./market-radar.js";
 
 export const HealthResponseSchema = z.object({
   status: z.literal("ok"),

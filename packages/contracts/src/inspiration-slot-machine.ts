@@ -50,6 +50,12 @@ export const InspirationStarterBlueprintSchema = z.object({
   advantageHook: z.string().min(1),
   targetCircle: z.string().min(1),
   openingTension: z.string().min(1),
+  /** What he actually walks away with the first time. This is the outline goal. */
+  firstTake: z.string().min(1).optional(),
+  /** Who shows up because of that, carrying something more valuable. */
+  inbound: z.string().min(1).optional(),
+  packId: z.string().min(1).optional(),
+  packLabel: z.string().min(1).optional(),
 });
 
 export const InspirationSeedCardSchema = z
@@ -65,6 +71,9 @@ export const InspirationSeedCardSchema = z
       ),
     slots: InspirationSlotCollectionSchema,
     starterBlueprint: InspirationStarterBlueprintSchema,
+    /** A seed is one chain from one pack; it is never stitched across packs. */
+    chainId: z.string().min(1).optional(),
+    packId: z.string().min(1).optional(),
   })
   .superRefine((card, context) => {
     for (const slot of InspirationSlotKeySchema.options) {

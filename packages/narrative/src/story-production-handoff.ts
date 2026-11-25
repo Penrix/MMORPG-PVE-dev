@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { sha256Hex } from "@narralume/domain";
 
 import type {
   ReaderTimeAllocation,
@@ -71,7 +71,7 @@ const READER_TIME_WEIGHT: Record<
 };
 
 function digest(value: unknown): string {
-  return createHash("sha256").update(JSON.stringify(value)).digest("hex");
+  return sha256Hex(JSON.stringify(value));
 }
 
 function visibleDecisions(

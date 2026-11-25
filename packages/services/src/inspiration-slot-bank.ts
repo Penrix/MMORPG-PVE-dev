@@ -6,11 +6,17 @@ import {
   type InspirationChannel,
   type InspirationRollRequest,
   type InspirationRollResponse,
+  type InspirationSeedCard,
   type InspirationSlotItem,
   type InspirationSlotKey,
 } from "@narralume/contracts";
 import type { NarrativeDatabase } from "@narralume/persistence";
-import { BUILTIN_INSPIRATION_SLOT_BANK } from "./inspiration-slot-bank-data.js";
+import {
+  BUILTIN_INSPIRATION_SLOT_BANK,
+  INSPIRATION_CHAINS,
+  hookFor,
+  type InspirationChain,
+} from "./inspiration-slot-bank-data.js";
 
 export { BUILTIN_INSPIRATION_SLOT_BANK } from "./inspiration-slot-bank-data.js";
 
@@ -227,31 +233,6 @@ interface CyclingDrawState {
   remaining: InspirationSlotItem[];
 }
 
-function createCyclingDrawState(): CyclingDrawState {
-  return { round: -1, remaining: [] };
-}
-
-function drawCyclingItem(
-  pool: readonly InspirationSlotItem[],
-  state: CyclingDrawState,
-  keyword: string,
-  random: () => number,
-): InspirationSlotItem {
-  if (!pool.length) throw new Error("inspiration.empty_slot_pool");
-  if (!state.remaining.length) {
-    state.round += 1;
-    state.remaining = [...pool];
-  }
-  const selected = weightedDraw(state.remaining, keyword, random);
-  state.remaining = state.remaining.filter((item) => item.id !== selected.id);
-  // A recycled source card is the same material, but a new dealt instance.
-  // This keeps source/materialId traceable while making the exact four-slot
-  // deal signature unique even when three other slots are locked.
-  return state.round === 0
-    ? selected
-    : { ...selected, id: `${selected.id}:deal-round-${state.round + 1}` };
-}
-
 interface PriorityDrawState extends CyclingDrawState {
   phase: "primary" | "fallback";
 }
@@ -292,31 +273,106 @@ function drawPriorityItem(
     : { ...selected, id: `${selected.id}:deal-round-${state.round + 1}` };
 }
 
-function makeSentence(
-  slots: Record<InspirationSlotKey, InspirationSlotItem>,
-): string {
-  const identity = slots.identity.phrase.replace(/^我是/u, "");
-  const anomaly = slots.anomalyRule.phrase.replace(/^(?:我能|能够)/u, "");
-  const circle = slots.highValueCircle.phrase;
-  const twist = slots.twistPressure.phrase;
-  const pressure = TURN.test(twist) ? twist : "没想到" + twist;
-  const sentence =
-    "我是" +
-    identity +
-    "，偶然发现自己" +
-    anomaly +
-    "，借此闯入" +
-    circle +
-    "，" +
-    pressure.replace(/^[，。\s]+/u, "") +
-    (/[。！？]$/u.test(pressure) ? "" : "。");
-  if (
-    !TURN.test(sentence) ||
-    SLOT_KEYS.some((key) => !slots[key].phrase.trim())
-  ) {
-    throw new Error("inspiration.hollow_seed");
+const CHAIN_SLOT_FIELDS = {
+  identity: "identity",
+  anomalyRule: "leverage",
+  highValueCircle: "gatekeeper",
+  twistPressure: "inbound",
+} as const satisfies Record<InspirationSlotKey, keyof InspirationChain>;
+
+/**
+ * The card face is the hook; the five-segment chain stays behind it and only
+ * feeds the outline. Do not concatenate the chain into the sentence.
+ */
+function sentenceFor(chain: InspirationChain): string {
+  const hook = hookFor(chain);
+  if (!TURN.test(hook) || !hook.startsWith("我是")) {
+    throw new Error("inspiration.hollow_seed:" + chain.id);
   }
-  return sentence;
+  return hook;
+}
+
+function chainSlots(
+  chain: InspirationChain,
+): Record<InspirationSlotKey, InspirationSlotItem> {
+  return Object.fromEntries(
+    SLOT_KEYS.map((slot) => {
+      const phrase = chain[CHAIN_SLOT_FIELDS[slot]] as string;
+      const item: InspirationSlotItem = {
+        id: "chain:" + chain.id + ":" + slot,
+        slot,
+        channels: [chain.channel],
+        label: phrase,
+        phrase,
+        sourceLibrary: "slot-bank",
+        materialType: null,
+        tags: [chain.channel, slot, chain.packId],
+      };
+      return [slot, item];
+    }),
+  ) as Record<InspirationSlotKey, InspirationSlotItem>;
+}
+
+function cardFromChain(
+  input: InspirationRollRequest,
+  chain: InspirationChain,
+  index: number,
+): InspirationSeedCard {
+  const slots = chainSlots(chain);
+  return InspirationSeedCardSchema.parse({
+    id: `inspiration:chain:${input.seed ?? "random"}:${index + 1}:${chain.id}`,
+    channel: input.channel,
+    sentence: sentenceFor(chain),
+    slots,
+    starterBlueprint: {
+      suggestedTitle: "我在" + chain.gatekeeper + "的第一笔",
+      genreLabel:
+        input.channel === "female"
+          ? "女频奇遇"
+          : input.channel === "male"
+            ? "男频奇遇"
+            : "奇遇幻想",
+      readerNeed:
+        input.channel === "female" ? "偏爱与主动权" : "得意与阶层跃升",
+      targetEmotion:
+        input.channel === "female" ? "被偏爱、掌握命运" : "得意、惊艳、赢麻了",
+      protagonistIdentity: chain.identity,
+      advantageHook: chain.leverage,
+      targetCircle: chain.gatekeeper,
+      openingTension: chain.inbound,
+      firstTake: chain.firstTake,
+      inbound: chain.inbound,
+      packId: chain.packId,
+      packLabel: chain.packLabel,
+    },
+    chainId: chain.id,
+    packId: chain.packId,
+  });
+}
+
+function chainMatchesLocks(
+  chain: InspirationChain,
+  locked: NonNullable<InspirationRollRequest["lockedSlots"]>,
+  channel: InspirationChannel,
+): boolean {
+  for (const slot of SLOT_KEYS) {
+    const fixed = locked[slot];
+    if (!fixed) continue;
+    if (!fixed.channels.includes(channel)) return false;
+    if ((chain[CHAIN_SLOT_FIELDS[slot]] as string) !== fixed.phrase) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function shuffled<T>(items: readonly T[], random: () => number): T[] {
+  const copy = [...items];
+  for (let index = copy.length - 1; index > 0; index--) {
+    const swap = Math.floor(random() * (index + 1));
+    [copy[index], copy[swap]] = [copy[swap]!, copy[index]!];
+  }
+  return copy;
 }
 
 function materialPool(
@@ -406,6 +462,11 @@ export function dealMaterialBundlesForLlm(
  * until its pool is exhausted; later shuffle rounds may reuse source cards,
  * while dealt item IDs keep every four-slot signature globally unique.
  */
+/**
+ * Deals whole chains. A card is one story from one pack; it is never stitched
+ * from four unrelated pools. The requested count is capped by how many
+ * compatible chains exist, because a repeated story is worse than a short batch.
+ */
 export function rollInspirationSeeds(
   database: NarrativeDatabase,
   request: InspirationRollRequest,
@@ -414,69 +475,17 @@ export function rollInspirationSeeds(
   const m03 = input.useM03 ? loadM03SlotItems(database, input.projectId) : [];
   const stats = inspirationPoolStats(input.channel, m03);
   const random = seededRandom(input.seed);
-  const available = [...BUILTIN_INSPIRATION_SLOT_BANK, ...m03].filter((item) =>
-    item.channels.includes(input.channel),
-  );
   const locked = input.lockedSlots ?? {};
-  const keyword = input.keyword ?? input.topic ?? "";
-  const states = Object.fromEntries(
-    SLOT_KEYS.map((slot) => [slot, createCyclingDrawState()]),
-  ) as Record<InspirationSlotKey, CyclingDrawState>;
-  const pools = Object.fromEntries(
-    SLOT_KEYS.map((slot) => [
-      slot,
-      available.filter((item) => item.slot === slot),
-    ]),
-  ) as Record<InspirationSlotKey, InspirationSlotItem[]>;
-  const signatures = new Set<string>();
-
-  const cards = Array.from({ length: input.count }, (_, index) => {
-    const slots = Object.fromEntries(
-      SLOT_KEYS.map((slot) => {
-        if (locked[slot]) return [slot, locked[slot]];
-        return [
-          slot,
-          drawCyclingItem(pools[slot], states[slot], keyword, random),
-        ];
-      }),
-    ) as Record<InspirationSlotKey, InspirationSlotItem>;
-    const signature = SLOT_KEYS.map((slot) => slots[slot].id).join("|");
-    if (signatures.has(signature))
-      throw new Error("inspiration.duplicate_slot_signature");
-    signatures.add(signature);
-    const sentence = makeSentence(slots);
-    return InspirationSeedCardSchema.parse({
-      id:
-        "inspiration:" +
-        (input.seed ?? "random") +
-        ":" +
-        String(index + 1) +
-        ":" +
-        Math.floor(random() * 0xffffffff).toString(16),
-      channel: input.channel,
-      sentence,
-      slots,
-      starterBlueprint: {
-        suggestedTitle: "我在" + slots.highValueCircle.label + "的秘密",
-        genreLabel:
-          input.channel === "female"
-            ? "女频奇遇"
-            : input.channel === "male"
-              ? "男频奇遇"
-              : "奇遇幻想",
-        readerNeed:
-          input.channel === "female" ? "偏爱与主动权" : "得意与阶层跃升",
-        targetEmotion:
-          input.channel === "female"
-            ? "被偏爱、掌握命运"
-            : "得意、惊艳、赢麻了",
-        protagonistIdentity: slots.identity.phrase,
-        advantageHook: slots.anomalyRule.phrase,
-        targetCircle: slots.highValueCircle.phrase,
-        openingTension: slots.twistPressure.phrase,
-      },
-    });
-  });
+  const compatible = INSPIRATION_CHAINS.filter(
+    (chain) =>
+      chain.channel === input.channel &&
+      chainMatchesLocks(chain, locked, input.channel),
+  );
+  if (!compatible.length) throw new Error("inspiration.no_chain_for_locks");
+  const count = Math.min(input.count, compatible.length);
+  const cards = shuffled(compatible, random)
+    .slice(0, count)
+    .map((chain, index) => cardFromChain(input, chain, index));
   return InspirationRollResponseSchema.parse({
     channel: input.channel,
     mode: "local",

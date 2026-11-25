@@ -4,207 +4,573 @@ import type {
   InspirationSlotKey,
 } from "@narralume/contracts";
 
-/** Source-of-truth for portable, world-agnostic slot phrases. Add cards here, never to Canon. */
-const phrases: Record<
-  InspirationSlotKey,
-  Record<InspirationChannel, readonly string[]>
-> = {
-  identity: {
-    male: [
-      "古董街鉴定学徒",
-      "夜间急诊护工",
-      "废品站小老板",
-      "宗门药渣杂役",
-      "典当行掌柜",
-      "边军粮草账房",
-      "地下拳馆擦地工",
-      "皇家猎场驯马奴",
-      "仙门藏经阁扫地童子",
-      "港口走私船修理工",
-      "旧城殡仪馆背尸人",
-      "电视台深夜档剪辑助理",
-    ],
-    female: [
-      "豪门婚礼策划师",
-      "顶流剧组服装助理",
-      "旧城区私人化妆师",
-      "高奢珠宝维修学徒",
-      "世家祠堂抄经女史",
-      "贵族学院代课老师",
-      "宫廷绣坊末等绣娘",
-      "财阀家族私人营养师",
-      "拍卖行遗物整理师",
-      "古堡里的临时女管家",
-      "电竞俱乐部战队分析员",
-      "仙门灵兽园喂养女弟子",
-    ],
-    hybrid: [
-      "老城区按摩师",
-      "午夜便利店值班员",
-      "乡镇兽医",
-      "流动餐车厨师",
-      "深夜电台接线员",
-      "废弃游乐园守夜人",
-      "城中村修锁师傅",
-      "地铁末班车司机",
-      "山村药铺学徒",
-      "旧书店收银员",
-      "民俗博物馆库房管理员",
-      "暴雨天的道路救援员",
-    ],
+/**
+ * One inspiration = one chain, not four independent slots.
+ *
+ * identity    where he stands (S0)
+ * leverage    the rule that lets him move
+ * gatekeeper  who owns the thing he wants, and what gate it sits behind
+ * firstTake   what he actually walks away with the first time
+ * inbound     who shows up because of that, carrying something more valuable
+ *
+ * A pack is one place or one organization. Chains inside a pack share a
+ * world, so any chain in it can be dealt on its own without stitching two
+ * unrelated stories together. Deals never mix chains.
+ */
+export interface InspirationChain {
+  readonly id: string;
+  readonly channel: InspirationChannel;
+  readonly packId: string;
+  readonly packLabel: string;
+  readonly identity: string;
+  readonly leverage: string;
+  readonly gatekeeper: string;
+  readonly firstTake: string;
+  readonly inbound: string;
+}
+
+export const INSPIRATION_CHAINS: readonly InspirationChain[] = [
+  // ── 男频 · 边镇军帐 ────────────────────────────────────────────────
+  {
+    id: "male-border-01",
+    channel: "male",
+    packId: "male-border",
+    packLabel: "边镇军帐",
+    identity: "边军粮草账房",
+    leverage:
+      "我记下的每一笔亏空，夜里会自己长出一条只有我能走的路，通向那批粮真正被藏的地方",
+    gatekeeper: "边军统帅与三条粮道上的大粮商",
+    firstTake:
+      "我照着账目走了一夜，摸进一座没报过关的仓，手里多出三十车军粮的提货竹牌",
+    inbound: "统帅派人来查账，来的是他亲儿子——他想借我这本账，换掉他爹的位置",
   },
-  anomalyRule: {
-    male: [
-      "能听出每件古董前主人的最后一句遗言",
-      "每治好一名重伤高手就继承他的一门绝技",
-      "经手的废铁会显露失传的锻造秘方",
-      "药渣里能重新炼出原丹药最稀有的药性",
-      "典当来的物品能兑换原主的人生机缘",
-      "每记下一笔军粮亏空就能找到一座隐秘粮仓",
-      "挨打越多肉身越强且能复现对手招式",
-      "替人驯服烈马便能借用其血脉天赋",
-      "被撕掉的秘籍在眼前自动补全",
-      "修好的船能短暂驶入另一条历史航线",
-      "触碰遗体就能看见死者藏起的宝藏",
-      "剪掉的废片会在明日成为真实新闻",
-    ],
-    female: [
-      "剪断婚纱丝线就能看见一段被隐瞒的婚约",
-      "替演员试穿戏服能预演她未来的成名现场",
-      "化妆时能改写对象在旁人心中的第一印象",
-      "修复珠宝便能听见上一代女主人的秘密",
-      "抄写家谱能看见被抹去的继承人名字",
-      "教给学生的知识会在现实中结成可交换的好运",
-      "每绣出一只凤凰就能唤醒一条失传的宫廷密令",
-      "做的家常菜能临时改写食客运势",
-      "触碰拍卖遗物便能重播它最贵的一次交易",
-      "能看见每个贵族来客的谎言标价",
-      "看一眼比赛录像便能预知队伍下一次关键失误",
-      "喂过的灵兽会替她说出主人的真心话",
-    ],
-    hybrid: [
-      "按对穴位能精准调节他人情绪",
-      "开发的APP意外连通地府",
-      "每卖出一件夜宵就能交换客人一段好运",
-      "收银小票能打印出顾客明天的重大选择",
-      "收听求助电话时能听见另一个时空的回音",
-      "游乐设施会在午夜通向真实的异世界",
-      "配出的钥匙能打开主人遗忘的一扇门",
-      "末班车每晚都会多出一位未来乘客",
-      "煎药时能看见病人命运中的断点",
-      "旧书里的空白页会写出即将发生的秘密",
-      "库房标本在月圆时能复活一刻钟",
-      "每救出一位被困者就能得到一张隐藏地图",
-    ],
+  {
+    id: "male-border-02",
+    channel: "male",
+    packId: "male-border",
+    packLabel: "边镇军帐",
+    identity: "军营伙夫",
+    leverage: "吃我做的饭的人，会把明天最不想说的一句实话讲给我听",
+    gatekeeper: "监军太监手里的密折与三千石过冬粮",
+    firstTake: "一个亲兵扒完饭，说了句“监军今夜要烧粮”，我提前把粮车挪出了营",
+    inbound:
+      "监军先一步找上门，没杀我，反倒要我替他写一本假账，价码是让我当管粮官",
   },
-  highValueCircle: {
-    male: [
-      "地下黑帮大佬圈",
-      "诸天仙尊大能的私人宴席",
-      "豪门世家权贵",
-      "朝堂勋贵与禁军统领",
-      "天庭地府神鬼官署",
-      "宗门长老团",
-      "传世国宝收藏家联盟",
-      "边境军阀与粮商",
-      "顶级地下格斗王者圈",
-      "皇室御马监与将门",
-      "隐世丹宗的炼丹宗师",
-      "娱乐帝国顶级导演制片人圈",
-    ],
-    female: [
-      "顶级豪门继承人圈",
-      "顶流影帝与资本局",
-      "高冷世家掌权人",
-      "豪门联姻名利场",
-      "皇室后宫与权臣家眷",
-      "国际珠宝收藏家圈",
-      "贵族学院继承人社交圈",
-      "财阀家族董事会",
-      "奢侈品牌首席设计师圈",
-      "电影节红毯与影后争夺局",
-      "顶尖职业战队与巨额赞助商",
-      "仙门圣女与掌教亲传圈",
-    ],
-    hybrid: [
-      "城市隐秘超自然调查局",
-      "跨国古董黑市拍卖圈",
-      "三界失物招领所",
-      "世界级餐饮评审团",
-      "隐世医门的宗师家族",
-      "富豪私人委托人圈",
-      "地下情报交易所",
-      "深空科考队的核心席位",
-      "王城最古老的商会",
-      "历史谜案调查专家圈",
-      "神明降临的秘密委员会",
-      "异世界远征队的开拓者联盟",
-    ],
+  {
+    id: "male-border-03",
+    channel: "male",
+    packId: "male-border",
+    packLabel: "边镇军帐",
+    identity: "替马看病的马夫",
+    leverage: "我摸过的战马，会让我看见它上一任主人是怎么死的",
+    gatekeeper: "将门嫡子的亲兵营与那匹御赐马",
+    firstTake: "我在御赐马的眼里，看见老将军是被自己人从背后射穿的",
+    inbound:
+      "将门嫡子把马连同我一起要走，许我一个亲兵名额——条件是那句话永远烂在我肚子里",
   },
-  twistPressure: {
-    male: [
-      "没想到全城大佬都求着来当常客，但一张破账本竟牵出他们的命脉",
-      "结果对手越打压反而越帮我涨修为，却引来幕后掌局者亲自登门",
-      "却被满楼怪物当成最可怕的隐世凶物，争着献上镇楼宝物",
-      "没想到最值钱的宝物竟是皇帝亲手丢掉的废品，满朝都在追查我的身份",
-      "但一夜之间三大宗门同时悬赏拜师，连老祖都偷偷排队",
-      "结果我随手救下的老人竟能决定整个地下世界的生死名单",
-      "不料一份假账竟让边军统帅亲自上门，开出连王侯都拒绝不了的条件",
-      "却发现自己收来的断刀曾杀过当朝第一高手，他的传人正在找刀",
-      "没想到镇守宝库的神兽只肯认我为主，所有长老当场翻脸",
-      "但赢下第一场地下擂台后，三位拳王竟同时宣布要收我为徒",
-      "结果那些看不起我的贵族抢着送来家传秘宝，只为换一次交易机会",
-      "不料我剪出的废片提前泄露了王朝更替的秘密，全城权贵连夜找上门",
-    ],
-    female: [
-      "没想到被嫌弃的婚纱竟让三位豪门继承人当众争夺同一桩婚约",
-      "却意外掌握影帝最不愿公开的秘密，整个剧组开始对我另眼相看",
-      "结果高冷掌权人亲自来求我赴宴，竞争家族却当场宣布截胡",
-      "但一张被毁掉的家谱让失踪十年的真正继承人突然现身",
-      "没想到董事会争权的两派竟同时把决定票交到我手里",
-      "却发现那枚天价戒指指向一场被全族掩盖的旧日背叛",
-      "不料贵族学院的所有风云人物都来请教我，校董却要求封锁消息",
-      "结果被我退回的礼服竟登上国际颁奖礼，设计界集体追查作者",
-      "但那位向来不近人情的影后当众宣布只肯用我的妆造",
-      "没想到王妃的一句夸赞让满宫权贵争相求见，皇帝却也注意到了我",
-      "却被圣女当众点名做唯一搭档，其他亲传弟子纷纷下场争夺",
-      "结果我随口说出的战术让弱队击败冠军，资本方连夜改写收购方案",
-    ],
-    hybrid: [
-      "没想到常客竟是失踪已久的城主，但他的名字早从所有档案里消失",
-      "结果门外排队的全是神仙妖王，却没人敢先迈进店门",
-      "却发现每一个买家都想抢同一件不起眼的旧货，价格一夜翻百倍",
-      "但世界冠军吃下一口便认出了失传百年的御厨手艺，当场跪求收徒",
-      "不料我救下的人竟掌管整个城市的秘密账本，各方势力开始争夺",
-      "结果只修好一把旧锁就打开皇室密库，全城猎人蜂拥而至",
-      "没想到末班车的乘客竟是未来的皇帝，追兵已经堵住整条街",
-      "却被地府判官误认成巡视使者，十八殿鬼王争着来送礼",
-      "但拍卖会最贵的拍品竟主动认我为主，买家纷纷开出天价交换",
-      "结果那只快死的灵兽开口叫我主人，连宗门掌教都失态",
-      "不料三支远征队都在地图上看见我的名字，争着交出指挥权",
-      "却发现整座城市的富豪都在寻找我手里那张普通收据",
-    ],
+
+  // ── 男频 · 仙门药谷 ────────────────────────────────────────────────
+  {
+    id: "male-sect-01",
+    channel: "male",
+    packId: "male-sect",
+    packLabel: "仙门药谷",
+    identity: "药谷烧火杂役",
+    leverage: "我烧剩的药渣，能还原那炉丹里最贵的一味药性",
+    gatekeeper: "丹堂长老与内门首席弟子",
+    firstTake:
+      "我攒出一炉没人认得出品相的丹，转手卖给外门执事，换到一块能进内门的腰牌",
+    inbound:
+      "长老查出丹出自药谷，第一个来问的是首席——他要我替他炼，炼成了算他的",
   },
+  {
+    id: "male-sect-02",
+    channel: "male",
+    packId: "male-sect",
+    packLabel: "仙门药谷",
+    identity: "藏经阁扫地的",
+    leverage: "被撕掉的书页，会在我眼前自己长回来",
+    gatekeeper: "戒律堂与掌门亲传手里的半部禁术",
+    firstTake:
+      "我补全了半部禁术，抄本落到戒律堂手里，换到一次不必跪着说话的机会",
+    inbound:
+      "掌门亲自下到藏经阁，问我还记得多少页——他手里那半部，正好缺我这一半",
+  },
+  {
+    id: "male-sect-03",
+    channel: "male",
+    packId: "male-sect",
+    packLabel: "仙门药谷",
+    identity: "灵兽园喂食的",
+    leverage: "被我喂过的灵兽，会替我说出它主人藏得最深的一句话",
+    gatekeeper: "圣女与掌教亲传的院子",
+    firstTake: "一头灵兽当众说出了圣女私藏的东西，满园长老脸色都变了",
+    inbound: "圣女没有杀我，反而把我调进她的院子——她要我先替她喂另一头",
+  },
+
+  // ── 男频 · 港城黑市 ────────────────────────────────────────────────
+  {
+    id: "male-port-01",
+    channel: "male",
+    packId: "male-port",
+    packLabel: "港城黑市",
+    identity: "码头记账的",
+    leverage: "我记的货单，会显出一件没人报关的东西",
+    gatekeeper: "三大帮口与海关稽查科",
+    firstTake:
+      "我从货单上认出一批军火，转手把消息卖给对家，换到一张能进内场的牌",
+    inbound: "海关的人先来找我，开的价比帮口高——他们要我继续记，只记给他们看",
+  },
+  {
+    id: "male-port-02",
+    channel: "male",
+    packId: "male-port",
+    packLabel: "港城黑市",
+    identity: "修船匠",
+    leverage: "我修好的船，能短暂开进另一条没人走过的航线",
+    gatekeeper: "走私船队与海事局",
+    firstTake: "试航那晚我靠上一条不存在的栈桥，从空船上捡回一整箱货",
+    inbound: "船队老大要我当领航，海事局同时贴出我的画像——两边开的价，我都能听",
+  },
+  {
+    id: "male-port-03",
+    channel: "male",
+    packId: "male-port",
+    packLabel: "港城黑市",
+    identity: "殡仪馆背尸的",
+    leverage: "我碰过的尸体会告诉我，他把钱藏在了哪",
+    gatekeeper: "地下钱庄与警局的赃物科",
+    firstTake: "我从一具无名尸身上摸到钱庄的暗号，取走第一笔没人认领的钱",
+    inbound: "钱庄掌柜主动上门，不讨钱，只求我替他背下一具还没送来的尸体",
+  },
+
+  // ── 男频 · 拍卖行 ──────────────────────────────────────────────────
+  {
+    id: "male-auction-01",
+    channel: "male",
+    packId: "male-auction",
+    packLabel: "夜拍场",
+    identity: "拍卖行学徒",
+    leverage: "经我手的拍品，会显出上一个买家肯出的底价",
+    gatekeeper: "顶级藏家与世家账房",
+    firstTake: "我在一场夜拍上看穿三家底牌，替一位藏家省下两千万，抽成够我脱身",
+    inbound:
+      "那位藏家把整场拍卖的委托交给我，包括一件他不想让任何人知道来源的东西",
+  },
+  {
+    id: "male-auction-02",
+    channel: "male",
+    packId: "male-auction",
+    packLabel: "夜拍场",
+    identity: "私人保镖",
+    leverage: "我挨过的打，会让我记住对手使过的每一招",
+    gatekeeper: "地下拳场与财团老板",
+    firstTake: "我在拳场连胜七场，被财团老板当场买走，成了他女儿的贴身保镖",
+    inbound: "老板的对头先送来一份聘书，年薪翻倍——他要的只是我站到另一边",
+  },
+  {
+    id: "male-auction-03",
+    channel: "male",
+    packId: "male-auction",
+    packLabel: "夜拍场",
+    identity: "老宅修缮工",
+    leverage: "我拆开的墙里，会浮现这家人藏过、又砌回去的东西",
+    gatekeeper: "世家三房的遗产争夺",
+    firstTake: "我拆出一份被砌进墙里的遗嘱，抄了一份，原件留在原地",
+    inbound: "三房人同时找上我，各开一个价——没有一个人问遗嘱上写的是谁",
+  },
+
+  // ── 女频 · 豪门婚宴 ────────────────────────────────────────────────
+  {
+    id: "female-wedding-01",
+    channel: "female",
+    packId: "female-wedding",
+    packLabel: "豪门婚宴",
+    identity: "豪门婚礼策划师",
+    leverage: "我剪断婚纱丝线，就能看见一段被瞒下来的婚约",
+    gatekeeper: "顶级豪门继承人圈",
+    firstTake: "我在一场临时取消的婚礼上剪断头纱，看见了新郎的另一份婚约",
+    inbound: "没想到三家人同时找我要那截丝线，各开一个价，谁都不肯说为什么",
+  },
+  {
+    id: "female-wedding-02",
+    channel: "female",
+    packId: "female-wedding",
+    packLabel: "豪门婚宴",
+    identity: "高奢珠宝维修学徒",
+    leverage: "修复珠宝时，我能听见上一代女主人的秘密",
+    gatekeeper: "国际珠宝收藏家圈",
+    firstTake: "我修好一枚旧戒指，听见原主人亲口说出遗嘱要怎么改",
+    inbound: "却被告知，这枚戒指的继承人已经找了它十年——她出的价是一座工作室",
+  },
+  {
+    id: "female-wedding-03",
+    channel: "female",
+    packId: "female-wedding",
+    packLabel: "豪门婚宴",
+    identity: "旧城区私人化妆师",
+    leverage: "我化的妆，能改写对象在旁人眼里的第一印象",
+    gatekeeper: "顶流影帝与资本局",
+    firstTake: "我给一个被雪藏的演员改了一次妆，他当天被导演点名进组",
+    inbound: "结果影帝的经纪人连夜找上门，只求我以后别再给别人化",
+  },
+
+  // ── 女频 · 深宅宫闱 ────────────────────────────────────────────────
+  {
+    id: "female-mansion-01",
+    channel: "female",
+    packId: "female-mansion",
+    packLabel: "深宅宫闱",
+    identity: "世家祠堂抄经女史",
+    leverage: "我抄家谱时，能看见被抹去的那个继承人名字",
+    gatekeeper: "皇室后宫与权臣家眷",
+    firstTake: "我抄出一页被刮掉的名字，顺着它找到那个还活着的人",
+    inbound: "但掌家的老夫人先一步把我叫去，让我把那一页忘掉，许我一座别院",
+  },
+  {
+    id: "female-mansion-02",
+    channel: "female",
+    packId: "female-mansion",
+    packLabel: "深宅宫闱",
+    identity: "宫廷绣坊末等绣娘",
+    leverage: "我每绣出一只凤凰，就能唤醒一条失传的宫廷密令",
+    gatekeeper: "皇室后宫与权臣家眷",
+    firstTake: "我绣完一只凤，绣绷上浮出一道废太子的赦令",
+    inbound: "不料皇后身边的女官亲自来取这只绣绷，还说皇后要见我",
+  },
+  {
+    id: "female-mansion-03",
+    channel: "female",
+    packId: "female-mansion",
+    packLabel: "深宅宫闱",
+    identity: "古堡里的临时女管家",
+    leverage: "我能看见每一位贵族来客身上挂着的谎言标价",
+    gatekeeper: "豪门联姻名利场",
+    firstTake: "我在一场订婚宴上看穿三家的底价，替主家省下一半聘礼",
+    inbound: "没想到主家把整座古堡的钥匙交给了我，包括那间不许开的",
+  },
+
+  // ── 女频 · 名利场 ──────────────────────────────────────────────────
+  {
+    id: "female-spotlight-01",
+    channel: "female",
+    packId: "female-spotlight",
+    packLabel: "名利场",
+    identity: "顶流剧组服装助理",
+    leverage: "我替演员试穿戏服，能预演她未来最出名的那一场",
+    gatekeeper: "电影节红毯与影后争夺局",
+    firstTake: "我替替补演员试了一件戏服，看见她三年后站在领奖台上",
+    inbound: "结果原定女主连夜换了造型师，点名要我去她组里",
+  },
+  {
+    id: "female-spotlight-02",
+    channel: "female",
+    packId: "female-spotlight",
+    packLabel: "名利场",
+    identity: "拍卖行遗物整理师",
+    leverage: "我触碰遗物，就能重播它最贵的一次交易",
+    gatekeeper: "顶级藏家与遗产拍卖会",
+    firstTake: "我从一只旧箱子里翻出一段从没被出过价的交易，记下了买家名字",
+    inbound: "但拍卖行老板要我把它从目录里删掉，条件是从此每场拍卖都带我",
+  },
+  {
+    id: "female-spotlight-03",
+    channel: "female",
+    packId: "female-spotlight",
+    packLabel: "名利场",
+    identity: "贵族学院代课老师",
+    leverage: "我教给学生的东西，会在现实里结成能交换的好运",
+    gatekeeper: "贵族学院继承人社交圈",
+    firstTake: "我随口点拨一个差生，他家里第二天签成一笔大单",
+    inbound: "结果全班家长排队要把孩子换到我的课，校董却先来查我的来历",
+  },
+
+  // ── 女频 · 新赛道 ──────────────────────────────────────────────────
+  {
+    id: "female-agenda-01",
+    channel: "female",
+    packId: "female-agenda",
+    packLabel: "新赛道",
+    identity: "财阀家族私人营养师",
+    leverage: "我做的家常菜，能临时改写食客当天的运势",
+    gatekeeper: "财阀家族董事会",
+    firstTake: "我给一个被排挤的董事做了一顿饭，他第二天就拿下了表决",
+    inbound: "没想到董事长亲自点名要我进宅子，只做他一个人的饭",
+  },
+  {
+    id: "female-agenda-02",
+    channel: "female",
+    packId: "female-agenda",
+    packLabel: "新赛道",
+    identity: "电竞俱乐部战队分析员",
+    leverage: "我看一眼录像，就能预知队伍下一次关键失误",
+    gatekeeper: "顶尖职业战队与巨额赞助商",
+    firstTake: "我在赛前点出三处失误，弱队赢了冠军，奖金分了我一份",
+    inbound: "结果资本方连夜改收购方案，条件里加了我的名字",
+  },
+  {
+    id: "female-agenda-03",
+    channel: "female",
+    packId: "female-agenda",
+    packLabel: "新赛道",
+    identity: "仙门灵兽园喂养女弟子",
+    leverage: "我喂过的灵兽，会替我说出它主人压在心底的那句话",
+    gatekeeper: "仙门圣女与掌教亲传圈",
+    firstTake: "一头灵兽当众说出圣女藏起来的那个人，满园弟子都听见了",
+    inbound: "圣女没有罚我，把我调进她的院子，要我替她喂另一头",
+  },
+
+  // ── 混合 · 午夜街铺 ────────────────────────────────────────────────
+  {
+    id: "hybrid-street-01",
+    channel: "hybrid",
+    packId: "hybrid-street",
+    packLabel: "午夜街铺",
+    identity: "老城区按摩师",
+    leverage: "我按对穴位，能改掉一个人一时的情绪",
+    gatekeeper: "黑帮老大与片警",
+    firstTake: "我给一个腰痛的老客按完，他当场把一条街的场子交给我看",
+    inbound: "第二天片警上门，说那条街的账本在他手里，问我昨晚按的是哪一下",
+  },
+  {
+    id: "hybrid-street-02",
+    channel: "hybrid",
+    packId: "hybrid-street",
+    packLabel: "午夜街铺",
+    identity: "便利店夜班店员",
+    leverage: "我打出的收银小票，会印出顾客明天要做的一个选择",
+    gatekeeper: "跨江财团与地下钱庄",
+    firstTake: "我打出一张“明天三点，转账八千万”的小票，留了一份底",
+    inbound: "财团的人来买这张小票，钱庄的人来抢——两边都以为我只剩一张",
+  },
+  {
+    id: "hybrid-street-03",
+    channel: "hybrid",
+    packId: "hybrid-street",
+    packLabel: "午夜街铺",
+    identity: "乡镇兽医",
+    leverage: "我治好的牲畜，会替主人说出一句它听来的话",
+    gatekeeper: "县里的养殖大户与收购商",
+    firstTake: "一头牛开口说出收购商压价的内幕，我转手把话卖给了大户",
+    inbound: "大户把全村兽医的活都包给我，收购商派了人来我的棚里",
+  },
+
+  // ── 混合 · 异界入口 ────────────────────────────────────────────────
+  {
+    id: "hybrid-threshold-01",
+    channel: "hybrid",
+    packId: "hybrid-threshold",
+    packLabel: "异界入口",
+    identity: "废弃游乐园守夜人",
+    leverage: "午夜开动的设施，会把人送到另一个地方",
+    gatekeeper: "异界远征队与本地商会",
+    firstTake: "我坐了一趟摩天轮，从对面带回一块这里没有的矿石",
+    inbound: "远征队包下整座园子，要我当向导——商会同时在门口等我开价",
+  },
+  {
+    id: "hybrid-threshold-02",
+    channel: "hybrid",
+    packId: "hybrid-threshold",
+    packLabel: "异界入口",
+    identity: "末班地铁司机",
+    leverage: "末班车每晚多出一节车厢，坐着的都是还没到的人",
+    gatekeeper: "城市应急办与秘密调查局",
+    firstTake: "我从那节车厢里带下一个自称明天会死的人",
+    inbound: "调查局封锁整条线，却先来问我他死在哪，愿用一个编制换",
+  },
+  {
+    id: "hybrid-threshold-03",
+    channel: "hybrid",
+    packId: "hybrid-threshold",
+    packLabel: "异界入口",
+    identity: "深夜电台接线员",
+    leverage: "求助电话里，我能听见另一个时空的回声",
+    gatekeeper: "失踪者家属与警方",
+    firstTake: "我接起一通二十年前的求助，报出了埋尸的地点",
+    inbound: "警方不信，家属带着钱来了，还带来一张同名失踪者的照片",
+  },
+
+  // ── 混合 · 老物件 ──────────────────────────────────────────────────
+  {
+    id: "hybrid-relic-01",
+    channel: "hybrid",
+    packId: "hybrid-relic",
+    packLabel: "老物件",
+    identity: "民俗博物馆库管",
+    leverage: "月圆那晚，库房里的标本会活过来一刻钟",
+    gatekeeper: "收藏家与文物贩子",
+    firstTake: "一只标本指给我看，库房里哪一件被换成了假的",
+    inbound: "收藏家开价买我的嘴，文物贩子开始在我下班路上等",
+  },
+  {
+    id: "hybrid-relic-02",
+    channel: "hybrid",
+    packId: "hybrid-relic",
+    packLabel: "老物件",
+    identity: "修锁师傅",
+    leverage: "我配出的钥匙，能打开主人早就忘掉的一扇门",
+    gatekeeper: "老宅继承人与拆迁办",
+    firstTake: "我给一户人家配钥匙，顺手开出一间封了三十年的房",
+    inbound: "拆迁办和继承人同一天找上门，一个要拆，一个要我作证",
+  },
+  {
+    id: "hybrid-relic-03",
+    channel: "hybrid",
+    packId: "hybrid-relic",
+    packLabel: "老物件",
+    identity: "旧书店收银员",
+    leverage: "旧书里的空白页，会自己写出明天要发生的事",
+    gatekeeper: "学者与拍卖行",
+    firstTake: "一本旧书提前写出明天的头条，我照着它躲过一场车祸",
+    inbound: "学者要买这本书，拍卖行要买我这个人",
+  },
+
+  // ── 混合 · 雨夜救援 ────────────────────────────────────────────────
+  {
+    id: "hybrid-rescue-01",
+    channel: "hybrid",
+    packId: "hybrid-rescue",
+    packLabel: "雨夜救援",
+    identity: "暴雨天的道路救援员",
+    leverage: "我救出来的每个人，都会给我一张只有他能看懂的地图",
+    gatekeeper: "被困的富豪与救援队",
+    firstTake: "我从隧道里拖出一个老板，他给了我一张画着公司地下通道的纸",
+    inbound: "老板的对手先找到我，出三倍价钱买那张纸，还说老板已经签了放弃救援",
+  },
+  {
+    id: "hybrid-rescue-02",
+    channel: "hybrid",
+    packId: "hybrid-rescue",
+    packLabel: "雨夜救援",
+    identity: "山村药铺学徒",
+    leverage: "我煎药时，能看见病人命里一个绕不过去的断点",
+    gatekeeper: "县医院与药材商",
+    firstTake: "我看出一位老村医三天后会出事，提前把他从那条路上拦了下来",
+    inbound: "药材商先来封口，县医院后脚来请人，两边都说认识我师父",
+  },
+  {
+    id: "hybrid-rescue-03",
+    channel: "hybrid",
+    packId: "hybrid-rescue",
+    packLabel: "雨夜救援",
+    identity: "流动餐车厨师",
+    leverage: "吃下这口饭的人，会想起一件自己忘掉的事",
+    gatekeeper: "夜市地头蛇与美食评审",
+    firstTake: "一个混子吃完哭着说出老大埋钱的地方，满摊子人都听见了",
+    inbound: "评审当场要给我一个固定摊位，地头蛇来收保护费，顺手把那混子带走了",
+  },
+];
+
+const CHAIN_SLOT_FIELDS = {
+  identity: "identity",
+  anomalyRule: "leverage",
+  highValueCircle: "gatekeeper",
+  twistPressure: "inbound",
+} as const satisfies Record<InspirationSlotKey, keyof InspirationChain>;
+
+/** Derived slot view kept for the LLM mold API and pool statistics. */
+export const BUILTIN_INSPIRATION_SLOT_BANK: readonly InspirationSlotItem[] =
+  INSPIRATION_CHAINS.flatMap((chain) =>
+    (Object.keys(CHAIN_SLOT_FIELDS) as InspirationSlotKey[]).map((slot) => {
+      const phrase = chain[CHAIN_SLOT_FIELDS[slot]] as string;
+      return {
+        id: "chain:" + chain.id + ":" + slot,
+        slot,
+        channels: [chain.channel],
+        label: phrase,
+        phrase,
+        sourceLibrary: "slot-bank" as const,
+        materialType: null,
+        tags: [chain.channel, slot, chain.packId, chain.id],
+      };
+    }),
+  );
+
+/**
+ * Card-face hooks. Four slots, all four on the card:
+ *   identity  — a concrete job, not "少年"
+ *   rule      — something you can picture him doing
+ *   circle    — the expensive circle he now walks in
+ *   reversal  — what his situation has become, not a plot event
+ * 35–55 characters. The chain behind it still feeds outline goal / conflict.
+ */
+export const CHAIN_HOOKS: Readonly<Record<string, string>> = {
+  "male-border-01":
+    "我是边军账房。三十车军粮的竹牌在我手里，统帅帐下的人却都要给我让路。",
+  "male-border-02":
+    "我是军营伙夫。吃我饭的人会说出明天的实话，监军帐里的人却都要先问我今天做什么菜。",
+  "male-border-03":
+    "我是替马看病的。御赐马眼里有老将军被谁射死，将门亲兵营却连夜把我请进了帅帐。",
+  "male-sect-01":
+    "我是药谷烧火的。药渣能还原最贵那味药，丹堂长老和内门首席却排队等我的炉子。",
+  "male-sect-02":
+    "我是藏经阁扫地的。撕掉的书页会自己长回来，掌门和戒律堂却一起下来问我还记得多少页。",
+  "male-sect-03":
+    "我是灵兽园喂食的。灵兽当众说出圣女的秘密，掌教亲传的院子却抢着要我去喂下一头。",
+  "male-port-01":
+    "我是码头记账的。货单上多出一批没报关的军火，结果三大帮口和海关同时开价买我这张纸。",
+  "male-port-02":
+    "我是修船匠。修好的船能开进另一条航线，走私船队和海事局却都等着我领航。",
+  "male-port-03":
+    "我是殡仪馆背尸的。尸体告诉我钱藏在哪，地下钱庄的掌柜却亲自上门，只求我背下一具还没送来的尸。",
+  "male-auction-01":
+    "我是拍卖行学徒。我能看穿买家的底价，顶级藏家的夜拍场，反而从此由我定价。",
+  "male-auction-02":
+    "我是私人保镖。挨过的打会记住对手的招，地下拳场的老板们却开始互相抬价，只为我站哪一边。",
+  "male-auction-03":
+    "我是老宅修缮工。墙里拆出一份遗嘱，世家三房却同时把钥匙交到我手上。",
+  "female-wedding-01":
+    "我是婚礼策划师。剪断头纱，我看见新郎另有一份婚约，没想到三大家族同时把婚约送到我桌上。",
+  "female-wedding-02":
+    "我是修珠宝的。旧戒指里藏着上一代女主人的遗嘱，国际收藏圈却已经为它开了三次价。",
+  "female-wedding-03":
+    "我是私人化妆师。我化的妆能改别人眼里的第一印象，影帝的资本局却开始点名要我进场。",
+  "female-mansion-01":
+    "我是祠堂抄经的。家谱上有个被刮掉的名字还活着，掌家老夫人却把整座别院的钥匙给了我。",
+  "female-mansion-02":
+    "我是绣坊末等绣娘。绣完一只凤，绣绷上浮出废太子的赦令，不料皇后宫里的女官亲自来取。",
+  "female-mansion-03":
+    "我是古堡临时女管家。我能看见每个客人的谎言标价，豪门联姻的两家人却都来问我该信谁。",
+  "female-spotlight-01":
+    "我是剧组服装助理。替替补演员试戏服，我看见她三年后领奖，电影节的红毯造型却全排到了我手上。",
+  "female-spotlight-02":
+    "我是拍卖行整理遗物的。旧箱子里翻出一段没被出过价的交易，顶级藏家却排着队来问那只箱子。",
+  "female-spotlight-03":
+    "我是贵族学院代课老师。我点拨过的差生第二天签成大单，继承人的家长圈却开始抢我的课。",
+  "female-agenda-01":
+    "我是财阀家的营养师。一顿饭让被排挤的董事拿下表决，但董事会点名只吃我做的饭。",
+  "female-agenda-02":
+    "我是战队分析员。赛前点出三处失误，弱队赢了冠军，资本方却连夜把收购方案改到我名下。",
+  "female-agenda-03":
+    "我是灵兽园喂食的。灵兽当众说出圣女藏的人，掌教亲传的弟子们却开始轮流来喂我那头兽。",
+  "hybrid-street-01":
+    "我是老城区按摩师。按对穴位能改人一时的情绪，没想到整条街的黑帮老大都成了我的常客。",
+  "hybrid-street-02":
+    "我是便利店夜班。小票会印出顾客明天的选择，跨江财团和地下钱庄却都来买我一张小票。",
+  "hybrid-street-03":
+    "我是乡镇兽医。牛开口说出收购商压价的内幕，县里的养殖大户却把全村的活都包给了我。",
+  "hybrid-threshold-01":
+    "我是废弃游乐园守夜人。午夜摩天轮通向另一个地方，结果异界远征队包下整座园子，只等我开门。",
+  "hybrid-threshold-02":
+    "我是末班地铁司机。车上多一节车厢，坐着明天会死的人，秘密调查局却先来问我他死在哪。",
+  "hybrid-threshold-03":
+    "我是深夜电台接线员。一通二十年前的电话说出了埋尸地点，失踪者家属却带着钱在台门口等我。",
+  "hybrid-relic-01":
+    "我是博物馆库管。月圆时标本会活一刻钟，但文物贩子先一步知道库房里哪件是假的。",
+  "hybrid-relic-02":
+    "我是修锁师傅。配出的钥匙能开主人忘掉的门，老宅继承人和拆迁办却都来求我别开那一间。",
+  "hybrid-relic-03":
+    "我是旧书店收银。空白页会写出明天的头条，学者和拍卖行却都盯着我这本书不肯走。",
+  "hybrid-rescue-01":
+    "我是道路救援员。被救的人会给我一张只有他懂的地图，被困的富豪圈却开始预约我的班。",
+  "hybrid-rescue-02":
+    "我是山村药铺学徒。煎药时能看见病人命里的断点，县医院和药材商却同时来请我出山。",
+  "hybrid-rescue-03":
+    "我是流动餐车厨师。吃下这口饭的人会想起忘掉的事，没想到夜市评审当场把整条美食街交给我。",
 };
 
-export const BUILTIN_INSPIRATION_SLOT_BANK: readonly InspirationSlotItem[] = (
-  Object.entries(phrases) as [
-    InspirationSlotKey,
-    Record<InspirationChannel, readonly string[]>,
-  ][]
-).flatMap(([slot, channels]) =>
-  (
-    Object.entries(channels) as [InspirationChannel, readonly string[]][]
-  ).flatMap(([channel, items]) =>
-    items.map((phrase, index) => ({
-      id: "slot-bank:" + slot + ":" + channel + ":" + String(index + 1),
-      slot,
-      channels: [channel],
-      label: phrase,
-      phrase,
-      sourceLibrary: "slot-bank" as const,
-      materialType: null,
-      tags: [channel, slot],
-    })),
-  ),
-);
+export function hookFor(chain: InspirationChain): string {
+  const hook = CHAIN_HOOKS[chain.id];
+  if (!hook) throw new Error("inspiration.missing_hook:" + chain.id);
+  return hook;
+}

@@ -250,13 +250,20 @@ function buildBatchValidationSchema(input: InspirationRollRequest) {
             message: "locked slot must be preserved verbatim",
           });
         }
-        if (!card.sentence.includes(phrase)) {
-          context.addIssue({
-            code: "custom",
-            path: ["cards", offset, "sentence"],
-            message: `sentence must contain ${field} verbatim`,
-          });
-        }
+      }
+      if (card.sentence.length > 90) {
+        context.addIssue({
+          code: "custom",
+          path: ["cards", offset, "sentence"],
+          message: "sentence is a one-line hook, keep it under 90 characters",
+        });
+      }
+      if (!card.sentence.startsWith("我是")) {
+        context.addIssue({
+          code: "custom",
+          path: ["cards", offset, "sentence"],
+          message: "sentence must open in first person",
+        });
       }
     }
 
@@ -408,13 +415,15 @@ function buildPrompt(
 ① identity：具体身份 / 出生位置，必须一眼能见到人在世界哪里。
 ② anomalyRule：异常规则 / 外挂 / 玩法，必须能让男主主动做事。
 ③ highValueCircle：高价值人物群、势力、职业圈或资源入口，必须有价格和门槛。
-④ twistPressure：明确对手、反向压力或危险信息，不能只是“变强了”。
+④ twistPressure：谁因为这个主动找上门、带着什么更贵的东西。允许是对手，但对手必须带着主角想要的东西来；不能只写“变强了”，也不能只写“有麻烦了”。
+- 一条卡的四槽必须属于同一个世界、同一条因果链。发到的模具若彼此跨世界，以 identityHint 的世界为准重写其余三槽，不得硬拼；宁可与模具不同，也不要写出一句读者第一眼就出戏的话。
 
 硬规则：
 - #N 必须明显继承 #N 发到的玩法/反转模具，不得跨号换牌，不得把 24 条写成同一个套路的改名版。
 - 未锁定时，本批 identity、anomalyRule、highValueCircle 不得逐字重复，且应尽量在职业、力量、圈层和矛盾类型上拉开。
-- sentence 必须逐字包含本条四个槽位字符串，并包含“没想到 / 却 / 但 / 不料 / 结果 / 反而”至少一个转折词。
-- sentence 必须同时出现“能做什么”与“谁/什么因此形成反向压力”，禁止只有设定没有故事。
+- sentence 是卡面钩子：第一人称“我是…”，35–50 字，最多 90 字；结尾必须落在某个人的反应或下一步动作上。四槽信息留在各自字段里，不要把四槽串成一段剧情简介。
+- sentence 必须包含“没想到 / 却 / 但 / 不料 / 结果 / 反而”至少一个转折词。
+- sentence 必须同时出现“他能做什么”与“谁因此找上门”，禁止只有设定没有现场。
 - 每条只返回一个 concise suggestedTitle；不要解释、点评、排序。
 ${lockText ? `- 锁槽：${lockText}。每一条对应字段必须逐字原样输出，只生成其余槽位。\n` : ""}
 发牌如下：

@@ -74,6 +74,12 @@ export async function postJson(
           headers: {
             "content-type": "application/json",
             accept: "application/json, text/event-stream",
+            ...openCodeGoDefaultHeaders(
+              url,
+              body,
+              config.headers,
+              options.headers,
+            ),
             ...config.headers,
             ...options.headers,
           },
@@ -420,4 +426,78 @@ function ensureDirectoryUrl(url: URL): URL {
   const clone = new URL(url);
   if (!clone.pathname.endsWith("/")) clone.pathname += "/";
   return clone;
+}
+
+const DEFAULT_OPENCODE_SESSION_ID =
+  typeof globalThis.crypto?.randomUUID === "function"
+    ? `narralume-${globalThis.crypto.randomUUID()}`
+    : "narralume-session";
+
+function hasHeader(
+  headers: Readonly<Record<string, string>> | undefined,
+  name: string,
+): boolean {
+  if (!headers) return false;
+  const target = name.toLowerCase();
+  return Object.keys(headers).some((key) => key.toLowerCase() === target);
+}
+
+function deriveOpenCodeSessionId(body: unknown): string {
+  if (body && typeof body === "object" && !Array.isArray(body)) {
+    const record = body as Record<string, unknown>;
+    const rawKey =
+      typeof record.prompt_cache_key === "string" &&
+      record.prompt_cache_key.trim().length > 0
+        ? record.prompt_cache_key.trim()
+        : record.metadata &&
+            typeof record.metadata === "object" &&
+            !Array.isArray(record.metadata)
+          ? ((record.metadata as Record<string, unknown>).runId ??
+            (record.metadata as Record<string, unknown>).projectId)
+          : undefined;
+    if (typeof rawKey === "string" && rawKey.trim().length > 0) {
+      const sanitized = rawKey
+        .trim()
+        .replace(/[^a-zA-Z0-9._:-]+/g, "-")
+        .slice(0, 96);
+      if (sanitized.length > 0) return `narralume-${sanitized}`;
+    }
+  }
+  return DEFAULT_OPENCODE_SESSION_ID;
+}
+
+function openCodeGoDefaultHeaders(
+  url: string,
+  body: unknown,
+  configHeaders?: Readonly<Record<string, string>>,
+  optionHeaders?: Readonly<Record<string, string>>,
+): Record<string, string> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return {};
+  }
+  const host = parsed.hostname.toLowerCase();
+  const path = parsed.pathname.toLowerCase();
+  if (
+    host !== "opencode.ai" ||
+    !(path.startsWith("/zen/go/") || path === "/zen/go")
+  ) {
+    return {};
+  }
+  const extra: Record<string, string> = {};
+  if (
+    !hasHeader(configHeaders, "x-opencode-session") &&
+    !hasHeader(optionHeaders, "x-opencode-session")
+  ) {
+    extra["x-opencode-session"] = deriveOpenCodeSessionId(body);
+  }
+  if (
+    !hasHeader(configHeaders, "user-agent") &&
+    !hasHeader(optionHeaders, "user-agent")
+  ) {
+    extra["user-agent"] = "narralume/0.2.0";
+  }
+  return extra;
 }

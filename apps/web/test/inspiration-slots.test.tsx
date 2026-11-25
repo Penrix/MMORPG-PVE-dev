@@ -175,14 +175,14 @@ afterEach(() => {
 });
 
 describe("灵感老虎机", () => {
-  it("打开即用 local 模式零等待生成 24 张男频种子，并默认选中 24", async () => {
+  it("打开即用 local 模式零等待生成 12 张男频种子，并默认选中 12", async () => {
     renderSlots();
-    expect(await screen.findAllByRole("article")).toHaveLength(24);
+    expect(await screen.findAllByRole("article")).toHaveLength(12);
     expect(screen.getByRole("button", { name: "男频" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    expect(screen.getByRole("button", { name: "24" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "12" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
@@ -195,7 +195,7 @@ describe("灵感老虎机", () => {
     );
     expect(JSON.parse(String(firstRoll?.[1]?.body))).toMatchObject({
       channel: "male",
-      count: 24,
+      count: 12,
       mode: "local",
       useM03: true,
     });

@@ -57,7 +57,7 @@ export function InspirationSlotsWorkspace() {
   const queryClient = useQueryClient();
   const [channel, setChannel] = useState<InspirationChannel>("male");
   const [topic, setTopic] = useState("");
-  const [count, setCount] = useState<number>(24);
+  const [count, setCount] = useState<number>(12);
   const [useM03, setUseM03] = useState(true);
   const [lockedSlots, setLockedSlots] = useState<LockedSlots>({});
   const [result, setResult] = useState<InspirationRollResponse | null>(null);
@@ -142,7 +142,7 @@ export function InspirationSlotsWorkspace() {
       });
     void Promise.resolve().then(() => {
       if (!controller.signal.aborted) {
-        return roll("local", "male", true, {}, "", 24);
+        return roll("local", "male", true, {}, "", 12);
       }
     });
     return () => {
@@ -357,6 +357,9 @@ export function InspirationSlotsWorkspace() {
             <div className="inspiration-slots__card-heading">
               <span>SEED {String(index + 1).padStart(2, "0")}</span>
               <span>
+                {card.starterBlueprint.packLabel
+                  ? card.starterBlueprint.packLabel + " · "
+                  : ""}
                 {card.channel === "male"
                   ? "男频"
                   : card.channel === "female"

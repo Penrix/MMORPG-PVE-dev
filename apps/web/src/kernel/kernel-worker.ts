@@ -49,6 +49,8 @@ import {
   registerRunRoutes,
   registerStoryRoutes,
   registerInspirationSlotRoutes,
+  registerMarketRadarRoutes,
+  registerM03LibraryRoutes,
   registerStudioRoutes,
   registerTemplateRoutes,
   seedDemoRelayProvider,
@@ -258,6 +260,11 @@ async function boot(): Promise<void> {
     environment: {},
     ...(credentialedModelFetch ? { fetch: credentialedModelFetch } : {}),
   });
+  registerMarketRadarRoutes(table, database, {
+    environment: {},
+    ...(credentialedModelFetch ? { fetch: credentialedModelFetch } : {}),
+  });
+  registerM03LibraryRoutes(table, database);
   registerStoryRoutes(table, database, {
     coordinator,
     enableBackgroundWorker: true,
