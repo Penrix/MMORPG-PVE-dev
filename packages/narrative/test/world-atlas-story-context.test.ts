@@ -254,8 +254,9 @@ describe("Module 3 World Atlas context adapter", () => {
       (surface) => surface.facet === "ability" && surface.slotKey === "profile",
     )!;
     expect(abilitySurface.bearingKinds).toEqual(
-      expect.arrayContaining(["reality", "rule", "qualification"]),
+      expect.arrayContaining(["reality", "rule"]),
     );
+    expect(abilitySurface.bearingKinds).not.toContain("qualification");
     const valueSurface = context.objects[0]!.surfaces.find(
       (surface) =>
         surface.facet === "value" &&
