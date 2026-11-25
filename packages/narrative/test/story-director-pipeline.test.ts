@@ -206,7 +206,14 @@ function unitFor(field: StoryObjectField, status: "READY" | "BLOCKED_WORLD_GAP" 
       productionHint: "social",
       status: "OPEN",
     }],
-    wishFulfillment: frameRequest().wishFulfillment,
+    wishFulfillment: {
+      ...frameRequest().wishFulfillment,
+      threads: frameRequest().wishFulfillment.threads.map((thread) =>
+        status === "READY" && thread.id === "wish:medic:recognition"
+          ? { ...thread, phase: "realizing" as const }
+          : thread,
+      ),
+    },
     wishFulfillmentAdvances: status === "READY" ? [{
       threadId: "wish:medic:recognition",
       toPhase: "realizing",
