@@ -206,7 +206,8 @@ describe("Naruto mother-world import into the ONE NarraLume SQLite", () => {
       ]),
     );
     expect(
-      worlds.getCard(NARUTO_SOURCE_WORLD_ID, "rule:naruto:chakra-nature")?.kind,
+      worlds.getCard(NARUTO_SOURCE_WORLD_ID, "rule:naruto:chakra-nature")
+        ?.record.kind,
     ).toBe("rule");
     expect(
       worlds.getCard(NARUTO_SOURCE_WORLD_ID, "rule:naruto:jutsu-system")
