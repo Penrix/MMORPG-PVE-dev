@@ -88,6 +88,18 @@ export const WORLD_ATLAS_SEMANTIC_LAYERS = {
   },
 } as const;
 
+/**
+ * Architecture invariant:
+ *
+ * Ten Families are one content graph, not ten databases. A thin domain
+ * (power, economy, equipment, professions, information, etc.) is first a
+ * content/evidence/edge gap, not proof that Module 2 needs a new subsystem.
+ *
+ * Prefer existing World Atlas cards + typed relations. People-centered views
+ * compose those same objects for narrative use; they are not a second schema.
+ * Extend the schema only when the existing graph cannot represent the world
+ * fact itself, not merely because an importer has not populated enough data.
+ */
 export type WorldAtlasContentFamily =
   | "space"
   | "people"
