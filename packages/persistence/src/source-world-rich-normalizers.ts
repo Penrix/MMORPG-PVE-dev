@@ -188,7 +188,11 @@ export function normalizeOnePieceWikiGraph(input: {
         "part_of_power_system_recorded",
         "Pinned Devil Fruit entity.",
       );
-      for (const value of historicalStringValues(entity, "classification", true)) {
+      for (const value of historicalStringValues(
+        entity,
+        "classification",
+        true,
+      )) {
         const target = power.devilFruitClassKeys.get(value);
         if (target)
           addRelation(
@@ -290,7 +294,11 @@ export function normalizeHunterXHunterMindMaps(input: {
   for (const row of input.abilities) addRecord(row, "ability", "nen");
   for (const row of input.routes) addRecord(row, "activity", "routes");
 
-  const power = addHunterXHunterPowerRules(records, input.abilities, upstream.sourceUrl);
+  const power = addHunterXHunterPowerRules(
+    records,
+    input.abilities,
+    upstream.sourceUrl,
+  );
 
   const addRelation = (
     from: string,
@@ -713,7 +721,11 @@ function addOnePiecePowerRules(input: {
   const devilFruitClassKeys = new Map<string, string>();
   for (const entity of input.entities) {
     if (text(entity.type) !== "devil-fruit") continue;
-    for (const value of historicalStringValues(entity, "classification", true)) {
+    for (const value of historicalStringValues(
+      entity,
+      "classification",
+      true,
+    )) {
       const normalized = value.toLowerCase();
       if (devilFruitClassKeys.has(normalized)) continue;
       const key = "rule:one-piece:devil-fruit-class:" + slug(normalized);
