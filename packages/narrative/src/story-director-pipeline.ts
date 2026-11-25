@@ -59,6 +59,13 @@ import { finalizeCharacterActionProposal } from "./vendor/novel-studio/character
 import { StorySceneExpansionService } from "./story-scene-runtime-workers.js";
 // prettier-ignore
 import {
+  worldWorkOrderFromStoryGap,
+  type WorldWorkOrder,
+} from "./world-production-engine.js";
+// prettier-ignore
+import { projectExistingWorldForProduction } from "./world-production-reality.js";
+// prettier-ignore
+import {
   buildStoryChapterProductionHandoff,
   stageStoryChapterProductionHandoff,
   type StoryChapterProductionHandoff,
@@ -91,6 +98,8 @@ export type StoryDirectorFrameResult =
       expectationDesign: ExpectationDesign;
       storyUnit: StoryUnitDesign;
       worldGaps: StoryUnitDesign["worldGaps"];
+      /** Module-1 candidate work only. No WorldPack or Reality write occurs here. */
+      worldWorkOrders: WorldWorkOrder[];
       usage: RunBudgetUsage;
     }
   | {
@@ -298,10 +307,40 @@ export class StoryDirectorPipeline {
     usage = addUsage(usage, designed.usage);
     const storyUnit = designed.value;
     if (storyUnit.status === "BLOCKED_WORLD_GAP") {
+      const inScopeEntityIds = new Set(
+        field.objects.map((object) => object.entityId),
+      );
+      const existingProjectWorld = projectExistingWorldForProduction({
+        entities: this.canon
+          .listEntities(request.projectId)
+          .filter((entity) => inScopeEntityIds.has(entity.id)),
+        facts: this.canon
+          .listEffectiveFacts(request.projectId)
+          .filter(
+            (fact) =>
+              inScopeEntityIds.has(fact.subjectId) &&
+              (!fact.objectEntityId ||
+                inScopeEntityIds.has(fact.objectEntityId)),
+          ),
+        relationships: this.state
+          .listCurrentRelationships(request.projectId)
+          .filter(
+            (relationship) =>
+              inScopeEntityIds.has(relationship.fromEntityId) &&
+              inScopeEntityIds.has(relationship.toEntityId),
+          ),
+      });
+      const worldWorkOrders = storyUnit.worldGaps.map((gap) =>
+        worldWorkOrderFromStoryGap(gap, existingProjectWorld),
+      );
       return {
         status: "BLOCKED_WORLD_GAP",
-        field, creativeContext, expectationDesign, storyUnit,
+        field,
+        creativeContext,
+        expectationDesign,
+        storyUnit,
         worldGaps: storyUnit.worldGaps,
+        worldWorkOrders,
         usage,
       };
     }
