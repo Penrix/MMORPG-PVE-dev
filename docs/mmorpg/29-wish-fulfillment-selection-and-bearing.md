@@ -506,6 +506,56 @@ price
 ~~~
 
 这和“每个 Requirement 单独举证”共同组成当前反假承重门禁。
+### Module 3 Settlement｜意淫兑现不等于资产化
+
+当前纵轴把 `realized` 与 `retained` 明确分开：
+
+~~~text
+realizing
+→ Story 正在把意淫线程做进 Reality
+
+realized
+→ 本章 Grounded Settlement 已经确认目标结果确实发生
+
+retained
+→ Grounded Settlement 还确认了 durable Canon / relationship 写回，
+  且该收益与 handoff 的 retainedGainOpportunity / settlementTarget 对齐
+~~~
+
+因此 Story handoff 中的 `retainedGainOpportunity` 只是**计划收益**，不再拥有自动入账权。
+
+当前 Settlement 会从已经接受的 Grounded Settlement 中分出两类 claims：
+
+- `confirmedRealityClaims`：summary / state delta / fact / timeline / relationship 等实际发生证据，用于判断 thread 是否至少 `realized`；
+- `confirmedRetainedClaims`：真正会形成持久 Canon fact / relationship 的变化，用于判断收益是否能进入 `retainedAssets`。
+
+根规则：
+
+> **计划里的 payoff 不是 Reality；发生过也不等于已经成为可复用资产。**
+
+如果 handoff 说“本章拿到新的任务资格”，但 Grounded Settlement 实际只确认“男主醒来”，则：
+
+~~~text
+Wish Thread 继续 realizing
+retainedAssets 不增加“新的任务资格”
+~~~
+
+如果实际结果已经发生但还没有 durable write-back，则：
+
+~~~text
+Wish Thread → realized
+但不进入 retainedAssets
+~~~
+
+只有真实结果与持久写回都成立时：
+
+~~~text
+Wish Thread → retained
+收益进入 retainedAssets
+成为下一轮更贵意淫的本金
+~~~
+
+这就是【赢麻了】在代码里的平仓纪律：**不能把计划收益、场面爽感或未实现势能冒充已实现权益。**
 ### Author / Director 与 Character POV 继续严格分权
 
 Wish-Fulfillment Frame、Reader Fantasy、Bearing Plan 属于 Author / Director Side。
