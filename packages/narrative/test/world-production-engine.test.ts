@@ -11,6 +11,9 @@ import {
   playtestWorld,
   worldWorkOrderInput,
 } from "../src/world-production-engine.js";
+import {
+  worldProductionWorkOrderForWishFulfillment,
+} from "../src/world-production-runner.js";
 
 const req: WorldPackRequest = {
   requestId: "00000000-0000-4000-8000-000000000000",
@@ -183,6 +186,85 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
     expect(instruction.selectionPolicy?.antiBalanceTax?.join("\n")).toContain(
       "不得因为能力太强",
     );
+  });
+
+
+  it("runs explicit wish-fulfillment selection before generic coverage repair and keeps multi-thread expansion", () => {
+    const doc = {
+      ...emptyWorldDocument(),
+      nodes: [
+        node("tsunade", "character", "纲手"),
+        node("flying-raijin", "rule", "飞雷神", null, "ability"),
+      ],
+    };
+    const wish = {
+      version: "wish-fulfillment-frame.v1" as const,
+      authority: "creative-direction" as const,
+      mode: "project_current" as const,
+      protagonistEntityId: "hero",
+      readerFantasy: "让木叶真正的高价人和高价力量逐渐围绕男主重新定价",
+      protagonistDesire: "获得足以进入木叶核心圈的力量与认可",
+      threads: [
+        {
+          id: "thread:tsunade-recognition",
+          targetRefs: ["tsunade"],
+          targetNames: ["纲手"],
+          dimension: "relationship",
+          readerFantasy: "纲手从注意到认可，再给出只有男主有的私人位置",
+          protagonistDesire: "让纲手认可自己的能力",
+          desiredChange: "纲手认可男主、主动合作并逐步开放私人信任",
+          privatePrivilege: "别人没有的私人准入",
+          publicRepricing: "纲手公开背书使木叶高层重新定价男主",
+          upgradeLeverage: ["医疗体系", "三忍圈层", "火影政治"],
+          phase: "selected" as const,
+        },
+        {
+          id: "thread:tsunade-destiny",
+          targetRefs: ["tsunade"],
+          targetNames: ["纲手"],
+          dimension: "relationship",
+          readerFantasy: "男主的存在真正改变纲手原本的人生",
+          protagonistDesire: "保护并改变自己重视的人",
+          desiredChange: "纲手的人生因男主介入产生高价值分叉",
+          privatePrivilege: null,
+          publicRepricing: null,
+          upgradeLeverage: ["原著命运改写"],
+          phase: "candidate" as const,
+        },
+      ],
+      bearingRequirements: [
+        {
+          id: "bearing:tsunade-choice",
+          threadIds: ["thread:tsunade-recognition"],
+          kind: "relationship" as const,
+          requirement: "纲手必须拥有真实选择权、社会价格和与男主逐步积累的共同历史",
+          evidenceRefs: [],
+          status: "missing" as const,
+          raisesPriceBecause: "她不是谁都认可，偏偏选择男主才贵",
+        },
+      ],
+      settlementTargets: [
+        {
+          threadId: "thread:tsunade-recognition",
+          assetKind: "relationship",
+          targetGain: "纲手的公开认可与私人信任",
+        },
+      ],
+    };
+    const generic = playtestWorld(doc, req).next;
+    expect(generic?.workshop).not.toBe("social");
+    const selected = worldProductionWorkOrderForWishFulfillment(wish, doc, {
+      ...req,
+      wishFulfillment: wish,
+    });
+    expect(selected).toMatchObject({
+      workshop: "social",
+      subjectRef: "tsunade",
+      wishFulfillmentThreadIds: ["thread:tsunade-recognition"],
+      bearingRequirementIds: ["bearing:tsunade-choice"],
+    });
+    expect(selected?.reason).toContain("纲手认可男主");
+    expect(wish.threads).toHaveLength(2);
   });
 
   it("merges new graph actors and edges by identity, rejects invented missing actors and changed identities", () => {

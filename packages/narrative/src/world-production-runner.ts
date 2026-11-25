@@ -5,6 +5,7 @@ import {
   worldPackAtlasKind,
   type WorldPackDocument,
   type WorldPackRequest,
+  type WishFulfillmentFrame,
 } from "@narralume/contracts";
 import type { JsonSchemaContract } from "@narralume/llm";
 import type {
@@ -170,6 +171,86 @@ export function worldProductionWorkOrder(
     suggestedCardKinds: atlasTarget.cardKinds,
     peopleQuestions: atlasTarget.peopleQuestions,
     completionRule: atlasTarget.completionRule,
+    wishFulfillmentThreadIds: [],
+    bearingRequirementIds: [],
+  };
+}
+
+const WISH_DIMENSION_WORKSHOP: Readonly<Record<string, WorldWorkshop>> = {
+  power: "power",
+  status: "factions",
+  wealth: "economy",
+  circle: "social",
+  information: "social",
+  space: "geography",
+  relationship: "social",
+  career: "factions",
+};
+
+const BEARING_KIND_WORKSHOP: Readonly<Record<string, WorldWorkshop>> = {
+  person: "people",
+  relationship: "social",
+  history: "events",
+  rule: "power",
+  price: "social",
+  access: "playability",
+  scarcity: "economy",
+  competition: "events",
+  qualification: "social",
+  reader_prior: "social",
+  reality: "living",
+  other: "social",
+};
+
+/**
+ * SELECT -> BEAR before generic Atlas coverage repair.
+ *
+ * This is deliberately protagonist/Reader-value driven. Coverage still repairs
+ * the world after a high-value thread is chosen, but it may not choose the
+ * first expensive production target merely because a Family is numerically thin.
+ */
+export function worldProductionWorkOrderForWishFulfillment(
+  frame: WishFulfillmentFrame,
+  doc: WorldPackDocument,
+  request: WorldPackRequest,
+): WorldWorkOrder | null {
+  const thread =
+    frame.threads.find((item) => item.phase === "bearing") ??
+    frame.threads.find((item) => item.phase === "selected") ??
+    frame.threads.find((item) => item.phase === "candidate") ??
+    null;
+  if (!thread) return null;
+
+  const missingBearing = frame.bearingRequirements.filter(
+    (item) => item.status === "missing" && item.threadIds.includes(thread.id),
+  );
+  const workshop =
+    (missingBearing[0] && BEARING_KIND_WORKSHOP[missingBearing[0].kind]) ??
+    WISH_DIMENSION_WORKSHOP[thread.dimension] ??
+    null;
+  if (!workshop) return null;
+
+  const base = worldProductionWorkOrder(workshop, doc, request);
+  const targetRef =
+    thread.targetRefs.find((ref) => doc.nodes.some((node) => node.localId === ref)) ??
+    base.subjectRef;
+  const targetNode = targetRef
+    ? doc.nodes.find((node) => node.localId === targetRef)
+    : null;
+  const bearingReason = missingBearing.length
+    ? ` 缺少承重：${missingBearing.map((item) => item.requirement).join("；")}。`
+    : "";
+
+  return {
+    ...base,
+    subjectRef: targetRef,
+    subjectName:
+      targetNode?.name ?? thread.targetNames[0] ?? base.subjectName,
+    reason:
+      `优先服务意淫展开线程「${thread.id}」：${thread.desiredChange}。${bearingReason} ` +
+      base.reason,
+    wishFulfillmentThreadIds: [thread.id],
+    bearingRequirementIds: missingBearing.map((item) => item.id),
   };
 }
 
@@ -348,11 +429,20 @@ export async function runWorldWorkshops(args: {
   for (let index = steps.length; index < maxSteps; index++) {
     const check = playtestWorld(view(), args.request);
     const firstStep = steps.length === 0 && index === 0;
+    const wishFulfillmentOrder =
+      firstStep && args.request.wishFulfillment
+        ? worldProductionWorkOrderForWishFulfillment(
+            args.request.wishFulfillment,
+            view(),
+            args.request,
+          )
+        : null;
     const requestedEntry = firstStep
       ? resolveWorldDesignEntry(args.request, view())
       : null;
     const op =
-      firstStep && args.request.intent === "advance"
+      wishFulfillmentOrder ??
+      (firstStep && args.request.intent === "advance"
         ? worldProductionWorkOrder("living", view(), args.request)
         : requestedEntry
           ? worldProductionWorkOrder(
@@ -363,10 +453,14 @@ export async function runWorldWorkshops(args: {
           : (check.next ??
             (steps.length === 0 && bootstrap[0]
               ? worldProductionWorkOrder(bootstrap[0], view(), args.request)
-              : null));
+              : null)));
     if (!op) break;
     const instruction = {
-      ...worldWorkOrderInput(op, view()),
+      ...worldWorkOrderInput(
+        op,
+        view(),
+        args.request.wishFulfillment ?? null,
+      ),
       authorRequest: args.request,
       ...(index === 0
         ? {

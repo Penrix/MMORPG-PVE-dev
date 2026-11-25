@@ -29,6 +29,7 @@ import {
 import {
   hasWorldWorkshopOutput,
   worldProductionWorkOrder,
+  worldProductionWorkOrderForWishFulfillment,
 } from "./world-production-runner.js";
 import {
   initialWorldWorkshopOrder,
@@ -75,16 +76,33 @@ export async function generateSourceWorldProduction(
     input.worldId,
     request,
   );
+  if (
+    request.wishFulfillment &&
+    request.wishFulfillment.mode !== "source_reusable"
+  ) {
+    throw serviceLikeError(
+      "source.world.production.invalid_wish_fulfillment_mode",
+      "Source World production requires wishFulfillment.mode=source_reusable",
+      422,
+    );
+  }
+  const wishFulfillmentOrder = request.wishFulfillment
+    ? worldProductionWorkOrderForWishFulfillment(
+        request.wishFulfillment,
+        existingWorld,
+        request,
+      )
+    : null;
   const requestedEntry = resolveWorldDesignEntry(request, existingWorld);
   const playtest = playtestWorld(existingWorld, request);
   const fallbackWorkshop =
     playtest.atlasAudit.nextWorkshop ??
     initialWorldWorkshopOrder(request)[0] ??
     "geography";
-  const op = requestedEntry
+  const op = wishFulfillmentOrder ?? (requestedEntry
     ? worldProductionWorkOrder(requestedEntry.workshop, existingWorld, request)
     : (playtest.next ??
-      worldProductionWorkOrder(fallbackWorkshop, existingWorld, request));
+      worldProductionWorkOrder(fallbackWorkshop, existingWorld, request)));
 
   const instruction = {
     target: "source_world",
@@ -96,7 +114,11 @@ export async function generateSourceWorldProduction(
       readerSemantics:
         "Reader-side prior only; never objective Source fact and never Project Canon",
     },
-    ...worldWorkOrderInput(op, existingWorld),
+    ...worldWorkOrderInput(
+      op,
+      existingWorld,
+      request.wishFulfillment ?? null,
+    ),
     authorRequest: request,
     worldBuilderAtlasContract: WORLD_BUILDER_ATLAS_CONTRACT,
     sourceWorld: {

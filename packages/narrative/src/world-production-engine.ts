@@ -3,6 +3,7 @@ import { powerDesignProducts } from "./world-design-policy.js";
 import {
   WORLD_ATLAS_CONTENT_FAMILIES,
   WORLD_BUILDER_SELECTION_POLICY,
+  WISH_FULFILLMENT_ROOT_GUARD,
   worldBuilderAtlasTarget,
   worldPackAtlasKind,
   worldPackReferenceProblems,
@@ -13,6 +14,7 @@ import {
   type WorldPackLink,
   type WorldPackNode,
   type StoryWorldGap,
+  type WishFulfillmentFrame,
   type WorldPackRequest,
 } from "@narralume/contracts";
 
@@ -34,6 +36,8 @@ export interface WorldWorkOrder {
   suggestedCardKinds: readonly WorldAtlasCardKind[];
   peopleQuestions: readonly string[];
   completionRule: string;
+  wishFulfillmentThreadIds: readonly string[];
+  bearingRequirementIds: readonly string[];
 }
 
 export type WorldFamilyCoverageStatus = "missing" | "thin" | "present";
@@ -938,6 +942,7 @@ export function applyWorldProductionDelta(
 export function worldWorkOrderInput(
   order: WorldWorkOrder,
   state: WorldPackDocument,
+  wishFulfillment: WishFulfillmentFrame | null = null,
 ): Record<string, unknown> {
   return {
     command: "produce_world_content",
@@ -945,6 +950,10 @@ export function worldWorkOrderInput(
     actualSubject: { ref: order.subjectRef, name: order.subjectName },
     whyThisOperation: order.reason,
     requiredWorldProducts: order.deliverables,
+    wishFulfillment,
+    wishFulfillmentThreadIds: order.wishFulfillmentThreadIds,
+    bearingRequirementIds: order.bearingRequirementIds,
+    wishFulfillmentRootGuard: WISH_FULFILLMENT_ROOT_GUARD,
     selectionPolicy: WORLD_BUILDER_SELECTION_POLICY,
     atlasTarget: {
       families: order.targetFamilies,
@@ -954,6 +963,6 @@ export function worldWorkOrderInput(
     },
     currentAtlasAudit: auditWorldAtlasProduction(state),
     currentWorld: state,
-    rule: "First apply selectionPolicy: prefer high wish-fulfillment / upgrade-leverage anchors; do not spend expensive production attention merely to make an encyclopedia category look complete. Then apply bearing: use real people, relations, history, scarcity, access and social price to make the fantasy more valuable. Bearing is not a balance tax: never invent penalties solely because a benefit feels too strong. Produce candidate World Atlas objects and typed relations, not a prose-only world overview. Creating a node is not completion: connect it into the real world graph, and when appropriate connect non-person content to concrete people or organizations. Reuse existing local IDs to deepen; new IDs must be unique. Return only the new or revised world-content increment. Never author a chapter outline. The engine decides the next work order.",
+    rule: "First apply the shared wish-fulfillment axis. Reader fantasy and protagonist desire are not the same thing. A high-value object may carry many simultaneous fantasy threads; never reduce recognition + mentorship + private access + public backing + affection + destiny rewrite into a single chosen relation. If wishFulfillment is present, serve its active thread(s) before generic coverage repair. Then apply bearing: use real people, relations, history, scarcity, access, Reader prior and social price to make each fantasy thread more valuable. Bearing is not a balance tax: never invent penalties solely because a benefit feels too strong. Produce candidate World Atlas objects and typed relations, not a prose-only world overview. Creating a node is not completion: connect it into the real world graph, and when appropriate connect non-person content to concrete people or organizations. Reuse existing local IDs to deepen; new IDs must be unique. Return only the new or revised world-content increment. Never author a chapter outline. The engine decides the next work order.",
   };
 }
