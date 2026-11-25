@@ -47,6 +47,135 @@ import {
 import { previewProductionReality } from "./world-production-reality.js";
 import { WORLD_PACK_MODEL_CONTRACT } from "./world-pack-workers.js";
 
+const SourceWishPlanningThreadSchema = WishFulfillmentThreadSchema.extend({
+  protagonistDesire: z.null(),
+  phase: z.enum(["selected", "candidate"]),
+});
+
+const SourceWishPlanningBearingSchema =
+  FantasyBearingRequirementSchema.extend({
+    evidenceRefs: z.array(z.string()).max(0),
+    status: z.enum(["candidate", "missing"]),
+  });
+
+const SourceWishFulfillmentPlanningOutputSchema = z
+  .object({
+    readerFantasy: z.string().trim().min(1).max(8_000),
+    threads: z.array(SourceWishPlanningThreadSchema).min(2).max(50),
+    bearingRequirements: z
+      .array(SourceWishPlanningBearingSchema)
+      .min(1)
+      .max(120),
+    settlementTargets: z
+      .array(WishFulfillmentSettlementTargetSchema)
+      .min(1)
+      .max(50),
+  })
+  .strict();
+
+type SourceWishFulfillmentPlanningOutput = z.infer<
+  typeof SourceWishFulfillmentPlanningOutputSchema
+>;
+
+const SOURCE_WISH_FULFILLMENT_PLANNING_CONTRACT: JsonSchemaContract = {
+  name: "source_world_wish_fulfillment_planning",
+  strict: true,
+  schema: z.toJSONSchema(SourceWishFulfillmentPlanningOutputSchema),
+};
+
+function sourceWishPlanningIssues(
+  value: SourceWishFulfillmentPlanningOutput,
+  existingWorld: WorldPackDocument,
+): string[] {
+  const issues: string[] = [];
+  const knownRefs = new Set(existingWorld.nodes.map((node) => node.localId));
+  const threadIds = new Set<string>();
+  const targetThreadCounts = new Map<string, number>();
+
+  for (const thread of value.threads) {
+    if (threadIds.has(thread.id)) {
+      issues.push(`threads: duplicate id ${thread.id}`);
+    }
+    threadIds.add(thread.id);
+    if (thread.targetRefs.length === 0 && thread.targetNames.length === 0) {
+      issues.push(
+        `thread ${thread.id}: name an existing Source object or a concrete high-value candidate`,
+      );
+    }
+    for (const targetRef of thread.targetRefs) {
+      if (!knownRefs.has(targetRef)) {
+        issues.push(`thread ${thread.id}: unknown targetRef ${targetRef}`);
+      }
+    }
+    const targetKey =
+      thread.targetRefs[0] ??
+      thread.targetNames[0]?.trim().toLocaleLowerCase() ??
+      "";
+    if (targetKey) {
+      targetThreadCounts.set(
+        targetKey,
+        (targetThreadCounts.get(targetKey) ?? 0) + 1,
+      );
+    }
+  }
+
+  if (![...targetThreadCounts.values()].some((count) => count >= 2)) {
+    issues.push(
+      "threads: at least one high-value source object/candidate must carry multiple reusable fantasy threads",
+    );
+  }
+
+  const bearingIds = new Set<string>();
+  const threadsWithBearing = new Set<string>();
+  for (const requirement of value.bearingRequirements) {
+    if (bearingIds.has(requirement.id)) {
+      issues.push(`bearingRequirements: duplicate id ${requirement.id}`);
+    }
+    bearingIds.add(requirement.id);
+    for (const threadId of requirement.threadIds) {
+      if (!threadIds.has(threadId)) {
+        issues.push(
+          `bearing requirement ${requirement.id}: unknown threadId ${threadId}`,
+        );
+      } else {
+        threadsWithBearing.add(threadId);
+      }
+    }
+  }
+  for (const threadId of threadIds) {
+    if (!threadsWithBearing.has(threadId)) {
+      issues.push(`thread ${threadId}: missing bearing requirement`);
+    }
+  }
+
+  const settlementThreadIds = new Set<string>();
+  for (const target of value.settlementTargets) {
+    if (!threadIds.has(target.threadId)) {
+      issues.push(
+        `settlementTargets: unknown threadId ${target.threadId}`,
+      );
+    }
+    if (settlementThreadIds.has(target.threadId)) {
+      issues.push(
+        `settlementTargets: duplicate threadId ${target.threadId}`,
+      );
+    }
+    settlementThreadIds.add(target.threadId);
+  }
+  if (
+    !value.threads.some(
+      (thread) =>
+        thread.phase === "selected" && settlementThreadIds.has(thread.id),
+    )
+  ) {
+    issues.push(
+      "settlementTargets: at least one selected reusable fantasy thread must name a future protagonist gain",
+    );
+  }
+
+  return issues;
+}
+
 export interface SourceWorldProductionGenerateInput {
   worldId: string;
   request: WorldPackRequest;
