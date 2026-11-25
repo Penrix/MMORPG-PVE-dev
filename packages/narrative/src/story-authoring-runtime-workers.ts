@@ -11,14 +11,21 @@ import {
   StoryUnitReactionTargetSchema,
   StoryStakeLedgerEntrySchema,
   StoryWorldGapSchema,
+  FantasyBearingRequirementSchema,
   WishFulfillmentBearingEvidenceSchema,
+  WishFulfillmentFrameSchema,
+  WishFulfillmentSettlementTargetSchema,
   WishFulfillmentThreadAdvanceSchema,
+  WishFulfillmentThreadSchema,
+  WISH_FULFILLMENT_ROOT_GUARD,
   type ExpectationDesign,
   type StoryAuthoringSearch,
   type StoryCreativeContext,
   type StoryObjectField,
+  type StoryProtagonistCamera,
   type StoryUnitDesign,
   type StoryUpgradeLedger,
+  type WishFulfillmentFrame,
 } from "@narralume/contracts";
 import type {
   NarrativeRun,
@@ -56,6 +63,43 @@ const STORY_AUTHORING_SEARCH_CONTRACT: JsonSchemaContract = {
   schema: z.toJSONSchema(StoryAuthoringSearchOutputSchema),
 };
 
+const WishFulfillmentPlanningThreadSchema =
+  WishFulfillmentThreadSchema.extend({
+    phase: z.enum(["selected", "candidate"]),
+  });
+
+const WishFulfillmentPlanningBearingSchema =
+  FantasyBearingRequirementSchema.extend({
+    evidenceRefs: z.array(z.string()).max(0),
+    status: z.enum(["candidate", "missing"]),
+  });
+
+const WishFulfillmentPlanningOutputSchema = z
+  .object({
+    readerFantasy: z.string().trim().min(1).max(8_000),
+    protagonistDesire: z.string().trim().min(1).max(8_000),
+    threads: z.array(WishFulfillmentPlanningThreadSchema).min(2).max(40),
+    bearingRequirements: z
+      .array(WishFulfillmentPlanningBearingSchema)
+      .min(1)
+      .max(100),
+    settlementTargets: z
+      .array(WishFulfillmentSettlementTargetSchema)
+      .min(1)
+      .max(40),
+  })
+  .strict();
+
+type WishFulfillmentPlanningOutput = z.infer<
+  typeof WishFulfillmentPlanningOutputSchema
+>;
+
+const WISH_FULFILLMENT_PLANNING_CONTRACT: JsonSchemaContract = {
+  name: "story_wish_fulfillment_planning",
+  strict: true,
+  schema: z.toJSONSchema(WishFulfillmentPlanningOutputSchema),
+};
+
 const StoryUnitDesignOutputSchema = z.object({
   status: z.enum(["READY", "BLOCKED_WORLD_GAP"]),
   objectAnchorIds: z.array(z.string().min(1)),
@@ -91,6 +135,15 @@ export interface StoryAuthoringSearchModelRequest {
   methodInstructions?: string;
   /** @deprecated Prefer creativeContext.materialSelections from Module 2. */
   matureStoryMaterials?: string;
+}
+
+export interface WishFulfillmentPlanningModelRequest {
+  field: StoryObjectField;
+  protagonistCamera: StoryProtagonistCamera;
+  upgradeLedger: StoryUpgradeLedger;
+  request: string;
+  readerNeed: string;
+  targetEmotion: string;
 }
 
 export interface StoryUnitDesignModelRequest {
@@ -463,6 +516,94 @@ function storyUnitOutputIssues(
   return issues;
 }
 
+function wishFulfillmentPlanningIssues(
+  value: WishFulfillmentPlanningOutput,
+  request: WishFulfillmentPlanningModelRequest,
+): string[] {
+  const issues: string[] = [];
+  const allowedObjectIds = new Set(
+    request.field.objects.map((object) => object.id),
+  );
+  const threadIds = new Set<string>();
+  const targetThreadCounts = new Map<string, number>();
+
+  for (const thread of value.threads) {
+    if (threadIds.has(thread.id)) {
+      issues.push(`threads: duplicate id ${thread.id}`);
+    }
+    threadIds.add(thread.id);
+    if (thread.targetRefs.length === 0) {
+      issues.push(`thread ${thread.id}: targetRefs must name real Module-2 objects`);
+    }
+    for (const targetRef of thread.targetRefs) {
+      if (!allowedObjectIds.has(targetRef)) {
+        issues.push(`thread ${thread.id}: unknown targetRef ${targetRef}`);
+      } else {
+        targetThreadCounts.set(
+          targetRef,
+          (targetThreadCounts.get(targetRef) ?? 0) + 1,
+        );
+      }
+    }
+  }
+
+  if (![...targetThreadCounts.values()].some((count) => count >= 2)) {
+    issues.push(
+      "threads: at least one high-value object must carry multiple simultaneous wish-fulfillment threads; do not reduce each object to one chosen relation",
+    );
+  }
+
+  const bearingIds = new Set<string>();
+  const threadsWithBearing = new Set<string>();
+  for (const requirement of value.bearingRequirements) {
+    if (bearingIds.has(requirement.id)) {
+      issues.push(`bearingRequirements: duplicate id ${requirement.id}`);
+    }
+    bearingIds.add(requirement.id);
+    for (const threadId of requirement.threadIds) {
+      if (!threadIds.has(threadId)) {
+        issues.push(
+          `bearing requirement ${requirement.id}: unknown threadId ${threadId}`,
+        );
+      } else {
+        threadsWithBearing.add(threadId);
+      }
+    }
+  }
+  for (const threadId of threadIds) {
+    if (!threadsWithBearing.has(threadId)) {
+      issues.push(`thread ${threadId}: missing bearing requirement`);
+    }
+  }
+
+  const settlementThreadIds = new Set<string>();
+  for (const target of value.settlementTargets) {
+    if (!threadIds.has(target.threadId)) {
+      issues.push(
+        `settlementTargets: unknown threadId ${target.threadId}`,
+      );
+    }
+    if (settlementThreadIds.has(target.threadId)) {
+      issues.push(
+        `settlementTargets: duplicate threadId ${target.threadId}`,
+      );
+    }
+    settlementThreadIds.add(target.threadId);
+  }
+  if (
+    !value.threads.some(
+      (thread) =>
+        thread.phase === "selected" && settlementThreadIds.has(thread.id),
+    )
+  ) {
+    issues.push(
+      "settlementTargets: at least one selected thread must name the real gain expected from this fantasy line",
+    );
+  }
+
+  return issues;
+}
+
 /**
  * Author-side writers' room service.
  *
@@ -476,6 +617,109 @@ export class StoryAuthoringService {
     _legacyCreativeMaterials?: unknown,
   ) {
     void _legacyCreativeMaterials;
+  }
+
+  /**
+   * Plan the shared male-frequency fantasy axis only when no author-provided
+   * or inherited WishFulfillmentFrame exists. This is author/director-side
+   * creative direction, not a fourth module and never world truth.
+   */
+  async planWishFulfillment(
+    run: NarrativeRun,
+    step: NarrativeRunStep,
+    request: WishFulfillmentPlanningModelRequest,
+    signal: AbortSignal,
+  ): Promise<StoryAuthoringModelResult<WishFulfillmentFrame>> {
+    if (
+      run.projectId !== request.field.projectId ||
+      request.field.scale !== "S04" ||
+      request.request.trim().length === 0 ||
+      request.readerNeed.trim().length === 0 ||
+      request.targetEmotion.trim().length === 0 ||
+      request.protagonistCamera.projectId !== request.field.projectId ||
+      request.protagonistCamera.protagonistEntityId !==
+        request.upgradeLedger.protagonistEntityId ||
+      !request.field.objects.some(
+        (object) =>
+          object.entityId === request.protagonistCamera.protagonistEntityId,
+      )
+    ) {
+      throw new Error("story_authoring.invalid_wish_fulfillment_request");
+    }
+
+    const result = await this.model.structured(
+      run,
+      step,
+      "story-wish-fulfillment-planning",
+      {
+        instructions: [
+          "你在作者/Director侧先决定这轮商业男频到底要意淫什么，再进入Expectation与StoryUnit。不要把这一步降级成升级字段改写。",
+          WISH_FULFILLMENT_ROOT_GUARD.readerQuestion,
+          WISH_FULFILLMENT_ROOT_GUARD.protagonistQuestion,
+          WISH_FULFILLMENT_ROOT_GUARD.expansionQuestion,
+          WISH_FULFILLMENT_ROOT_GUARD.bearingQuestion,
+          WISH_FULFILLMENT_ROOT_GUARD.settlementQuestion,
+          WISH_FULFILLMENT_ROOT_GUARD.antiBalanceTax,
+          "先读当前 Object Field 里的具体人、能力、组织、地点、资产、Reader Semantics、世界价格、关系和入口。想象必须有对象；targetRefs只能引用真实 object.id。",
+          "不要只输出‘获得当前升级收益 + 进入更高圈层’两条模板线。优先找 Reader 真馋的高价对象，并把同一个对象展开成多条可长期升价的线程。",
+          "高价人物尤其不要单选关系。若世界对象支持，可以同时展开：注意/认可、师承、主动合作、需要男主、私人准入、公开背书、权力联盟、偏爱、独占例外、公开重新定价、命运改写等。它们是不同剧情资产，不互相替代。",
+          "高价技能/资产也要展开：真正拥有、独门使用、身份标签、高手重新定价、打开高阶圈层、继续开发、形成事业或权限等，而不是只写‘学会技能’。",
+          "Reader Fantasy 与 protagonistDesire 必须分开。Reader可以期待更大的高价人生；具体男主当前只能按自己的目标、性格和Reality行动。",
+          "每条thread都必须有bearing requirement。承重负责把幻想托贵，不负责削弱收益。没有合适Reality就标missing，后续返回World Gap；不要发明冷却、反噬、寿命税、净亏损、感情债来平衡。",
+          "planner没有权限宣布承重已成立、幻想已实现或收益已资产化。thread.phase只能selected/candidate；bearing.status只能candidate/missing；evidenceRefs必须为空。",
+          "至少让一个高价对象承载两条以上不同意淫展开，防止把多声部关系压成单选题。不要为了凑数量机械枚举八类；只展开当前对象真正有价格、能长期写Story的线。",
+          "settlementTargets写未来真正希望结算进男主人生的权益。计划收益不是Reality，后续仍必须经过Grounded Settlement。",
+        ].join("\n"),
+        messages: [
+          {
+            role: "user",
+            content: JSON.stringify(
+              {
+                request: request.request,
+                readerNeed: request.readerNeed,
+                targetEmotion: request.targetEmotion,
+                protagonistCamera: request.protagonistCamera,
+                upgradeLedger: request.upgradeLedger,
+                objectField: {
+                  digest: request.field.digest,
+                  storyTimeLabel: request.field.storyTimeLabel,
+                  objects: fieldObjectCatalog(request.field),
+                },
+                bearingEvidenceCandidates: storyBearingEvidenceCandidates(
+                  request.field,
+                ),
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+        reasoningEffort: "high",
+      },
+      WISH_FULFILLMENT_PLANNING_CONTRACT,
+      zodValidator(WishFulfillmentPlanningOutputSchema, (value) =>
+        wishFulfillmentPlanningIssues(value, request),
+      ),
+      signal,
+    );
+
+    const value = WishFulfillmentFrameSchema.parse({
+      version: "wish-fulfillment-frame.v1",
+      authority: "creative-direction",
+      mode: "story_current",
+      protagonistEntityId: request.protagonistCamera.protagonistEntityId,
+      readerFantasy: result.value.readerFantasy,
+      protagonistDesire: result.value.protagonistDesire,
+      threads: result.value.threads,
+      bearingRequirements: result.value.bearingRequirements,
+      settlementTargets: result.value.settlementTargets,
+    });
+
+    return {
+      value,
+      usage: result.usage,
+      generation: { mode: result.mode, attempts: result.attempts },
+    };
   }
 
   /**
