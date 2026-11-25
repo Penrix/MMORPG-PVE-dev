@@ -1,9 +1,17 @@
+import { z } from "zod";
 import {
   WORLD_BUILDER_ATLAS_CONTRACT,
+  WORLD_BUILDER_SELECTION_POLICY,
+  WISH_FULFILLMENT_ROOT_GUARD,
+  FantasyBearingRequirementSchema,
+  WishFulfillmentFrameSchema,
+  WishFulfillmentSettlementTargetSchema,
+  WishFulfillmentThreadSchema,
   WorldPackDocumentSchema,
   WorldPackRequestSchema,
   worldPackAtlasKind,
   worldPackCoarseTypeForAtlasKind,
+  type WishFulfillmentFrame,
   type WorldAction,
   type WorldPackDocument,
   type WorldPackRequest,
@@ -12,6 +20,7 @@ import {
   ModelGateway,
   createModelAdapter,
   type FetchLike,
+  type JsonSchemaContract,
 } from "@narralume/llm";
 import {
   SqliteAssignmentRepository,
@@ -52,6 +61,18 @@ export interface SourceWorldProductionGenerateOptions {
     prompt: string;
     existingWorld: WorldPackDocument;
     operation: string;
+  }) => Promise<unknown> | unknown;
+  /**
+   * Test/manual override for the source-reusable wish planner. Normal runtime
+   * uses the configured planning model. When generateOverride is supplied
+   * without this hook, auto-planning is intentionally bypassed so legacy
+   * production test doubles keep receiving exactly one generation call.
+   */
+  planWishFulfillmentOverride?: (input: {
+    worldId: string;
+    request: WorldPackRequest;
+    prompt: string;
+    existingWorld: WorldPackDocument;
   }) => Promise<unknown> | unknown;
 }
 
