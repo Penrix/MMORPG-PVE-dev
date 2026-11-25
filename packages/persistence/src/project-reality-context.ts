@@ -1,4 +1,7 @@
-import { worldAtlasNarrativePriority, type FantasyBearingKind } from "@narralume/contracts";
+import {
+  worldAtlasNarrativePriority,
+  type FantasyBearingKind,
+} from "@narralume/contracts";
 import type { ContextSource } from "@narralume/context";
 import type { NarrativeDatabase } from "./database.js";
 import { SqliteUnifiedSourceWorldRepository } from "./unified-source-world-repository.js";
@@ -18,7 +21,10 @@ export interface WorldAtlasStoryObjectSurface {
   bearingKinds: FantasyBearingKind[];
 }
 
-function objectHasNonEmptyKey(value: unknown, keys: readonly string[]): boolean {
+function objectHasNonEmptyKey(
+  value: unknown,
+  keys: readonly string[],
+): boolean {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
   return keys.some((key) => {
@@ -53,7 +59,11 @@ export function worldAtlasBearingKindsForSurface(surface: {
       break;
     case "relationship":
       kinds.add("relationship");
-      if (/敌|竞争|争夺|对手|enemy|rival|compete|contest/i.test(JSON.stringify(surface.value))) {
+      if (
+        /敌|竞争|争夺|对手|enemy|rival|compete|contest/i.test(
+          JSON.stringify(surface.value),
+        )
+      ) {
         kinds.add("competition");
       }
       break;
@@ -77,7 +87,8 @@ export function worldAtlasBearingKindsForSurface(surface: {
     case "value":
     case "standing":
       kinds.add("price");
-      if (objectHasNonEmptyKey(surface.value, ["scarcity"])) kinds.add("scarcity");
+      if (objectHasNonEmptyKey(surface.value, ["scarcity"]))
+        kinds.add("scarcity");
       if (
         objectHasNonEmptyKey(surface.value, [
           "accessPath",
@@ -222,9 +233,7 @@ export class WorldAtlasStoryContextBuilder {
         };
         readerSemanticSurfaces.push({
           ...readerSemanticSurface,
-          bearingKinds: worldAtlasBearingKindsForSurface(
-            readerSemanticSurface,
-          ),
+          bearingKinds: worldAtlasBearingKindsForSurface(readerSemanticSurface),
         });
       }
 

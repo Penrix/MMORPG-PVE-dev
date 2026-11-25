@@ -259,8 +259,7 @@ describe("Module 3 World Atlas context adapter", () => {
     expect(abilitySurface.bearingKinds).not.toContain("qualification");
     const valueSurface = context.objects[0]!.surfaces.find(
       (surface) =>
-        surface.facet === "value" &&
-        surface.slotKey === "appraisal:hero-value",
+        surface.facet === "value" && surface.slotKey === "appraisal:hero-value",
     )!;
     expect(valueSurface.bearingKinds).toEqual(
       expect.arrayContaining(["reality", "price", "scarcity", "access"]),
