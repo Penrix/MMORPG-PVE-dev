@@ -220,7 +220,9 @@ describe("Source World World Builder target", () => {
           expect(prompt).toContain("source:<stable-key>");
           expect(prompt).toContain("意淫承重");
           expect(prompt).toContain("承重不是平衡税");
-          expect(prompt).toContain("Selection decides what deserves production");
+          expect(prompt).toContain(
+            "Selection decides what deserves production",
+          );
           expect(existingWorld.nodes).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
@@ -320,7 +322,8 @@ describe("Source World World Builder target", () => {
                 targetRefs: ["source:ability:sharingan"],
                 targetNames: ["写轮眼"],
                 dimension: "status",
-                readerFantasy: "写轮眼不只是一项技能，还改变未来男主在忍界的身份价格",
+                readerFantasy:
+                  "写轮眼不只是一项技能，还改变未来男主在忍界的身份价格",
                 protagonistDesire: null,
                 desiredChange: "由低位忍者变成必须被高手和组织重新定价的人",
                 privatePrivilege: null,
@@ -337,7 +340,8 @@ describe("Source World World Builder target", () => {
                 requirement: "补清写轮眼真实能力规则、掌握者与可执行动作",
                 evidenceRefs: [],
                 status: "missing",
-                raisesPriceBecause: "力量规则与真实掌握者越清楚，取得以后越不是廉价白送",
+                raisesPriceBecause:
+                  "力量规则与真实掌握者越清楚，取得以后越不是廉价白送",
               },
               {
                 id: "bearing:source:sharingan-price",
@@ -374,7 +378,8 @@ describe("Source World World Builder target", () => {
                 type: "rule",
                 atlasKind: "ability",
                 name: "写轮眼运用规则候选",
-                description: "围绕写轮眼实际掌握、使用与开发形成的候选规则说明。",
+                description:
+                  "围绕写轮眼实际掌握、使用与开发形成的候选规则说明。",
                 areaRef: null,
                 value: "对写轮眼掌握者与忍界高层具有高能力价格",
                 access: "通过真实掌握、训练与传承关系进入",

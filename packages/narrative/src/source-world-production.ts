@@ -52,11 +52,10 @@ const SourceWishPlanningThreadSchema = WishFulfillmentThreadSchema.extend({
   phase: z.enum(["selected", "candidate"]),
 });
 
-const SourceWishPlanningBearingSchema =
-  FantasyBearingRequirementSchema.extend({
-    evidenceRefs: z.array(z.string()).max(0),
-    status: z.enum(["candidate", "missing"]),
-  });
+const SourceWishPlanningBearingSchema = FantasyBearingRequirementSchema.extend({
+  evidenceRefs: z.array(z.string()).max(0),
+  status: z.enum(["candidate", "missing"]),
+});
 
 const SourceWishFulfillmentPlanningOutputSchema = z
   .object({
@@ -151,14 +150,10 @@ function sourceWishPlanningIssues(
   const settlementThreadIds = new Set<string>();
   for (const target of value.settlementTargets) {
     if (!threadIds.has(target.threadId)) {
-      issues.push(
-        `settlementTargets: unknown threadId ${target.threadId}`,
-      );
+      issues.push(`settlementTargets: unknown threadId ${target.threadId}`);
     }
     if (settlementThreadIds.has(target.threadId)) {
-      issues.push(
-        `settlementTargets: duplicate threadId ${target.threadId}`,
-      );
+      issues.push(`settlementTargets: duplicate threadId ${target.threadId}`);
     }
     settlementThreadIds.add(target.threadId);
   }
@@ -289,17 +284,13 @@ export async function generateSourceWorldProduction(
           existingWorld,
           options,
         );
-    const planned = SourceWishFulfillmentPlanningOutputSchema.safeParse(
-      plannedRaw,
-    );
+    const planned =
+      SourceWishFulfillmentPlanningOutputSchema.safeParse(plannedRaw);
     if (!planned.success) {
       throw serviceLikeError(
         "source.world.production.invalid_wish_fulfillment_plan",
         planned.error.issues
-          .map(
-            (issue) =>
-              `${issue.path.join(".") || "root"}: ${issue.message}`,
-          )
+          .map((issue) => `${issue.path.join(".") || "root"}: ${issue.message}`)
           .join("; "),
         422,
       );
@@ -334,10 +325,16 @@ export async function generateSourceWorldProduction(
     playtest.atlasAudit.nextWorkshop ??
     initialWorldWorkshopOrder(request)[0] ??
     "geography";
-  const op = wishFulfillmentOrder ?? (requestedEntry
-    ? worldProductionWorkOrder(requestedEntry.workshop, existingWorld, request)
-    : (playtest.next ??
-      worldProductionWorkOrder(fallbackWorkshop, existingWorld, request)));
+  const op =
+    wishFulfillmentOrder ??
+    (requestedEntry
+      ? worldProductionWorkOrder(
+          requestedEntry.workshop,
+          existingWorld,
+          request,
+        )
+      : (playtest.next ??
+        worldProductionWorkOrder(fallbackWorkshop, existingWorld, request)));
 
   const instruction = {
     target: "source_world",
@@ -349,11 +346,7 @@ export async function generateSourceWorldProduction(
       readerSemantics:
         "Reader-side prior only; never objective Source fact and never Project Canon",
     },
-    ...worldWorkOrderInput(
-      op,
-      existingWorld,
-      request.wishFulfillment ?? null,
-    ),
+    ...worldWorkOrderInput(op, existingWorld, request.wishFulfillment ?? null),
     authorRequest: request,
     worldBuilderAtlasContract: WORLD_BUILDER_ATLAS_CONTRACT,
     sourceWorld: {
@@ -769,10 +762,7 @@ async function callSourceWorldModel(
   prompt: string,
   options: SourceWorldProductionGenerateOptions,
 ): Promise<unknown> {
-  const { assignment, gateway } = sourceWorldModelRuntime(
-    database,
-    options,
-  );
+  const { assignment, gateway } = sourceWorldModelRuntime(database, options);
   const result = await gateway.generateStructured(
     {
       model: assignment.model.modelId,
