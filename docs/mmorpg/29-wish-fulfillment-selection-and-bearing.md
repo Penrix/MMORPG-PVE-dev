@@ -640,7 +640,7 @@ missing_value    → price / scarcity / reader_prior
 missing_activity → reality / competition
 ~~~
 
-Story Director 返回 `BLOCKED_WORLD_GAP` 时，同时返回 `worldWorkOrders`。WorkOrder 使用当前 Project Reality 的真实 Canon 投影寻找锚点，例如：
+Story Director 返回 `BLOCKED_WORLD_GAP` 时，同时返回 `worldWorkOrders`。该字段会随 `/api/projects/:projectId/story-director/design` 的 run `outputArtifact` 原样暴露给客户端，因此前端 / Work / 其他宿主不需要重新推断 gap 应该交给哪个 Module 1 workshop。WorkOrder 使用当前 Project Reality 的真实 Canon 投影寻找锚点，例如：
 
 ~~~text
 object:medic
