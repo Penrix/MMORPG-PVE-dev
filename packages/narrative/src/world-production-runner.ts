@@ -209,49 +209,106 @@ const BEARING_KIND_WORKSHOP: Readonly<Record<string, WorldWorkshop>> = {
  * the world after a high-value thread is chosen, but it may not choose the
  * first expensive production target merely because a Family is numerically thin.
  */
+export interface WorldWishFulfillmentProgress {
+  servedThreadIds: ReadonlySet<string>;
+  servedBearingRequirementIds: ReadonlySet<string>;
+}
+
+function wishFulfillmentProgress(
+  steps: readonly WorldProductionStep[],
+): WorldWishFulfillmentProgress {
+  return {
+    servedThreadIds: new Set(
+      steps.flatMap((step) => step.wishFulfillmentThreadIds),
+    ),
+    servedBearingRequirementIds: new Set(
+      steps.flatMap((step) => step.bearingRequirementIds),
+    ),
+  };
+}
+
+/**
+ * SELECT -> BEAR before generic Atlas coverage repair.
+ *
+ * A high-value target is not a single-choice reward. The same character,
+ * ability, organization or place may carry many simultaneous fantasy threads
+ * (recognition + mentorship + private access + public backing + affection +
+ * destiny rewrite...). Each active thread must get at least one concrete
+ * production step, and every explicitly missing bearing requirement must be
+ * serviced before the engine falls back to generic family coverage.
+ */
 export function worldProductionWorkOrderForWishFulfillment(
   frame: WishFulfillmentFrame,
   doc: WorldPackDocument,
   request: WorldPackRequest,
+  progress: WorldWishFulfillmentProgress = {
+    servedThreadIds: new Set<string>(),
+    servedBearingRequirementIds: new Set<string>(),
+  },
 ): WorldWorkOrder | null {
-  const thread =
-    frame.threads.find((item) => item.phase === "bearing") ??
-    frame.threads.find((item) => item.phase === "selected") ??
-    frame.threads.find((item) => item.phase === "candidate") ??
-    null;
-  if (!thread) return null;
+  const phasePriority = new Map([
+    ["bearing", 0],
+    ["selected", 1],
+    ["candidate", 2],
+  ]);
+  const threads = frame.threads
+    .filter((item) => phasePriority.has(item.phase))
+    .sort(
+      (a, b) =>
+        (phasePriority.get(a.phase) ?? 99) -
+        (phasePriority.get(b.phase) ?? 99),
+    );
 
-  const missingBearing = frame.bearingRequirements.filter(
-    (item) => item.status === "missing" && item.threadIds.includes(thread.id),
-  );
-  const workshop =
-    (missingBearing[0] && BEARING_KIND_WORKSHOP[missingBearing[0].kind]) ??
-    WISH_DIMENSION_WORKSHOP[thread.dimension] ??
-    "playability";
-  if (!workshop) return null;
+  for (const thread of threads) {
+    const unservedBearing = frame.bearingRequirements.filter(
+      (item) =>
+        item.status === "missing" &&
+        item.threadIds.includes(thread.id) &&
+        !progress.servedBearingRequirementIds.has(item.id),
+    );
+    if (
+      unservedBearing.length === 0 &&
+      progress.servedThreadIds.has(thread.id)
+    ) {
+      continue;
+    }
 
-  const base = worldProductionWorkOrder(workshop, doc, request);
-  const targetRef =
-    thread.targetRefs.find((ref) => doc.nodes.some((node) => node.localId === ref)) ??
-    base.subjectRef;
-  const targetNode = targetRef
-    ? doc.nodes.find((node) => node.localId === targetRef)
-    : null;
-  const bearingReason = missingBearing.length
-    ? ` 缺少承重：${missingBearing.map((item) => item.requirement).join("；")}。`
-    : "";
+    const firstBearing = unservedBearing[0] ?? null;
+    const workshop =
+      (firstBearing && BEARING_KIND_WORKSHOP[firstBearing.kind]) ??
+      WISH_DIMENSION_WORKSHOP[thread.dimension] ??
+      "playability";
+    const bearingForWorkshop = unservedBearing.filter(
+      (item) => BEARING_KIND_WORKSHOP[item.kind] === workshop,
+    );
 
-  return {
-    ...base,
-    subjectRef: targetRef,
-    subjectName:
-      targetNode?.name ?? thread.targetNames[0] ?? base.subjectName,
-    reason:
-      `优先服务意淫展开线程「${thread.id}」：${thread.desiredChange}。${bearingReason} ` +
-      base.reason,
-    wishFulfillmentThreadIds: [thread.id],
-    bearingRequirementIds: missingBearing.map((item) => item.id),
-  };
+    const base = worldProductionWorkOrder(workshop, doc, request);
+    const targetRef =
+      thread.targetRefs.find((ref) =>
+        doc.nodes.some((node) => node.localId === ref),
+      ) ?? base.subjectRef;
+    const targetNode = targetRef
+      ? doc.nodes.find((node) => node.localId === targetRef)
+      : null;
+    const bearingReason = bearingForWorkshop.length
+      ? ` 缺少承重：${bearingForWorkshop
+          .map((item) => item.requirement)
+          .join("；")}。`
+      : "";
+
+    return {
+      ...base,
+      subjectRef: targetRef,
+      subjectName:
+        targetNode?.name ?? thread.targetNames[0] ?? base.subjectName,
+      reason:
+        `优先服务意淫展开线程「${thread.id}」：${thread.desiredChange}。${bearingReason} ` +
+        base.reason,
+      wishFulfillmentThreadIds: [thread.id],
+      bearingRequirementIds: bearingForWorkshop.map((item) => item.id),
+    };
+  }
+  return null;
 }
 
 export function hasWorldWorkshopOutput(
@@ -425,18 +482,29 @@ export async function runWorldWorkshops(args: {
   // deficiency remains, and unrelated workshops are not executed merely to
   // tick a checklist. The bootstrap list is only a fallback for an otherwise
   // undiagnosable empty start.
-  const maxSteps = 16;
+  const activeWishThreads =
+    args.request.wishFulfillment?.threads.filter((thread) =>
+      ["candidate", "selected", "bearing"].includes(thread.phase),
+    ).length ?? 0;
+  const missingBearingCount =
+    args.request.wishFulfillment?.bearingRequirements.filter(
+      (item) => item.status === "missing",
+    ).length ?? 0;
+  const maxSteps = Math.min(
+    40,
+    Math.max(16, activeWishThreads + missingBearingCount + 8),
+  );
   for (let index = steps.length; index < maxSteps; index++) {
     const check = playtestWorld(view(), args.request);
     const firstStep = steps.length === 0 && index === 0;
-    const wishFulfillmentOrder =
-      firstStep && args.request.wishFulfillment
-        ? worldProductionWorkOrderForWishFulfillment(
-            args.request.wishFulfillment,
-            view(),
-            args.request,
-          )
-        : null;
+    const wishFulfillmentOrder = args.request.wishFulfillment
+      ? worldProductionWorkOrderForWishFulfillment(
+          args.request.wishFulfillment,
+          view(),
+          args.request,
+          wishFulfillmentProgress(steps),
+        )
+      : null;
     const requestedEntry = firstStep
       ? resolveWorldDesignEntry(args.request, view())
       : null;
@@ -506,6 +574,7 @@ export async function runWorldWorkshops(args: {
             op.workshop,
             op.subjectRef,
             args.knownSourceKeys ?? new Set<string>(),
+            op,
           );
           if (
             !hasWorldWorkshopOutput(
@@ -540,13 +609,23 @@ export async function runWorldWorkshops(args: {
       op.workshop,
       op.subjectRef,
       args.knownSourceKeys ?? new Set<string>(),
+      op,
     );
     state = merged.document;
     steps.push(merged.step);
     usage = addUsage(usage, result.usage);
     await args.onCheckpoint?.({ document: state, usage, steps: [...steps] });
   }
-  const remaining = playtestWorld(view(), args.request).next;
+  const remainingWishFulfillment = args.request.wishFulfillment
+    ? worldProductionWorkOrderForWishFulfillment(
+        args.request.wishFulfillment,
+        view(),
+        args.request,
+        wishFulfillmentProgress(steps),
+      )
+    : null;
+  const remaining =
+    remainingWishFulfillment ?? playtestWorld(view(), args.request).next;
   if (remaining) {
     // Never silently stage a package while a blocking structural deficiency
     // still exists. Non-blocking Atlas audit gaps remain recommendations for
@@ -571,6 +650,8 @@ export async function runWorldWorkshops(args: {
         workshop: step.workshop,
         subjectRef: step.subjectRef,
         changedRefs: step.changedRefs,
+        wishFulfillmentThreadIds: step.wishFulfillmentThreadIds,
+        bearingRequirementIds: step.bearingRequirementIds,
       })),
       playtestedPaths: playtest.interactionPaths,
       atlasAudit: playtest.atlasAudit,
