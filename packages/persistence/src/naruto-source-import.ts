@@ -302,6 +302,71 @@ export function importNarutoDattebayo(
     }
     stats.collections.jutsu = jutsu.size;
 
+    // POWER-family roots derived from explicit upstream structures. These are
+    // ordinary World Atlas rule/ability objects in the same graph, NOT a
+    // parallel Naruto power subsystem. They organize existing evidence without
+    // inventing costs, prerequisites, balancing rules or historical states.
+    add(
+      "rule:naruto:jutsu-system",
+      "rule",
+      "Jutsu System",
+      {
+        authority: "taxonomy_root",
+        evidence: "Dattebayo character jutsu[] fields",
+      },
+      "power-system",
+      "Taxonomy root for source-listed jutsu; individual mechanics remain source-bound.",
+    );
+    add(
+      "rule:naruto:chakra-nature",
+      "rule",
+      "Chakra Nature",
+      {
+        authority: "taxonomy_root",
+        evidence: "Dattebayo natureType[] fields",
+      },
+      "power-system",
+      "Taxonomy root for explicit chakra natureType evidence.",
+    );
+    add(
+      "rule:naruto:kekkei-genkai",
+      "rule",
+      "Kekkei Genkai",
+      {
+        authority: "taxonomy_root",
+        evidence: "Dattebayo kekkei-genkai collection",
+      },
+      "power-system",
+      "Taxonomy root for the upstream kekkei-genkai collection.",
+    );
+
+    const natureTypes = new Set<string>();
+    for (const entry of [
+      ...data.characters,
+      ...data.akatsuki,
+      ...data.kara,
+      ...data["tailed-beasts"],
+    ]) {
+      const row = asRow(entry);
+      for (const name of asList(row?.natureType).map(asText)) {
+        if (isJutsuName(name)) natureTypes.add(name);
+      }
+    }
+    for (const name of natureTypes) {
+      add(
+        `nature:${name}`,
+        "ability",
+        name,
+        {
+          name,
+          extraction: "verbatim natureType[] value",
+        },
+        "power-system",
+        "Source-listed chakra nature; classification details remain provenance-aware.",
+      );
+    }
+    stats.collections["chakra-natures"] = natureTypes.size;
+
     const link = (
       fromKey: string,
       toKey: string,
@@ -321,6 +386,32 @@ export function importNarutoDattebayo(
       });
       stats.relations++;
     };
+    for (const name of jutsu)
+      link(
+        `jutsu:${name}`,
+        "rule:naruto:jutsu-system",
+        "part_of_power_system_recorded",
+        "Source-listed jutsu organized under the shared Jutsu System taxonomy root.",
+      );
+    for (const entry of data["kekkei-genkai"]) {
+      const row = asRow(entry);
+      const id = row ? numberId(row.id) : null;
+      if (id === null) continue;
+      link(
+        sourceKey("kekkei", id),
+        "rule:naruto:kekkei-genkai",
+        "part_of_power_system_recorded",
+        "Upstream kekkei-genkai collection organized under the shared Kekkei Genkai taxonomy root.",
+      );
+    }
+    for (const name of natureTypes)
+      link(
+        `nature:${name}`,
+        "rule:naruto:chakra-nature",
+        "part_of_power_system_recorded",
+        "Explicit natureType value organized under the Chakra Nature taxonomy root.",
+      );
+
     for (const group of groups) {
       for (const entry of data[group.collection]) {
         const row = asRow(entry);
@@ -340,6 +431,47 @@ export function importNarutoDattebayo(
         }
       }
     }
+    const linkNatureTypes = (
+      entries: readonly unknown[],
+      keyForRow: (id: number) => string,
+      sourceLabel: string,
+    ): void => {
+      for (const entry of entries) {
+        const row = asRow(entry);
+        const id = row ? numberId(row.id) : null;
+        if (id === null || !row) continue;
+        for (const name of asList(row.natureType).map(asText)) {
+          if (!natureTypes.has(name)) continue;
+          link(
+            keyForRow(id),
+            `nature:${name}`,
+            "chakra_nature_recorded",
+            `Explicit upstream ${sourceLabel} natureType[] entry; historical availability remains source-bound`,
+          );
+        }
+      }
+    };
+    linkNatureTypes(
+      data.characters,
+      (id) => sourceKey("character", id),
+      "characters",
+    );
+    linkNatureTypes(
+      data.akatsuki,
+      (id) => sourceKey("character", id),
+      "akatsuki",
+    );
+    linkNatureTypes(
+      data.kara,
+      (id) => sourceKey("character", id),
+      "kara",
+    );
+    linkNatureTypes(
+      data["tailed-beasts"],
+      (id) => sourceKey("beast", id),
+      "tailed-beasts",
+    );
+
     for (const [group, org] of [
       ["akatsuki", "org:akatsuki"],
       ["kara", "org:kara"],
