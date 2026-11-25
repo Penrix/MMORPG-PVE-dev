@@ -272,6 +272,118 @@ export function normalizeBleachDatabase(input: {
     relations.push({ fromKey, toKey, relation, sourceNote });
   };
 
+  const ensureRule = (
+    sourceKey: string,
+    canonicalKey: string,
+    name: string,
+    summary: string,
+    collection: string,
+  ): string => {
+    addRecord({
+      sourceKey,
+      canonicalKey,
+      kind: "rule",
+      name,
+      summary,
+      raw: { projection: "derived_from_structured_bleach_power_fields" },
+      sourceUrl: upstream.sourceUrl,
+      originCollection: collection,
+    });
+    return sourceKey;
+  };
+
+  const ensureAbility = (
+    ability: string,
+    collection: string,
+    sourceField: string,
+  ): string | null => {
+    if (!isConcreteBleachPowerValue(ability) || ability.length > 180) return null;
+    const abilityKey = "ability:" + slug(ability);
+    addRecord({
+      sourceKey: abilityKey,
+      canonicalKey: abilityKey,
+      kind: "ability",
+      name: ability,
+      summary:
+        "Named power/form/skill extracted from structured Bleach upstream evidence.",
+      raw: { name: ability, sourceField },
+      sourceUrl: rawUrl(upstream, "data/" + collection + ".json"),
+      originCollection: collection + "." + sourceField,
+    });
+    return abilityKey;
+  };
+
+  const ensureZanpakutoRoot = (): string =>
+    ensureRule(
+      "power-rule:zanpakuto-system",
+      "rule:bleach:zanpakuto-system",
+      "Zanpakutō System",
+      "POWER rule root projected from structured stats.Zanpakutō evidence.",
+      "power-system/zanpakuto",
+    );
+
+  const ensureZanpakutoStage = (
+    stage: "shikai" | "bankai" | "shinuchi" | "resurreccion",
+    name: string,
+    sourceField: string,
+  ): string => {
+    const root = ensureZanpakutoRoot();
+    const key = "power-rule:zanpakuto-stage:" + stage;
+    ensureRule(
+      key,
+      "rule:bleach:zanpakuto-stage:" + stage,
+      name,
+      "Zanpakutō-related stage/form projected from structured " +
+        sourceField +
+        " evidence.",
+      "power-system/zanpakuto/stages",
+    );
+    addRelation(
+      key,
+      root,
+      "power_branch_of_recorded",
+      "The upstream stores " + sourceField + " under stats.Zanpakutō.",
+    );
+    return key;
+  };
+
+  const ensureQuincyRoot = (): string =>
+    ensureRule(
+      "power-rule:quincy-system",
+      "rule:bleach:quincy-system",
+      "Quincy Power System",
+      "POWER rule root projected from structured Quincy Primary Skills evidence.",
+      "power-system/quincy",
+    );
+
+  const ensureVollstandigRule = (): string => {
+    const root = ensureQuincyRoot();
+    const key = "power-rule:quincy-stage:vollstandig";
+    ensureRule(
+      key,
+      "rule:bleach:quincy-stage:vollstandig",
+      "Quincy: Vollständig",
+      "Quincy power stage/form projected from the structured vollständig field.",
+      "power-system/quincy/stages",
+    );
+    addRelation(
+      key,
+      root,
+      "power_branch_of_recorded",
+      "The upstream exposes vollständig as a structured Quincy Primary Skills field.",
+    );
+    return key;
+  };
+
+  const ensureFullbringRoot = (): string =>
+    ensureRule(
+      "power-rule:fullbring-system",
+      "rule:bleach:fullbring-system",
+      "Fullbring System",
+      "POWER rule root projected from structured Human Primary Skill.fullbring evidence.",
+      "power-system/fullbring",
+    );
+
   for (const [collection, value] of Object.entries(input)) {
     for (const row of arrayOfObjects(value)) {
       const id = text(row.id);
@@ -280,6 +392,7 @@ export function normalizeBleachDatabase(input: {
         text(nameValue?.english) || text(nameValue?.romaji) || text(row.name);
       if (!id || !name) continue;
       const characterKey = "character:" + collection + ":" + id.toLowerCase();
+      const sourcePath = "data/" + collection + ".json";
       addRecord({
         sourceKey: characterKey,
         canonicalKey: characterKey,
@@ -290,13 +403,16 @@ export function normalizeBleachDatabase(input: {
         ),
         summary: text(row.description),
         raw: row,
-        sourceUrl: rawUrl(upstream, "data/" + collection + ".json"),
+        sourceUrl: rawUrl(upstream, sourcePath),
         originCollection: collection,
       });
 
       const stats = object(row.stats);
       const professional = findNestedObject(stats, "professional status");
-      const skills = findNestedObject(stats, "primary skills");
+      const skills =
+        findNestedObject(stats, "primary skills") ??
+        findNestedObject(stats, "primary skill");
+      const zanpakuto = findNestedObject(stats, "zanpakutō");
 
       for (const [field, relation] of [
         ["affiliation", "affiliation_recorded"],
@@ -315,7 +431,7 @@ export function normalizeBleachDatabase(input: {
             summary:
               "Organization/team name extracted from Bleach professional-status evidence.",
             raw: { name: organization, sourceField: field },
-            sourceUrl: rawUrl(upstream, "data/" + collection + ".json"),
+            sourceUrl: rawUrl(upstream, sourcePath),
             originCollection: collection + ".stats.Professional Status",
           });
           addRelation(
@@ -338,7 +454,7 @@ export function normalizeBleachDatabase(input: {
           summary:
             "Base of operations named by Bleach professional-status evidence.",
           raw: { name: location },
-          sourceUrl: rawUrl(upstream, "data/" + collection + ".json"),
+          sourceUrl: rawUrl(upstream, sourcePath),
           originCollection: collection + ".stats.Professional Status",
         });
         addRelation(
@@ -350,25 +466,133 @@ export function normalizeBleachDatabase(input: {
       }
 
       for (const ability of scalarLeaves(skills).slice(0, 30)) {
-        if (!ability || ability.length > 180) continue;
-        const abilityKey = "ability:" + slug(ability);
-        addRecord({
-          sourceKey: abilityKey,
-          canonicalKey: abilityKey,
-          kind: "ability",
-          name: ability,
-          summary:
-            "Primary skill or named power extracted from Bleach upstream evidence.",
-          raw: { name: ability },
-          sourceUrl: rawUrl(upstream, "data/" + collection + ".json"),
-          originCollection: collection + ".stats.Primary Skills",
-        });
+        const abilityKey = ensureAbility(
+          ability,
+          collection,
+          skills === findNestedObject(stats, "primary skill")
+            ? "stats.Primary Skill"
+            : "stats.Primary Skills",
+        );
+        if (!abilityKey) continue;
         addRelation(
           characterKey,
           abilityKey,
           "ability_listed",
-          "Extracted from upstream Primary Skills; mechanics and historical availability remain source-bound.",
+          "Extracted from upstream Primary Skill(s); mechanics and historical availability remain source-bound.",
         );
+      }
+
+      for (const [field, stage, displayName, relation] of [
+        ["shikai", "shikai", "Shikai", "shikai_recorded"],
+        ["bankai", "bankai", "Bankai", "bankai_recorded"],
+        ["shin'uchi", "shinuchi", "Shin'uchi", "shinuchi_recorded"],
+        [
+          "resurrección",
+          "resurreccion",
+          "Resurrección",
+          "resurreccion_recorded",
+        ],
+      ] as const) {
+        const valueText = scalarFromKey(zanpakuto, field);
+        const abilityKey = ensureAbility(
+          valueText,
+          collection,
+          "stats.Zanpakutō." + field,
+        );
+        if (!abilityKey) continue;
+        const stageKey = ensureZanpakutoStage(
+          stage,
+          displayName,
+          "stats.Zanpakutō." + field,
+        );
+        addRelation(
+          characterKey,
+          abilityKey,
+          relation,
+          "Exact named form from upstream stats.Zanpakutō." + field + ".",
+        );
+        addRelation(
+          abilityKey,
+          stageKey,
+          "power_stage_recorded",
+          "Named form belongs to the structured " + displayName + " field.",
+        );
+      }
+
+      if (collection === "quincy") {
+        const root = ensureQuincyRoot();
+        for (const [field, relation] of [
+          ["spirit weapon", "spirit_weapon_recorded"],
+          ["signature skill", "signature_skill_recorded"],
+        ] as const) {
+          const valueText = scalarFromKey(skills, field);
+          const abilityKey = ensureAbility(
+            valueText,
+            collection,
+            "stats.Primary Skills." + field,
+          );
+          if (!abilityKey) continue;
+          addRelation(
+            characterKey,
+            abilityKey,
+            relation,
+            "Exact Quincy Primary Skills." + field + " evidence.",
+          );
+          addRelation(
+            abilityKey,
+            root,
+            "part_of_power_system_recorded",
+            "Structured Quincy Primary Skills evidence.",
+          );
+        }
+
+        const vollstandig =
+          scalarFromKey(skills, "vollständig") ||
+          scalarFromKey(skills, "vollstandig");
+        const abilityKey = ensureAbility(
+          vollstandig,
+          collection,
+          "stats.Primary Skills.vollständig",
+        );
+        if (abilityKey) {
+          const stageKey = ensureVollstandigRule();
+          addRelation(
+            characterKey,
+            abilityKey,
+            "vollstandig_recorded",
+            "Exact Quincy vollständig evidence.",
+          );
+          addRelation(
+            abilityKey,
+            stageKey,
+            "power_stage_recorded",
+            "Named form belongs to the structured vollständig field.",
+          );
+        }
+      }
+
+      if (collection === "humans") {
+        const fullbring = scalarFromKey(skills, "fullbring");
+        const abilityKey = ensureAbility(
+          fullbring,
+          collection,
+          "stats.Primary Skill.fullbring",
+        );
+        if (abilityKey) {
+          const root = ensureFullbringRoot();
+          addRelation(
+            characterKey,
+            abilityKey,
+            "fullbring_recorded",
+            "Exact Human Primary Skill.fullbring evidence.",
+          );
+          addRelation(
+            abilityKey,
+            root,
+            "part_of_power_system_recorded",
+            "Structured Human Fullbring evidence.",
+          );
+        }
       }
     }
   }
@@ -388,7 +612,7 @@ export function normalizeBleachDatabase(input: {
       },
       evidenceRole: "primary",
       sourceNote:
-        "Bulk character evidence grouped by Shinigami, Arrancar, Quincy and Humans.",
+        "Bulk character evidence grouped by Shinigami, Arrancar, Quincy and Humans, including structured POWER projections from Zanpakutō / Primary Skill fields.",
       records: [...records.values()],
       relations,
     },
@@ -718,6 +942,19 @@ function slug(value: string): string {
   for (const char of value)
     hash = Math.imul(hash ^ char.charCodeAt(0), 16777619) >>> 0;
   return "u-" + hash.toString(16);
+}
+
+function isConcreteBleachPowerValue(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return false;
+  return !new Set([
+    "unknown",
+    "none",
+    "not yet achieved",
+    "not achieved",
+    "n/a",
+    "not applicable",
+  ]).has(normalized);
 }
 
 function findNestedObject(
