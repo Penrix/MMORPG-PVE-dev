@@ -134,33 +134,40 @@ describe("program-owned world production, not LLM self-reported completion", () 
         protagonistEntityId: "hero",
         readerFantasy: "让高价人物逐渐认可男主并给出特殊入口",
         protagonistDesire: "进入更高价圈层",
-        threads: [{
-          id: "wish:tsunade:recognition",
-          targetRefs: ["tsunade"],
-          targetNames: ["纲手"],
-          dimension: "relationship",
-          readerFantasy: "纲手从注意、认可一路发展到私人准入与公开背书",
-          protagonistDesire: "取得纲手认可",
-          desiredChange: "纲手主动认可男主并开放别人没有的位置",
-          privatePrivilege: "私人传承入口",
-          publicRepricing: "三忍级人物公开背书",
-          upgradeLeverage: ["三忍圈层", "木叶高层"],
-          phase: "selected",
-        }],
-        bearingRequirements: [{
-          id: "bearing:tsunade:choice",
-          threadIds: ["wish:tsunade:recognition"],
-          kind: "relationship",
-          requirement: "纲手必须拥有真实选择权、公共价格和与男主积累关系的路径",
-          evidenceRefs: [],
-          status: "missing",
-          raisesPriceBecause: "她不是谁都认可，偏偏选择男主才贵",
-        }],
-        settlementTargets: [{
-          threadId: "wish:tsunade:recognition",
-          assetKind: "relationship",
-          targetGain: "纲手的公开认可与私人准入",
-        }],
+        threads: [
+          {
+            id: "wish:tsunade:recognition",
+            targetRefs: ["tsunade"],
+            targetNames: ["纲手"],
+            dimension: "relationship",
+            readerFantasy: "纲手从注意、认可一路发展到私人准入与公开背书",
+            protagonistDesire: "取得纲手认可",
+            desiredChange: "纲手主动认可男主并开放别人没有的位置",
+            privatePrivilege: "私人传承入口",
+            publicRepricing: "三忍级人物公开背书",
+            upgradeLeverage: ["三忍圈层", "木叶高层"],
+            phase: "selected",
+          },
+        ],
+        bearingRequirements: [
+          {
+            id: "bearing:tsunade:choice",
+            threadIds: ["wish:tsunade:recognition"],
+            kind: "relationship",
+            requirement:
+              "纲手必须拥有真实选择权、公共价格和与男主积累关系的路径",
+            evidenceRefs: [],
+            status: "missing",
+            raisesPriceBecause: "她不是谁都认可，偏偏选择男主才贵",
+          },
+        ],
+        settlementTargets: [
+          {
+            threadId: "wish:tsunade:recognition",
+            assetKind: "relationship",
+            targetGain: "纲手的公开认可与私人准入",
+          },
+        ],
       },
     };
     const existingWorld: WorldPackDocument = {
@@ -196,9 +203,7 @@ describe("program-owned world production, not LLM self-reported completion", () 
         expect(input.wishFulfillmentThreadIds).toEqual([
           "wish:tsunade:recognition",
         ]);
-        expect(input.bearingRequirementIds).toEqual([
-          "bearing:tsunade:choice",
-        ]);
+        expect(input.bearingRequirementIds).toEqual(["bearing:tsunade:choice"]);
         const parsed = validate(place);
         if (!parsed.success) throw new Error(parsed.issues.join("; "));
         return {
@@ -251,45 +256,53 @@ describe("program-owned world production, not LLM self-reported completion", () 
         protagonistEntityId: "hero",
         readerFantasy: "让真实专业人物重新给男主定价",
         protagonistDesire: "获得专业认可",
-        threads: [{
-          id: "wish:medic:recognition",
-          targetRefs: ["medic"],
-          targetNames: ["医疗忍者"],
-          dimension: "relationship",
-          readerFantasy: "医疗忍者亲自认可并改判",
-          protagonistDesire: "获得专业认可",
-          desiredChange: "从普通处理变成主动认可",
-          privatePrivilege: null,
-          publicRepricing: "专业体系提高男主评级",
-          upgradeLeverage: ["高价任务入口"],
-          phase: "selected",
-        }],
-        bearingRequirements: [{
-          id: "bearing:medic",
-          threadIds: ["wish:medic:recognition"],
-          kind: "person",
-          requirement: "真实专业人物亲自承担改判责任",
-          evidenceRefs: [],
-          status: "missing",
-          raisesPriceBecause: "不是路人夸奖，而是专业人物真实改判",
-        }],
-        settlementTargets: [{
-          threadId: "wish:medic:recognition",
-          assetKind: "status",
-          targetGain: "专业重新估值",
-        }],
+        threads: [
+          {
+            id: "wish:medic:recognition",
+            targetRefs: ["medic"],
+            targetNames: ["医疗忍者"],
+            dimension: "relationship",
+            readerFantasy: "医疗忍者亲自认可并改判",
+            protagonistDesire: "获得专业认可",
+            desiredChange: "从普通处理变成主动认可",
+            privatePrivilege: null,
+            publicRepricing: "专业体系提高男主评级",
+            upgradeLeverage: ["高价任务入口"],
+            phase: "selected",
+          },
+        ],
+        bearingRequirements: [
+          {
+            id: "bearing:medic",
+            threadIds: ["wish:medic:recognition"],
+            kind: "person",
+            requirement: "真实专业人物亲自承担改判责任",
+            evidenceRefs: [],
+            status: "missing",
+            raisesPriceBecause: "不是路人夸奖，而是专业人物真实改判",
+          },
+        ],
+        settlementTargets: [
+          {
+            threadId: "wish:medic:recognition",
+            assetKind: "status",
+            targetGain: "专业重新估值",
+          },
+        ],
       },
     };
     const existingWorld: WorldPackDocument = {
       ...place,
-      nodes: [{
-        ...place.nodes[0]!,
-        localId: "canon:medic",
-        existingCanonId: "medic",
-        type: "character",
-        name: "医疗忍者",
-        description: "当前真实负责秀信伤情复核的医疗忍者",
-      }],
+      nodes: [
+        {
+          ...place.nodes[0]!,
+          localId: "canon:medic",
+          existingCanonId: "medic",
+          type: "character",
+          name: "医疗忍者",
+          description: "当前真实负责秀信伤情复核的医疗忍者",
+        },
+      ],
     };
     const seen: string[] = [];
     const model = {
