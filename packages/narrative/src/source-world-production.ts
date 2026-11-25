@@ -221,6 +221,14 @@ export async function generateSourceWorldProduction(
     input.worldId,
     request,
   );
+  if (request.storyWorldGap) {
+    throw serviceLikeError(
+      "source.world.production.project_story_gap_forbidden",
+      "Project StoryWorldGap belongs to Project Reality World Builder, not Source World production",
+      422,
+    );
+  }
+
   if (
     request.wishFulfillment &&
     request.wishFulfillment.mode !== "source_reusable"
