@@ -1,4 +1,4 @@
-import { worldAtlasNarrativePriority } from "@narralume/contracts";
+import { worldAtlasNarrativePriority, type FantasyBearingKind } from "@narralume/contracts";
 import type { ContextSource } from "@narralume/context";
 import type { NarrativeDatabase } from "./database.js";
 import { SqliteUnifiedSourceWorldRepository } from "./unified-source-world-repository.js";
@@ -14,6 +14,103 @@ export interface WorldAtlasStoryObjectSurface {
   facet: string;
   slotKey: string;
   value: unknown;
+  /** Derived author/director-side affordance; never persisted as world truth. */
+  bearingKinds: FantasyBearingKind[];
+}
+
+function objectHasNonEmptyKey(value: unknown, keys: readonly string[]): boolean {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return keys.some((key) => {
+    const candidate = record[key];
+    if (typeof candidate === "string") return candidate.trim().length > 0;
+    if (Array.isArray(candidate)) return candidate.length > 0;
+    return candidate !== null && candidate !== undefined;
+  });
+}
+
+/**
+ * Module-2 projection only: classify which kind of fantasy-bearing a stored
+ * surface may support. This does not decide that a fantasy requirement is
+ * already satisfied; Module 3 must still bind a concrete requirement to
+ * concrete surface refs.
+ */
+export function worldAtlasBearingKindsForSurface(surface: {
+  authority: "confirmed" | "reference";
+  facet: string;
+  slotKey: string;
+  value: unknown;
+}): FantasyBearingKind[] {
+  const kinds = new Set<FantasyBearingKind>();
+  if (surface.authority === "confirmed") kinds.add("reality");
+
+  switch (surface.facet) {
+    case "identity":
+      kinds.add("person");
+      break;
+    case "state":
+      if (surface.slotKey === "source_identity") kinds.add("person");
+      break;
+    case "relationship":
+      kinds.add("relationship");
+      if (/敌|竞争|争夺|对手|enemy|rival|compete|contest/i.test(JSON.stringify(surface.value))) {
+        kinds.add("competition");
+      }
+      break;
+    case "chronicle":
+    case "lore":
+      kinds.add("history");
+      break;
+    case "ability":
+      kinds.add("rule");
+      if (
+        objectHasNonEmptyKey(surface.value, [
+          "acquisition",
+          "activationConditions",
+          "knowledgeOrTraining",
+          "prerequisites",
+        ])
+      ) {
+        kinds.add("qualification");
+      }
+      break;
+    case "value":
+    case "standing":
+      kinds.add("price");
+      if (objectHasNonEmptyKey(surface.value, ["scarcity"])) kinds.add("scarcity");
+      if (
+        objectHasNonEmptyKey(surface.value, [
+          "accessPath",
+          "access_path",
+          "accessConditions",
+          "access_conditions",
+        ])
+      ) {
+        kinds.add("access");
+      }
+      break;
+    case "map":
+    case "production":
+      kinds.add("access");
+      if (
+        objectHasNonEmptyKey(surface.value, [
+          "prerequisites",
+          "qualification",
+          "requirements",
+        ])
+      ) {
+        kinds.add("qualification");
+      }
+      break;
+    case "reader_semantics":
+      kinds.add("reader_prior");
+      break;
+    default:
+      break;
+  }
+
+  if (kinds.size === 0) kinds.add("other");
+  return [...kinds];
 }
 
 export interface WorldAtlasStoryObject {
@@ -116,12 +213,18 @@ export class WorldAtlasStoryContextBuilder {
           sourceReference.link.sourceKey,
         );
         if (!semantics) continue;
-        readerSemanticSurfaces.push({
-          authority: "reference",
+        const readerSemanticSurface = {
+          authority: "reference" as const,
           sourceId: `world-reader-semantics:${view.entity.id}:${world.id}`,
           facet: "reader_semantics",
           slotKey: sourceReference.link.sourceKey,
           value: semantics,
+        };
+        readerSemanticSurfaces.push({
+          ...readerSemanticSurface,
+          bearingKinds: worldAtlasBearingKindsForSurface(
+            readerSemanticSurface,
+          ),
         });
       }
 
@@ -140,21 +243,34 @@ export class WorldAtlasStoryContextBuilder {
             name: view.entity.name,
             type: view.entity.type,
           },
+          bearingKinds: ["reality", "person"],
         },
-        ...project.map((slot) => ({
-          authority: "confirmed" as const,
-          sourceId: `world-reality:${view.entity.id}`,
-          facet: slot.facet,
-          slotKey: slot.slotKey,
-          value: slot.value,
-        })),
-        ...sourceIdentityAndRelations.map((slot) => ({
-          authority: "reference" as const,
-          sourceId: `world-source-baseline:${view.entity.id}`,
-          facet: slot.facet,
-          slotKey: slot.slotKey,
-          value: slot.value,
-        })),
+        ...project.map((slot) => {
+          const surface = {
+            authority: "confirmed" as const,
+            sourceId: `world-reality:${view.entity.id}`,
+            facet: slot.facet,
+            slotKey: slot.slotKey,
+            value: slot.value,
+          };
+          return {
+            ...surface,
+            bearingKinds: worldAtlasBearingKindsForSurface(surface),
+          };
+        }),
+        ...sourceIdentityAndRelations.map((slot) => {
+          const surface = {
+            authority: "reference" as const,
+            sourceId: `world-source-baseline:${view.entity.id}`,
+            facet: slot.facet,
+            slotKey: slot.slotKey,
+            value: slot.value,
+          };
+          return {
+            ...surface,
+            bearingKinds: worldAtlasBearingKindsForSurface(surface),
+          };
+        }),
         ...readerSemanticSurfaces,
       ];
       objects.push({
