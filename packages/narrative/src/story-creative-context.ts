@@ -410,6 +410,36 @@ export function finalizeStoryCreativeFrameState(
   });
 }
 
+function wishGainMatches(targetGain: string, retainedGain: string): boolean {
+  const target = targetGain.trim().replace(/\s+/g, "");
+  const retained = retainedGain.trim().replace(/\s+/g, "");
+  if (!target || !retained) return false;
+  return target === retained || target.includes(retained) || retained.includes(target);
+}
+
+function settleWishFulfillment(
+  current: StoryCreativeFrameState["wishFulfillment"],
+  retainedGains: readonly string[],
+): StoryCreativeFrameState["wishFulfillment"] {
+  if (!current || retainedGains.length === 0) return current;
+  const retainedThreadIds = new Set(
+    current.settlementTargets
+      .filter((target) =>
+        retainedGains.some((gain) => wishGainMatches(target.targetGain, gain)),
+      )
+      .map((target) => target.threadId),
+  );
+  if (retainedThreadIds.size === 0) return current;
+  return {
+    ...current,
+    threads: current.threads.map((thread) =>
+      retainedThreadIds.has(thread.id)
+        ? { ...thread, phase: "retained" as const }
+        : thread,
+    ),
+  };
+}
+
 // prettier-ignore
 export interface ApplySettlementToCreativeFrameStateInput {
   currentState: StoryCreativeFrameState;
@@ -469,6 +499,10 @@ export function applySettlementToCreativeFrameState(
     upgradeLedger: ledger && nextStep
       ? { ...ledger, currentStepId: nextStep.id }
       : ledger,
+    wishFulfillment: settleWishFulfillment(
+      currentState.wishFulfillment,
+      retainedGains,
+    ),
     stakeLedger: currentState.stakeLedger.map((entry) => {
       if (entry.state === "settled") return entry;
       if (payoffEntityIds.has(entry.entityId)) return { ...entry, state: "settled" };

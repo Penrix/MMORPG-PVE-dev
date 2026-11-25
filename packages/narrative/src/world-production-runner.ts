@@ -227,7 +227,7 @@ export function worldProductionWorkOrderForWishFulfillment(
   const workshop =
     (missingBearing[0] && BEARING_KIND_WORKSHOP[missingBearing[0].kind]) ??
     WISH_DIMENSION_WORKSHOP[thread.dimension] ??
-    null;
+    "playability";
   if (!workshop) return null;
 
   const base = worldProductionWorkOrder(workshop, doc, request);

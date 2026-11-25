@@ -69,7 +69,7 @@ export type WishFulfillmentThread = z.infer<
 export const WishFulfillmentThreadAdvanceSchema = z
   .object({
     threadId: z.string().trim().min(1).max(300),
-    toPhase: z.enum(["bearing", "realizing", "realized", "retained"]),
+    toPhase: z.enum(["bearing", "realizing"]),
     storyMove: z.string().trim().min(1).max(5_000),
   })
   .strict();

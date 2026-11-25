@@ -633,7 +633,18 @@ describe("accepted settlement creative-state write-back", () => {
     });
     expect(next.frameOutlineNodeId).toBe("chapter-2");
     expect(next.upgradeLedger?.currentStepId).toBe("step:two");
+    expect(
+      next.wishFulfillment?.threads.find(
+        (thread) => thread.id === "wish:settlement:qualification",
+      )?.phase,
+    ).toBe("retained");
+    expect(next.retainedAssets).toContain("新的任务资格");
     expect(original.upgradeLedger?.currentStepId).toBe("step:one");
+    expect(
+      original.wishFulfillment?.threads.find(
+        (thread) => thread.id === "wish:settlement:qualification",
+      )?.phase,
+    ).toBe("realizing");
     expect(next.digest).not.toBe(original.digest);
   });
 });
@@ -680,6 +691,41 @@ function creativeState() {
         { id: "step:one", title: "复核", targetGain: "资格", gate: "通过复核", targetCircle: "忍者" },
         { id: "step:two", title: "高级任务", targetGain: "高级待遇", gate: "进入任务", targetCircle: "上忍" },
       ],
+    },
+    wishFulfillment: {
+      version: "wish-fulfillment-frame.v1",
+      authority: "creative-direction",
+      mode: "story_current",
+      protagonistEntityId: "hero",
+      readerFantasy: "通过专业复核真正拿到新的任务资格",
+      protagonistDesire: "获得任务资格",
+      threads: [{
+        id: "wish:settlement:qualification",
+        targetRefs: [],
+        targetNames: ["任务资格"],
+        dimension: "status",
+        readerFantasy: "不是只被夸，而是真正拿到更贵的任务资格",
+        protagonistDesire: "取得资格",
+        desiredChange: "从普通忍者变成拥有新的任务资格",
+        privatePrivilege: "获得此前没有的任务准入",
+        publicRepricing: "任务体系正式提高男主价格",
+        upgradeLeverage: ["高级任务"],
+        phase: "realizing",
+      }],
+      bearingRequirements: [{
+        id: "bearing:settlement:review",
+        threadIds: ["wish:settlement:qualification"],
+        kind: "qualification",
+        requirement: "真实复核与任务体系必须正式承认资格",
+        evidenceRefs: ["story-surface:review"],
+        status: "grounded",
+        raisesPriceBecause: "资格必须由真实体系给出才是资产",
+      }],
+      settlementTargets: [{
+        threadId: "wish:settlement:qualification",
+        assetKind: "access",
+        targetGain: "新的任务资格",
+      }],
     },
     stakeLedger: [stake("stake:payoff", "rival"), stake("stake:charge", "hero")],
     expectationThreads: [thread("thread:payoff"), thread("thread:future")],

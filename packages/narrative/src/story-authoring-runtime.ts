@@ -337,6 +337,7 @@ export function finalizeStoryAuthoringSearch(
 function applyWishFulfillmentAdvances(
   frame: WishFulfillmentFrame | null,
   advances: readonly WishFulfillmentThreadAdvance[],
+  bearingEvidenceRefs: readonly string[],
 ): WishFulfillmentFrame | null {
   if (!frame) {
     if (advances.length > 0) {
@@ -373,11 +374,27 @@ function applyWishFulfillmentAdvances(
       );
     }
   }
+  const advancedThreadIds = new Set(advances.map((advance) => advance.threadId));
   return {
     ...frame,
     threads: frame.threads.map((thread) => {
       const advance = byId.get(thread.id);
       return advance ? { ...thread, phase: advance.toPhase } : thread;
+    }),
+    bearingRequirements: frame.bearingRequirements.map((requirement) => {
+      if (
+        bearingEvidenceRefs.length === 0 ||
+        !requirement.threadIds.some((threadId) => advancedThreadIds.has(threadId))
+      ) {
+        return requirement;
+      }
+      return {
+        ...requirement,
+        status: "grounded" as const,
+        evidenceRefs: [
+          ...new Set([...requirement.evidenceRefs, ...bearingEvidenceRefs]),
+        ],
+      };
     }),
   };
 }
@@ -456,6 +473,7 @@ export function finalizeStoryUnitDesign(
   const advancedWishFulfillment = applyWishFulfillmentAdvances(
     wishFrame,
     wishAdvances,
+    bearingEvidenceRefs,
   );
   if (!entityIds.has(parsed.upgradeLedger.protagonistEntityId)) {
     throw new Error("story_authoring.upgrade_protagonist_not_in_object_field");
