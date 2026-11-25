@@ -297,7 +297,8 @@ export function normalizeBleachDatabase(input: {
     collection: string,
     sourceField: string,
   ): string | null => {
-    if (!isConcreteBleachPowerValue(ability) || ability.length > 180) return null;
+    if (!isConcreteBleachPowerValue(ability) || ability.length > 180)
+      return null;
     const abilityKey = "ability:" + slug(ability);
     addRecord({
       sourceKey: abilityKey,

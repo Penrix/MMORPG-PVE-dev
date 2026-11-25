@@ -666,7 +666,7 @@ describe("multi-world normalizers", () => {
               affiliation: "Gotei 13",
               "base of operations": "Seireitei",
             },
-            "Zanpakutō": {
+            Zanpakutō: {
               shikai: "Zabimaru",
               bankai: "Sōō Zabimaru",
             },
@@ -679,8 +679,8 @@ describe("multi-world normalizers", () => {
           name: { english: "Loly Aivirrne" },
           description: "Arrancar",
           stats: {
-            "Zanpakutō": {
-              "resurrección": "Escolopendra",
+            Zanpakutō: {
+              resurrección: "Escolopendra",
             },
           },
         },

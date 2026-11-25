@@ -659,14 +659,14 @@ People-centered Query / View
 
 真实导入结果：
 
-| POWER 投影 | 数量 |
-| --- | ---: |
-| POWER rule objects | **16** |
-| Haki branches | **6** |
-| Devil Fruit classes | **8** |
-| Devil Fruit → class relations | **211** |
-| Character → Haki branch relations | **22** |
-| shared Haki ability → branch relations | **3** |
+| POWER 投影                             |    数量 |
+| -------------------------------------- | ------: |
+| POWER rule objects                     |  **16** |
+| Haki branches                          |   **6** |
+| Devil Fruit classes                    |   **8** |
+| Devil Fruit → class relations          | **211** |
+| Character → Haki branch relations      |  **22** |
+| shared Haki ability → branch relations |   **3** |
 
 当前关系形状已经能够表达：
 
@@ -692,6 +692,7 @@ Gomu Gomu no Mi
 - 禁止因为 schema 存在就伪造“已填充”的事实。
 
 当前 fresh real import：
+
 - canonical cards: **4,099**
 - canonical typed relations: **5,365**
 - evidence relations: **5,368**
@@ -728,16 +729,17 @@ Gyo / In / En / Shu / Ko / Ken / Ryu
 
 真实导入：
 
-| POWER 投影 | 数量 |
-| --- | ---: |
-| POWER rule objects | **7** |
-| Nen categories | **6** |
-| Hatsu → Nen category | **59** |
-| fundamental → Nen system | **7** |
-| advanced application → Nen system | **7** |
-| ability → Nen system | **73** |
+| POWER 投影                        |   数量 |
+| --------------------------------- | -----: |
+| POWER rule objects                |  **7** |
+| Nen categories                    |  **6** |
+| Hatsu → Nen category              | **59** |
+| fundamental → Nen system          |  **7** |
+| advanced application → Nen system |  **7** |
+| ability → Nen system              | **73** |
 
 当前 fresh real import：
+
 - canonical cards: **756**
 - canonical typed relations: **2,650**
 - evidence relations: **2,814**
@@ -755,4 +757,3 @@ Gyo / In / En / Shu / Ko / Ken / Ryu
 - Source import 继续只增厚 reusable Original Mother，不污染单书 Project Reality。
 
 永久 CI 现在同时守住 POWER 语义，而不只检查卡片总数：如果未来 Adapter 把超凡世界重新压扁成一堆 `ability` 标签，Haki / Nen 系统节点或人物连接消失，multi-world smoke 会失败。
-
