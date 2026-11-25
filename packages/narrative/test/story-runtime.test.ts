@@ -424,6 +424,81 @@ describe("Module 3 Story Runtime core", () => {
     expect(build().authoredDirection).toBe(stake.authoredDirection);
   });
 
+  it("never leaks author-side wish fulfillment or bearing plans into character observation", () => {
+    const design = storyUnitDesignFixture();
+    design.wishFulfillment = {
+      version: "wish-fulfillment-frame.v1",
+      authority: "creative-direction",
+      mode: "story_current",
+      protagonistEntityId: "hero",
+      readerFantasy:
+        "AUTHOR-ONLY Reader wants Hero publicly repriced and privately favored",
+      protagonistDesire: "leave the harbor with real leverage",
+      threads: [
+        {
+          id: "wish:author-only",
+          targetRefs: ["object:rival"],
+          targetNames: ["Rival"],
+          dimension: "relationship",
+          readerFantasy: "AUTHOR-ONLY Rival eventually grants a unique exception",
+          protagonistDesire: "gain a route through the gate",
+          desiredChange: "AUTHOR-ONLY Rival changes from blocking Hero to special access",
+          privatePrivilege: "AUTHOR-ONLY private harbor access",
+          publicRepricing: "AUTHOR-ONLY public recognition",
+          upgradeLeverage: ["next circle"],
+          phase: "realizing",
+        },
+      ],
+      bearingRequirements: [
+        {
+          id: "bearing:author-only",
+          threadIds: ["wish:author-only"],
+          kind: "relationship",
+          requirement:
+            "AUTHOR-ONLY Rival must have real authority before the exception is valuable",
+          evidenceRefs: ["surface:rival-authority"],
+          status: "grounded",
+          raisesPriceBecause:
+            "AUTHOR-ONLY the privilege is expensive because others cannot grant it",
+        },
+      ],
+      settlementTargets: [
+        {
+          threadId: "wish:author-only",
+          assetKind: "access",
+          targetGain: "private harbor access",
+        },
+      ],
+    };
+    design.wishFulfillmentAdvances = [
+      {
+        threadId: "wish:author-only",
+        toPhase: "realizing",
+        storyMove: "AUTHOR-ONLY move the privilege thread forward",
+      },
+    ];
+    design.bearingEvidence = [
+      {
+        requirementId: "bearing:author-only",
+        evidenceRefs: ["surface:rival-authority"],
+      },
+    ];
+
+    const observation = new CharacterObservationBuilder(database).build({
+      projectId: "p1",
+      characterId: "hero",
+      generationId: "generation-1",
+      storyUnitDesign: design,
+      worldContext: worldContextFixture(design),
+      targetOutlineNodeId: "chapter-1",
+      goalEvidenceRefs: ["hero-goal"],
+    });
+
+    expect(observation).not.toHaveProperty("wishFulfillment");
+    expect(observation).not.toHaveProperty("bearingEvidence");
+    expect(JSON.stringify(observation)).not.toContain("AUTHOR-ONLY");
+  });
+
   it("uses a visible camp baseline for a new actor with no story-state records", () => {
     canon.insertEntity(
       createCanonEntity({
