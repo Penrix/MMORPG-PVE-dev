@@ -654,11 +654,50 @@ describe("multi-world normalizers", () => {
     );
   });
 
-  it("normalizes Bleach professional status, base and primary skills", () => {
+  it("normalizes Bleach people and structured power systems without a parallel schema", () => {
     const seed = normalizeBleachDatabase({
-      shinigami: [],
-      arrancar: [],
-      humans: [],
+      shinigami: [
+        {
+          id: "renji_abarai",
+          name: { english: "Renji Abarai" },
+          description: "Shinigami",
+          stats: {
+            "Professional Status": {
+              affiliation: "Gotei 13",
+              "base of operations": "Seireitei",
+            },
+            "Zanpakutō": {
+              shikai: "Zabimaru",
+              bankai: "Sōō Zabimaru",
+            },
+          },
+        },
+      ],
+      arrancar: [
+        {
+          id: "loly_aivirrne",
+          name: { english: "Loly Aivirrne" },
+          description: "Arrancar",
+          stats: {
+            "Zanpakutō": {
+              "resurrección": "Escolopendra",
+            },
+          },
+        },
+      ],
+      humans: [
+        {
+          id: "fullbringer",
+          name: { english: "Fixture Fullbringer" },
+          description: "Human",
+          stats: {
+            "Primary Skill": {
+              fullbring: "Fixture Fullbring",
+              "signature skill": "Fixture Signature Skill",
+            },
+          },
+        },
+      ],
       quincy: [
         {
           id: "robert_accutrone",
@@ -672,6 +711,7 @@ describe("multi-world normalizers", () => {
             },
             "Primary Skills": {
               "spirit weapon": "Reishi Pistol",
+              "signature skill": "Fixture Quincy Signature",
               vollstandig: "Grimaniel",
             },
           },
@@ -682,18 +722,47 @@ describe("multi-world normalizers", () => {
     expect(seed.world.id).toBe("bleach");
     expect(corpus.records).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          kind: "character",
-          name: "Robert Accutrone",
-        }),
-        expect.objectContaining({
-          kind: "organization",
-          name: "Wandenreich",
-        }),
-        expect.objectContaining({ kind: "organization", name: "Sternritter" }),
-        expect.objectContaining({ kind: "location", name: "Silbern" }),
-        expect.objectContaining({ kind: "ability", name: "Reishi Pistol" }),
+        expect.objectContaining({ kind: "character", name: "Renji Abarai" }),
+        expect.objectContaining({ kind: "ability", name: "Zabimaru" }),
+        expect.objectContaining({ kind: "ability", name: "Sōō Zabimaru" }),
+        expect.objectContaining({ kind: "ability", name: "Escolopendra" }),
         expect.objectContaining({ kind: "ability", name: "Grimaniel" }),
+        expect.objectContaining({ kind: "ability", name: "Fixture Fullbring" }),
+        expect.objectContaining({
+          kind: "rule",
+          canonicalKey: "rule:bleach:zanpakuto-system",
+          name: "Zanpakutō System",
+        }),
+        expect.objectContaining({
+          kind: "rule",
+          canonicalKey: "rule:bleach:zanpakuto-stage:shikai",
+          name: "Shikai",
+        }),
+        expect.objectContaining({
+          kind: "rule",
+          canonicalKey: "rule:bleach:zanpakuto-stage:bankai",
+          name: "Bankai",
+        }),
+        expect.objectContaining({
+          kind: "rule",
+          canonicalKey: "rule:bleach:zanpakuto-stage:resurreccion",
+          name: "Resurrección",
+        }),
+        expect.objectContaining({
+          kind: "rule",
+          canonicalKey: "rule:bleach:quincy-system",
+          name: "Quincy Power System",
+        }),
+        expect.objectContaining({
+          kind: "rule",
+          canonicalKey: "rule:bleach:quincy-stage:vollstandig",
+          name: "Quincy: Vollständig",
+        }),
+        expect.objectContaining({
+          kind: "rule",
+          canonicalKey: "rule:bleach:fullbring-system",
+          name: "Fullbring System",
+        }),
       ]),
     );
     expect(corpus.relations.map((edge) => edge.relation)).toEqual(
@@ -702,6 +771,16 @@ describe("multi-world normalizers", () => {
         "previous_team_recorded",
         "base_of_operations_recorded",
         "ability_listed",
+        "power_branch_of_recorded",
+        "shikai_recorded",
+        "bankai_recorded",
+        "resurreccion_recorded",
+        "spirit_weapon_recorded",
+        "signature_skill_recorded",
+        "vollstandig_recorded",
+        "fullbring_recorded",
+        "power_stage_recorded",
+        "part_of_power_system_recorded",
       ]),
     );
   });
