@@ -8,6 +8,7 @@ on:
       - "packages/persistence/src/source-world-catalog.ts"
       - "packages/persistence/src/source-world-seed.ts"
       - "packages/persistence/src/source-world-normalizers.ts"
+      - "packages/persistence/src/source-world-rich-normalizers.ts"
       - "packages/persistence/src/source-corpus-repository.ts"
       - "packages/persistence/src/unified-source-world-repository.ts"
       - "packages/persistence/test/source-world-multiworld.test.ts"
@@ -67,6 +68,28 @@ jobs:
           assert(relations["one-piece"] > 10);
           assert(relations.bleach > 50);
           assert(relations["hunter-x-hunter"] > 20);
+
+          // Semantic POWER regression guard: a populated supernatural world
+          // must retain system rules + character/ability links, not collapse
+          // back into a flat list of ability labels.
+          const powerCount = (corpus, prefix) =>
+            db.prepare("SELECT COUNT(*) AS n FROM source_records WHERE corpus_id=? AND source_key LIKE ?")
+              .get(corpus, prefix + "%").n;
+          const relationCount = (corpus, relation) =>
+            db.prepare("SELECT COUNT(*) AS n FROM source_relations WHERE corpus_id=? AND relation=?")
+              .get(corpus, relation).n;
+
+          assert(powerCount(canon["one-piece"], "rule:one-piece:haki:") >= 6);
+          assert(powerCount(canon["one-piece"], "rule:one-piece:devil-fruit-class:") >= 3);
+          assert(relationCount(canon["one-piece"], "devil_fruit_class_recorded") > 20);
+          assert(relationCount(canon["one-piece"], "haki_type_recorded") >= 10);
+
+          assert(powerCount(canon["hunter-x-hunter"], "rule:hxh:nen-category:") >= 6);
+          assert(relationCount(canon["hunter-x-hunter"], "nen_category_recorded") > 20);
+          assert(relationCount(canon["hunter-x-hunter"], "fundamental_of_recorded") >= 4);
+          assert(relationCount(canon["hunter-x-hunter"], "advanced_application_of_recorded") >= 4);
+          assert(relationCount(canon["hunter-x-hunter"], "part_of_power_system_recorded") > 50);
+
           for (const id of Object.keys(canon))
             assert(typeof cognitive[id] === "string" && cognitive[id].length > 10, id + " Cognitive Mother missing");
           assert.equal(projectCanon, 0, "Source imports must not fabricate Project Canon");
