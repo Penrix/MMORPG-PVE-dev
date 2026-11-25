@@ -1,4 +1,5 @@
 name: Scoped Fantasy Bearing Verify Temporary
+# Rerun after scoped-binding normalization fix.
 
 on:
   push:
