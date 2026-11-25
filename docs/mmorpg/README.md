@@ -11,6 +11,7 @@
 当前三模块已经收敛为同一条长期小说闭环：**第一模块生产世界内容；第二模块维护可查询对象底座，包括 World Object Space（Source World / World Atlas + Project Reality）和持续增长的 Creative Material Space；第三模块面对当前世界对象，并按需调用创意素材与 M 算法，沿 Upgrade Ladder 用讲师方法主动设计故事，再交 NarraLume 生产正文并通过 Settlement 写回 Reality。** 第一模块只在真实世界缺口出现时继续增量制作，不为剧情功能临时捏 NPC。
 
 - **世界语义总入口：[28 原生母体 × 认知母体 × Project Reality](28-world-semantic-layers-and-production-targets.md)**。先恢复世界语义与 Authority：原生母体回答“本来是什么”，认知母体回答“Reader 已怎样理解和定价”，Project Reality 是本书唯一 Current；同时固定 World Builder 的 Source World / Project Reality 双生产目标。
+- **第一模块选材宪法：[29 男频意淫价值 × 意淫承重](29-wish-fulfillment-selection-and-bearing.md)**。先问“如果我是男主，我到底想意淫什么”，再问“什么 Reality 能把这个幻想托贵”；Selection 决定什么值得生产，Atlas Audit 只检查选中区域缺什么。承重负责抬价，不负责给幻想征平衡税。
 - **第一模块生产合同：[16 World Builder ← World Atlas](16-world-builder-from-world-atlas.md)**。World Builder 持续生产 Atlas Card / Typed Relation / 当前事务候选，并根据真实图结构缺口决定下一轮制作；同一套生产认知既可建设可复用 Source World，也可扩张具体 Project Reality。当前两条 production target 都已正式接线：Source World 走独立 production draft / review / adopt，Project Reality 继续走原 WorldPack / Canon 链。
 - **第三模块当前合同：[17 Novel Studio 接入 World Atlas / Project Reality](17-module3-world-atlas-integration.md)**。定义 Project Reality / Source Atlas 权威层、POV 认知边界、Chapter / Co-create / Assistant 接线和 settlement 单写原则。
 - **第三模块最新核心：[23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md)**。当前最高优先级：第二模块已经提供世界和现成人物；第三模块沿既定升级路线，用讲师的稀缺/固有认知/三阵营/信息差/配角下注主动编故事。Upgrade Ledger负责写长，Stake Ledger与配角反应负责写爽；Agent只负责符合人设的具体演法，不得否决编剧线。

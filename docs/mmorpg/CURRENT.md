@@ -59,7 +59,7 @@ Project Reality 更新
 三模块最短定义：
 
 ```text
-Module 1：有什么？
+Module 1：什么值得男主去要？什么 Reality 能把它托贵？然后把它做成真正存在的世界内容。
 Module 2：现在什么是真的？还能查询哪些世界对象、创意素材，以及按需调用哪些创意算子？
 Module 3：这些已经存在的人接下来演什么故事？
 ```
@@ -75,6 +75,7 @@ Module 3：这些已经存在的人接下来演什么故事？
 | Module 2        | [14 World Atlas Content Framework](14-world-atlas-content-framework-v01.md)                                 | 世界应该有什么；v0.1～v0.7 是 Content Schema，不是 SQL Schema                                                                                                               |
 | Module 2        | [15 People-Centered Narrative Axis](15-people-centered-narrative-axis.md)                                   | 人是默认叙事展开中心，其他世界对象通过人与人 / 人与世界关系进入故事                                                                                                         |
 | Module 2        | [25 World Objects × Creative Materials × Creative Operators](25-module2-dual-object-space.md)               | **对象空间权威。** 世界对象与创意素材都属于第二模块可查询底座；素材不是算法，也不是 Reality                                                                                 |
+| Module 1        | [29 Wish-Fulfillment Selection × Bearing](29-wish-fulfillment-selection-and-bearing.md)                      | **第一模块选材权威。** 先决定什么世界对象值得男主/Reader意淫，再用Reality承重把它托贵；Coverage Audit不得冒充Creative Selection                 |
 | Module 1        | [16 World Builder ← World Atlas](16-world-builder-from-world-atlas.md)                                      | World Builder = World Atlas Content Producer                                                                                                                                |
 | Module 3 ↔ 2    | [17 Novel Studio ↔ World Atlas](17-module3-world-atlas-integration.md)                                      | Module 3 读取 Project Reality / Source Atlas 的正式边界与单一 settlement 写回                                                                                               |
 | Module 3        | [23 Upgrade Ladder × Existing Cast × Stake Ledger](23-module3-upgrade-stake-director.md)                    | **故事发动机权威。** 升级路线写长，配角下注与反应写爽；已有世界人物是故事对象                                                                                               |
@@ -169,6 +170,7 @@ CURRENT.md
 ```text
 CURRENT.md
 → 28
+→ 29
 → 14 / 15
 → 16
 → 13 / 17（确认 Source / Project 写入边界）

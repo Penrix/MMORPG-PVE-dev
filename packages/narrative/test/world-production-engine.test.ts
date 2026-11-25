@@ -156,6 +156,33 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
       actualSubject: { ref: "guild", name: "三江商会" },
     });
     expect(JSON.stringify(instruction)).toContain("当前");
+    expect(JSON.stringify(instruction)).toContain("意淫承重");
+    expect(JSON.stringify(instruction)).toContain("承重不是平衡税");
+    expect(JSON.stringify(instruction)).toContain("Selection decides what deserves production");
+  });
+
+  it("keeps coverage audit separate from creative selection and exposes anti-balance-tax bearing", () => {
+    const doc = {
+      ...emptyWorldDocument(),
+      nodes: [node("market", "location", "紫霄坊市")],
+    };
+    const need = playtestWorld(doc, req).next!;
+    const instruction = worldWorkOrderInput(need, doc) as {
+      selectionPolicy?: {
+        firstQuestion?: string;
+        bearingRule?: string;
+        selectionVsAudit?: string;
+        antiBalanceTax?: string[];
+      };
+    };
+    expect(instruction.selectionPolicy?.firstQuestion).toContain("意淫");
+    expect(instruction.selectionPolicy?.bearingRule).toContain("不是平衡税");
+    expect(instruction.selectionPolicy?.selectionVsAudit).toContain(
+      "Selection decides what deserves production",
+    );
+    expect(instruction.selectionPolicy?.antiBalanceTax?.join("\n")).toContain(
+      "不得因为能力太强",
+    );
   });
 
   it("merges new graph actors and edges by identity, rejects invented missing actors and changed identities", () => {

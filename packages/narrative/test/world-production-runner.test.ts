@@ -79,7 +79,10 @@ describe("program-owned world production, not LLM self-reported completion", () 
       ) {
         const input = JSON.parse(prompt.messages[0]!.content) as {
           operation: string;
+          selectionPolicy?: { bearingRule?: string; firstQuestion?: string };
         };
+        expect(input.selectionPolicy?.firstQuestion).toContain("意淫");
+        expect(input.selectionPolicy?.bearingRule).toContain("不是平衡税");
         calls.push(input.operation);
         const parsed = validate(place);
         if (!parsed.success) throw new Error(parsed.issues.join("; "));

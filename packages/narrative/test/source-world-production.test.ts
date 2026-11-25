@@ -218,6 +218,9 @@ describe("Source World World Builder target", () => {
         generateOverride: ({ existingWorld, operation, prompt }) => {
           expect(operation).toBe("power");
           expect(prompt).toContain("source:<stable-key>");
+          expect(prompt).toContain("意淫承重");
+          expect(prompt).toContain("承重不是平衡税");
+          expect(prompt).toContain("Selection decides what deserves production");
           expect(existingWorld.nodes).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
