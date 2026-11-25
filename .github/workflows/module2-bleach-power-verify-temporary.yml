@@ -1,0 +1,28 @@
+name: Module2 Bleach Power Verify Temporary
+
+on:
+  push:
+    branches:
+      - feat/module3-world-atlas-integration
+    paths:
+      - ".github/workflows/module2-bleach-power-verify-temporary.yml"
+      - "packages/persistence/src/source-world-normalizers.ts"
+      - "packages/persistence/test/source-world-multiworld.test.ts"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm test -- source-world-multiworld
