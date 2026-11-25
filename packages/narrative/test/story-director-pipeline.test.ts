@@ -430,6 +430,56 @@ describe("StoryDirectorPipeline", () => {
     expect(mocks.reader).toHaveBeenCalledTimes(1);
   });
 
+  it("auto-plans a concrete WishFulfillmentFrame only when the frame has no author or inherited wish direction", async () => {
+    const plannedWish = frameRequest().wishFulfillment;
+    const planner = vi
+      .spyOn(StoryAuthoringService.prototype, "planWishFulfillment")
+      .mockImplementation(async (_run, _step, request) => {
+        expect(request.field.objects.map((object) => object.id)).toEqual(
+          expect.arrayContaining(["object:hero", "object:medic"]),
+        );
+        expect(request.protagonistCamera.currentGoal).toBe("获得重新估值");
+        return {
+          value: plannedWish,
+          usage,
+          generation: { mode: "native", attempts: 1 },
+        };
+      });
+    vi.spyOn(ExpectationNarrativeService.prototype, "designExpectation")
+      .mockImplementation(async (_run, _step, request) => ({
+        value: expectationFor(request), usage, generation: { mode: "native", attempts: 1 },
+      }));
+    vi.spyOn(StoryAuthoringService.prototype, "designStoryUnit")
+      .mockImplementation(async (_run, _step, request) => {
+        expect(request.creativeContext.wishFulfillment?.threads).toHaveLength(2);
+        expect(
+          request.creativeContext.wishFulfillment?.threads.every((thread) =>
+            thread.targetRefs.includes("object:medic"),
+          ),
+        ).toBe(true);
+        return {
+          value: unitFor(request.field),
+          usage,
+          generation: { mode: "native", attempts: 1 },
+        };
+      });
+
+    const { wishFulfillment: _ignored, ...withoutWish } = frameRequest();
+    void _ignored;
+    const director = new StoryDirectorPipeline(db, mockModel);
+    const designed = await director.designStoryUnitForFrame(
+      run,
+      step,
+      withoutWish,
+      signal,
+    );
+
+    expect(designed.status).toBe("READY");
+    expect(planner).toHaveBeenCalledOnce();
+    expect(designed.creativeContext.wishFulfillment?.threads).toHaveLength(2);
+    expect(designed.usage.calls).toBe(3);
+  });
+
   it("stops on BLOCKED_WORLD_GAP without running S05 or staging anything", async () => {
     vi.spyOn(ExpectationNarrativeService.prototype, "designExpectation")
       .mockImplementation(async (_run, _step, request) => ({
