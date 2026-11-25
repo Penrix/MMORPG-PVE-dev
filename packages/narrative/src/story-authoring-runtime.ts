@@ -8,6 +8,7 @@ import {
   StoryUnitDesignDraftSchema,
   StoryUnitDesignSchema,
   type ExpectationDesign,
+  type FantasyBearingKind,
   type StoryAuthoringSearch,
   type StoryAuthoringSearchDraft,
   type StoryCreativeContext,
@@ -23,7 +24,10 @@ import {
   type WishFulfillmentThreadAdvance,
 } from "@narralume/contracts";
 import { sha256Hex } from "@narralume/domain";
-import type { WorldAtlasStoryContext } from "@narralume/persistence";
+import {
+  worldAtlasBearingKindsForSurface,
+  type WorldAtlasStoryContext,
+} from "@narralume/persistence";
 
 function stableJson(value: unknown): string {
   if (Array.isArray(value)) {
@@ -61,6 +65,57 @@ export function storyObjectSurfaceRef(
       value: surface.value,
     }),
   )}`;
+}
+
+export interface StoryBearingEvidenceCandidate {
+  evidenceRef: string;
+  objectId: string;
+  entityId: string;
+  objectName: string;
+  authority: "confirmed" | "reference";
+  facet: string;
+  slotKey: string;
+  bearingKinds: FantasyBearingKind[];
+}
+
+/**
+ * Author/director-side projection over Module-2 surfaces. This is not a new
+ * truth store: it only says what kind of bearing each existing surface may
+ * legitimately support.
+ */
+export function storyBearingEvidenceCandidates(
+  field: StoryObjectField,
+): StoryBearingEvidenceCandidate[] {
+  return field.objects.flatMap((object) =>
+    object.surfaces.map((surface) => ({
+      evidenceRef: storyObjectSurfaceRef(object.id, surface),
+      objectId: object.id,
+      entityId: object.entityId,
+      objectName: object.name,
+      authority: surface.authority,
+      facet: surface.facet,
+      slotKey: surface.slotKey,
+      bearingKinds:
+        surface.bearingKinds ??
+        worldAtlasBearingKindsForSurface({
+          authority: surface.authority,
+          facet: surface.facet,
+          slotKey: surface.slotKey,
+          value: surface.value,
+        }),
+    })),
+  );
+}
+
+function bearingKindsByEvidenceRef(
+  field: StoryObjectField,
+): Map<string, ReadonlySet<FantasyBearingKind>> {
+  return new Map(
+    storyBearingEvidenceCandidates(field).map((candidate) => [
+      candidate.evidenceRef,
+      new Set(candidate.bearingKinds),
+    ]),
+  );
 }
 
 function allowedStorySurfaceRefs(field: StoryObjectField): Set<string> {
@@ -568,6 +623,13 @@ export function finalizeStoryUnitDesign(
           legacyBearingEvidenceRefs,
         })
       : explicitBearingEvidence;
+  const bearingKinds = bearingKindsByEvidenceRef(field);
+  const bearingRequirementsById = new Map(
+    wishFrame?.bearingRequirements.map((requirement) => [
+      requirement.id,
+      requirement,
+    ]) ?? [],
+  );
   for (const binding of normalizedBearingEvidence) {
     requireUnique(
       `bearing_evidence_${binding.requirementId}`,
@@ -578,6 +640,15 @@ export function finalizeStoryUnitDesign(
       binding.evidenceRefs,
       surfaceRefs,
     );
+    const requirement = bearingRequirementsById.get(binding.requirementId);
+    if (!requirement) continue;
+    for (const evidenceRef of binding.evidenceRefs) {
+      if (!bearingKinds.get(evidenceRef)?.has(requirement.kind)) {
+        throw new Error(
+          `story_authoring.bearing_evidence_kind_mismatch:${binding.requirementId}:${requirement.kind}:${evidenceRef}`,
+        );
+      }
+    }
   }
   const advancedWishFulfillment = applyWishFulfillmentAdvances(
     wishFrame,
