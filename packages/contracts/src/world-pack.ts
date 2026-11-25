@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { StoryWorldGapSchema } from "./story-runtime.js";
 import { WishFulfillmentFrameSchema } from "./wish-fulfillment.js";
 import {
   WorldAtlasCardKindSchema,
@@ -26,6 +27,12 @@ export const WorldPackRequestSchema = z.object({
   parentAreaId: z.string().trim().max(300).nullable(),
   /** Optional shared longitudinal fantasy direction. Author/Director side only; never Reality. */
   wishFulfillment: WishFulfillmentFrameSchema.optional(),
+  /**
+   * Structured Module-3 blocking gap. If present, Module 1 services this
+   * specific gap before generic selection/coverage. It remains candidate-only
+   * until the resulting WorldPack is explicitly adopted.
+   */
+  storyWorldGap: StoryWorldGapSchema.optional(),
   /** Covel WORLD_YAML / WORLD_MD / WORLD_PACKAGE_YAML multi-section authoring source. */
   sourcePackageText: z.string().max(100_000).optional(),
 });
