@@ -138,7 +138,10 @@ export function importNarutoDattebayo(
         aliases,
         summary,
         raw,
-        sourceUrl: `${DATTEBAYO_ROOT}/${collection}.json`,
+        sourceUrl:
+          collection === "power-system"
+            ? DATTEBAYO_ROOT
+            : `${DATTEBAYO_ROOT}/${collection}.json`,
         originCollection: collection,
         importedAt,
       });
