@@ -1,4 +1,5 @@
 name: Bearing Semantics Verify Temporary
+# Rerun after explicit qualification test correction.
 
 on:
   push:
