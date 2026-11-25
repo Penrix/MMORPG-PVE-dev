@@ -390,7 +390,7 @@ export async function runWorldWorkshops(args: {
       "world-pack",
       {
         instructions:
-          "执行一个明确的 World Atlas 世界内容生产工序。不是写剧情大纲，不是生成一篇完整世界观，也不是填十个标题。生产具体对象并用 typed relations 接入现实关系网；People-centered 是生产优先级而不是数据库层级。程序将依据实际缺口另行选择后续工序。",
+          "执行一个明确的 World Atlas 世界内容生产工序。先读取 selectionPolicy：优先制作让目标男性 Reader 借男主真想拥有、成为、进入或继续升级的高意淫价值对象；低价背景只在承重、入口或当前 Reality 需要时补。意淫承重负责用真实人物、关系、历史、价格、门槛与稀缺把幻想托贵，不得因为太爽而自动加副作用、失败、净亏损或情感债等平衡税。不是写剧情大纲，不是生成一篇完整世界观，也不是填十个标题。生产具体对象并用 typed relations 接入现实关系网；People-centered 是生产优先级而不是数据库层级。程序将依据实际缺口另行选择后续工序。",
         messages: [{ role: "user", content: JSON.stringify(instruction) }],
         reasoningEffort: "medium",
       },

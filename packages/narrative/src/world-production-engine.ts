@@ -2,6 +2,7 @@ import { playWorldActionPaths } from "./world-action-runtime.js";
 import { powerDesignProducts } from "./world-design-policy.js";
 import {
   WORLD_ATLAS_CONTENT_FAMILIES,
+  WORLD_BUILDER_SELECTION_POLICY,
   worldBuilderAtlasTarget,
   worldPackAtlasKind,
   worldPackReferenceProblems,
@@ -206,7 +207,13 @@ const FAMILY_WORKSHOP: Readonly<
   playable: "playability",
 };
 
-const FAMILY_PRIORITY: readonly WorldAtlasContentFamily[] = [
+/**
+ * Structural coverage repair order only.
+ * This is NOT a creative-selection ranking. Module 1 selects high
+ * wish-fulfillment anchors first; this list only repairs missing world bones
+ * around an already-selected anchor/zone.
+ */
+const COVERAGE_AUDIT_ORDER: readonly WorldAtlasContentFamily[] = [
   "people",
   "organization",
   "activity",
@@ -567,7 +574,7 @@ export function auditWorldAtlasProduction(
     ),
   ];
 
-  const nextFamily = FAMILY_PRIORITY.map((family) =>
+  const nextFamily = COVERAGE_AUDIT_ORDER.map((family) =>
     families.find((entry) => entry.family === family),
   ).find((entry) => entry && entry.status !== "present");
 
@@ -938,6 +945,7 @@ export function worldWorkOrderInput(
     actualSubject: { ref: order.subjectRef, name: order.subjectName },
     whyThisOperation: order.reason,
     requiredWorldProducts: order.deliverables,
+    selectionPolicy: WORLD_BUILDER_SELECTION_POLICY,
     atlasTarget: {
       families: order.targetFamilies,
       suggestedCardKinds: order.suggestedCardKinds,
@@ -946,6 +954,6 @@ export function worldWorkOrderInput(
     },
     currentAtlasAudit: auditWorldAtlasProduction(state),
     currentWorld: state,
-    rule: "Produce candidate World Atlas objects and typed relations, not a prose-only world overview. Creating a node is not completion: connect it into the real world graph, and when appropriate connect non-person content to concrete people or organizations. Reuse existing local IDs to deepen; new IDs must be unique. Return only the new or revised world-content increment. Never author a chapter outline. The engine decides the next work order.",
+    rule: "First apply selectionPolicy: prefer high wish-fulfillment / upgrade-leverage anchors; do not spend expensive production attention merely to make an encyclopedia category look complete. Then apply bearing: use real people, relations, history, scarcity, access and social price to make the fantasy more valuable. Bearing is not a balance tax: never invent penalties solely because a benefit feels too strong. Produce candidate World Atlas objects and typed relations, not a prose-only world overview. Creating a node is not completion: connect it into the real world graph, and when appropriate connect non-person content to concrete people or organizations. Reuse existing local IDs to deepen; new IDs must be unique. Return only the new or revised world-content increment. Never author a chapter outline. The engine decides the next work order.",
   };
 }

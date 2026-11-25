@@ -38,6 +38,29 @@ Playable / Valuable Connections
 
 WorldPack 继续存在，但它只是**一次生产批次的 staging envelope**，不是世界的最终本体，也不是与 World Atlas 竞争的第二套世界模型。
 
+## 0.1 先选什么，再谈怎样做完整｜2026-11-25 根级补全
+
+第一模块此前已经拥有完整世界框架，却缺少一个上游 Selection Policy。当前新增权威：
+
+→ [29｜男频意淫价值 × 意淫承重](29-wish-fulfillment-selection-and-bearing.md)
+
+~~~text
+DISCOVER 世界候选
+→ SELECT：如果我是男主，我到底想意淫什么？
+→ BEAR：什么 Reality 能把这个幻想托得更真、更贵、更馋？
+→ 再进入 ROOT / SKELETON / ZONE / HUMANIZE / CONNECT / ACTIVATE / PRICE / AUDIT
+~~~
+
+十个 World Family 与既有 v0.1～v0.7 世界框架继续有效，但职责回正：
+
+> **Selection 决定什么值得生产；Atlas Audit 只检查已经选中的高价锚点 / 区域还缺什么世界骨头。**
+
+低价背景可以保留在 Source / Evidence，只有在承重、入口、关系或当前 Reality 需要时才获得昂贵精编配额。
+
+【意淫承重】固定边界：**承重的目标函数是提高幻想价格，不是降低幻想收益。** 不得因为“太爽 / 太强 / 太顺”默认添加冷却、反噬、净亏损、情感债等平衡税。
+
+---
+
 ### 0.5 两个合法 production target｜同一套 World Builder，不同 Authority
 
 第一模块不能再被理解为“只给某一本小说的 Project Canon 补世界”。同一套生产认知有两个目标：

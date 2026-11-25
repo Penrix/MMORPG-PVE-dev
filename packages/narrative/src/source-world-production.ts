@@ -113,6 +113,8 @@ export async function generateSourceWorldProduction(
       "new unverified material must use origin=inference or origin=original; never manufacture source_canon",
       "value means world-internal social value; readerSemantics is the target Reader's preloaded price and expectation",
       "readerSemantics may be null when there is no meaningful Reader prior",
+      "selectionPolicy chooses which existing-IP / historical objects deserve expensive curation; do not fill low-value encyclopedia categories merely for symmetry",
+      "bearing must raise fantasy price through real Reality / relations / history / scarcity / access; never invent penalties solely because a benefit feels too strong",
     ],
   };
   const prompt =
@@ -438,7 +440,7 @@ async function callSourceWorldModel(
     {
       model: assignment.model.modelId,
       instructions:
-        "执行一个 Source World Atlas 世界内容生产工序。只生产候选世界对象、typed relations、活动、世界内部价格/入口及独立的 Reader-side semantics；不要写小说剧情，不要把模型记忆冒充已核实原作事实。",
+        "执行一个 Source World Atlas 世界内容生产工序。先服从 selectionPolicy：优先选择高意淫价值、高升级杠杆、能继续打开更贵人生的世界对象，再用意淫承重补齐真实人物、关系、历史、价格、门槛、稀缺和入口。承重是抬价，不是平衡税，不得因为太爽自动加副作用或净亏损。只生产候选世界对象、typed relations、活动、世界内部价格/入口及独立的 Reader-side semantics；不要写小说剧情，不要把模型记忆冒充已核实原作事实。",
       messages: [{ role: "user", content: prompt }],
       maxOutputTokens: Math.min(
         assignment.model.maxOutputTokens ?? 12_000,

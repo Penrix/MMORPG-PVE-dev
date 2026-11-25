@@ -3,6 +3,57 @@ import type {
   WorldAtlasContentFamily,
 } from "./world-atlas.js";
 
+export const WORLD_BUILDER_WISH_FULFILLMENT_AXES = [
+  { id: "power", label: "力量", question: "如果我是男主，我想能做到什么？" },
+  { id: "status", label: "身份", question: "如果我是男主，我想成为什么人？" },
+  { id: "wealth", label: "财富", question: "如果我是男主，我想拥有什么？" },
+  { id: "circle", label: "圈层", question: "如果我是男主，我想和什么人坐到一张桌上？" },
+  { id: "information", label: "信息", question: "如果我是男主，我想知道别人不知道什么？" },
+  { id: "space", label: "空间", question: "如果我是男主，我想活进怎样更昂贵的世界？" },
+  { id: "relationship", label: "关系", question: "如果我是男主，我想和谁形成怎样只有我有的位置？" },
+  { id: "career", label: "事业", question: "如果我是男主，我想在世界上留下怎样属于我的事业？" },
+] as const;
+
+export type WorldBuilderWishFulfillmentAxisId =
+  (typeof WORLD_BUILDER_WISH_FULFILLMENT_AXES)[number]["id"];
+
+/**
+ * Module-1 selection policy. This chooses which world content deserves
+ * expensive production attention. It is separate from Atlas family coverage,
+ * which only audits what an already-selected anchor/zone still lacks.
+ */
+export const WORLD_BUILDER_SELECTION_POLICY = {
+  name: "男频意淫价值 / Wish-Fulfillment Selection",
+  firstQuestion:
+    "如果我是这个男主，这个候选到底有什么值得我意淫？它会让成为这个男主增加什么欲望？",
+  bearingQuestion:
+    "什么 Reality、人、关系、历史、价格、门槛、稀缺、竞争、资格和取得路径，能把这个幻想托得更真、更贵、更馋？",
+  objective:
+    "优先生产高意淫价值且能继续打开更贵人生的世界对象；低价背景只在承重、入口、关系或当前 Reality 需要时精编。",
+  bearingRule:
+    "意淫承重的目标函数是提高幻想价格，不是降低幻想收益。承重不是平衡税。",
+  selectionVsAudit:
+    "Selection decides what deserves production; Atlas coverage audit only checks what the already-selected anchor or zone still lacks. Family scarcity is never creative value by itself.",
+  candidateSignals: [
+    "它本身是否让目标男性 Reader 真想拥有、成为、进入、征服、享受、改变或被认可",
+    "它是否能让男主力量、身份、财富、圈层、信息、空间、关系或事业升级",
+    "它是否能继续打开更高价人物、能力、资产、权限、地图或生活",
+    "它是否拥有 Reader 预装价格、世界内部价格或能与男主形成高价关系",
+  ],
+  bearingSignals: [
+    "谁拥有、控制、教授、授权、选择、评价、竞争或阻碍",
+    "什么历史、规则、社会价格、稀缺、资格、共同经历或现实入口使它值钱",
+    "男主真正取得后，哪些人和组织会重新给他定价",
+  ],
+  antiBalanceTax: [
+    "不得因为能力太强就自动加冷却、反噬、寿命税或随机失控",
+    "不得因为关系太爽就自动制造长期情感债务来抵消收益",
+    "不得因为男主赢得太多就安排与当前 Reality 无关的净亏损",
+    "真实限制只可来自 Source / Current Reality / 人物选择或明确产品增益，不能只来自太爽所以要平衡",
+  ],
+  axes: WORLD_BUILDER_WISH_FULFILLMENT_AXES,
+} as const;
+
 export type WorldBuilderStageId =
   | "root"
   | "skeleton"
@@ -263,6 +314,12 @@ export const WORLD_BUILDER_ATLAS_CONTRACT = {
     "World Builder produces candidate World Atlas cards, typed relations and current activities; WorldPack is only a staging envelope.",
   contentAxis:
     "The ten World Families are parallel coverage lenses, not ten mandatory generators.",
+  selection:
+    "Wish-fulfillment selection chooses what deserves production before coverage repair. A missing Family is not, by itself, a reason to spend expensive production attention on a low-value object.",
+  bearing:
+    "Bearing raises fantasy price through Reality, people, relations, history, scarcity, access and social price; it must not silently become a balance tax that reduces protagonist gains.",
+  auditBoundary:
+    "Atlas audit asks what an already-selected anchor or zone still lacks. It must not be interpreted as creative-selection priority.",
   narrativeAxis:
     "People-centered changes production priority: non-person content should normally connect to concrete people or organizations when the world logic supports it.",
   completion:
