@@ -500,9 +500,9 @@ describe("SettlementApplicationService", () => {
 
 // prettier-ignore
 describe("accepted settlement creative-state write-back", () => {
-  it("settles payoff stakes, charges open stakes and carries retained gains into chapter two", () => {
+  it("settles payoff stakes, charges open stakes and carries Reality-confirmed retained gains into chapter two", () => {
     stageCreativeChapter();
-    seedChangeSet("change-creative", settlementPayload("awake"));
+    seedChangeSet("change-creative", settlementPayload("新的任务资格"));
     new SettlementApplicationService(database).apply({
       projectId: "p1",
       changeSetId: "change-creative",
@@ -545,6 +545,24 @@ describe("accepted settlement creative-state write-back", () => {
       "thread:future",
     ]);
     expect(next.inheritedState.sourceStates.at(-1)?.frameOutlineNodeId).toBe("chapter-1");
+  });
+
+  it("does not retain a planned fantasy gain when Grounded Settlement never confirms it", () => {
+    stageCreativeChapter();
+    seedChangeSet("change-creative-unconfirmed", settlementPayload("awake"));
+    new SettlementApplicationService(database).apply({
+      projectId: "p1",
+      changeSetId: "change-creative-unconfirmed",
+      now,
+    });
+
+    const settled = chapterCreativeState();
+    expect(settled.retainedAssets).not.toContain("新的任务资格");
+    expect(
+      settled.wishFulfillment?.threads.find(
+        (thread) => thread.id === "wish:settlement:qualification",
+      )?.phase,
+    ).toBe("realizing");
   });
 
   it("resolves a manual settlement run through its linked document", () => {
@@ -634,11 +652,29 @@ describe("accepted settlement creative-state write-back", () => {
   it("supports inherited states and optional one-step upgrade advancement without mutating input", () => {
     const original = creativeState();
     const handoff = creativeHandoff();
+    const realizedOnly = applySettlementToCreativeFrameState({
+      currentState: original,
+      handoff,
+      frameOutlineNodeId: "chapter-2",
+      updatedAt: "2026-08-10T00:04:00.000Z",
+      confirmedRealityClaims: ["新的任务资格"],
+      confirmedRetainedClaims: [],
+      advanceUpgradeStep: false,
+    });
+    expect(
+      realizedOnly.wishFulfillment?.threads.find(
+        (thread) => thread.id === "wish:settlement:qualification",
+      )?.phase,
+    ).toBe("realized");
+    expect(realizedOnly.retainedAssets).not.toContain("新的任务资格");
+
     const next = applySettlementToCreativeFrameState({
       currentState: original,
       handoff,
       frameOutlineNodeId: "chapter-2",
       updatedAt: "2026-08-10T00:05:00.000Z",
+      confirmedRealityClaims: ["新的任务资格"],
+      confirmedRetainedClaims: ["新的任务资格"],
       advanceUpgradeStep: true,
     });
     expect(next.frameOutlineNodeId).toBe("chapter-2");
