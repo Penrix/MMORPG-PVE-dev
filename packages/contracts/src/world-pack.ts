@@ -257,6 +257,10 @@ export const WorldPackDocumentSchema = z
               ]),
               subjectRef: z.string().nullable(),
               changedRefs: z.array(z.string()),
+              /** Author-side creative provenance; absent on older saved packs. */
+              wishFulfillmentThreadIds: z.array(z.string()).optional(),
+              /** Explicit Reality-bearing gaps this step was asked to ground. */
+              bearingRequirementIds: z.array(z.string()).optional(),
             })
             .strict(),
         ),
