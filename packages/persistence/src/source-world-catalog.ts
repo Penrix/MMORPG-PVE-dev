@@ -144,6 +144,7 @@ const ONE_PIECE: SourceWorldCatalogEntry = {
       paths: [
         "data/universes/one-piece/entities",
         "data/universes/one-piece/translations/en",
+        "data/universes/one-piece/schemas/vocabulary/haki-types.json",
       ],
       note: "Large pinned entity graph: characters, crews, devil fruits, locations, ships, weapons, arcs, chapters and qualified temporal/epistemic relations. Repository license not detected; use as provenance-aware runtime evidence, do not vendor.",
     },
