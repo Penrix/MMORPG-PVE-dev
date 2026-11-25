@@ -82,7 +82,7 @@ export type StoryCreativeFrameState = z.infer<
 >;
 export const StoryCreativeFrameStateDraftSchema =
   StoryCreativeFrameStateSchema.omit({ digest: true });
-export type StoryCreativeFrameStateDraft = z.infer<
+export type StoryCreativeFrameStateDraft = z.input<
   typeof StoryCreativeFrameStateDraftSchema
 >;
 

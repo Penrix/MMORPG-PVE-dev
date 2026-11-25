@@ -131,6 +131,50 @@ describe("creative frame state persistence", () => {
         frameOutlineNodeId: previous.id,
         status: "settled",
         upgradeLedger: upgrade("step:mission", "已获得专业重新估值的忍者"),
+        wishFulfillment: {
+          version: "wish-fulfillment-frame.v1",
+          authority: "creative-direction",
+          mode: "story_current",
+          protagonistEntityId: "xiuxin",
+          readerFantasy: "从低位伤员被专业体系重新定价，再进入更高任务圈",
+          protagonistDesire: "获得真正的高价任务资格",
+          threads: [
+            {
+              id: "wish:hospital:recognition",
+              targetRefs: [],
+              targetNames: ["医疗体系"],
+              dimension: "relationship",
+              readerFantasy: "让可信专业体系正式承认秀信不是普通伤员",
+              protagonistDesire: "取得专业评级",
+              desiredChange: "专业评级从普通伤员变成值得上报的异常价值",
+              privatePrivilege: null,
+              publicRepricing: "医疗记录正式提高秀信的任务价格",
+              upgradeLeverage: ["高价任务入口"],
+              phase: "realized",
+            },
+            {
+              id: "wish:mission:circle",
+              targetRefs: [],
+              targetNames: ["高价任务圈"],
+              dimension: "circle",
+              readerFantasy: "沿已有专业评级进入更昂贵的任务圈",
+              protagonistDesire: "拿到高价任务资格",
+              desiredChange: "从有评级变成真正拥有上层任务入口",
+              privatePrivilege: "获得普通伤员没有的任务准入",
+              publicRepricing: null,
+              upgradeLeverage: ["上忍圈层"],
+              phase: "selected",
+            },
+          ],
+          bearingRequirements: [],
+          settlementTargets: [
+            {
+              threadId: "wish:mission:circle",
+              assetKind: "access",
+              targetGain: "高价任务入口",
+            },
+          ],
+        },
         stakeLedger: [
           {
             id: "stake:medic",
@@ -203,6 +247,12 @@ describe("creative frame state persistence", () => {
     expect(context.inheritedState.latestUpgradeLedger?.currentStepId).toBe(
       "step:mission",
     );
+    expect(context.inheritedState.latestWishFulfillment?.threads).toHaveLength(2);
+    expect(
+      context.inheritedState.latestWishFulfillment?.threads.find(
+        (thread) => thread.id === "wish:hospital:recognition",
+      )?.phase,
+    ).toBe("realized");
     expect(
       context.inheritedState.activeStakeLedger.map((item) => item.id),
     ).toEqual(["stake:reviewer"]);
