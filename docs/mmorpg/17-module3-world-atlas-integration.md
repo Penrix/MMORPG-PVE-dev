@@ -81,7 +81,7 @@ Project Reality
 
 Cognitive Mother 不能因为当前 Adapter 尚未有独立字段就被删除。它未来只应进入 **author / director / Reader-product 侧语义**，不得因此泄漏给 character POV，也不得被写成 Source objective fact 或 Project Canon。
 
-**当前代码状态：Cognitive Mother 尚未成为一等 ContextSource。** 本文记录权限边界，不虚报已接线。
+**当前代码状态：世界级 Cognitive Mother 仍不是整包自动注入 Module 3 的一等 ContextSource；但对象级 Reader Semantics 已作为 author-side `reader_semantics` reference surface 投影进入 Story Object Field。** 它提供 Reader 对具体对象的预装价格、期待、自然入口与注意触发，不是 Source objective fact，也不是 Project Reality，更不得进入 Character POV。
 
 ## 3. POV / 人物认知边界
 
@@ -147,6 +147,60 @@ worldAtlasNarrativePriority()
 
 ---
 
+## 4.8 三模块共享 Wish-Fulfillment 纵轴｜2026-11-25
+
+第三模块现在除 `UpgradeLedger / Expectation / StakeLedger` 外，正式读取同一份作者侧：
+
+~~~text
+WishFulfillmentFrame
+├─ readerFantasy
+├─ protagonistDesire
+├─ threads[]
+├─ bearingRequirements[]
+└─ settlementTargets[]
+~~~
+
+这里最重要的不是多一个字段，而是恢复一条从产品目标到 Reality 的连续纵轴：
+
+~~~text
+Reader 想意淫什么
+        ↓
+这个男人自己现在想要什么
+        ↓
+围绕高价对象展开哪些值得写的变化
+        ↓
+什么 Reality 把这些变化托贵
+        ↓
+StoryUnit 推进具体 thread
+        ↓
+Settlement 留下真实资产
+        ↓
+下一轮更贵的意淫
+~~~
+
+### 意淫展开是多线程，不是单选关系
+
+同一个人物可以同时存在 recognition / mentorship / need / private access / public backing / political alliance / affection / destiny rewrite 等多条线程。它们可以在不同章、卷逐渐进入、回返、叠加。当前 `WishFulfillmentThread[]` 就是为了防止模型把一个高价人物压成一个 `desiredRelation`。
+
+### StoryUnit 的硬合同
+
+当当前 Creative Context 存在 Wish-Fulfillment Frame 时，READY StoryUnit 必须：
+
+1. 用 `wishFulfillmentAdvances[]` 明确本轮推进了哪些 thread、推进到哪一 phase、Story move 是什么；
+2. 用 `bearingEvidenceRefs[]` 引用当前 `StoryObjectField` 的真实 surface，说明这轮幻想靠什么 Reality / Reader price / 人物 / 规则 / 权限承重；
+3. 若缺关键承重，返回 `BLOCKED_WORLD_GAP` 给 Module 1，而不是第三模块临时造人、造世界或加平衡税。
+
+Finalizer 会拒绝 READY + 有意淫帧但无 thread advance、无 bearing evidence、未知 thread、thread phase 倒退或不存在于 Object Field 的 bearing ref。
+
+### Creative State 跨章节继承
+
+采用后的 `mmorpgCreativeState` 现在同时继承 Upgrade Ledger、WishFulfillmentFrame、Stake Ledger、Expectation Threads、Retained Assets。因此高价关系已经走到哪一步，不应下一章失忆重置。
+
+### Character Agent 仍然不知道 Reader 意淫
+
+Wish-Fulfillment Frame 属于 Author / Director side。Character Observation 不注入 Reader 最终幻想、thread 最终 payoff 或作者全知未来。角色只知道自己的事实、关系、利益、资源、记忆、当前压力和局部人物线方向。这个边界与此前修复 `payoffReaction` 提前剧透是同一条纪律。
+
+---
 ## 5. Settlement 写回不双写
 
 章节正式结算继续使用已有成熟入口：

@@ -38,7 +38,8 @@ People-centered = 世界对象默认叙事展开轴
         ↓ 当前世界对象 + 创意素材 + 可点名调用算子
 
 Module 3｜Story Director
-Upgrade Ladder
+Wish-Fulfillment Frame（Reader意淫 / 男主之欲 / 多线程展开 / 承重）
+× Upgrade Ladder
 × Existing Cast
 × 讲师编剧法
 × M01B（升级 / 人物自己找事 / Reader张力常驻）
@@ -61,7 +62,7 @@ Project Reality 更新
 ```text
 Module 1：什么值得男主去要？什么 Reality 能把它托贵？然后把它做成真正存在的世界内容。
 Module 2：现在什么是真的？还能查询哪些世界对象、创意素材，以及按需调用哪些创意算子？
-Module 3：这些已经存在的人接下来演什么故事？
+Module 3：当前哪几条意淫展开值得推进？靠什么 Reality 承重？这些已经存在的人怎样把它演成 Story 并兑现？
 ```
 
 ## 1. CURRENT AUTHORITY｜当前设计裁决
@@ -86,7 +87,11 @@ Module 3：这些已经存在的人接下来演什么故事？
 ### 当前 Module 3 主链
 
 ```text
-Upgrade Ladder
+Reader Fantasy
+→ Protagonist Desire
+→ Wish-Fulfillment Threads（同一高价对象允许多条并行展开）
+→ Bearing Evidence from Module 2
+→ Upgrade Ladder
 → Current Stage Goal
 → Module 2 Existing Cast / Reality
 → M01B三前线持续深挖（Upgrade / Actor / Reader）
@@ -226,6 +231,25 @@ World Arbiter
 只检查硬Reality冲突
 ```
 
+## 5.5 Wish-Fulfillment 纵轴属于三模块共享，不是第四模块
+
+~~~text
+Module 1
+SELECT / BEAR
+什么值得生产，什么 Reality 把它托贵
+
+Module 2
+GROUND
+Source / Reader Semantics / Project Reality 提供可引用底盘
+
+Module 3
+REALIZE / SETTLE
+多条意淫 thread 进入 Story、兑现、留下资产
+~~~
+
+当前共享合同在 `packages/contracts/src/wish-fulfillment.ts`。它是 author/director-side creative direction，不拥有 Source truth 或 Project Reality Authority，也不得进入 Character POV。
+
+---
 ## 6. 三模块不可混淆的权限
 
 ### Module 1
