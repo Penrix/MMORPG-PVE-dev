@@ -346,9 +346,7 @@ function normalizeWishFulfillmentBearingEvidence(input: {
   );
   const relatedRequirements = input.frame.bearingRequirements.filter(
     (requirement) =>
-      requirement.threadIds.some((threadId) =>
-        advancedThreadIds.has(threadId),
-      ),
+      requirement.threadIds.some((threadId) => advancedThreadIds.has(threadId)),
   );
 
   for (const threadId of advancedThreadIds) {
@@ -374,14 +372,9 @@ function normalizeWishFulfillmentBearingEvidence(input: {
   }
 
   let bindings = [...input.bearingEvidence];
-  if (
-    bindings.length === 0 &&
-    input.legacyBearingEvidenceRefs.length > 0
-  ) {
+  if (bindings.length === 0 && input.legacyBearingEvidenceRefs.length > 0) {
     if (ungroundedRequirements.length !== 1) {
-      throw new Error(
-        "story_authoring.ambiguous_flat_bearing_evidence",
-      );
+      throw new Error("story_authoring.ambiguous_flat_bearing_evidence");
     }
     bindings = [
       {
@@ -412,9 +405,7 @@ function normalizeWishFulfillmentBearingEvidence(input: {
       );
     }
     if (
-      !requirement.threadIds.some((threadId) =>
-        advancedThreadIds.has(threadId),
-      )
+      !requirement.threadIds.some((threadId) => advancedThreadIds.has(threadId))
     ) {
       throw new Error(
         `story_authoring.unrelated_bearing_evidence:${binding.requirementId}`,

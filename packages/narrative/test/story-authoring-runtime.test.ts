@@ -266,7 +266,8 @@ function creativeContextWithWish(currentField: StoryObjectField) {
           requirement: "这个专业人物的评级必须真的能改变男主后续资源与任务价格",
           evidenceRefs: [],
           status: "candidate",
-          raisesPriceBecause: "不是随便一个路人夸一句，而是有现实后果的专业改判",
+          raisesPriceBecause:
+            "不是随便一个路人夸一句，而是有现实后果的专业改判",
         },
       ],
       settlementTargets: [
@@ -919,63 +920,74 @@ describe("object-grounded story authoring runtime", () => {
           currentInterest: "维护专业判断准确性",
         },
       ],
-      stakeLedger: [{
-        id: "stake:runtime:medic",
-        entityId: "medic",
-        currentBelief: "秀信只是普通伤员",
-        currentInterest: "维护专业判断准确性",
-        stakeAction: "继续按普通伤员标准复核",
-        stakeAssets: ["专业信用"],
-        commitmentCost: "改判意味着承认此前估值不足",
-        escalationPlan: "异常持续时进行更严格复核",
-        payoffReaction: "亲自改判并上报",
-        settlementChange: "秀信取得可信专业重新估值",
-        state: "committed" as const,
-      }],
-      reactionTargets: [{
-        entityId: "medic",
-        before: "普通估值",
-        during: "亲自见证异常",
-        after: "重新估值",
-      }],
+      stakeLedger: [
+        {
+          id: "stake:runtime:medic",
+          entityId: "medic",
+          currentBelief: "秀信只是普通伤员",
+          currentInterest: "维护专业判断准确性",
+          stakeAction: "继续按普通伤员标准复核",
+          stakeAssets: ["专业信用"],
+          commitmentCost: "改判意味着承认此前估值不足",
+          escalationPlan: "异常持续时进行更严格复核",
+          payoffReaction: "亲自改判并上报",
+          settlementChange: "秀信取得可信专业重新估值",
+          state: "committed" as const,
+        },
+      ],
+      reactionTargets: [
+        {
+          entityId: "medic",
+          before: "普通估值",
+          during: "亲自见证异常",
+          after: "重新估值",
+        },
+      ],
       campTransitions: [],
       appearanceOrderEntityIds: ["xiuxin", "medic"],
       informationRelease: [],
-      events: [{
-        id: "event:runtime:wish",
-        title: "专业复核",
-        purpose: "让意淫线程进入真实人物判断",
-        problem: "医疗忍者会不会因亲眼所见改变专业估值",
-        storyPressure: "旧专业判断与异常结果冲突",
-        castPoolEntityIds: ["xiuxin", "medic"],
-        activeSeedEntityIds: ["xiuxin"],
-        actorPressures: [
-          { entityId: "xiuxin", pressure: "必须继续真实训练" },
-          { entityId: "medic", pressure: "必须按职责判断眼前异常" },
-        ],
-        stakeEntryIds: ["stake:runtime:medic"],
-        reactionTargetEntityIds: ["medic"],
-        informationReleaseSteps: [],
-        phaseTargets: [{
-          phase: "during" as const,
-          entityIds: ["xiuxin", "medic"],
-          authorIntent: "让专业人物亲自见证异常并形成独立判断",
-          expectationMovement: "把Reader已经看见的异常推进成世界内可见价格",
-        }],
-        realityQuestion: "当前医疗职责与人物认知是否支持改判",
-        observableStart: "秀信展示异常恢复与控制",
-        expectedChange: "医疗忍者产生新的专业估值",
-        readerExpectation: "等待可信专业人物重新定价男主",
-      }],
+      events: [
+        {
+          id: "event:runtime:wish",
+          title: "专业复核",
+          purpose: "让意淫线程进入真实人物判断",
+          problem: "医疗忍者会不会因亲眼所见改变专业估值",
+          storyPressure: "旧专业判断与异常结果冲突",
+          castPoolEntityIds: ["xiuxin", "medic"],
+          activeSeedEntityIds: ["xiuxin"],
+          actorPressures: [
+            { entityId: "xiuxin", pressure: "必须继续真实训练" },
+            { entityId: "medic", pressure: "必须按职责判断眼前异常" },
+          ],
+          stakeEntryIds: ["stake:runtime:medic"],
+          reactionTargetEntityIds: ["medic"],
+          informationReleaseSteps: [],
+          phaseTargets: [
+            {
+              phase: "during" as const,
+              entityIds: ["xiuxin", "medic"],
+              authorIntent: "让专业人物亲自见证异常并形成独立判断",
+              expectationMovement: "把Reader已经看见的异常推进成世界内可见价格",
+            },
+          ],
+          realityQuestion: "当前医疗职责与人物认知是否支持改判",
+          observableStart: "秀信展示异常恢复与控制",
+          expectedChange: "医疗忍者产生新的专业估值",
+          readerExpectation: "等待可信专业人物重新定价男主",
+        },
+      ],
       directorAuthority: "author-defined-story-line" as const,
-      characterExecutionRule: "characterization-constrained-performance" as const,
+      characterExecutionRule:
+        "characterization-constrained-performance" as const,
     };
 
-    const advances = [{
-      threadId: "wish:runtime:recognition",
-      toPhase: "realizing" as const,
-      storyMove: "让医疗忍者亲眼见证并开始改判",
-    }];
+    const advances = [
+      {
+        threadId: "wish:runtime:recognition",
+        toPhase: "realizing" as const,
+        storyMove: "让医疗忍者亲眼见证并开始改判",
+      },
+    ];
     const medicDuty = surfaceRef(objectField, "object:medic", "duty");
     const medicPrice = surfaceRef(
       objectField,
@@ -1017,9 +1029,7 @@ describe("object-grounded story authoring runtime", () => {
         exp,
         context,
       ),
-    ).toThrow(
-      "story_authoring.missing_bearing_evidence:bearing:runtime:price",
-    );
+    ).toThrow("story_authoring.missing_bearing_evidence:bearing:runtime:price");
 
     expect(() =>
       finalizeStoryUnitDesign(

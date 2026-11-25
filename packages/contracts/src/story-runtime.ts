@@ -1053,9 +1053,7 @@ export const StoryUnitDesignSchema = z.object({
    * Module-2 evidence. One price surface may not silently ground private
    * trust, access, history, affection, authority, etc.
    */
-  bearingEvidence: z
-    .array(WishFulfillmentBearingEvidenceSchema)
-    .optional(),
+  bearingEvidence: z.array(WishFulfillmentBearingEvidenceSchema).optional(),
   /**
    * @deprecated Compatibility for older saved StoryUnits. Runtime may map this
    * only when exactly one ungrounded bearing requirement is relevant.

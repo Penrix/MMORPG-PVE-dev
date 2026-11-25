@@ -282,9 +282,7 @@ function storyUnitOutputIssues(
         `bearingEvidence: unknown requirementId ${binding.requirementId}`,
       );
     } else if (
-      !requirement.threadIds.some((threadId) =>
-        advancedThreadIds.has(threadId),
-      )
+      !requirement.threadIds.some((threadId) => advancedThreadIds.has(threadId))
     ) {
       issues.push(
         `bearingEvidence: requirement ${binding.requirementId} is unrelated to advanced threads`,

@@ -153,8 +153,7 @@ function creativeContext(currentField: StoryObjectField) {
           dimension: "relationship",
           readerFantasy: "专业人物从普通估值到真正认可秀信",
           protagonistDesire: "让真实训练结果获得专业认可",
-          desiredChange:
-            "医疗忍者主动改判，并把秀信当成值得上报的异常价值",
+          desiredChange: "医疗忍者主动改判，并把秀信当成值得上报的异常价值",
           privatePrivilege: null,
           publicRepricing: "专业评级进入任务体系",
           upgradeLeverage: ["上层任务入口"],
@@ -168,8 +167,7 @@ function creativeContext(currentField: StoryObjectField) {
           readerFantasy:
             "从一个专业人的认可继续进入普通伤员进不去的高价任务审核圈",
           protagonistDesire: "重新取得高价任务资格",
-          desiredChange:
-            "低位伤员身份被重新定价为值得更高任务机会的人",
+          desiredChange: "低位伤员身份被重新定价为值得更高任务机会的人",
           privatePrivilege: "获得普通伤员没有的复核入口",
           publicRepricing: "审核圈开始按更高标准评价秀信",
           upgradeLeverage: ["上忍级任务机会"],
@@ -184,8 +182,7 @@ function creativeContext(currentField: StoryObjectField) {
           requirement: "必须有真实专业人物与复核职责承接重新估值",
           evidenceRefs: [],
           status: "candidate",
-          raisesPriceBecause:
-            "可信专业人自己改判，比作者旁白说男主厉害更贵",
+          raisesPriceBecause: "可信专业人自己改判，比作者旁白说男主厉害更贵",
         },
       ],
       settlementTargets: [
@@ -475,9 +472,7 @@ describe("StoryAuthoringService", () => {
             bearingEvidence: [
               {
                 requirementId: "bearing:medic-duty",
-                evidenceRefs: [
-                  surfaceRef(objectField, "object:medic", "duty"),
-                ],
+                evidenceRefs: [surfaceRef(objectField, "object:medic", "duty")],
               },
             ],
             campNetwork: [
@@ -620,9 +615,7 @@ describe("StoryAuthoringService", () => {
     expect(result.value.bearingEvidence).toEqual([
       {
         requirementId: "bearing:medic-duty",
-        evidenceRefs: [
-          surfaceRef(objectField, "object:medic", "duty"),
-        ],
+        evidenceRefs: [surfaceRef(objectField, "object:medic", "duty")],
       },
     ]);
     expect(result.value.authority).toBe("speculative");

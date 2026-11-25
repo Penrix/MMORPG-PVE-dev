@@ -12,11 +12,31 @@ export const WISH_FULFILLMENT_SEARCH_AXES = [
   { id: "power", label: "力量", question: "如果我是男主，我想能做到什么？" },
   { id: "status", label: "身份", question: "如果我是男主，我想成为什么人？" },
   { id: "wealth", label: "财富", question: "如果我是男主，我想拥有什么？" },
-  { id: "circle", label: "圈层", question: "如果我是男主，我想和什么人坐到一张桌上？" },
-  { id: "information", label: "信息", question: "如果我是男主，我想知道别人不知道什么？" },
-  { id: "space", label: "空间", question: "如果我是男主，我想活进怎样更昂贵的世界？" },
-  { id: "relationship", label: "关系", question: "如果我是男主，我想和谁形成怎样只有我有的位置？" },
-  { id: "career", label: "事业", question: "如果我是男主，我想在世界上留下怎样属于我的事业？" },
+  {
+    id: "circle",
+    label: "圈层",
+    question: "如果我是男主，我想和什么人坐到一张桌上？",
+  },
+  {
+    id: "information",
+    label: "信息",
+    question: "如果我是男主，我想知道别人不知道什么？",
+  },
+  {
+    id: "space",
+    label: "空间",
+    question: "如果我是男主，我想活进怎样更昂贵的世界？",
+  },
+  {
+    id: "relationship",
+    label: "关系",
+    question: "如果我是男主，我想和谁形成怎样只有我有的位置？",
+  },
+  {
+    id: "career",
+    label: "事业",
+    question: "如果我是男主，我想在世界上留下怎样属于我的事业？",
+  },
 ] as const;
 
 export type WishFulfillmentSearchAxisId =
@@ -62,9 +82,7 @@ export const WishFulfillmentThreadSchema = z
     phase: WishFulfillmentThreadPhaseSchema,
   })
   .strict();
-export type WishFulfillmentThread = z.infer<
-  typeof WishFulfillmentThreadSchema
->;
+export type WishFulfillmentThread = z.infer<typeof WishFulfillmentThreadSchema>;
 
 export const WishFulfillmentThreadAdvanceSchema = z
   .object({
@@ -98,9 +116,7 @@ export const FantasyBearingStatusSchema = z.enum([
   "missing",
   "candidate",
 ]);
-export type FantasyBearingStatus = z.infer<
-  typeof FantasyBearingStatusSchema
->;
+export type FantasyBearingStatus = z.infer<typeof FantasyBearingStatusSchema>;
 
 export const FantasyBearingRequirementSchema = z
   .object({
@@ -126,10 +142,7 @@ export type FantasyBearingRequirement = z.infer<
 export const WishFulfillmentBearingEvidenceSchema = z
   .object({
     requirementId: z.string().trim().min(1).max(300),
-    evidenceRefs: z
-      .array(z.string().trim().min(1).max(1_000))
-      .min(1)
-      .max(100),
+    evidenceRefs: z.array(z.string().trim().min(1).max(1_000)).min(1).max(100),
   })
   .strict();
 export type WishFulfillmentBearingEvidence = z.infer<
@@ -164,17 +177,11 @@ export const WishFulfillmentFrameSchema = z
     readerFantasy: z.string().trim().min(1).max(8_000),
     protagonistDesire: z.string().trim().min(1).max(8_000).nullable(),
     threads: z.array(WishFulfillmentThreadSchema).min(1).max(100),
-    bearingRequirements: z
-      .array(FantasyBearingRequirementSchema)
-      .max(200),
-    settlementTargets: z
-      .array(WishFulfillmentSettlementTargetSchema)
-      .max(100),
+    bearingRequirements: z.array(FantasyBearingRequirementSchema).max(200),
+    settlementTargets: z.array(WishFulfillmentSettlementTargetSchema).max(100),
   })
   .strict();
-export type WishFulfillmentFrame = z.infer<
-  typeof WishFulfillmentFrameSchema
->;
+export type WishFulfillmentFrame = z.infer<typeof WishFulfillmentFrameSchema>;
 
 export const WISH_FULFILLMENT_ROOT_GUARD = {
   readerQuestion: "目标男性 Reader 借男主到底想活什么、意淫什么？",
