@@ -131,14 +131,14 @@ export function normalizeOnePieceWikiGraph(input: {
     relations.push({ fromKey, toKey, relation, sourceNote });
   };
 
-  for (const [value, key] of power.hakiTypeKeys)
+  for (const [, key] of power.hakiTypeKeys)
     addRelation(
       key,
       power.hakiRootKey,
       "power_branch_of_recorded",
       "Pinned One Piece haki-types vocabulary.",
     );
-  for (const [value, key] of power.devilFruitClassKeys)
+  for (const [, key] of power.devilFruitClassKeys)
     addRelation(
       key,
       power.devilFruitRootKey,
