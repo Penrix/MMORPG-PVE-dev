@@ -1,0 +1,28 @@
+name: Wish Fulfillment Axis Verify Temporary
+
+on:
+  push:
+    branches:
+      - feat/module3-world-atlas-integration
+    paths:
+      - .github/workflows/wish-fulfillment-axis-verify-temporary.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- world-production-engine
+      - run: npm run build
