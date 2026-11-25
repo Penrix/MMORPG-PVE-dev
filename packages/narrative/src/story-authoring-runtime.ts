@@ -87,23 +87,30 @@ export function storyBearingEvidenceCandidates(
   field: StoryObjectField,
 ): StoryBearingEvidenceCandidate[] {
   return field.objects.flatMap((object) =>
-    object.surfaces.map((surface) => ({
-      evidenceRef: storyObjectSurfaceRef(object.id, surface),
-      objectId: object.id,
-      entityId: object.entityId,
-      objectName: object.name,
-      authority: surface.authority,
-      facet: surface.facet,
-      slotKey: surface.slotKey,
-      bearingKinds:
+    object.surfaces.map((surface) => {
+      const kinds = new Set(
         surface.bearingKinds ??
-        worldAtlasBearingKindsForSurface({
-          authority: surface.authority,
-          facet: surface.facet,
-          slotKey: surface.slotKey,
-          value: surface.value,
-        }),
-    })),
+          worldAtlasBearingKindsForSurface({
+            authority: surface.authority,
+            facet: surface.facet,
+            slotKey: surface.slotKey,
+            value: surface.value,
+          }),
+      );
+      // A concrete character surface can bear "a real person occupies this
+      // role/position/state", even when the surface facet itself is state/value.
+      if (object.kind === "character") kinds.add("person");
+      return {
+        evidenceRef: storyObjectSurfaceRef(object.id, surface),
+        objectId: object.id,
+        entityId: object.entityId,
+        objectName: object.name,
+        authority: surface.authority,
+        facet: surface.facet,
+        slotKey: surface.slotKey,
+        bearingKinds: [...kinds],
+      };
+    }),
   );
 }
 
