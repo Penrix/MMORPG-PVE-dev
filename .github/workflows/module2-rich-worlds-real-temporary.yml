@@ -78,6 +78,57 @@ jobs:
           assert.equal(canon,0,"Source import must not write Project Canon");
           db.close();
           EOF
+      - name: Audit power projections
+        run: |
+          node --input-type=module <<'EOF'
+          import { DatabaseSync } from "node:sqlite";
+          import assert from "node:assert/strict";
+          const db = new DatabaseSync("/tmp/rich-worlds.sqlite", {readOnly:true});
+          const corpus = id => db.prepare("SELECT canonical_corpus_id AS corpus FROM source_worlds WHERE id=?").get(id).corpus;
+          const op = corpus("one-piece");
+          const hxh = corpus("hunter-x-hunter");
+          const record = (c,k) => db.prepare("SELECT source_key,name,kind,raw_json FROM source_records WHERE corpus_id=? AND source_key=?").get(c,k);
+          const relCount = (c,relation) => db.prepare("SELECT COUNT(*) AS n FROM source_relations WHERE corpus_id=? AND relation=?").get(c,relation).n;
+          const keyCount = (c,prefix) => db.prepare("SELECT COUNT(*) AS n FROM source_records WHERE corpus_id=? AND source_key LIKE ?").get(c,prefix+"%").n;
+
+          const power = {
+            onePiece: {
+              rules: keyCount(op,"rule:one-piece:"),
+              hakiRoot: record(op,"rule:one-piece:haki-system"),
+              hakiBranches: keyCount(op,"rule:one-piece:haki:"),
+              fruitRoot: record(op,"rule:one-piece:devil-fruit-system"),
+              fruitClasses: keyCount(op,"rule:one-piece:devil-fruit-class:"),
+              fruitClassRelations: relCount(op,"devil_fruit_class_recorded"),
+              hakiUserRelations: relCount(op,"haki_type_recorded"),
+              awakeningRelations: relCount(op,"awakening_recorded"),
+            },
+            hxh: {
+              rules: keyCount(hxh,"rule:hxh:"),
+              nenRoot: record(hxh,"rule:hxh:nen-system"),
+              nenCategories: keyCount(hxh,"rule:hxh:nen-category:"),
+              categoryRelations: relCount(hxh,"nen_category_recorded"),
+              fundamentals: relCount(hxh,"fundamental_of_recorded"),
+              advanced: relCount(hxh,"advanced_application_of_recorded"),
+              systemLinks: relCount(hxh,"part_of_power_system_recorded"),
+            },
+          };
+          console.log(JSON.stringify(power,null,2));
+
+          assert(power.onePiece.hakiRoot, "One Piece Haki root rule missing");
+          assert(power.onePiece.hakiBranches >= 6, "One Piece Haki vocabulary projection too thin");
+          assert(power.onePiece.fruitRoot, "One Piece Devil Fruit root rule missing");
+          assert(power.onePiece.fruitClasses >= 3, "One Piece Devil Fruit classifications too thin");
+          assert(power.onePiece.fruitClassRelations > 20, "Devil Fruit entities are not linked to classifications");
+
+          assert(power.hxh.nenRoot, "HxH Nen root rule missing");
+          assert(power.hxh.nenCategories >= 6, "HxH Nen categories too thin");
+          assert(power.hxh.categoryRelations > 20, "HxH Hatsu are not linked to Nen categories");
+          assert(power.hxh.fundamentals >= 4, "HxH fundamental Nen records not linked to system");
+          assert(power.hxh.advanced >= 4, "HxH advanced Nen applications not linked to system");
+          assert(power.hxh.systemLinks > 50, "HxH abilities are not linked to Nen system");
+          assert.equal(db.prepare("SELECT COUNT(*) AS n FROM canon_entities").get().n,0);
+          db.close();
+          EOF
       - name: Capture counts before reimport
         run: |
           node --input-type=module <<'EOF' > /tmp/rich-before.json
