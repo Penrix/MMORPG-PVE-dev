@@ -195,11 +195,13 @@ function unitFor(
     storyProblem: "医疗忍者如何重新估值秀信",
     worldGaps: status === "READY" ? [] : [{
       id: "gap:1",
-      kind: "missing_value",
+      kind: "missing_object",
       anchorObjectIds: ["object:medic"],
-      need: "专业证据",
-      reason: "尚缺专业证据",
-      productionHint: "social",
+      need: "补出真实专业人物对男主进行复核与改判的承重",
+      reason: "这条认可意淫还缺能承担专业判断责任的真实人物承重",
+      productionHint: "people",
+      wishFulfillmentThreadIds: ["wish:api:recognition"],
+      bearingRequirementIds: ["bearing:api:medic"],
       status: "OPEN",
     }],
     wishFulfillment: {
@@ -439,5 +441,68 @@ describe("StoryDirector API dual-host run contract", () => {
     expect(outlineResponse.statusCode, outlineResponse.body).toBe(200);
     expect(outlineResponse.body).toContain("storyProductionHandoff");
     expect(outlineResponse.body).toContain("mmorpgCreativeState");
+  });
+
+  it("returns a concrete Module-1 work order when Story design is blocked by fantasy bearing", async () => {
+    vi.spyOn(ExpectationNarrativeService.prototype, "designExpectation")
+      .mockImplementation(async (_run, _step, request) => ({
+        value: expectationFor(request),
+        usage,
+        generation: { mode: "native", attempts: 1 },
+      }));
+    vi.spyOn(StoryAuthoringService.prototype, "designStoryUnit")
+      .mockImplementation(async (_run, _step, request) => ({
+        value: unitFor(request.field, "BLOCKED_WORLD_GAP"),
+        usage,
+        generation: { mode: "native", attempts: 1 },
+      }));
+
+    app = await buildApp({
+      config,
+      database: db,
+      narrativeModelClient: mockModel,
+      enableRunWorker: true,
+      logger: false,
+      environment: {
+        NARRATIVE_LLM_API_KEY: "test-key",
+        NARRATIVE_LLM_BASE_URL: "https://api.example.test/v1",
+        NARRATIVE_LLM_MODEL: "mock-story-director",
+      },
+    });
+
+    const design = await app.inject({
+      method: "POST",
+      url: "/api/projects/p1/story-director/design",
+      payload: frameRequest(),
+    });
+    expect(design.statusCode, design.body).toBe(202);
+
+    const designRun = await awaitCompleted(design.json().runId as string);
+    const blocked = designRun.steps[0]?.outputArtifact as
+      | {
+          status?: string;
+          worldGaps?: Array<Record<string, unknown>>;
+          worldWorkOrders?: Array<Record<string, unknown>>;
+        }
+      | undefined;
+
+    expect(blocked?.status).toBe("BLOCKED_WORLD_GAP");
+    expect(blocked?.worldGaps).toHaveLength(1);
+    expect(blocked?.worldWorkOrders).toHaveLength(1);
+    expect(blocked?.worldWorkOrders?.[0]).toMatchObject({
+      workshop: "people",
+      subjectRef: "canon:medic",
+      subjectName: "医疗忍者",
+      wishFulfillmentThreadIds: ["wish:api:recognition"],
+      bearingRequirementIds: ["bearing:api:medic"],
+    });
+
+    expect(
+      story.requireOutlineNode("p1", "chapter-1").metadata
+        .storyProductionHandoff,
+    ).toBeUndefined();
+    expect(
+      story.requireOutlineNode("p1", "chapter-1").metadata.mmorpgCreativeState,
+    ).toBeUndefined();
   });
 });
