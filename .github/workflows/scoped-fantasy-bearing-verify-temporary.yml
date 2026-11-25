@@ -1,5 +1,5 @@
 name: Scoped Fantasy Bearing Verify Temporary
-# Rerun after scoped-bearing test fixture repair.
+# Final rerun with legacy compatibility and actor-POV isolation guards.
 
 on:
   push:
@@ -24,14 +24,15 @@ jobs:
       - run: npm ci
       - name: Format this batch only
         run: |
-          npx prettier --write             packages/contracts/src/wish-fulfillment.ts             packages/contracts/src/story-runtime.ts             packages/narrative/src/story-authoring-runtime.ts             packages/narrative/src/story-authoring-runtime-workers.ts             packages/narrative/test/story-authoring-runtime.test.ts             packages/narrative/test/story-authoring-runtime-workers.test.ts             packages/narrative/test/story-director-pipeline.test.ts
+          npx prettier --write             packages/contracts/src/wish-fulfillment.ts             packages/contracts/src/story-runtime.ts             packages/narrative/src/story-authoring-runtime.ts             packages/narrative/src/story-authoring-runtime-workers.ts             packages/narrative/test/story-authoring-runtime.test.ts             packages/narrative/test/story-authoring-runtime-workers.test.ts             packages/narrative/test/story-director-pipeline.test.ts \
+            packages/narrative/test/story-runtime.test.ts
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test -- story-authoring-runtime story-authoring-runtime-workers story-director-pipeline
+      - run: npm test -- story-authoring-runtime story-authoring-runtime-workers story-director-pipeline story-runtime
       - run: npm run build
       - name: Commit batch formatting
         run: |
-          FILES="packages/contracts/src/wish-fulfillment.ts packages/contracts/src/story-runtime.ts packages/narrative/src/story-authoring-runtime.ts packages/narrative/src/story-authoring-runtime-workers.ts packages/narrative/test/story-authoring-runtime.test.ts packages/narrative/test/story-authoring-runtime-workers.test.ts packages/narrative/test/story-director-pipeline.test.ts"
+          FILES="packages/contracts/src/wish-fulfillment.ts packages/contracts/src/story-runtime.ts packages/narrative/src/story-authoring-runtime.ts packages/narrative/src/story-authoring-runtime-workers.ts packages/narrative/test/story-authoring-runtime.test.ts packages/narrative/test/story-authoring-runtime-workers.test.ts packages/narrative/test/story-director-pipeline.test.ts packages/narrative/test/story-runtime.test.ts"
           if git diff --quiet -- $FILES; then exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
