@@ -8,7 +8,7 @@ on:
       - .github/workflows/naruto-tsunade-wish-axis-verify-temporary.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
@@ -21,7 +21,18 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx prettier --check packages/narrative/test/naruto-tsunade-wish-axis.integration.test.ts
+      - name: Format Tsunade exemplar
+        run: npx prettier --write packages/narrative/test/naruto-tsunade-wish-axis.integration.test.ts
       - run: npm run typecheck
       - run: npm test -- naruto-tsunade-wish-axis.integration
       - run: npm run build
+      - name: Commit exemplar formatting
+        run: |
+          if git diff --quiet -- packages/narrative/test/naruto-tsunade-wish-axis.integration.test.ts; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/narrative/test/naruto-tsunade-wish-axis.integration.test.ts
+          git commit -m "chore: format Naruto Tsunade wish-axis exemplar"
+          git push
