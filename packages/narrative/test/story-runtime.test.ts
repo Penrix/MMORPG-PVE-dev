@@ -440,9 +440,11 @@ describe("Module 3 Story Runtime core", () => {
           targetRefs: ["object:rival"],
           targetNames: ["Rival"],
           dimension: "relationship",
-          readerFantasy: "AUTHOR-ONLY Rival eventually grants a unique exception",
+          readerFantasy:
+            "AUTHOR-ONLY Rival eventually grants a unique exception",
           protagonistDesire: "gain a route through the gate",
-          desiredChange: "AUTHOR-ONLY Rival changes from blocking Hero to special access",
+          desiredChange:
+            "AUTHOR-ONLY Rival changes from blocking Hero to special access",
           privatePrivilege: "AUTHOR-ONLY private harbor access",
           publicRepricing: "AUTHOR-ONLY public recognition",
           upgradeLeverage: ["next circle"],
