@@ -1079,6 +1079,41 @@ describe("object-grounded story authoring runtime", () => {
         (requirement) => requirement.id === "bearing:runtime:price",
       ),
     ).toMatchObject({ status: "grounded", evidenceRefs: [medicPrice] });
+
+    const legacyWish = {
+      ...context.wishFulfillment!,
+      bearingRequirements: context.wishFulfillment!.bearingRequirements.filter(
+        (requirement) => requirement.id === "bearing:runtime:medic",
+      ),
+    };
+    const legacyContext = finalizeStoryCreativeContext({
+      version: "story-creative-context.v1",
+      authority: "speculative",
+      projectId: context.projectId,
+      frame: context.frame,
+      protagonistCamera: context.protagonistCamera,
+      wishFulfillment: legacyWish,
+      methodInvocations: context.methodInvocations,
+      materialSelections: context.materialSelections,
+    });
+    const legacyAccepted = finalizeStoryUnitDesign(
+      {
+        ...baseDraft,
+        creativeContextDigest: legacyContext.digest,
+        wishFulfillmentAdvances: advances,
+        bearingEvidenceRefs: [medicDuty],
+      },
+      objectField,
+      exp,
+      legacyContext,
+    );
+    expect(legacyAccepted.bearingEvidence).toEqual([
+      {
+        requirementId: "bearing:runtime:medic",
+        evidenceRefs: [medicDuty],
+      },
+    ]);
+    expect(legacyAccepted.bearingEvidenceRefs).toBeUndefined();
   });
 
   it("allows S03 to stop on a real world gap instead of inventing a seed", () => {
