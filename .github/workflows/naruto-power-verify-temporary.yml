@@ -1,5 +1,5 @@
 name: Naruto POWER Verify Temporary
-# Rerun after Devil Fruit provenance type fix.
+# Rerun after Naruto card-kind assertion fix.
 
 on:
   push:
