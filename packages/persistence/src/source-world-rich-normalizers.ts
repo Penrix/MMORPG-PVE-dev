@@ -138,7 +138,7 @@ export function normalizeOnePieceWikiGraph(input: {
       "power_branch_of_recorded",
       "Pinned One Piece haki-types vocabulary.",
     );
-  for (const [, key] of power.devilFruitClassKeys)
+  for (const [value, key] of power.devilFruitClassKeys)
     addRelation(
       key,
       power.devilFruitRootKey,
