@@ -117,6 +117,9 @@ async function loadOnePieceSeed(
       const base = join(root, "data/universes/one-piece");
       const entities = readJsonObjectsRecursively(join(base, "entities"));
       const translations = readTranslationMap(join(base, "translations/en"));
+      const hakiVocabulary = JSON.parse(
+        readFileSync(join(base, "schemas/vocabulary/haki-types.json"), "utf8"),
+      ) as JsonObject;
       console.log(
         "One Piece rich graph: " +
           entities.length +
@@ -127,6 +130,7 @@ async function loadOnePieceSeed(
       return normalizeOnePieceWikiGraph({
         entities,
         translations,
+        hakiVocabulary,
         canonicalByIdentity: buildSourceIdentityBridge(legacy),
       });
     },
