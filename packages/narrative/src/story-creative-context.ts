@@ -83,6 +83,7 @@ function inheritedCreativeState(
     sourceStateDigests: sourceStates.map((state) => state.digest),
     sourceStates,
     latestUpgradeLedger: latest?.upgradeLedger ?? null,
+    latestWishFulfillment: latest?.wishFulfillment ?? null,
     activeStakeLedger:
       latest?.stakeLedger.filter((entry) => entry.state !== "settled") ?? [],
     openExpectationThreads:
@@ -247,6 +248,15 @@ export function finalizeStoryCreativeContext(
   ) {
     throw new Error("story_creative_context.empty_camera_focus");
   }
+  if (
+    parsed.wishFulfillment?.protagonistEntityId &&
+    parsed.wishFulfillment.protagonistEntityId !==
+      parsed.protagonistCamera.protagonistEntityId
+  ) {
+    throw new Error(
+      "story_creative_context.wish_fulfillment_protagonist_mismatch",
+    );
+  }
 
   const invocationIds = new Set<string>();
   for (const invocation of parsed.methodInvocations) {
@@ -284,6 +294,7 @@ export function withCreativeMethodInvocations(
     projectId: context.projectId,
     frame: context.frame,
     protagonistCamera: context.protagonistCamera,
+    wishFulfillment: context.wishFulfillment,
     methodInvocations: [...context.methodInvocations, ...invocations],
     materialSelections: context.materialSelections,
   });
@@ -299,6 +310,7 @@ export function withCreativeMaterialSelections(
     projectId: context.projectId,
     frame: context.frame,
     protagonistCamera: context.protagonistCamera,
+    wishFulfillment: context.wishFulfillment,
     methodInvocations: context.methodInvocations,
     materialSelections: [...context.materialSelections, ...selections],
   });
@@ -515,6 +527,7 @@ export function storyCreativeFrameStateFromStoryUnit(
     frameOutlineNodeId: input.frameOutlineNodeId,
     status: input.status ?? "in_progress",
     upgradeLedger: input.storyUnit.upgradeLedger,
+    wishFulfillment: input.storyUnit.wishFulfillment ?? null,
     stakeLedger: input.storyUnit.stakeLedger,
     expectationThreads:
       input.expectationState?.threads.map((thread) => ({

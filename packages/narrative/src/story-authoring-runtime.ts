@@ -18,6 +18,8 @@ import {
   type StoryUnitDesign,
   type WorldArbitrationReceipt,
   type StoryUnitDesignDraft,
+  type WishFulfillmentFrame,
+  type WishFulfillmentThreadAdvance,
 } from "@narralume/contracts";
 import { sha256Hex } from "@narralume/domain";
 import type { WorldAtlasStoryContext } from "@narralume/persistence";
@@ -332,6 +334,54 @@ export function finalizeStoryAuthoringSearch(
   });
 }
 
+function applyWishFulfillmentAdvances(
+  frame: WishFulfillmentFrame | null,
+  advances: readonly WishFulfillmentThreadAdvance[],
+): WishFulfillmentFrame | null {
+  if (!frame) {
+    if (advances.length > 0) {
+      throw new Error("story_authoring.wish_advance_without_frame");
+    }
+    return null;
+  }
+  const rank: Record<string, number> = {
+    candidate: 0,
+    selected: 1,
+    bearing: 2,
+    realizing: 3,
+    realized: 4,
+    retained: 5,
+  };
+  const seen = new Set<string>();
+  const byId = new Map(advances.map((advance) => [advance.threadId, advance]));
+  for (const advance of advances) {
+    if (seen.has(advance.threadId)) {
+      throw new Error(
+        `story_authoring.duplicate_wish_advance:${advance.threadId}`,
+      );
+    }
+    seen.add(advance.threadId);
+    const thread = frame.threads.find((item) => item.id === advance.threadId);
+    if (!thread) {
+      throw new Error(
+        `story_authoring.unknown_wish_thread:${advance.threadId}`,
+      );
+    }
+    if ((rank[advance.toPhase] ?? -1) < (rank[thread.phase] ?? -1)) {
+      throw new Error(
+        `story_authoring.wish_thread_regression:${advance.threadId}`,
+      );
+    }
+  }
+  return {
+    ...frame,
+    threads: frame.threads.map((thread) => {
+      const advance = byId.get(thread.id);
+      return advance ? { ...thread, phase: advance.toPhase } : thread;
+    }),
+  };
+}
+
 export interface StoryUnitRealityFocus {
   projectId: string;
   storyUnitDesignDigest: string;
@@ -390,6 +440,23 @@ export function finalizeStoryUnitDesign(
   const objectIds = new Set(field.objects.map((object) => object.id));
   const entityIds = new Set(field.objects.map((object) => object.entityId));
   const surfaceRefs = allowedStorySurfaceRefs(field);
+  const wishFrame = creativeContext.wishFulfillment;
+  const wishAdvances = parsed.wishFulfillmentAdvances ?? [];
+  const bearingEvidenceRefs = parsed.bearingEvidenceRefs ?? [];
+  if (parsed.status === "READY" && wishFrame) {
+    if (wishAdvances.length === 0) {
+      throw new Error("story_authoring.ready_without_wish_advance");
+    }
+    if (bearingEvidenceRefs.length === 0) {
+      throw new Error("story_authoring.ready_without_bearing_evidence");
+    }
+  }
+  requireUnique("bearing_evidence", bearingEvidenceRefs);
+  requireRefs("bearing_evidence", bearingEvidenceRefs, surfaceRefs);
+  const advancedWishFulfillment = applyWishFulfillmentAdvances(
+    wishFrame,
+    wishAdvances,
+  );
   if (!entityIds.has(parsed.upgradeLedger.protagonistEntityId)) {
     throw new Error("story_authoring.upgrade_protagonist_not_in_object_field");
   }
@@ -618,9 +685,15 @@ export function finalizeStoryUnitDesign(
     }
   }
 
-  return StoryUnitDesignSchema.parse({
+  const normalized = {
     ...parsed,
-    digest: digest(parsed),
+    wishFulfillment: advancedWishFulfillment,
+    wishFulfillmentAdvances: wishAdvances,
+    bearingEvidenceRefs,
+  };
+  return StoryUnitDesignSchema.parse({
+    ...normalized,
+    digest: digest(normalized),
   });
 }
 
