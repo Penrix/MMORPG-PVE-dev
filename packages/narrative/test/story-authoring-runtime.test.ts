@@ -198,6 +198,74 @@ function creativeContext(currentField: StoryObjectField) {
   });
 }
 
+function creativeContextWithWish(currentField: StoryObjectField) {
+  const base = creativeContext(currentField);
+  return finalizeStoryCreativeContext({
+    version: "story-creative-context.v1",
+    authority: "speculative",
+    projectId: base.projectId,
+    frame: base.frame,
+    protagonistCamera: base.protagonistCamera,
+    wishFulfillment: {
+      version: "wish-fulfillment-frame.v1",
+      authority: "creative-direction",
+      mode: "story_current",
+      protagonistEntityId: "xiuxin",
+      readerFantasy:
+        "看秀信从普通伤员被可信专业人物重新定价，再进入更昂贵的任务圈",
+      protagonistDesire: "恢复并取得更高任务入口",
+      threads: [
+        {
+          id: "wish:runtime:recognition",
+          targetRefs: ["object:medic"],
+          targetNames: ["医疗忍者"],
+          dimension: "relationship",
+          readerFantasy: "专业人物亲自认可并重新给男主定价",
+          protagonistDesire: "让真实训练结果获得专业认可",
+          desiredChange: "医疗忍者从普通估值变成主动改判与上报",
+          privatePrivilege: null,
+          publicRepricing: "专业记录提高男主任务价格",
+          upgradeLeverage: ["高价任务入口"],
+          phase: "selected",
+        },
+        {
+          id: "wish:runtime:circle",
+          targetRefs: ["object:sakumo"],
+          targetNames: ["旗木朔茂", "高价军事圈"],
+          dimension: "circle",
+          readerFantasy: "第一层专业认可继续打开木叶真正的高价人物圈",
+          protagonistDesire: "进入上层任务体系",
+          desiredChange: "从医院识货链进入朔茂等高价人物的真实视野",
+          privatePrivilege: "获得低位伤员没有的任务与人物入口",
+          publicRepricing: null,
+          upgradeLeverage: ["高价军事圈"],
+          phase: "candidate",
+        },
+      ],
+      bearingRequirements: [
+        {
+          id: "bearing:runtime:medic",
+          threadIds: ["wish:runtime:recognition"],
+          kind: "person",
+          requirement: "必须由真实专业人物凭职责亲自见证并改判",
+          evidenceRefs: [],
+          status: "candidate",
+          raisesPriceBecause: "专业人物自己的判断变化能给男主制造可信社会价格",
+        },
+      ],
+      settlementTargets: [
+        {
+          threadId: "wish:runtime:recognition",
+          assetKind: "status",
+          targetGain: "专业重新估值",
+        },
+      ],
+    },
+    methodInvocations: base.methodInvocations,
+    materialSelections: base.materialSelections,
+  });
+}
+
 function expectation(): ExpectationDesign {
   return finalizeExpectationDesign({
     version: "expectation-design.v1",
@@ -794,6 +862,148 @@ describe("object-grounded story authoring runtime", () => {
         new Set(["seed:s03"]),
       ),
     ).toThrow("story_authoring.unknown_event_active_seed:sakumo");
+  });
+
+  it("requires both a wish-thread advance and real bearing evidence before a READY fantasy can pass", () => {
+    const objectField = field("S04");
+    const exp = expectation();
+    const context = creativeContextWithWish(objectField);
+    const baseDraft = {
+      version: "story-unit-design.v1" as const,
+      authority: "speculative" as const,
+      status: "READY" as const,
+      projectId: "p1",
+      objectFieldDigest: objectField.digest,
+      creativeContextDigest: context.digest,
+      sourceSeedIds: [],
+      expectationDesignDigest: exp.digest,
+      objectAnchorIds: ["object:xiuxin", "object:medic"],
+      groundingSurfaceRefs: [
+        surfaceRef(objectField, "object:xiuxin", "location"),
+        surfaceRef(objectField, "object:medic", "duty"),
+      ],
+      storyProblem: "让专业人物亲自重新给秀信定价",
+      worldGaps: [],
+      upgradeLedger: upgradeLedger(),
+      campNetwork: [
+        {
+          entityId: "xiuxin",
+          camp: "友方" as const,
+          currentGoal: "恢复并取得重新估值",
+          storyRole: "主角主动行动",
+          currentBelief: "自己的控制异常有真实价值",
+          currentInterest: "进入更高任务体系",
+        },
+        {
+          entityId: "medic",
+          camp: "中立" as const,
+          currentGoal: "按规则复核伤员",
+          storyRole: "第一层专业定价者",
+          currentBelief: "秀信只是普通伤员",
+          currentInterest: "维护专业判断准确性",
+        },
+      ],
+      stakeLedger: [{
+        id: "stake:runtime:medic",
+        entityId: "medic",
+        currentBelief: "秀信只是普通伤员",
+        currentInterest: "维护专业判断准确性",
+        stakeAction: "继续按普通伤员标准复核",
+        stakeAssets: ["专业信用"],
+        commitmentCost: "改判意味着承认此前估值不足",
+        escalationPlan: "异常持续时进行更严格复核",
+        payoffReaction: "亲自改判并上报",
+        settlementChange: "秀信取得可信专业重新估值",
+        state: "committed" as const,
+      }],
+      reactionTargets: [{
+        entityId: "medic",
+        before: "普通估值",
+        during: "亲自见证异常",
+        after: "重新估值",
+      }],
+      campTransitions: [],
+      appearanceOrderEntityIds: ["xiuxin", "medic"],
+      informationRelease: [],
+      events: [{
+        id: "event:runtime:wish",
+        title: "专业复核",
+        purpose: "让意淫线程进入真实人物判断",
+        problem: "医疗忍者会不会因亲眼所见改变专业估值",
+        storyPressure: "旧专业判断与异常结果冲突",
+        castPoolEntityIds: ["xiuxin", "medic"],
+        activeSeedEntityIds: ["xiuxin"],
+        actorPressures: [
+          { entityId: "xiuxin", pressure: "必须继续真实训练" },
+          { entityId: "medic", pressure: "必须按职责判断眼前异常" },
+        ],
+        stakeEntryIds: ["stake:runtime:medic"],
+        reactionTargetEntityIds: ["medic"],
+        informationReleaseSteps: [],
+        phaseTargets: [],
+        realityQuestion: "当前医疗职责与人物认知是否支持改判",
+        observableStart: "秀信展示异常恢复与控制",
+        expectedChange: "医疗忍者产生新的专业估值",
+        readerExpectation: "等待可信专业人物重新定价男主",
+      }],
+      directorAuthority: "author-defined-story-line" as const,
+      characterExecutionRule: "characterization-constrained-performance" as const,
+    };
+
+    expect(() =>
+      finalizeStoryUnitDesign(
+        {
+          ...baseDraft,
+          wishFulfillmentAdvances: [],
+          bearingEvidenceRefs: [
+            surfaceRef(objectField, "object:medic", "duty"),
+          ],
+        },
+        objectField,
+        exp,
+        context,
+      ),
+    ).toThrow("story_authoring.ready_without_wish_advance");
+
+    expect(() =>
+      finalizeStoryUnitDesign(
+        {
+          ...baseDraft,
+          wishFulfillmentAdvances: [{
+            threadId: "wish:runtime:recognition",
+            toPhase: "realizing",
+            storyMove: "让医疗忍者亲眼见证并开始改判",
+          }],
+          bearingEvidenceRefs: [],
+        },
+        objectField,
+        exp,
+        context,
+      ),
+    ).toThrow("story_authoring.ready_without_bearing_evidence");
+
+    const accepted = finalizeStoryUnitDesign(
+      {
+        ...baseDraft,
+        wishFulfillmentAdvances: [{
+          threadId: "wish:runtime:recognition",
+          toPhase: "realizing",
+          storyMove: "让医疗忍者亲眼见证并开始改判",
+        }],
+        bearingEvidenceRefs: [
+          surfaceRef(objectField, "object:medic", "duty"),
+        ],
+      },
+      objectField,
+      exp,
+      context,
+    );
+    expect(
+      accepted.wishFulfillment?.threads.find(
+        (thread) => thread.id === "wish:runtime:recognition",
+      )?.phase,
+    ).toBe("realizing");
+    expect(accepted.wishFulfillment?.threads).toHaveLength(2);
   });
 
   it("allows S03 to stop on a real world gap instead of inventing a seed", () => {
