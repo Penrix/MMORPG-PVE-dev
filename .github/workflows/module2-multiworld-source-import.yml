@@ -9,6 +9,8 @@ on:
       - "packages/persistence/src/source-world-seed.ts"
       - "packages/persistence/src/source-world-normalizers.ts"
       - "packages/persistence/src/source-world-rich-normalizers.ts"
+      - "packages/persistence/src/naruto-source-import.ts"
+      - "packages/persistence/test/naruto-source-import.test.ts"
       - "packages/persistence/src/source-corpus-repository.ts"
       - "packages/persistence/src/unified-source-world-repository.ts"
       - "packages/persistence/test/source-world-multiworld.test.ts"
@@ -89,6 +91,11 @@ jobs:
           assert(relationCount(canon["hunter-x-hunter"], "fundamental_of_recorded") >= 4);
           assert(relationCount(canon["hunter-x-hunter"], "advanced_application_of_recorded") >= 4);
           assert(relationCount(canon["hunter-x-hunter"], "part_of_power_system_recorded") > 50);
+
+          assert(powerCount(canon.naruto, "rule:naruto:") >= 3);
+          assert(powerCount(canon.naruto, "nature:") > 5);
+          assert(relationCount(canon.naruto, "chakra_nature_recorded") > 10);
+          assert(relationCount(canon.naruto, "part_of_power_system_recorded") > 100);
 
           assert(powerCount(canon.bleach, "rule:bleach:") >= 7);
           assert(relationCount(canon.bleach, "shikai_recorded") > 30);
