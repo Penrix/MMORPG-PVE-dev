@@ -334,6 +334,163 @@ Reader意淫什么？
 - Module 3：推进具体 thread，引用 bearing evidence，Story 兑现并 settlement；
 - Character Agent：不得读取 Reader fantasy / 最终 payoff，只按人物自己的可见 Reality 演。
 
+## 12.1 2026-11-26｜代码已经落地的三模块接口
+
+### Module 1｜意淫展开不是一次性 Selection
+
+当前 `world-production-runner` 已把 Wish-Fulfillment 从“第一步 Prompt 提醒”升级为持续运行队列：
+
+~~~text
+未服务的 Wish Thread
+        +
+未服务的 Bearing Requirement
+        ↓
+优先生成本轮 WorldWorkOrder
+        ↓
+完成后记录：
+wishFulfillmentThreadIds
+bearingRequirementIds
+        ↓
+下一轮继续检查尚未服务的线程
+        ↓
+全部服务后
+才回退普通 Atlas Coverage Audit
+~~~
+
+因此同一个高价对象的：
+
+~~~text
+认可
+师承
+需要
+私人准入
+公开背书
+政治联盟
+偏爱
+命运改写
+……
+~~~
+
+不会再因为第一条已经做过就被当成“这个对象已经完成”。
+
+### Module 2｜不新增“意淫数据库”，只提供可引用 Reality surfaces
+
+当前 `WorldAtlasStoryContextBuilder` 已经能同时提供：
+
+- Project Reality confirmed surfaces；
+- Source identity / relationship reference surfaces；
+- Reader Semantics reference surfaces；
+- 完整 Source Card 仅留 Author reference detail，不自动注入 Current Reality。
+
+`StoryObjectField` 把这些 surface 转成稳定 `surfaceRef`。
+
+因此：
+
+> **Module 2 的职责是提供承重证据，不负责给对象写一个永久“意淫分数”。**
+
+同一个纲手、职位、技能、组织在不同男主、不同阶段可以产生不同 Wish-Fulfillment 价值；第二模块只负责保存它们真实是谁、有什么关系、什么价格、什么 Authority。
+
+### Module 3｜每一条承重要求必须单独举证
+
+旧 StoryUnit 曾使用一个扁平：
+
+~~~text
+bearingEvidenceRefs[]
+~~~
+
+这会产生假承重：
+
+~~~text
+证明了“纲手很贵”
+→ 顺手把
+  私人信任
+  政治权限
+  偏爱稀缺
+  命运改写
+全部标成 grounded
+~~~
+
+当前新合同已经改为：
+
+~~~text
+bearingEvidence: [
+  {
+    requirementId,
+    evidenceRefs[]
+  }
+]
+~~~
+
+每一个尚未 grounded、且属于本轮推进 thread 的 `FantasyBearingRequirement` 都必须有自己的 Module-2 surface evidence。
+
+如果同一 thread 有两个承重要求，只给一个证据：
+
+> **StoryUnit 不能 READY。**
+
+旧 `bearingEvidenceRefs[]` 只保留存档兼容：**只有恰好一个相关未承重 Requirement 时才能自动归属；多 Requirement 时直接判歧义。**
+
+### Author / Director 与 Character POV 继续严格分权
+
+Wish-Fulfillment Frame、Reader Fantasy、Bearing Plan 属于 Author / Director Side。
+
+Character Observation 不包含：
+
+~~~text
+readerFantasy
+wishFulfillment
+bearingEvidence
+最终 payoff
+~~~
+
+角色只拿：
+
+~~~text
+自己知道什么
+自己想什么
+当前压力
+可见 Reality
+已有关系
+自己的利益与下注
+~~~
+
+因此作者可以主动设计“纲手最终偏爱男主 / 公开背书 / 改变命运”，但演员纲手不会被提前告知：
+
+> “Reader 想看你偏爱他。”
+
+她只会在 Director 已定商业故事方向内，依据自身人物条件与当前 Reality 演出具体行动。
+
+---
+
+## 12.2 当前三模块最短工程闭环
+
+~~~text
+Module 1
+Reader Fantasy / Protagonist Desire
+→ 多条 Wish Threads
+→ Bearing Requirements
+→ World Builder 持续补承重
+        ↓
+Module 2
+Project Reality
++ Source Relations
++ Reader Semantics
+→ stable surfaceRefs
+        ↓
+Module 3
+选择本轮推进 threads
+→ requirement-by-requirement bearing evidence
+→ Story / Stake / Reaction / Reader Time
+→ Settlement
+        ↓
+Project Reality / retained assets
+        ↓
+下一轮更贵 Wish Threads
+~~~
+
+这条纵轴是产品控制线，不是第四个模块，也不是新数据库。
+
+---
+
 ## 13. 最短恢复
 
 > **先问“Reader和男主到底想意淫什么”；把同一高价对象能展开的多条高价变化摊开；再问“什么 Reality 能把每条意淫托贵”，最后才进入 Story 兑现。**
