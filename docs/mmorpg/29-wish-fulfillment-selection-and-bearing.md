@@ -336,6 +336,46 @@ Reader意淫什么？
 
 ## 12.1 2026-11-26｜代码已经落地的三模块接口
 
+### Module 1｜Source World 默认先做 Source-Reusable 意淫选材
+
+此前 `generateSourceWorldProduction()` 只有在调用方已经手工提供 `wishFulfillment.mode=source_reusable` 时，才会真正先走意淫 Selection。一个没有上下文的新窗口如果只说“继续填火影世界”，默认仍可能从 Atlas coverage / 初始 workshop 开始，重新滑向百科式补齐。
+
+当前默认路径已经改为：
+
+~~~text
+显式 source_reusable Wish Frame
+        ↓ 有则直接使用
+
+没有
+        ↓
+读取当前 Source graph
++ Reader Semantics
++ Cognitive Mother
++ focus / genre / worldTime
+        ↓
+Source-Reusable Wish Planner
+        ↓
+高价对象 / 高价候选的多条 reusable Wish Threads
+        ↓
+Fantasy Bearing Requirements
+        ↓
+WorldWorkOrder
+        ↓
+Atlas Coverage 只负责补选中区域的世界骨头
+~~~
+
+Source-Reusable Planner 与具体小说 Planner 权限不同：
+
+- 它不绑定秀信、萧炎之类具体男主，`protagonistEntityId = null`；
+- 已经存在的 Source 对象必须使用真实 `source:<stable-key>`；
+- 尚未进入 Atlas 的高价候选可以只写具体 `targetName`，因为 Module 1 本来就负责生产世界内容；
+- 但“Planner 想到这个对象”绝不等于 Source Canon，新对象仍只能以 `inference / original candidate` 身份进入草稿，等待人工 adoption；
+- 同一个高价对象/候选至少允许并鼓励展开多条 reusable thread，不能退回“一个对象一个功能”；
+- 每条 thread 都必须有 bearing requirement，Planner 无权宣布 grounded / realized / retained。
+
+因此没有上下文的新窗口也不应再从“哪个 Family 少”开始，而应先问：
+
+> **这个母体世界里，未来男主碰到哪些具体人事物以后，能一口接一口地释放高价男性意淫？为了让这些东西真贵，世界还必须补什么？**
 ### Module 1｜意淫展开不是一次性 Selection
 
 当前 `world-production-runner` 已把 Wish-Fulfillment 从“第一步 Prompt 提醒”升级为持续运行队列：
