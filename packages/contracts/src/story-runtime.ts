@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  WishFulfillmentFrameSchema,
+  WishFulfillmentThreadAdvanceSchema,
+} from "./wish-fulfillment.js";
 
 export const StoryRuntimeAuthoritySchema = z.enum([
   "confirmed",
@@ -1039,6 +1043,11 @@ export const StoryUnitDesignSchema = z.object({
   creativeContextDigest: z.string().min(1),
   sourceSeedIds: z.array(z.string().min(1)),
   expectationDesignDigest: z.string().min(1),
+  wishFulfillment: WishFulfillmentFrameSchema.nullable().optional(),
+  wishFulfillmentAdvances: z
+    .array(WishFulfillmentThreadAdvanceSchema)
+    .optional(),
+  bearingEvidenceRefs: z.array(z.string().min(1)).optional(),
   objectAnchorIds: z.array(z.string().min(1)),
   groundingSurfaceRefs: z.array(z.string().min(1)),
   storyProblem: z.string().min(1),

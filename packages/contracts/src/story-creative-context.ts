@@ -6,6 +6,7 @@ import {
   StoryUpgradeLedgerSchema,
 } from "./story-runtime.js";
 import { CreativeMaterialSelectionSchema } from "./creative-material.js";
+import { WishFulfillmentFrameSchema } from "./wish-fulfillment.js";
 
 export const StoryCreativeFrameKindSchema = z.enum([
   "book",
@@ -66,6 +67,7 @@ export const StoryCreativeFrameStateSchema = z.object({
   frameOutlineNodeId: z.string().min(1),
   status: StoryCreativeFrameStateStatusSchema,
   upgradeLedger: StoryUpgradeLedgerSchema.nullable(),
+  wishFulfillment: WishFulfillmentFrameSchema.nullable().default(null),
   stakeLedger: z.array(StoryStakeLedgerEntrySchema),
   expectationThreads: z.array(StoryCreativeExpectationThreadSchema),
   retainedAssets: z.array(z.string().min(1)),
@@ -89,6 +91,7 @@ export const StoryCreativeInheritedStateSchema = z.object({
   sourceStateDigests: z.array(z.string().min(1)),
   sourceStates: z.array(StoryCreativeFrameStateSchema),
   latestUpgradeLedger: StoryUpgradeLedgerSchema.nullable(),
+  latestWishFulfillment: WishFulfillmentFrameSchema.nullable().default(null),
   activeStakeLedger: z.array(StoryStakeLedgerEntrySchema),
   openExpectationThreads: z.array(StoryCreativeExpectationThreadSchema),
   retainedAssets: z.array(z.string().min(1)),
@@ -168,6 +171,7 @@ export const StoryCreativeContextSchema = z.object({
   projectId: z.string().min(1),
   frame: StoryCreativeFrameContextSchema,
   protagonistCamera: StoryProtagonistCameraSchema,
+  wishFulfillment: WishFulfillmentFrameSchema.nullable().default(null),
   methodInvocations: z.array(CreativeMethodInvocationSchema),
   materialSelections: z.array(CreativeMaterialSelectionSchema).default([]),
   digest: z.string().min(1),
