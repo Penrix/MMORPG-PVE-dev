@@ -78,6 +78,10 @@ export interface WorldProductionStep {
   before: { nodes: number; links: number; activities: number };
   after: { nodes: number; links: number; activities: number };
   changedRefs: string[];
+  /** Author-side creative threads this concrete production step served. */
+  wishFulfillmentThreadIds: string[];
+  /** Bearing gaps this step was explicitly asked to ground in Reality. */
+  bearingRequirementIds: string[];
 }
 
 export function emptyWorldDocument(): WorldPackDocument {
@@ -148,6 +152,8 @@ function order(
     suggestedCardKinds: atlasTarget.cardKinds,
     peopleQuestions: atlasTarget.peopleQuestions,
     completionRule: atlasTarget.completionRule,
+    wishFulfillmentThreadIds: [],
+    bearingRequirementIds: [],
   };
 }
 
@@ -842,6 +848,10 @@ export function applyWorldProductionDelta(
   workshop: WorldWorkshop,
   subjectRef: string | null,
   knownSourceKeys: ReadonlySet<string> = new Set<string>(),
+  workOrder: Pick<
+    WorldWorkOrder,
+    "wishFulfillmentThreadIds" | "bearingRequirementIds"
+  > | null = null,
 ): { document: WorldPackDocument; step: WorldProductionStep } {
   const nodeMap = new Map(current.nodes.map((n) => [n.localId, n]));
   const changes = new Set<string>();
@@ -934,6 +944,8 @@ export function applyWorldProductionDelta(
       before: snapshot(current),
       after: snapshot(document),
       changedRefs: [...changes],
+      wishFulfillmentThreadIds: [...(workOrder?.wishFulfillmentThreadIds ?? [])],
+      bearingRequirementIds: [...(workOrder?.bearingRequirementIds ?? [])],
     },
   };
 }
