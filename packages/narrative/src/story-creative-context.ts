@@ -420,6 +420,7 @@ function wishGainMatches(targetGain: string, retainedGain: string): boolean {
 function settleWishFulfillment(
   current: StoryCreativeFrameState["wishFulfillment"],
   confirmedRealityClaims: readonly string[],
+  confirmedRetainedClaims: readonly string[],
   plannedRetainedGains: readonly string[],
 ): StoryCreativeFrameState["wishFulfillment"] {
   if (!current || confirmedRealityClaims.length === 0) return current;
@@ -439,6 +440,9 @@ function settleWishFulfillment(
       .filter((target) =>
         plannedRetainedGains.some((gain) =>
           wishGainMatches(target.targetGain, gain),
+        ) &&
+        confirmedRetainedClaims.some((claim) =>
+          wishGainMatches(target.targetGain, claim),
         ),
       )
       .map((target) => target.threadId),
@@ -470,6 +474,11 @@ export interface ApplySettlementToCreativeFrameStateInput {
    * Planned payoff / retained-gain directions are not Reality evidence.
    */
   confirmedRealityClaims: readonly string[];
+  /**
+   * Durable claims actually written to Project Reality / Canon by settlement.
+   * Only these may turn a planned retained gain into reusable equity.
+   */
+  confirmedRetainedClaims: readonly string[];
   advanceUpgradeStep?: boolean;
 }
 
@@ -526,6 +535,7 @@ export function applySettlementToCreativeFrameState(
     wishFulfillment: settleWishFulfillment(
       currentState.wishFulfillment,
       input.confirmedRealityClaims,
+      input.confirmedRetainedClaims,
       plannedRetainedGains,
     ),
     stakeLedger: currentState.stakeLedger.map((entry) => {
@@ -550,7 +560,7 @@ export function applySettlementToCreativeFrameState(
     retainedAssets: [
       ...currentState.retainedAssets,
       ...plannedRetainedGains.filter((gain) =>
-        input.confirmedRealityClaims.some((claim) =>
+        input.confirmedRetainedClaims.some((claim) =>
           wishGainMatches(gain, claim),
         ),
       ),
