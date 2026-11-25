@@ -12,6 +12,14 @@ import type { SourceKind } from "./source-corpus-repository.js";
 
 type JsonObject = Record<string, unknown>;
 
+/**
+ * Importer invariant:
+ * rich adapters THICKEN the existing World Atlas graph. A richer fandom
+ * domain does not justify a parallel Power/Equipment/Economy database.
+ * Project rules, abilities, characters, items, organizations and events into
+ * the existing Card + Typed Relation model and let people-centered queries
+ * compose the view.
+ */
 export interface SourceIdentityBridge {
   [identity: string]: string;
 }
@@ -61,6 +69,7 @@ export function mergeSourceWorldSeeds(
 export function normalizeOnePieceWikiGraph(input: {
   entities: JsonObject[];
   translations: Record<string, string>;
+  hakiVocabulary?: JsonObject;
   canonicalByIdentity?: SourceIdentityBridge;
 }): SourceWorldSeed {
   const entry = requiredCatalog("one-piece");
@@ -99,26 +108,107 @@ export function normalizeOnePieceWikiGraph(input: {
     });
   }
 
+  const power = addOnePiecePowerRules({
+    records,
+    entities: input.entities,
+    hakiVocabulary: input.hakiVocabulary,
+    sourceUrl: upstream.sourceUrl,
+  });
+  for (const key of power.allKeys) sourceKeys.add(key);
+
   const relations: SourceWorldSeedRelation[] = [];
   const seen = new Set<string>();
+  const addRelation = (
+    fromKey: string,
+    toKey: string,
+    relation: string,
+    sourceNote: string,
+  ): void => {
+    if (!sourceKeys.has(fromKey) || !sourceKeys.has(toKey)) return;
+    const id = fromKey + "\0" + relation + "\0" + toKey;
+    if (seen.has(id)) return;
+    seen.add(id);
+    relations.push({ fromKey, toKey, relation, sourceNote });
+  };
+
+  for (const [value, key] of power.hakiTypeKeys)
+    addRelation(
+      key,
+      power.hakiRootKey,
+      "power_branch_of_recorded",
+      "Pinned One Piece haki-types vocabulary.",
+    );
+  for (const [value, key] of power.devilFruitClassKeys)
+    addRelation(
+      key,
+      power.devilFruitRootKey,
+      "power_branch_of_recorded",
+      "Classification observed in pinned Devil Fruit evidence: " + value,
+    );
+  if (power.awakeningKey)
+    addRelation(
+      power.awakeningKey,
+      power.devilFruitRootKey,
+      "power_rule_of_recorded",
+      "Awakening is projected from pinned Devil Fruit awakened/awakening_outcome fields.",
+    );
+
   for (const entity of input.entities) {
     const fromKey = text(entity.id);
     if (!fromKey || !sourceKeys.has(fromKey)) continue;
     for (const edge of arrayOfObjects(entity.relations)) {
       const toKey = text(edge.target);
       const relation = text(edge.type);
-      if (!toKey || !relation || !sourceKeys.has(toKey)) continue;
-      const id = fromKey + "\0" + relation + "\0" + toKey;
-      if (seen.has(id)) continue;
-      seen.add(id);
-      relations.push({
+      if (!toKey || !relation) continue;
+      addRelation(
         fromKey,
         toKey,
         relation,
-        sourceNote:
-          "Pinned One Piece entity relation; qualifiers=" +
+        "Pinned One Piece entity relation; qualifiers=" +
           JSON.stringify(object(edge.qualifiers) ?? {}),
-      });
+      );
+    }
+
+    if (text(entity.type) === "character")
+      for (const value of historicalStringValues(entity, "haki_types")) {
+        const target = power.hakiTypeKeys.get(value);
+        if (target)
+          addRelation(
+            fromKey,
+            target,
+            "haki_type_recorded",
+            "Pinned character.haki_types evidence: " + value,
+          );
+      }
+
+    if (text(entity.type) === "devil-fruit") {
+      addRelation(
+        fromKey,
+        power.devilFruitRootKey,
+        "part_of_power_system_recorded",
+        "Pinned Devil Fruit entity.",
+      );
+      for (const value of historicalStringValues(entity, "classification", true)) {
+        const target = power.devilFruitClassKeys.get(value);
+        if (target)
+          addRelation(
+            fromKey,
+            target,
+            "devil_fruit_class_recorded",
+            "Pinned Devil Fruit classification evidence: " + value,
+          );
+      }
+      if (
+        power.awakeningKey &&
+        (hasMeaningfulProperty(entity, "awakened") ||
+          hasMeaningfulProperty(entity, "awakening_outcome"))
+      )
+        addRelation(
+          fromKey,
+          power.awakeningKey,
+          "awakening_recorded",
+          "Pinned Devil Fruit awakening evidence.",
+        );
     }
   }
 
@@ -200,6 +290,8 @@ export function normalizeHunterXHunterMindMaps(input: {
   for (const row of input.abilities) addRecord(row, "ability", "nen");
   for (const row of input.routes) addRecord(row, "activity", "routes");
 
+  const power = addHunterXHunterPowerRules(records, input.abilities, upstream.sourceUrl);
+
   const addRelation = (
     from: string,
     to: string,
@@ -220,6 +312,14 @@ export function normalizeHunterXHunterMindMaps(input: {
   ): void => {
     for (const to of stringArray(values)) addRelation(from, to, relation, note);
   };
+
+  for (const [category, key] of power.categoryKeys)
+    addRelation(
+      key,
+      power.rootKey,
+      "power_branch_of_recorded",
+      "Nen category observed in pinned ability.type fields: " + category,
+    );
 
   for (const row of input.characters) {
     const id = text(row.id);
@@ -291,7 +391,45 @@ export function normalizeHunterXHunterMindMaps(input: {
   }
   for (const row of input.abilities) {
     const id = text(row.id);
+    if (!id) continue;
     many(id, row.characterIds, "used_by_recorded", "MindMaps ability users.");
+    addRelation(
+      id,
+      power.rootKey,
+      "part_of_power_system_recorded",
+      "Pinned HxH Nen ability record.",
+    );
+    const nenType = text(row.type).toLowerCase();
+    if (nenType && nenType !== "nen") {
+      const category = power.categoryKeys.get(nenType);
+      if (category)
+        addRelation(
+          id,
+          category,
+          "nen_category_recorded",
+          "Pinned ability.type Nen category: " + nenType,
+        );
+    } else {
+      const tags = stringArray(row.tags).map((tag) => tag.toLowerCase());
+      const name = text(row.name).toLowerCase();
+      if (tags.includes("avanzata"))
+        addRelation(
+          id,
+          power.rootKey,
+          "advanced_application_of_recorded",
+          "Pinned Nen tag marks this as an advanced application.",
+        );
+      else if (
+        tags.includes("fondamentale") ||
+        ["nen", "ten", "zetsu", "ren", "hatsu"].includes(name)
+      )
+        addRelation(
+          id,
+          power.rootKey,
+          "fundamental_of_recorded",
+          "Pinned Nen record marks this as a fundamental/system rule.",
+        );
+    }
   }
   for (const row of input.events) {
     const id = text(row.id);
@@ -526,6 +664,214 @@ export function normalizeHunterXHunterRoster(input: {
   ]);
 }
 
+interface OnePiecePowerProjection {
+  allKeys: Set<string>;
+  hakiRootKey: string;
+  hakiTypeKeys: Map<string, string>;
+  devilFruitRootKey: string;
+  devilFruitClassKeys: Map<string, string>;
+  awakeningKey: string | null;
+}
+
+function addOnePiecePowerRules(input: {
+  records: SourceWorldSeedRecord[];
+  entities: JsonObject[];
+  hakiVocabulary?: JsonObject;
+  sourceUrl: string;
+}): OnePiecePowerProjection {
+  const allKeys = new Set<string>();
+  const pushRule = (
+    sourceKey: string,
+    name: string,
+    summary: string,
+    raw: JsonObject,
+    collection: string,
+  ): void => {
+    if (allKeys.has(sourceKey)) return;
+    allKeys.add(sourceKey);
+    input.records.push({
+      sourceKey,
+      canonicalKey: sourceKey,
+      kind: "rule",
+      name,
+      summary,
+      raw,
+      sourceUrl: input.sourceUrl,
+      originCollection: collection,
+    });
+  };
+
+  const devilFruitRootKey = "rule:one-piece:devil-fruit-system";
+  pushRule(
+    devilFruitRootKey,
+    "Devil Fruit System",
+    "World-level power rule grouping pinned Devil Fruit entities and their observed classifications.",
+    { projection: "derived_from_pinned_devil_fruit_entities" },
+    "power-system/devil-fruit",
+  );
+
+  const devilFruitClassKeys = new Map<string, string>();
+  for (const entity of input.entities) {
+    if (text(entity.type) !== "devil-fruit") continue;
+    for (const value of historicalStringValues(entity, "classification", true)) {
+      const normalized = value.toLowerCase();
+      if (devilFruitClassKeys.has(normalized)) continue;
+      const key = "rule:one-piece:devil-fruit-class:" + slug(normalized);
+      devilFruitClassKeys.set(normalized, key);
+      pushRule(
+        key,
+        titleCase(normalized.replaceAll("_", " ")) + " Devil Fruit",
+        "Devil Fruit classification observed in pinned Source evidence.",
+        { classification: normalized },
+        "power-system/devil-fruit/classification",
+      );
+    }
+  }
+
+  const hasAwakening = input.entities.some(
+    (entity) =>
+      text(entity.type) === "devil-fruit" &&
+      (hasMeaningfulProperty(entity, "awakened") ||
+        hasMeaningfulProperty(entity, "awakening_outcome")),
+  );
+  const awakeningKey = hasAwakening
+    ? "rule:one-piece:devil-fruit-awakening"
+    : null;
+  if (awakeningKey)
+    pushRule(
+      awakeningKey,
+      "Devil Fruit Awakening",
+      "Awakening rule projected only because pinned Devil Fruit records expose awakened/awakening_outcome fields.",
+      { projection: "derived_from_pinned_awakening_fields" },
+      "power-system/devil-fruit/awakening",
+    );
+
+  const hakiRootKey = "rule:one-piece:haki-system";
+  pushRule(
+    hakiRootKey,
+    "Haki System",
+    "World-level Haki rule projected from the pinned haki-types vocabulary.",
+    { vocabulary: "haki-types" },
+    "power-system/haki",
+  );
+  const hakiTypeKeys = new Map<string, string>();
+  const values = object(input.hakiVocabulary?.values);
+  for (const [value, descriptor] of Object.entries(values ?? {})) {
+    const label =
+      text(object(object(descriptor)?.labels)?.en) ||
+      titleCase(value.replaceAll("_", " "));
+    const key = "rule:one-piece:haki:" + slug(value);
+    hakiTypeKeys.set(value.toLowerCase(), key);
+    pushRule(
+      key,
+      label,
+      "Haki branch from the pinned One Piece haki-types vocabulary.",
+      { vocabulary: "haki-types", value },
+      "power-system/haki/types",
+    );
+  }
+
+  return {
+    allKeys,
+    hakiRootKey,
+    hakiTypeKeys,
+    devilFruitRootKey,
+    devilFruitClassKeys,
+    awakeningKey,
+  };
+}
+
+interface HunterXHunterPowerProjection {
+  rootKey: string;
+  categoryKeys: Map<string, string>;
+}
+
+function addHunterXHunterPowerRules(
+  records: Map<string, SourceWorldSeedRecord>,
+  abilities: JsonObject[],
+  sourceUrl: string,
+): HunterXHunterPowerProjection {
+  const rootKey = "rule:hxh:nen-system";
+  const nenRoot = abilities.find((row) => text(row.id) === "jutsu-hxh-nen");
+  records.set(rootKey, {
+    sourceKey: rootKey,
+    canonicalKey: rootKey,
+    kind: "rule",
+    name: "Nen System",
+    summary:
+      description(nenRoot ?? {}) ||
+      "World-level Nen rule projected from pinned HxH Nen records.",
+    raw: {
+      projection: "derived_from_pinned_nen_records",
+      sourceAbilityId: text(nenRoot?.id),
+      sourceType: text(nenRoot?.type),
+    },
+    sourceUrl,
+    originCollection: "nen/system",
+  });
+
+  const categoryKeys = new Map<string, string>();
+  const categories = new Set(
+    abilities
+      .map((row) => text(row.type).toLowerCase())
+      .filter((value) => value && value !== "nen"),
+  );
+  for (const category of [...categories].sort()) {
+    const key = "rule:hxh:nen-category:" + slug(category);
+    categoryKeys.set(category, key);
+    records.set(key, {
+      sourceKey: key,
+      canonicalKey: key,
+      kind: "rule",
+      name: titleCase(category) + " Nen",
+      summary:
+        "Nen category projected from pinned ability.type fields; individual Hatsu link back to this branch.",
+      raw: {
+        projection: "derived_from_pinned_ability_type",
+        nenCategory: category,
+      },
+      sourceUrl,
+      originCollection: "nen/categories",
+    });
+  }
+
+  return { rootKey, categoryKeys };
+}
+
+function historicalStringValues(
+  entity: JsonObject,
+  property: string,
+  includeActual = false,
+): string[] {
+  const properties = object(entity.properties);
+  const raw = properties?.[property];
+  const entries = Array.isArray(raw) ? raw : raw === undefined ? [] : [raw];
+  const values = new Set<string>();
+  for (const entry of entries) {
+    if (typeof entry === "string") {
+      if (entry.trim()) values.add(entry.trim().toLowerCase());
+      continue;
+    }
+    const row = object(entry);
+    const value = text(row?.value);
+    if (value) values.add(value.toLowerCase());
+    if (includeActual) {
+      const actual = text(row?.actual_value);
+      if (actual) values.add(actual.toLowerCase());
+    }
+  }
+  return [...values];
+}
+
+function hasMeaningfulProperty(entity: JsonObject, property: string): boolean {
+  const properties = object(entity.properties);
+  const raw = properties?.[property];
+  if (raw === undefined || raw === null) return false;
+  if (Array.isArray(raw)) return raw.length > 0;
+  if (typeof raw === "string") return raw.trim().length > 0;
+  return Boolean(raw);
+}
+
 function seed(
   entry: SourceWorldCatalogEntry,
   corpora: SourceWorldSeedCorpus[],
@@ -564,7 +910,7 @@ function onePieceKind(type: string): SourceKind {
   if (type === "crew" || type === "organization" || type === "company")
     return "organization";
   if (type === "location") return "location";
-  if (type === "devil-fruit") return "ability";
+  if (type === "devil-fruit" || type === "technique") return "ability";
   if (type === "ship" || type === "weapon") return "item";
   if (type === "event" || type === "arc" || type === "saga") return "event";
   if (
