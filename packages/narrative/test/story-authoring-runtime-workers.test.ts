@@ -453,6 +453,11 @@ describe("StoryAuthoringService", () => {
           expect(serialized).toContain("wish:reprice:recognition");
           expect(serialized).toContain("wish:reprice:circle");
           expect(serialized).toContain("每种承重各算各的");
+          expect(serialized).toContain("bearingEvidenceCandidates");
+          expect(serialized).toContain("bearingKinds");
+          expect(serialized).toContain(
+            "只能引用 bearingEvidenceCandidates 中 bearingKinds 包含该 requirement.kind 的证据",
+          );
           const checked = validate({
             status: "READY",
             objectAnchorIds: ["object:xiuxin", "object:medic"],
