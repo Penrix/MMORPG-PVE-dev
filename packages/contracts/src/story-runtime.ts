@@ -662,6 +662,10 @@ export const StoryWorldGapSchema = z.object({
     "playability",
     "living",
   ]),
+  /** Optional on old saved units; current finalizer derives these when possible. */
+  wishFulfillmentThreadIds: z.array(z.string().min(1)).optional(),
+  /** Exact FantasyBearingRequirement ids this gap blocks. */
+  bearingRequirementIds: z.array(z.string().min(1)).optional(),
   status: z.literal("OPEN"),
 });
 export type StoryWorldGap = z.infer<typeof StoryWorldGapSchema>;
