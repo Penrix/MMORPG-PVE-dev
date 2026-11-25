@@ -1044,6 +1044,30 @@ describe("object-grounded story authoring runtime", () => {
       ),
     ).toThrow("story_authoring.ambiguous_flat_bearing_evidence");
 
+    expect(() =>
+      finalizeStoryUnitDesign(
+        {
+          ...baseDraft,
+          wishFulfillmentAdvances: advances,
+          bearingEvidence: [
+            {
+              requirementId: "bearing:runtime:medic",
+              evidenceRefs: [medicDuty],
+            },
+            {
+              requirementId: "bearing:runtime:price",
+              evidenceRefs: [medicDuty],
+            },
+          ],
+        },
+        objectField,
+        exp,
+        context,
+      ),
+    ).toThrow(
+      "story_authoring.bearing_evidence_kind_mismatch:bearing:runtime:price:price",
+    );
+
     const accepted = finalizeStoryUnitDesign(
       {
         ...baseDraft,
