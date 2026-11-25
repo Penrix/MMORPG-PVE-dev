@@ -19,16 +19,10 @@ import {
   storyBearingEvidenceCandidates,
   storyObjectFieldFromWorldContext,
 } from "../src/story-authoring-runtime.js";
-import {
-  applySettlementToCreativeFrameState,
-} from "../src/story-creative-context.js";
+import { applySettlementToCreativeFrameState } from "../src/story-creative-context.js";
 import type { StoryChapterProductionHandoff } from "../src/story-production-handoff.js";
-import {
-  worldWorkOrderFromStoryGap,
-} from "../src/world-production-engine.js";
-import {
-  projectExistingWorldForProduction,
-} from "../src/world-production-reality.js";
+import { worldWorkOrderFromStoryGap } from "../src/world-production-engine.js";
+import { projectExistingWorldForProduction } from "../src/world-production-reality.js";
 
 const now = "2026-11-26T00:00:00.000Z";
 
@@ -98,10 +92,7 @@ function installTsunadeSourceAndProjectReality() {
       ],
       familiarRelations: ["三忍", "木叶高层", "医疗忍术"],
       naturalEntrances: ["医疗体系", "战后复核", "木叶高层事务"],
-      attentionTriggers: [
-        "纲手主动注意低位男主",
-        "纲手给出别人没有的私人准入",
-      ],
+      attentionTriggers: ["纲手主动注意低位男主", "纲手给出别人没有的私人准入"],
       basis: "author_judgment",
       sourceNote: "纲手高价人物测试语义",
     },
@@ -198,10 +189,13 @@ function tsunadeWishFrame() {
         id === "private-access" || id === "affection"
           ? "形成普通忍者与普通弟子都没有的私人例外"
           : null,
-      publicRepricing:
-        ["recognition", "mentorship", "political-alliance"].includes(id)
-          ? "纲手的公开选择会让木叶重新给男主定价"
-          : null,
+      publicRepricing: [
+        "recognition",
+        "mentorship",
+        "political-alliance",
+      ].includes(id)
+        ? "纲手的公开选择会让木叶重新给男主定价"
+        : null,
       upgradeLeverage: [
         "医疗忍术",
         "三忍圈层",
@@ -214,7 +208,10 @@ function tsunadeWishFrame() {
     bearingRequirements: desired.map(([id, change]) => ({
       id: `bearing:tsunade:${id}`,
       threadIds: [`wish:tsunade:${id}`],
-      kind: id === "private-access" || id === "affection" ? "relationship" : "person",
+      kind:
+        id === "private-access" || id === "affection"
+          ? "relationship"
+          : "person",
       requirement:
         id === "private-access"
           ? "必须存在纲手与秀信之间真实、当前、已经形成的私人信任或私人准入关系；纲手的公共高价不能替代这一关系。"
@@ -256,9 +253,7 @@ describe("Naruto Tsunade wish-fulfillment axis integration", () => {
     const { canon } = installTsunadeSourceAndProjectReality();
     const wish = tsunadeWishFrame();
     expect(wish.threads).toHaveLength(8);
-    expect(
-      wish.threads.map((thread) => thread.desiredChange),
-    ).toEqual(
+    expect(wish.threads.map((thread) => thread.desiredChange)).toEqual(
       expect.arrayContaining([
         "纲手认可我的天赋",
         "纲手成为我的老师",
@@ -433,8 +428,6 @@ describe("Naruto Tsunade wish-fulfillment axis integration", () => {
         (thread) => thread.id === "wish:tsunade:private-access",
       )?.phase,
     ).toBe("retained");
-    expect(durable.retainedAssets).toContain(
-      "纲手只对秀信开放私人一面",
-    );
+    expect(durable.retainedAssets).toContain("纲手只对秀信开放私人一面");
   });
 });
