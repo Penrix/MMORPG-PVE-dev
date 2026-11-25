@@ -176,7 +176,7 @@ export function worldWorkOrderFromStoryGap(
       (node.existingCanonId !== null &&
         anchorCanonIds.includes(node.existingCanonId)),
   );
-  return order(
+  const workOrder = order(
     gap.productionHint,
     anchorNode?.localId ?? null,
     doc,
@@ -189,6 +189,11 @@ export function worldWorkOrderFromStoryGap(
         : "anchorObjects=none",
     ],
   );
+  return {
+    ...workOrder,
+    wishFulfillmentThreadIds: [...(gap.wishFulfillmentThreadIds ?? [])],
+    bearingRequirementIds: [...(gap.bearingRequirementIds ?? [])],
+  };
 }
 
 function relationMatches(relation: string, pattern: RegExp): boolean {
