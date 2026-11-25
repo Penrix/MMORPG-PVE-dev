@@ -521,6 +521,11 @@ describe("accepted settlement creative-state write-back", () => {
       "charging",
     ]);
     expect(settled.retainedAssets).toContain("新的任务资格");
+    expect(
+      settled.wishFulfillment?.threads.find(
+        (thread) => thread.id === "wish:settlement:qualification",
+      )?.phase,
+    ).toBe("retained");
     expect(settled.realityFingerprint).toBe("reality:accepted");
 
     const next = buildStoryCreativeFrameContext(
@@ -528,6 +533,11 @@ describe("accepted settlement creative-state write-back", () => {
       "chapter-2",
     );
     expect(next.inheritedState.retainedAssets).toContain("新的任务资格");
+    expect(
+      next.inheritedState.latestWishFulfillment?.threads.find(
+        (thread) => thread.id === "wish:settlement:qualification",
+      )?.phase,
+    ).toBe("retained");
     expect(next.inheritedState.activeStakeLedger.map((stake) => stake.entityId)).toEqual([
       "hero",
     ]);

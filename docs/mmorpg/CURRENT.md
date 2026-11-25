@@ -249,6 +249,8 @@ REALIZE / SETTLE
 
 当前共享合同在 `packages/contracts/src/wish-fulfillment.ts`。它是 author/director-side creative direction，不拥有 Source truth 或 Project Reality Authority，也不得进入 Character POV。
 
+权益边界固定：**StoryUnit 只允许 `bearing / realizing`，不得提前写 `realized / retained`；只有作者接受 Chapter Settlement 后，匹配实际 retained gain 的意淫线程才能进入 `retained`。**
+
 ---
 ## 6. 三模块不可混淆的权限
 

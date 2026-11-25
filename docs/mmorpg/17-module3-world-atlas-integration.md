@@ -192,6 +192,8 @@ Settlement 留下真实资产
 
 Finalizer 会拒绝 READY + 有意淫帧但无 thread advance、无 bearing evidence、未知 thread、thread phase 倒退或不存在于 Object Field 的 bearing ref。
 
+**Director 没有平仓权。** StoryUnit 的 `wishFulfillmentAdvances` 只能把线程推进到 `bearing / realizing`。即使作者已经设计好 payoff，也不能在 Story design 阶段把势能冒充已实现权益。只有章节正文正式 Settlement 被作者接受，而且 handoff 中确实留下与 `settlementTargets.targetGain` 对应的 retained gain，Creative State 才把相应 thread 推进为 `retained` 并写入 retained assets。
+
 ### Creative State 跨章节继承
 
 采用后的 `mmorpgCreativeState` 现在同时继承 Upgrade Ledger、WishFulfillmentFrame、Stake Ledger、Expectation Threads、Retained Assets。因此高价关系已经走到哪一步，不应下一章失忆重置。
