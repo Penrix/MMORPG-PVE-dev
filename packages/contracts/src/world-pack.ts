@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { WishFulfillmentFrameSchema } from "./wish-fulfillment.js";
 import {
   WorldAtlasCardKindSchema,
   WorldAtlasReaderSemanticsSchema,
@@ -23,6 +24,8 @@ export const WorldPackRequestSchema = z.object({
   scarcity: z.string().trim().max(2_000),
   instruction: z.string().trim().max(8_000),
   parentAreaId: z.string().trim().max(300).nullable(),
+  /** Optional shared longitudinal fantasy direction. Author/Director side only; never Reality. */
+  wishFulfillment: WishFulfillmentFrameSchema.optional(),
   /** Covel WORLD_YAML / WORLD_MD / WORLD_PACKAGE_YAML multi-section authoring source. */
   sourcePackageText: z.string().max(100_000).optional(),
 });

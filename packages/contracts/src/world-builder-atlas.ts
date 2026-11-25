@@ -2,20 +2,15 @@ import type {
   WorldAtlasCardKind,
   WorldAtlasContentFamily,
 } from "./world-atlas.js";
+import {
+  WISH_FULFILLMENT_SEARCH_AXES,
+  type WishFulfillmentSearchAxisId,
+} from "./wish-fulfillment.js";
 
-export const WORLD_BUILDER_WISH_FULFILLMENT_AXES = [
-  { id: "power", label: "力量", question: "如果我是男主，我想能做到什么？" },
-  { id: "status", label: "身份", question: "如果我是男主，我想成为什么人？" },
-  { id: "wealth", label: "财富", question: "如果我是男主，我想拥有什么？" },
-  { id: "circle", label: "圈层", question: "如果我是男主，我想和什么人坐到一张桌上？" },
-  { id: "information", label: "信息", question: "如果我是男主，我想知道别人不知道什么？" },
-  { id: "space", label: "空间", question: "如果我是男主，我想活进怎样更昂贵的世界？" },
-  { id: "relationship", label: "关系", question: "如果我是男主，我想和谁形成怎样只有我有的位置？" },
-  { id: "career", label: "事业", question: "如果我是男主，我想在世界上留下怎样属于我的事业？" },
-] as const;
+export const WORLD_BUILDER_WISH_FULFILLMENT_AXES =
+  WISH_FULFILLMENT_SEARCH_AXES;
 
-export type WorldBuilderWishFulfillmentAxisId =
-  (typeof WORLD_BUILDER_WISH_FULFILLMENT_AXES)[number]["id"];
+export type WorldBuilderWishFulfillmentAxisId = WishFulfillmentSearchAxisId;
 
 /**
  * Module-1 selection policy. This chooses which world content deserves
@@ -26,8 +21,10 @@ export const WORLD_BUILDER_SELECTION_POLICY = {
   name: "男频意淫价值 / Wish-Fulfillment Selection",
   firstQuestion:
     "如果我是这个男主，这个候选到底有什么值得我意淫？它会让成为这个男主增加什么欲望？",
+  expansionQuestion:
+    "围绕同一个高价对象，不是选一种关系，而是展开多条可持续升价的线程：认可、师承、需要、私人准入、公开背书、权力、偏爱、拥有、命运改写等哪些都值得逐条发生？",
   bearingQuestion:
-    "什么 Reality、人、关系、历史、价格、门槛、稀缺、竞争、资格和取得路径，能把这个幻想托得更真、更贵、更馋？",
+    "什么 Reality、人、关系、历史、价格、门槛、稀缺、竞争、资格和取得路径，能把这些幻想线程逐条托得更真、更贵、更馋？",
   objective:
     "优先生产高意淫价值且能继续打开更贵人生的世界对象；低价背景只在承重、入口、关系或当前 Reality 需要时精编。",
   bearingRule:
