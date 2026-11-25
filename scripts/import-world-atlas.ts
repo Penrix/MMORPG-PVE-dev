@@ -27,8 +27,17 @@ import { NodeNarrativeDatabase } from "@narralume/persistence/node";
 interface WorldMeta {
   id: string;
   name: string;
-  kind: "fictional" | "historical" | "real" | "hybrid";
+  kind: "fictional" | "historical" | "era" | "original_reference" | "real" | "hybrid";
   description: string;
+}
+
+function normalizeWorldKind(
+  kind: WorldMeta["kind"],
+): "fictional" | "historical" | "era" | "original_reference" {
+  if (kind === "fictional" || kind === "historical" || kind === "era" || kind === "original_reference") {
+    return kind;
+  }
+  return "era";
 }
 
 interface AtlasCardInput {
@@ -160,7 +169,7 @@ async function main(): Promise<void> {
         worlds.createWorld({
           id: bundle.world.id,
           name: bundle.world.name,
-          kind: bundle.world.kind,
+          kind: normalizeWorldKind(bundle.world.kind),
           description: bundle.world.description,
           canonicalCorpusId,
           createdAt: now,
