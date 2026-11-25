@@ -148,7 +148,7 @@ function installTsunadeSourceAndProjectReality() {
         value_basis,scarcity,access_path,future_use,status,
         source_type,source_note,created_at
       ) VALUES (
-        'tsunade-price','p-tsunade','tsunade',NULL,'status',
+        'tsunade-price','p-tsunade','tsunade',NULL,'office',
         '三忍、顶级医疗忍者、木叶最高政治层级人物',
         '同级公共价格极少',
         '普通低位忍者没有私人准入',
