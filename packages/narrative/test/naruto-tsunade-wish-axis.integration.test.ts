@@ -358,7 +358,7 @@ describe("Naruto Tsunade wish-fulfillment axis integration", () => {
 
     expect(relationshipEvidence).toBeDefined();
     expect(relationshipEvidence?.authority).toBe("confirmed");
-    expect(relationshipEvidence?.evidenceRef).toContain("object:tsunade");
+    expect(relationshipEvidence?.objectId).toBe("object:tsunade");
   });
 
   it("only turns Tsunade private access into retained equity when settlement confirms the durable relationship write-back", () => {
