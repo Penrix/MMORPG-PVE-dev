@@ -199,11 +199,13 @@ function unitFor(field: StoryObjectField, status: "READY" | "BLOCKED_WORLD_GAP" 
     storyProblem: "医疗忍者如何重新估值秀信",
     worldGaps: status === "READY" ? [] : [{
       id: "gap:1",
-      kind: "missing_value",
+      kind: "missing_object",
       anchorObjectIds: ["object:medic"],
-      need: "专业证据",
-      reason: "尚缺专业证据",
-      productionHint: "social",
+      need: "补出真实专业人物对男主进行复核与改判的承重",
+      reason: "这条认可意淫还缺能承担专业判断责任的真实人物承重",
+      productionHint: "people",
+      wishFulfillmentThreadIds: ["wish:medic:recognition"],
+      bearingRequirementIds: ["bearing:medic"],
       status: "OPEN",
     }],
     wishFulfillment: {
@@ -497,6 +499,14 @@ describe("StoryDirectorPipeline", () => {
     if (blocked.status !== "BLOCKED_WORLD_GAP") throw new Error("unexpected ready");
     expect(blocked.worldGaps).toHaveLength(1);
     expect(blocked.storyUnit.worldGaps).toBe(blocked.worldGaps);
+    expect(blocked.worldWorkOrders).toHaveLength(1);
+    expect(blocked.worldWorkOrders[0]).toMatchObject({
+      workshop: "people",
+      subjectRef: "canon:medic",
+      subjectName: "医疗忍者",
+      wishFulfillmentThreadIds: ["wish:medic:recognition"],
+      bearingRequirementIds: ["bearing:medic"],
+    });
     expect(agent).not.toHaveBeenCalled();
     expect(story.requireOutlineNode("p1", "chapter-1").metadata).toEqual({});
   });
