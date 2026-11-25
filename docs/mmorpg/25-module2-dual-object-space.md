@@ -807,6 +807,53 @@ Human
 
 当前仍明确缺少更厚的 supporting evidence，例如 Kidō、Hollow/Visored 通用规则、Quincy 通用技术等。搜索到的部分 Bleach 游戏/模组项目混入大量自定义平衡与二创规则，不能直接提升为 Source World evidence；在找到可固定、可追溯的原著资料源前保持为缺口，不用模型常识硬填。
 
+#### Naruto
+
+Naruto 原始 Dattebayo 数据一直很厚，但此前 POWER 主要停留在：
+
+```text
+Character → jutsu_listed → Jutsu
+Character → kekkei_genkai_recorded → Kekkei Genkai
+Character / Beast 原始字段里存在 natureType[]
+```
+
+也就是说，**人物和具体技能很多，但世界力量规则骨架没有真正站起来**。
+
+这次没有新建任何 Naruto 专用 Power schema，而是在同一 World Object Graph 中增加三个规则根，并把已有 evidence 接回去：
+
+```text
+Jutsu System
+    ↑ part_of_power_system_recorded
+1,690 source-listed Jutsu
+
+Chakra Nature
+    ↑ part_of_power_system_recorded
+50 explicit natureType objects
+    ↑ chakra_nature_recorded
+Characters / Tailed Beasts
+
+Kekkei Genkai
+    ↑ part_of_power_system_recorded
+existing kekkei-genkai records
+    ↑ kekkei_genkai_recorded
+Characters
+```
+
+这里的 `Chakra Nature` 对象完全来自 Dattebayo 现有 `natureType[]`，不按技能名称猜属性；`Jutsu System` 只做“这是上游明确列出的术”的总根，不把所有 jutsu 擅自分类成 Ninjutsu / Genjutsu / Taijutsu；`Kekkei Genkai` 根只组织现有 `kekkei-genkai` collection，不新增平衡规则、代价或获取条件。
+
+真实全量导入结果：
+
+| POWER 投影 | 数量 |
+| --- | ---: |
+| POWER rule roots | **3** |
+| Chakra Nature objects | **50** |
+| Jutsu → Jutsu System | **1,690** |
+| Character/Beast → Chakra Nature | **871** |
+| unresolved projected relations | **0** |
+| Project Canon | **0** |
+
+这一步证明 Naruto 的问题不是“缺 Power 子系统”，而是**specialized importer 没把已经存在的结构化 POWER evidence 吃完整**。下一阶段仍应沿同一路径继续恢复更细的公共规则、分类与人物实例，而不是另造 Naruto 技能树数据库。
+
 #### 验收
 
 真实 GitHub Actions 已验证：
