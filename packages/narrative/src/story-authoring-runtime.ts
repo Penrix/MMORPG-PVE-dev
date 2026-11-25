@@ -18,6 +18,7 @@ import {
   type StoryUnitDesign,
   type WorldArbitrationReceipt,
   type StoryUnitDesignDraft,
+  type WishFulfillmentBearingEvidence,
   type WishFulfillmentFrame,
   type WishFulfillmentThreadAdvance,
 } from "@narralume/contracts";
@@ -334,13 +335,110 @@ export function finalizeStoryAuthoringSearch(
   });
 }
 
+function normalizeWishFulfillmentBearingEvidence(input: {
+  frame: WishFulfillmentFrame;
+  advances: readonly WishFulfillmentThreadAdvance[];
+  bearingEvidence: readonly WishFulfillmentBearingEvidence[];
+  legacyBearingEvidenceRefs: readonly string[];
+}): WishFulfillmentBearingEvidence[] {
+  const advancedThreadIds = new Set(
+    input.advances.map((advance) => advance.threadId),
+  );
+  const relatedRequirements = input.frame.bearingRequirements.filter(
+    (requirement) =>
+      requirement.threadIds.some((threadId) =>
+        advancedThreadIds.has(threadId),
+      ),
+  );
+
+  for (const threadId of advancedThreadIds) {
+    if (
+      !relatedRequirements.some((requirement) =>
+        requirement.threadIds.includes(threadId),
+      )
+    ) {
+      throw new Error(
+        `story_authoring.wish_thread_without_bearing_requirement:${threadId}`,
+      );
+    }
+  }
+
+  const ungroundedRequirements = relatedRequirements.filter(
+    (requirement) => requirement.status !== "grounded",
+  );
+  if (
+    input.bearingEvidence.length > 0 &&
+    input.legacyBearingEvidenceRefs.length > 0
+  ) {
+    throw new Error("story_authoring.mixed_bearing_evidence_formats");
+  }
+
+  let bindings = [...input.bearingEvidence];
+  if (
+    bindings.length === 0 &&
+    input.legacyBearingEvidenceRefs.length > 0
+  ) {
+    if (ungroundedRequirements.length !== 1) {
+      throw new Error(
+        "story_authoring.ambiguous_flat_bearing_evidence",
+      );
+    }
+    bindings = [
+      {
+        requirementId: ungroundedRequirements[0]!.id,
+        evidenceRefs: [...input.legacyBearingEvidenceRefs],
+      },
+    ];
+  }
+
+  const requirementsById = new Map(
+    input.frame.bearingRequirements.map((requirement) => [
+      requirement.id,
+      requirement,
+    ]),
+  );
+  const seenRequirementIds = new Set<string>();
+  for (const binding of bindings) {
+    if (seenRequirementIds.has(binding.requirementId)) {
+      throw new Error(
+        `story_authoring.duplicate_bearing_evidence:${binding.requirementId}`,
+      );
+    }
+    seenRequirementIds.add(binding.requirementId);
+    const requirement = requirementsById.get(binding.requirementId);
+    if (!requirement) {
+      throw new Error(
+        `story_authoring.unknown_bearing_requirement:${binding.requirementId}`,
+      );
+    }
+    if (
+      !requirement.threadIds.some((threadId) =>
+        advancedThreadIds.has(threadId),
+      )
+    ) {
+      throw new Error(
+        `story_authoring.unrelated_bearing_evidence:${binding.requirementId}`,
+      );
+    }
+  }
+
+  for (const requirement of ungroundedRequirements) {
+    if (!seenRequirementIds.has(requirement.id)) {
+      throw new Error(
+        `story_authoring.missing_bearing_evidence:${requirement.id}`,
+      );
+    }
+  }
+  return bindings;
+}
+
 function applyWishFulfillmentAdvances(
   frame: WishFulfillmentFrame | null,
   advances: readonly WishFulfillmentThreadAdvance[],
-  bearingEvidenceRefs: readonly string[],
+  bearingEvidence: readonly WishFulfillmentBearingEvidence[],
 ): WishFulfillmentFrame | null {
   if (!frame) {
-    if (advances.length > 0) {
+    if (advances.length > 0 || bearingEvidence.length > 0) {
       throw new Error("story_authoring.wish_advance_without_frame");
     }
     return null;
@@ -374,7 +472,9 @@ function applyWishFulfillmentAdvances(
       );
     }
   }
-  const advancedThreadIds = new Set(advances.map((advance) => advance.threadId));
+  const bearingByRequirement = new Map(
+    bearingEvidence.map((binding) => [binding.requirementId, binding]),
+  );
   return {
     ...frame,
     threads: frame.threads.map((thread) => {
@@ -382,17 +482,13 @@ function applyWishFulfillmentAdvances(
       return advance ? { ...thread, phase: advance.toPhase } : thread;
     }),
     bearingRequirements: frame.bearingRequirements.map((requirement) => {
-      if (
-        bearingEvidenceRefs.length === 0 ||
-        !requirement.threadIds.some((threadId) => advancedThreadIds.has(threadId))
-      ) {
-        return requirement;
-      }
+      const binding = bearingByRequirement.get(requirement.id);
+      if (!binding) return requirement;
       return {
         ...requirement,
         status: "grounded" as const,
         evidenceRefs: [
-          ...new Set([...requirement.evidenceRefs, ...bearingEvidenceRefs]),
+          ...new Set([...requirement.evidenceRefs, ...binding.evidenceRefs]),
         ],
       };
     }),
@@ -459,21 +555,43 @@ export function finalizeStoryUnitDesign(
   const surfaceRefs = allowedStorySurfaceRefs(field);
   const wishFrame = creativeContext.wishFulfillment;
   const wishAdvances = parsed.wishFulfillmentAdvances ?? [];
-  const bearingEvidenceRefs = parsed.bearingEvidenceRefs ?? [];
-  if (parsed.status === "READY" && wishFrame) {
-    if (wishAdvances.length === 0) {
-      throw new Error("story_authoring.ready_without_wish_advance");
-    }
-    if (bearingEvidenceRefs.length === 0) {
-      throw new Error("story_authoring.ready_without_bearing_evidence");
-    }
+  const explicitBearingEvidence = parsed.bearingEvidence ?? [];
+  const legacyBearingEvidenceRefs = parsed.bearingEvidenceRefs ?? [];
+  if (
+    !wishFrame &&
+    (wishAdvances.length > 0 ||
+      explicitBearingEvidence.length > 0 ||
+      legacyBearingEvidenceRefs.length > 0)
+  ) {
+    throw new Error("story_authoring.wish_advance_without_frame");
   }
-  requireUnique("bearing_evidence", bearingEvidenceRefs);
-  requireRefs("bearing_evidence", bearingEvidenceRefs, surfaceRefs);
+  if (parsed.status === "READY" && wishFrame && wishAdvances.length === 0) {
+    throw new Error("story_authoring.ready_without_wish_advance");
+  }
+  const normalizedBearingEvidence =
+    parsed.status === "READY" && wishFrame
+      ? normalizeWishFulfillmentBearingEvidence({
+          frame: wishFrame,
+          advances: wishAdvances,
+          bearingEvidence: explicitBearingEvidence,
+          legacyBearingEvidenceRefs,
+        })
+      : explicitBearingEvidence;
+  for (const binding of normalizedBearingEvidence) {
+    requireUnique(
+      `bearing_evidence_${binding.requirementId}`,
+      binding.evidenceRefs,
+    );
+    requireRefs(
+      `bearing_evidence_${binding.requirementId}`,
+      binding.evidenceRefs,
+      surfaceRefs,
+    );
+  }
   const advancedWishFulfillment = applyWishFulfillmentAdvances(
     wishFrame,
     wishAdvances,
-    bearingEvidenceRefs,
+    normalizedBearingEvidence,
   );
   if (!entityIds.has(parsed.upgradeLedger.protagonistEntityId)) {
     throw new Error("story_authoring.upgrade_protagonist_not_in_object_field");
