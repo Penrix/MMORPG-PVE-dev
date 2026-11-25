@@ -341,6 +341,66 @@ Module 2
 
 最终目标不是让模型记住更多名词，而是让创作时真正能拿到足够厚的**世界对象**和**创意对象**，再由算法和 Story Director 对它们进行推演。
 
+### 8.1 防止把“内容缺口”误判成“架构缺口”
+
+2026-11-25 在增厚 One Piece / Hunter x Hunter 时暴露了一条新的错误路径：
+
+```text
+某个 Family 的内容还很薄
+→ 发现现有导入器只拿到了人物 / ability / 若干关系
+→ 误以为第二模块缺少一个新的专用子系统
+→ 条件反射提出 Power System Graph / Character Build Database
+→ 实际上重复发明已有 World Atlas 能力
+```
+
+这不是“忘了某个名词”，而是**没有先恢复第二模块的既有结构，就从局部任务重新发明架构**。
+
+今后遇到力量、经济、职业、装备、组织、信息、社会权限等任何局部内容不足时，必须先按下面顺序判断：
+
+```text
+1. 这是新的世界对象类型，还是现有 Ten Families 里的内容还没填厚？
+        ↓
+2. 现有 WorldAtlasCardKind 能不能表达？
+        ↓
+3. 现有 Card + Typed Relation 能不能把它与人物、组织、地点、事件等连接？
+        ↓
+4. People-centered Query 能不能从人物中心把这些对象重新组装出来？
+        ↓
+5. 只有上述结构确实无法表达时，才讨论扩 schema / 新 subsystem。
+```
+
+默认裁决：
+
+> **先补内容与关系，后谈扩架构。局部资料薄，不能自动推出底座缺一层。**
+
+以力量体系为例，正确理解不是再建一套独立 Power Database，而是把现有 World Object Graph 中的 POWER Family 填厚：
+
+- `rule`：力量的公共规则、原理、阶段、成立条件；
+- `ability`：具体能力、技能、招式、境界表现；
+- `technology`：研究、制造、工程与技术路线；
+- `item/resource`：恶魔果实、斩魄刀、秘卷、特殊资源等载体；
+- `character`：具体人物实际掌握、使用、发展到什么状态；
+- `organization`：谁教授、控制、垄断、研究这些力量；
+- `event/activity`：何时学会、觉醒、突破、训练、研究或失去；
+- Typed Relations：`掌握 / 使用 / 传授 / 前置 / 组合 / 克制 / 依赖 / 来源 ...`。
+
+所谓“人物 Build”也不是新的数据库实体，而是 **People-centered View**：
+
+```text
+Character
+  + POWER
+  + ASSET
+  + ORGANIZATION
+  + ACTIVITY
+  + INFORMATION
+  + 当前 time-slice / Project Reality
+→ 查询时动态组装出的具体人物状态
+```
+
+因此 One Piece / Hunter x Hunter 当前真正的问题是 **Adapter / Normalizer 仍偏百科导入，尚未充分投影原著中的力量规则、力量内容与人物实例之间的关系**，不是 Module 2 缺少 Power subsystem。
+
+这条规则适用于所有 World Family，防止以后把“经济内容薄”误判成需要 Economy Database、把“职业内容薄”误判成需要 Career Database、把“装备内容薄”误判成需要 Equipment Database。
+
 ## 9. 算子不是流程
 
 Creative Operator Space 更像工具架，不是流水线。第三模块遇到局部发散、迁移、变奏、检验问题时，点名调用一个算子，得到候选后立即回到讲师 Story Director 主线。
