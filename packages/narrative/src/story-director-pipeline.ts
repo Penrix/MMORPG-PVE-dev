@@ -18,6 +18,7 @@ import type {
   StoryUpgradeLedger,
   WorldArbitrationContext,
   WorldArbitrationReceipt,
+  WishFulfillmentFrame,
 } from "@narralume/contracts";
 // prettier-ignore
 import {
@@ -70,6 +71,7 @@ export interface StoryDirectorFrameRequest {
   entityIds: readonly string[];
   protagonistCamera: StoryProtagonistCamera;
   upgradeLedger?: StoryUpgradeLedger;
+  wishFulfillment?: WishFulfillmentFrame;
   storyTimeLabel?: string | null;
   request: string;
   readerNeed: string;
@@ -167,6 +169,74 @@ function addUsage(total: RunBudgetUsage, next: RunBudgetUsage): RunBudgetUsage {
   };
 }
 
+function fallbackWishFulfillment(input: {
+  protagonistEntityId: string;
+  readerNeed: string;
+  protagonistDesire: string;
+  upgradeLedger: StoryUpgradeLedger;
+}): WishFulfillmentFrame {
+  const current =
+    input.upgradeLedger.steps.find(
+      (step) => step.id === input.upgradeLedger.currentStepId,
+    ) ?? input.upgradeLedger.steps[0]!;
+  return {
+    version: "wish-fulfillment-frame.v1",
+    authority: "creative-direction",
+    mode: "story_current",
+    protagonistEntityId: input.protagonistEntityId,
+    readerFantasy: input.readerNeed,
+    protagonistDesire: input.protagonistDesire,
+    threads: [
+      {
+        id: `wish:${current.id}:gain`,
+        targetRefs: [],
+        targetNames: [],
+        dimension: "upgrade",
+        readerFantasy: `男主真正取得：${current.targetGain}`,
+        protagonistDesire: input.protagonistDesire,
+        desiredChange: `从${input.upgradeLedger.currentPosition}推进到${current.targetGain}`,
+        privatePrivilege: null,
+        publicRepricing: null,
+        upgradeLeverage: [input.upgradeLedger.settlementTarget],
+        phase: "selected",
+      },
+      {
+        id: `wish:${current.id}:circle`,
+        targetRefs: [],
+        targetNames: [current.targetCircle],
+        dimension: "circle",
+        readerFantasy: `进入更昂贵的${current.targetCircle}并被里面的人重新定价`,
+        protagonistDesire: input.protagonistDesire,
+        desiredChange: `从圈外/低位进入${current.targetCircle}并获得真实位置`,
+        privatePrivilege: null,
+        publicRepricing: `让${current.targetCircle}中的高价人物公开重新评价男主`,
+        upgradeLeverage: [input.upgradeLedger.settlementTarget],
+        phase: "candidate",
+      },
+    ],
+    bearingRequirements: [
+      {
+        id: `bearing:${current.id}:reality`,
+        threadIds: [`wish:${current.id}:gain`, `wish:${current.id}:circle`],
+        kind: "reality",
+        requirement:
+          "用当前 Project Reality 中真实人物、关系、规则、价格与准入把这一层升级托贵",
+        evidenceRefs: [],
+        status: "candidate",
+        raisesPriceBecause:
+          "不是白送升级，而是让高价世界真实重新给男主定价",
+      },
+    ],
+    settlementTargets: [
+      {
+        threadId: `wish:${current.id}:gain`,
+        assetKind: "upgrade",
+        targetGain: input.upgradeLedger.settlementTarget,
+      },
+    ],
+  };
+}
+
 /** S01-S08 coordination only. The speculative methods never stage data. */
 // prettier-ignore
 export class StoryDirectorPipeline {
@@ -222,17 +292,28 @@ export class StoryDirectorPipeline {
       storyStateFingerprint: packet.fingerprint,
       context: world,
     });
+    const upgradeLedger =
+      request.upgradeLedger ?? frame.inheritedState.latestUpgradeLedger;
+    if (!upgradeLedger) throw new Error("story_director.missing_upgrade_ledger");
+    const wishFulfillment =
+      request.wishFulfillment ??
+      frame.inheritedState.latestWishFulfillment ??
+      fallbackWishFulfillment({
+        protagonistEntityId: request.protagonistCamera.protagonistEntityId,
+        readerNeed: request.readerNeed,
+        protagonistDesire: request.protagonistCamera.currentGoal,
+        upgradeLedger,
+      });
     const creativeContext = finalizeStoryCreativeContext({
       version: "story-creative-context.v1",
       authority: "speculative",
       projectId: request.projectId,
       frame,
       protagonistCamera: request.protagonistCamera,
+      wishFulfillment,
       methodInvocations: [...(request.methodInvocations ?? [])],
       materialSelections: [...(request.materialSelections ?? [])],
     });
-    const upgradeLedger = request.upgradeLedger ?? frame.inheritedState.latestUpgradeLedger;
-    if (!upgradeLedger) throw new Error("story_director.missing_upgrade_ledger");
     let usage = emptyUsage();
     let expectationDesign = request.expectationDesign;
     if (!expectationDesign) {
