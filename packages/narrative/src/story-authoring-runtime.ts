@@ -825,7 +825,10 @@ export function finalizeStoryUnitDesign(
     ...parsed,
     wishFulfillment: advancedWishFulfillment,
     wishFulfillmentAdvances: wishAdvances,
-    bearingEvidenceRefs,
+    bearingEvidence: normalizedBearingEvidence,
+    // Normalize legacy flat evidence into requirement-scoped bindings so all
+    // newly finalized StoryUnits use the current contract.
+    bearingEvidenceRefs: undefined,
   };
   return StoryUnitDesignSchema.parse({
     ...normalized,
