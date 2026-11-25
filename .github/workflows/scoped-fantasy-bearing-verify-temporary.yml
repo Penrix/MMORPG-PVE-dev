@@ -1,0 +1,39 @@
+name: Scoped Fantasy Bearing Verify Temporary
+
+on:
+  push:
+    branches:
+      - feat/module3-world-atlas-integration
+    paths:
+      - .github/workflows/scoped-fantasy-bearing-verify-temporary.yml
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format this batch only
+        run: |
+          npx prettier --write             packages/contracts/src/wish-fulfillment.ts             packages/contracts/src/story-runtime.ts             packages/narrative/src/story-authoring-runtime.ts             packages/narrative/src/story-authoring-runtime-workers.ts             packages/narrative/test/story-authoring-runtime.test.ts             packages/narrative/test/story-authoring-runtime-workers.test.ts             packages/narrative/test/story-director-pipeline.test.ts
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- story-authoring-runtime story-authoring-runtime-workers story-director-pipeline
+      - run: npm run build
+      - name: Commit batch formatting
+        run: |
+          FILES="packages/contracts/src/wish-fulfillment.ts packages/contracts/src/story-runtime.ts packages/narrative/src/story-authoring-runtime.ts packages/narrative/src/story-authoring-runtime-workers.ts packages/narrative/test/story-authoring-runtime.test.ts packages/narrative/test/story-authoring-runtime-workers.test.ts packages/narrative/test/story-director-pipeline.test.ts"
+          if git diff --quiet -- $FILES; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add $FILES
+          git commit -m "chore(module3): format scoped fantasy bearing batch"
+          git push
