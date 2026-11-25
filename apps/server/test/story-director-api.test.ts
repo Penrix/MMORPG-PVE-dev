@@ -107,6 +107,56 @@ function frameRequest() {
     entityIds: ["hero", "medic"],
     protagonistCamera: camera,
     upgradeLedger: ledger,
+    wishFulfillment: {
+      version: "wish-fulfillment-frame.v1" as const,
+      authority: "creative-direction" as const,
+      mode: "story_current" as const,
+      protagonistEntityId: "hero",
+      readerFantasy: "看秀信被专业体系重新定价，并由这份认可打开更昂贵的任务圈",
+      protagonistDesire: "获得重新估值",
+      threads: [
+        {
+          id: "wish:api:recognition",
+          targetRefs: ["object:medic"],
+          targetNames: ["医疗忍者"],
+          dimension: "relationship",
+          readerFantasy: "专业人物亲自改判并认可秀信",
+          protagonistDesire: "用真实表现获得认可",
+          desiredChange: "医疗忍者从普通估值转为主动认可并上报",
+          privatePrivilege: null,
+          publicRepricing: "专业体系提高秀信评级",
+          upgradeLeverage: ["高价任务资格"],
+          phase: "selected" as const,
+        },
+        {
+          id: "wish:api:circle",
+          targetRefs: ["object:medic"],
+          targetNames: ["高价任务审核圈"],
+          dimension: "circle",
+          readerFantasy: "这份认可继续把秀信带进更高价圈层",
+          protagonistDesire: "进入上层任务体系",
+          desiredChange: "从医院伤员变成有资格进入高价任务审核的人",
+          privatePrivilege: "获得普通伤员没有的复核入口",
+          publicRepricing: null,
+          upgradeLeverage: ["上层任务入口"],
+          phase: "candidate" as const,
+        },
+      ],
+      bearingRequirements: [{
+        id: "bearing:api:medic",
+        threadIds: ["wish:api:recognition"],
+        kind: "person" as const,
+        requirement: "真实专业人物亲自见证并承担改判责任",
+        evidenceRefs: [],
+        status: "candidate" as const,
+        raisesPriceBecause: "专业人物自己改判才让认可变贵",
+      }],
+      settlementTargets: [{
+        threadId: "wish:api:recognition",
+        assetKind: "status",
+        targetGain: "专业重新估值",
+      }],
+    },
     request: "设计秀信打破普通伤员估值的故事",
     readerNeed: "得意",
     targetEmotion: "得意",
@@ -131,7 +181,11 @@ function expectationFor(field: { realityFingerprint: string; storyStateFingerpri
 }
 
 // prettier-ignore
-function unitFor(field: { digest: string }, status: "READY" | "BLOCKED_WORLD_GAP" = "READY"): StoryUnitDesign {
+function unitFor(
+  field: StoryObjectField,
+  status: "READY" | "BLOCKED_WORLD_GAP" = "READY",
+): StoryUnitDesign {
+  const frame = frameRequest().wishFulfillment;
   return {
     version: "story-unit-design.v1", authority: "speculative", status,
     projectId: "p1", objectFieldDigest: field.digest,
@@ -139,7 +193,29 @@ function unitFor(field: { digest: string }, status: "READY" | "BLOCKED_WORLD_GAP
     expectationDesignDigest: "expectation:1",
     objectAnchorIds: ["object:hero", "object:medic"], groundingSurfaceRefs: [],
     storyProblem: "医疗忍者如何重新估值秀信",
-    worldGaps: status === "READY" ? [] : [{ id: "gap:1", description: "尚缺专业证据" }],
+    worldGaps: status === "READY" ? [] : [{
+      id: "gap:1",
+      kind: "missing_value",
+      anchorObjectIds: ["object:medic"],
+      need: "专业证据",
+      reason: "尚缺专业证据",
+      productionHint: "social",
+      status: "OPEN",
+    }],
+    wishFulfillment: {
+      ...frame,
+      threads: frame.threads.map((thread) =>
+        status === "READY" && thread.id === "wish:api:recognition"
+          ? { ...thread, phase: "realizing" as const }
+          : thread,
+      ),
+    },
+    wishFulfillmentAdvances: status === "READY" ? [{
+      threadId: "wish:api:recognition",
+      toPhase: "realizing",
+      storyMove: "让医疗忍者亲自见证异常并开始改判",
+    }] : [],
+    bearingEvidenceRefs: status === "READY" ? ["api-test-bearing-surface"] : [],
     upgradeLedger: ledger, campNetwork: [
       { entityId: "hero", camp: "主角", currentGoal: "升级", storyRole: "主动测试", currentBelief: "自己能做到", currentInterest: "拿高价任务" },
       { entityId: "medic", camp: "专业观察者", currentGoal: "按流程工作", storyRole: "旧认知下注", currentBelief: "秀信只是普通伤员", currentInterest: "维持专业判断" },
@@ -292,9 +368,17 @@ describe("StoryDirector API dual-host run contract", () => {
         value: expectationFor(request), usage, generation: { mode: "native", attempts: 1 },
       }));
     vi.spyOn(StoryAuthoringService.prototype, "designStoryUnit")
-      .mockImplementation(async (_run, _step, request) => ({
-        value: unitFor(request.field), usage, generation: { mode: "native", attempts: 1 },
-      }));
+      .mockImplementation(async (_run, _step, request) => {
+        expect(request.creativeContext.wishFulfillment?.threads).toHaveLength(2);
+        expect(
+          request.creativeContext.wishFulfillment?.threads.map((thread) => thread.id),
+        ).toEqual(["wish:api:recognition", "wish:api:circle"]);
+        return {
+          value: unitFor(request.field),
+          usage,
+          generation: { mode: "native", attempts: 1 },
+        };
+      });
     rehearsalMocks(["feasible"]);
     app = await buildApp({
       config, database: db, narrativeModelClient: mockModel, enableRunWorker: true, logger: false,
@@ -345,6 +429,12 @@ describe("StoryDirector API dual-host run contract", () => {
     expect(story.requireOutlineNode("p1", "chapter-2").metadata.storyProductionHandoff).toBeUndefined();
     const next = buildStoryCreativeFrameContext(story.listOutline("p1"), "chapter-2");
     expect(next.inheritedState.latestUpgradeLedger).toEqual(ledger);
+    expect(next.inheritedState.latestWishFulfillment?.threads).toHaveLength(2);
+    expect(
+      next.inheritedState.latestWishFulfillment?.threads.find(
+        (thread) => thread.id === "wish:api:recognition",
+      )?.phase,
+    ).toBe("realizing");
     const outlineResponse = await app.inject({ method: "GET", url: "/api/projects/p1/outline" });
     expect(outlineResponse.statusCode, outlineResponse.body).toBe(200);
     expect(outlineResponse.body).toContain("storyProductionHandoff");

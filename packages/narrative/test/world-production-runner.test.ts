@@ -120,6 +120,113 @@ describe("program-owned world production, not LLM self-reported completion", () 
     ).rejects.toThrow("world.workshop.no_product");
     expect(calls).toEqual(["factions"]);
   });
+
+  it("puts wish-bearing selection ahead of family coverage", async () => {
+    const wishRequest: WorldPackRequest = {
+      ...request,
+      scale: "W1",
+      premise: "木叶高价人物关系承重",
+      genre: "火影同人",
+      wishFulfillment: {
+        version: "wish-fulfillment-frame.v1",
+        authority: "creative-direction",
+        mode: "project_current",
+        protagonistEntityId: "hero",
+        readerFantasy: "让高价人物逐渐认可男主并给出特殊入口",
+        protagonistDesire: "进入更高价圈层",
+        threads: [{
+          id: "wish:tsunade:recognition",
+          targetRefs: ["tsunade"],
+          targetNames: ["纲手"],
+          dimension: "relationship",
+          readerFantasy: "纲手从注意、认可一路发展到私人准入与公开背书",
+          protagonistDesire: "取得纲手认可",
+          desiredChange: "纲手主动认可男主并开放别人没有的位置",
+          privatePrivilege: "私人传承入口",
+          publicRepricing: "三忍级人物公开背书",
+          upgradeLeverage: ["三忍圈层", "木叶高层"],
+          phase: "selected",
+        }],
+        bearingRequirements: [{
+          id: "bearing:tsunade:choice",
+          threadIds: ["wish:tsunade:recognition"],
+          kind: "relationship",
+          requirement: "纲手必须拥有真实选择权、公共价格和与男主积累关系的路径",
+          evidenceRefs: [],
+          status: "missing",
+          raisesPriceBecause: "她不是谁都认可，偏偏选择男主才贵",
+        }],
+        settlementTargets: [{
+          threadId: "wish:tsunade:recognition",
+          assetKind: "relationship",
+          targetGain: "纲手的公开认可与私人准入",
+        }],
+      },
+    };
+    const existingWorld: WorldPackDocument = {
+      ...place,
+      nodes: [
+        {
+          ...place.nodes[0]!,
+          localId: "tsunade",
+          type: "character",
+          name: "纲手",
+          description: "三忍之一，拥有极高专业与社会价格",
+        },
+      ],
+    };
+    const operations: string[] = [];
+    const model = {
+      async structured<T>(
+        _run: NarrativeRun,
+        _step: NarrativeRunStep,
+        _purpose: string,
+        prompt: { messages: Array<{ content: string }> },
+        _contract: unknown,
+        validate: (
+          value: unknown,
+        ) => { success: true; data: T } | { success: false; issues: string[] },
+      ) {
+        const input = JSON.parse(prompt.messages[0]!.content) as {
+          operation: string;
+          wishFulfillmentThreadIds?: string[];
+          bearingRequirementIds?: string[];
+        };
+        operations.push(input.operation);
+        expect(input.wishFulfillmentThreadIds).toEqual([
+          "wish:tsunade:recognition",
+        ]);
+        expect(input.bearingRequirementIds).toEqual([
+          "bearing:tsunade:choice",
+        ]);
+        const parsed = validate(place);
+        if (!parsed.success) throw new Error(parsed.issues.join("; "));
+        return {
+          value: parsed.data,
+          usage,
+          mode: "native" as const,
+          attempts: 1,
+        };
+      },
+    } as unknown as NarrativeModelClient;
+
+    await expect(
+      runWorldWorkshops({
+        run,
+        step,
+        model,
+        request: wishRequest,
+        basePrompt: "意淫承重优先的世界制作",
+        existingWorld,
+        knownCanonIds: new Set<string>(),
+        contract: WORLD_PACK_MODEL_CONTRACT,
+        signal: new AbortController().signal,
+      }),
+    ).rejects.toThrow("world.workshop.no_product");
+
+    expect(operations[0]).toBe("social");
+  });
+
   it("starts W1 from a known historical power instead of recreating geography", async () => {
     const focus: WorldPackRequest = {
       ...request,
