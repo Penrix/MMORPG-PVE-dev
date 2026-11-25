@@ -1138,6 +1138,37 @@ describe("object-grounded story authoring runtime", () => {
       },
     ]);
     expect(legacyAccepted.bearingEvidenceRefs).toBeUndefined();
+
+    const blocked = finalizeStoryUnitDesign(
+      {
+        ...baseDraft,
+        status: "BLOCKED_WORLD_GAP" as const,
+        events: [],
+        wishFulfillmentAdvances: [],
+        bearingEvidence: [],
+        worldGaps: [
+          {
+            id: "gap:runtime:medic-person",
+            kind: "missing_object" as const,
+            anchorObjectIds: ["object:medic"],
+            need: "补出能真实承担专业改判责任的人物承重",
+            reason: "当前线程需要真实专业人物亲自见证并承担改判责任",
+            productionHint: "people" as const,
+            status: "OPEN" as const,
+          },
+        ],
+      },
+      objectField,
+      exp,
+      context,
+    );
+    expect(blocked.worldGaps[0]).toMatchObject({
+      wishFulfillmentThreadIds: ["wish:runtime:recognition"],
+      bearingRequirementIds: ["bearing:runtime:medic"],
+    });
+    expect(blocked.worldGaps[0]?.bearingRequirementIds).not.toContain(
+      "bearing:runtime:price",
+    );
   });
 
   it("allows S03 to stop on a real world gap instead of inventing a seed", () => {
