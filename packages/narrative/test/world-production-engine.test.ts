@@ -264,6 +264,37 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
       bearingRequirementIds: ["bearing:tsunade-choice"],
     });
     expect(selected?.reason).toContain("纲手认可男主");
+
+    const nextThread = worldProductionWorkOrderForWishFulfillment(
+      wish,
+      doc,
+      { ...req, wishFulfillment: wish },
+      {
+        servedThreadIds: new Set(["thread:tsunade-recognition"]),
+        servedBearingRequirementIds: new Set(["bearing:tsunade-choice"]),
+      },
+    );
+    expect(nextThread).toMatchObject({
+      workshop: "social",
+      subjectRef: "tsunade",
+      wishFulfillmentThreadIds: ["thread:tsunade-destiny"],
+      bearingRequirementIds: [],
+    });
+    expect(nextThread?.reason).toContain("纲手的人生因男主介入");
+
+    const exhausted = worldProductionWorkOrderForWishFulfillment(
+      wish,
+      doc,
+      { ...req, wishFulfillment: wish },
+      {
+        servedThreadIds: new Set([
+          "thread:tsunade-recognition",
+          "thread:tsunade-destiny",
+        ]),
+        servedBearingRequirementIds: new Set(["bearing:tsunade-choice"]),
+      },
+    );
+    expect(exhausted).toBeNull();
     expect(wish.threads).toHaveLength(2);
   });
 
@@ -289,6 +320,8 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
     expect(result.step.changedRefs).toEqual(
       expect.arrayContaining(["guild", "guild|operates|market"]),
     );
+    expect(result.step.wishFulfillmentThreadIds).toEqual([]);
+    expect(result.step.bearingRequirementIds).toEqual([]);
     expect(() =>
       applyWorldProductionDelta(
         result.document,
