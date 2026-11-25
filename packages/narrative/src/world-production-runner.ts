@@ -18,6 +18,7 @@ import {
   applyWorldProductionDelta,
   emptyWorldDocument,
   playtestWorld,
+  worldWorkOrderFromStoryGap,
   worldWorkOrderInput,
   type WorldWorkOrder,
   type WorldWorkshop,
@@ -496,6 +497,10 @@ export async function runWorldWorkshops(args: {
   for (let index = steps.length; index < maxSteps; index++) {
     const check = playtestWorld(view(), args.request);
     const firstStep = steps.length === 0 && index === 0;
+    const storyGapOrder =
+      firstStep && args.request.storyWorldGap
+        ? worldWorkOrderFromStoryGap(args.request.storyWorldGap, view())
+        : null;
     const wishFulfillmentOrder = args.request.wishFulfillment
       ? worldProductionWorkOrderForWishFulfillment(
           args.request.wishFulfillment,
@@ -508,6 +513,7 @@ export async function runWorldWorkshops(args: {
       ? resolveWorldDesignEntry(args.request, view())
       : null;
     const op =
+      storyGapOrder ??
       wishFulfillmentOrder ??
       (firstStep && args.request.intent === "advance"
         ? worldProductionWorkOrder("living", view(), args.request)
