@@ -1,5 +1,5 @@
 name: Naruto POWER Verify Temporary
-# Rerun after Naruto card-kind assertion fix.
+# Rerun after exact SourceWorldCard kind assertion fix.
 
 on:
   push:
