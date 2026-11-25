@@ -843,14 +843,14 @@ Characters
 
 真实全量导入结果：
 
-| POWER 投影 | 数量 |
-| --- | ---: |
-| POWER rule roots | **3** |
-| Chakra Nature objects | **50** |
-| Jutsu → Jutsu System | **1,690** |
-| Character/Beast → Chakra Nature | **871** |
-| unresolved projected relations | **0** |
-| Project Canon | **0** |
+| POWER 投影                      |      数量 |
+| ------------------------------- | --------: |
+| POWER rule roots                |     **3** |
+| Chakra Nature objects           |    **50** |
+| Jutsu → Jutsu System            | **1,690** |
+| Character/Beast → Chakra Nature |   **871** |
+| unresolved projected relations  |     **0** |
+| Project Canon                   |     **0** |
 
 这一步证明 Naruto 的问题不是“缺 Power 子系统”，而是**specialized importer 没把已经存在的结构化 POWER evidence 吃完整**。下一阶段仍应沿同一路径继续恢复更细的公共规则、分类与人物实例，而不是另造 Naruto 技能树数据库。
 
