@@ -137,6 +137,65 @@ function creativeContext(currentField: StoryObjectField) {
       advantageRefs: ["world-reality:xiuxin"],
       assetRefs: [],
     },
+    wishFulfillment: {
+      version: "wish-fulfillment-frame.v1",
+      authority: "creative-direction",
+      mode: "story_current",
+      protagonistEntityId: "xiuxin",
+      readerFantasy:
+        "看低位秀信被可信专业人物重新估值，并沿这份认可进入更昂贵的忍者圈层",
+      protagonistDesire: "恢复战斗力并重新进入任务体系",
+      threads: [
+        {
+          id: "wish:reprice:recognition",
+          targetRefs: ["object:medic"],
+          targetNames: ["医疗忍者"],
+          dimension: "relationship",
+          readerFantasy: "专业人物从普通估值到真正认可秀信",
+          protagonistDesire: "让真实训练结果获得专业认可",
+          desiredChange:
+            "医疗忍者主动改判，并把秀信当成值得上报的异常价值",
+          privatePrivilege: null,
+          publicRepricing: "专业评级进入任务体系",
+          upgradeLeverage: ["上层任务入口"],
+          phase: "selected",
+        },
+        {
+          id: "wish:reprice:circle",
+          targetRefs: ["object:medic"],
+          targetNames: ["医疗与任务审核圈"],
+          dimension: "circle",
+          readerFantasy:
+            "从一个专业人的认可继续进入普通伤员进不去的高价任务审核圈",
+          protagonistDesire: "重新取得高价任务资格",
+          desiredChange:
+            "低位伤员身份被重新定价为值得更高任务机会的人",
+          privatePrivilege: "获得普通伤员没有的复核入口",
+          publicRepricing: "审核圈开始按更高标准评价秀信",
+          upgradeLeverage: ["上忍级任务机会"],
+          phase: "candidate",
+        },
+      ],
+      bearingRequirements: [
+        {
+          id: "bearing:medic-duty",
+          threadIds: ["wish:reprice:recognition"],
+          kind: "person",
+          requirement: "必须有真实专业人物与复核职责承接重新估值",
+          evidenceRefs: [],
+          status: "candidate",
+          raisesPriceBecause:
+            "可信专业人自己改判，比作者旁白说男主厉害更贵",
+        },
+      ],
+      settlementTargets: [
+        {
+          threadId: "wish:reprice:recognition",
+          assetKind: "status",
+          targetGain: "可信专业重新估值",
+        },
+      ],
+    },
     methodInvocations: [
       {
         id: "method:m02:story",
@@ -393,6 +452,9 @@ describe("StoryAuthoringService", () => {
           expect(serialized).toContain("Creative Frame");
           expect(serialized).toContain("Protagonist Camera");
           expect(serialized).toContain("methodInvocations");
+          expect(serialized).toContain("意淫展开不是单选");
+          expect(serialized).toContain("wish:reprice:recognition");
+          expect(serialized).toContain("wish:reprice:circle");
           const checked = validate({
             status: "READY",
             objectAnchorIds: ["object:xiuxin", "object:medic"],
@@ -402,6 +464,16 @@ describe("StoryAuthoringService", () => {
             ],
             storyProblem: "让秀信的异常第一次进入可信专业识货链",
             worldGaps: [],
+            wishFulfillmentAdvances: [
+              {
+                threadId: "wish:reprice:recognition",
+                toPhase: "realizing",
+                storyMove: "让医疗忍者亲自见证异常并开始重新估值",
+              },
+            ],
+            bearingEvidenceRefs: [
+              surfaceRef(objectField, "object:medic", "duty"),
+            ],
             campNetwork: [
               {
                 entityId: "xiuxin",
@@ -533,6 +605,15 @@ describe("StoryAuthoringService", () => {
     expect(result.value.events[0]!.activeSeedEntityIds).toEqual(["xiuxin"]);
     expect(result.value.directorAuthority).toBe("author-defined-story-line");
     expect(result.value.stakeLedger[0]?.stakeAction).toContain("普通伤员");
+    expect(
+      result.value.wishFulfillment?.threads.find(
+        (thread) => thread.id === "wish:reprice:recognition",
+      )?.phase,
+    ).toBe("realizing");
+    expect(result.value.wishFulfillment?.threads).toHaveLength(2);
+    expect(result.value.bearingEvidenceRefs).toEqual([
+      surfaceRef(objectField, "object:medic", "duty"),
+    ]);
     expect(result.value.authority).toBe("speculative");
   });
 });

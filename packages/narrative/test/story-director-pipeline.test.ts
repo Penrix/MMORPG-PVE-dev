@@ -25,6 +25,8 @@ import { StorySceneExpansionService } from "../src/story-scene-runtime-workers.j
 import { buildStoryCreativeFrameContext } from "../src/story-creative-context.js";
 // prettier-ignore
 import { parseStoryChapterProductionHandoff } from "../src/story-production-handoff.js";
+// prettier-ignore
+import { storyObjectSurfaceRef } from "../src/story-authoring-runtime.js";
 
 // prettier-ignore
 const now = "2026-11-23T12:00:00.000Z";
@@ -108,6 +110,61 @@ function frameRequest() {
     entityIds: ["hero", "medic"],
     protagonistCamera: camera,
     upgradeLedger: ledger,
+    wishFulfillment: {
+      version: "wish-fulfillment-frame.v1" as const,
+      authority: "creative-direction" as const,
+      mode: "story_current" as const,
+      protagonistEntityId: "hero",
+      readerFantasy:
+        "看秀信从普通伤员变成被专业体系主动重新定价、逐步获得特殊入口的人",
+      protagonistDesire: "获得重新估值",
+      threads: [
+        {
+          id: "wish:medic:recognition",
+          targetRefs: ["object:medic"],
+          targetNames: ["医疗忍者"],
+          dimension: "relationship",
+          readerFantasy: "专业人物亲自改判并认可秀信",
+          protagonistDesire: "用真实表现获得专业认可",
+          desiredChange: "医疗忍者从普通估值转为主动认可并上报",
+          privatePrivilege: null,
+          publicRepricing: "专业体系公开提高秀信评级",
+          upgradeLeverage: ["高价任务资格"],
+          phase: "selected" as const,
+        },
+        {
+          id: "wish:medic:circle",
+          targetRefs: ["object:medic"],
+          targetNames: ["高价任务审核圈"],
+          dimension: "circle",
+          readerFantasy: "秀信由一个专业人的认可继续进入更高圈层",
+          protagonistDesire: "进入上层任务体系",
+          desiredChange: "从医院伤员进入高价任务审核圈",
+          privatePrivilege: "获得普通伤员没有的复核入口",
+          publicRepricing: null,
+          upgradeLeverage: ["上层任务入口"],
+          phase: "candidate" as const,
+        },
+      ],
+      bearingRequirements: [
+        {
+          id: "bearing:medic",
+          threadIds: ["wish:medic:recognition"],
+          kind: "person" as const,
+          requirement: "真实专业人物亲自见证并承担改判责任",
+          evidenceRefs: [],
+          status: "candidate" as const,
+          raisesPriceBecause: "由专业人物亲自改判才能形成可信社会价格",
+        },
+      ],
+      settlementTargets: [
+        {
+          threadId: "wish:medic:recognition",
+          assetKind: "status",
+          targetGain: "专业重新估值",
+        },
+      ],
+    },
     request: "设计秀信打破普通伤员估值的故事",
     readerNeed: "得意",
     targetEmotion: "得意",
@@ -132,7 +189,7 @@ function expectationFor(field: { realityFingerprint: string; storyStateFingerpri
 }
 
 // prettier-ignore
-function unitFor(field: { digest: string }, status: "READY" | "BLOCKED_WORLD_GAP" = "READY"): StoryUnitDesign {
+function unitFor(field: StoryObjectField, status: "READY" | "BLOCKED_WORLD_GAP" = "READY"): StoryUnitDesign {
   return {
     version: "story-unit-design.v1", authority: "speculative", status,
     projectId: "p1", objectFieldDigest: field.digest,
@@ -140,7 +197,27 @@ function unitFor(field: { digest: string }, status: "READY" | "BLOCKED_WORLD_GAP
     expectationDesignDigest: "expectation:1",
     objectAnchorIds: ["object:hero", "object:medic"], groundingSurfaceRefs: [],
     storyProblem: "医疗忍者如何重新估值秀信",
-    worldGaps: status === "READY" ? [] : [{ id: "gap:1", description: "尚缺专业证据" }],
+    worldGaps: status === "READY" ? [] : [{
+      id: "gap:1",
+      kind: "missing_value",
+      anchorObjectIds: ["object:medic"],
+      need: "专业证据",
+      reason: "尚缺专业证据",
+      productionHint: "social",
+      status: "OPEN",
+    }],
+    wishFulfillment: frameRequest().wishFulfillment,
+    wishFulfillmentAdvances: status === "READY" ? [{
+      threadId: "wish:medic:recognition",
+      toPhase: "realizing",
+      storyMove: "让医疗忍者亲自观察并开始改判",
+    }] : [],
+    bearingEvidenceRefs: status === "READY" ? [
+      (() => {
+        const object = field.objects.find((item) => item.id === "object:medic")!;
+        return storyObjectSurfaceRef(object.id, object.surfaces[0]!);
+      })(),
+    ] : [],
     upgradeLedger: ledger, campNetwork: [
       { entityId: "hero", camp: "主角", currentGoal: "升级", storyRole: "主动测试", currentBelief: "自己能做到", currentInterest: "拿高价任务" },
       { entityId: "medic", camp: "专业观察者", currentGoal: "按流程工作", storyRole: "旧认知下注", currentBelief: "秀信只是普通伤员", currentInterest: "维持专业判断" },
@@ -315,6 +392,9 @@ describe("StoryDirectorPipeline", () => {
     expect(observations).toHaveLength(1);
     expect(observations[0]!.authoredDirection).toContain("stake=");
     expect(observations[0]!.authoredDirection).not.toContain("payoff=");
+    expect(JSON.stringify(observations[0])).not.toContain(
+      "专业人物亲自改判并认可秀信",
+    );
     if (rehearsal.status !== "READY") throw new Error("unexpected conflict");
     expect(story.requireOutlineNode("p1", "chapter-1").metadata.storyProductionHandoff).toBeUndefined();
     const adopted = director.adoptNodeHandoff({
@@ -326,8 +406,15 @@ describe("StoryDirectorPipeline", () => {
       story.requireOutlineNode("p1", "chapter-1").metadata.storyProductionHandoff,
     )?.digest).toBe(rehearsal.handoff.digest);
     expect(adopted.creativeFrameState.upgradeLedger).toEqual(ledger);
+    expect(
+      adopted.creativeFrameState.wishFulfillment?.threads.find(
+        (thread) => thread.id === "wish:medic:recognition",
+      )?.phase,
+    ).toBe("realizing");
+    expect(adopted.creativeFrameState.wishFulfillment?.threads).toHaveLength(2);
     const next = buildStoryCreativeFrameContext(story.listOutline("p1"), "chapter-2");
     expect(next.inheritedState.latestUpgradeLedger).toEqual(ledger);
+    expect(next.inheritedState.latestWishFulfillment?.threads).toHaveLength(2);
     expect(next.inheritedState.activeStakeLedger).toHaveLength(1);
     expect(mocks.scenes).toHaveBeenCalledTimes(1);
     expect(mocks.reader).toHaveBeenCalledTimes(1);
