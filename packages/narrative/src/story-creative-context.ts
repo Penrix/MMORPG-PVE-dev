@@ -414,7 +414,11 @@ function wishGainMatches(targetGain: string, retainedGain: string): boolean {
   const target = targetGain.trim().replace(/\s+/g, "");
   const retained = retainedGain.trim().replace(/\s+/g, "");
   if (!target || !retained) return false;
-  return target === retained || target.includes(retained) || retained.includes(target);
+  return (
+    target === retained ||
+    target.includes(retained) ||
+    retained.includes(target)
+  );
 }
 
 function settleWishFulfillment(
@@ -437,13 +441,14 @@ function settleWishFulfillment(
   );
   const retainedThreadIds = new Set(
     realizedTargets
-      .filter((target) =>
-        plannedRetainedGains.some((gain) =>
-          wishGainMatches(target.targetGain, gain),
-        ) &&
-        confirmedRetainedClaims.some((claim) =>
-          wishGainMatches(target.targetGain, claim),
-        ),
+      .filter(
+        (target) =>
+          plannedRetainedGains.some((gain) =>
+            wishGainMatches(target.targetGain, gain),
+          ) &&
+          confirmedRetainedClaims.some((claim) =>
+            wishGainMatches(target.targetGain, claim),
+          ),
       )
       .map((target) => target.threadId),
   );
