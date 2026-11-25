@@ -630,3 +630,129 @@ GET /api/source-worlds/catalog
 ```
 
 这才是当前第二模块 World Object Space 的长期扩容方式。
+
+### 10.7 2026-11-25｜POWER Family 从“能力名单”增厚为“规则 × 内容 × 人物实例”
+
+多母体第一层种子跑通后，One Piece / Hunter x Hunter 暴露了一个内容层缺口：上游已经包含大量超凡力量资料，但早期 Adapter 主要把它们投影成 `ability` 卡，尚未充分恢复“力量基础规则 → 分支/技能 → 具体人物实例”的世界关系。
+
+本轮**没有新增 Power subsystem、Character Build 表或任何数据库迁移**。仍然使用现有：
+
+```text
+World Atlas
+├─ POWER: rule / ability / technology
+├─ PEOPLE: character
+├─ ASSET: item / resource
+├─ ORGANIZATION
+├─ ACTIVITY: event / activity
+└─ Typed Relations
+        ↓
+People-centered Query / View
+```
+
+工程裁决：
+
+> **力量体系是现有 World Object Graph 的内容，不是与人物分离的第二套数据库。所谓人物 Build，是从人物中心动态组装 POWER / ASSET / ORGANIZATION / ACTIVITY / time-slice / Project Reality 的查询视图。**
+
+#### One Piece
+
+固定上游 `7IBO/onepiece-wiki` 已提供 Devil Fruit classification 与 Haki vocabulary；Supporting `25thNight0901/OnePiece-dataset` 的核心人物 `abilities[]` 还提供了明确 Haki 人物实例。
+
+真实导入结果：
+
+| POWER 投影 | 数量 |
+| --- | ---: |
+| POWER rule objects | **16** |
+| Haki branches | **6** |
+| Devil Fruit classes | **8** |
+| Devil Fruit → class relations | **211** |
+| Character → Haki branch relations | **22** |
+| shared Haki ability → branch relations | **3** |
+
+当前关系形状已经能够表达：
+
+```text
+Monkey D. Luffy
+├─ ability_listed → Armament Haki
+├─ ability_listed → Observation Haki
+├─ ability_listed → Conqueror's Haki
+└─ haki_type_recorded
+       ├─ Armament Haki ─┐
+       ├─ Observation ───┼→ Haki System
+       └─ Conqueror ─────┘
+
+Gomu Gomu no Mi
+├─ part_of_power_system_recorded → Devil Fruit System
+└─ devil_fruit_class_recorded → classification rule
+```
+
+注意：Primary rich source 的 schema **支持** `character.haki_types`、`awakened` / `awakening_outcome`，但当前安装的真实实体数据中，这两类字段没有产生可用人物 Haki / Awakening 关系。因此：
+
+- 人物 Haki 当前来自 pinned supporting character abilities evidence，并与 rich Haki rule identity 汇聚；
+- `awakeningRelations = 0` 被保留为真实数据状态；
+- 禁止因为 schema 存在就伪造“已填充”的事实。
+
+当前 fresh real import：
+- canonical cards: **4,099**
+- canonical typed relations: **5,365**
+- evidence relations: **5,368**
+- Luffy evidence sources: **2**
+- Luffy canonical outgoing relations: **14**
+
+#### Hunter x Hunter
+
+Pinned MindMapsAnime 的 `nen.ts + nenBatch1..3` 本身已经给出 Nen 根规则、基础四大行、高级应用、六系和人物专属 Hatsu。此前只是 Adapter 没有把这些语义恢复出来。
+
+现在投影为：
+
+```text
+Nen System
+├─ Enhancement
+├─ Transmutation
+├─ Emission
+├─ Conjuration
+├─ Manipulation
+└─ Specialization
+      ↑
+      │ nen_category_recorded
+individual Hatsu
+      ↑
+      │ used_by_recorded
+Character
+
+Ten / Zetsu / Ren / Hatsu
+      └─ fundamental_of_recorded → Nen System
+
+Gyo / In / En / Shu / Ko / Ken / Ryu
+      └─ advanced_application_of_recorded → Nen System
+```
+
+真实导入：
+
+| POWER 投影 | 数量 |
+| --- | ---: |
+| POWER rule objects | **7** |
+| Nen categories | **6** |
+| Hatsu → Nen category | **59** |
+| fundamental → Nen system | **7** |
+| advanced application → Nen system | **7** |
+| ability → Nen system | **73** |
+
+当前 fresh real import：
+- canonical cards: **756**
+- canonical typed relations: **2,650**
+- evidence relations: **2,814**
+- Gon evidence sources: **3**
+- Gon canonical outgoing relations: **33**
+
+#### 验收
+
+真实 GitHub Actions 已验证：
+
+- One Piece / HxH rich import 成功；
+- POWER rule / branch / character-instance 关系真实存在；
+- 二次完整导入 `createdCards = 0`，计数不增生；
+- `Project Canon = 0`；
+- Source import 继续只增厚 reusable Original Mother，不污染单书 Project Reality。
+
+永久 CI 现在同时守住 POWER 语义，而不只检查卡片总数：如果未来 Adapter 把超凡世界重新压扁成一堆 `ability` 标签，Haki / Nen 系统节点或人物连接消失，multi-world smoke 会失败。
+
