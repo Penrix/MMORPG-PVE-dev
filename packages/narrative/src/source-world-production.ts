@@ -566,14 +566,13 @@ export function projectSourceWorldForProduction(
   };
 }
 
-async function callSourceWorldModel(
+function sourceWorldModelRuntime(
   database: NarrativeDatabase,
-  prompt: string,
   options: SourceWorldProductionGenerateOptions,
-): Promise<unknown> {
+) {
+  const assignments = new SqliteAssignmentRepository(database);
   const assignment =
-    new SqliteAssignmentRepository(database).resolve("planning") ??
-    new SqliteAssignmentRepository(database).resolve("writing");
+    assignments.resolve("planning") ?? assignments.resolve("writing");
   if (!assignment)
     throw serviceLikeError(
       "source.world.production.model_unavailable",
@@ -607,6 +606,84 @@ async function callSourceWorldModel(
       maxRetries: 1,
       ...(options.fetch === undefined ? {} : { fetch: options.fetch }),
     }),
+  );
+  return { assignment, gateway };
+}
+
+async function callSourceWorldWishPlanner(
+  database: NarrativeDatabase,
+  prompt: string,
+  existingWorld: WorldPackDocument,
+  options: SourceWorldProductionGenerateOptions,
+): Promise<SourceWishFulfillmentPlanningOutput> {
+  const { assignment, gateway } = sourceWorldModelRuntime(database, options);
+  const result = await gateway.generateStructured(
+    {
+      model: assignment.model.modelId,
+      instructions: [
+        "你在 Module 1 / World Builder 的 Source-Reusable Selection 阶段工作，不是在写某一本书的剧情。",
+        WISH_FULFILLMENT_ROOT_GUARD.readerQuestion,
+        WISH_FULFILLMENT_ROOT_GUARD.expansionQuestion,
+        WISH_FULFILLMENT_ROOT_GUARD.bearingQuestion,
+        WISH_FULFILLMENT_ROOT_GUARD.antiBalanceTax,
+        "面对同人/类同人母体，优先挑未来男主一旦接触就能持续释放多轮高价意淫的人物、技能、身份、组织、地点、秘密、资产与事件。",
+        "不要按百科类别平权补数据。一个高价人物如果能持续产生认可、师承、需要男主、私人准入、公开背书、联盟、偏爱、命运改写等多条关系线，应优先于大量一次性低价背景对象。",
+        "已有 Source 对象用其 source:<stable-key> 作为 targetRef；尚未进入 Atlas 的高价候选可以只给 concrete targetName。候选名字不是 Source Canon，后续仍只能作为 inference/original candidate 生产并等待人工 adoption。",
+        "这是公共母体，不绑定具体小说男主；thread.protagonistDesire 必须为 null。描述的是未来典型男频男主可与该对象形成的高价关系。",
+        "至少让一个高价对象/候选承载两条以上不同 thread。不要只写‘得到技能 + 进入圈层’两条模板，也不要为了凑数量机械枚举八个轴。",
+        "每条 thread 必须有承重要求。planner 无权宣告 grounded / realizing / realized / retained；bearing evidenceRefs 必须为空。",
+      ].join("\n"),
+      messages: [{ role: "user", content: prompt }],
+      maxOutputTokens: Math.min(
+        assignment.model.maxOutputTokens ?? 10_000,
+        14_000,
+      ),
+      responseSchema: SOURCE_WISH_FULFILLMENT_PLANNING_CONTRACT,
+    },
+    (value) => {
+      const parsed = SourceWishFulfillmentPlanningOutputSchema.safeParse(value);
+      if (!parsed.success) {
+        return {
+          success: false as const,
+          issues: parsed.error.issues.map(
+            (issue) => `${issue.path.join(".") || "root"}: ${issue.message}`,
+          ),
+        };
+      }
+      const issues = sourceWishPlanningIssues(parsed.data, existingWorld);
+      return issues.length === 0
+        ? { success: true as const, data: parsed.data }
+        : { success: false as const, issues };
+    },
+    { maxRepairAttempts: 1 },
+  );
+  return result.value;
+}
+
+function finalizeSourceReusableWishFulfillment(
+  value: SourceWishFulfillmentPlanningOutput,
+): WishFulfillmentFrame {
+  return WishFulfillmentFrameSchema.parse({
+    version: "wish-fulfillment-frame.v1",
+    authority: "creative-direction",
+    mode: "source_reusable",
+    protagonistEntityId: null,
+    readerFantasy: value.readerFantasy,
+    protagonistDesire: null,
+    threads: value.threads,
+    bearingRequirements: value.bearingRequirements,
+    settlementTargets: value.settlementTargets,
+  });
+}
+
+async function callSourceWorldModel(
+  database: NarrativeDatabase,
+  prompt: string,
+  options: SourceWorldProductionGenerateOptions,
+): Promise<unknown> {
+  const { assignment, gateway } = sourceWorldModelRuntime(
+    database,
+    options,
   );
   const result = await gateway.generateStructured(
     {
