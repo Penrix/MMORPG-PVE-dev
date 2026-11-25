@@ -1,0 +1,91 @@
+name: Module2 Bleach Power Real Temporary
+
+on:
+  push:
+    branches:
+      - feat/module3-world-atlas-integration
+    paths:
+      - ".github/workflows/module2-bleach-power-real-temporary.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  real:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Import Bleach source world
+        run: npm run import:source-world -- --world bleach --db /tmp/bleach-power.sqlite
+      - name: Audit Bleach POWER graph
+        run: |
+          node --input-type=module <<'EOF'
+          import { DatabaseSync } from "node:sqlite";
+          import assert from "node:assert/strict";
+          const db=new DatabaseSync("/tmp/bleach-power.sqlite",{readOnly:true});
+          const world=db.prepare("SELECT canonical_corpus_id AS corpus FROM source_worlds WHERE id='bleach'").get();
+          assert(world,"Bleach world missing");
+          const c=world.corpus;
+          const cards=db.prepare("SELECT COUNT(*) AS n FROM source_records WHERE corpus_id=?").get(c).n;
+          const relations=db.prepare("SELECT COUNT(*) AS n FROM source_relations WHERE corpus_id=?").get(c).n;
+          const rules=db.prepare("SELECT COUNT(*) AS n FROM source_records WHERE corpus_id=? AND source_key LIKE 'rule:bleach:%'").get(c).n;
+          const rel=name=>db.prepare("SELECT COUNT(*) AS n FROM source_relations WHERE corpus_id=? AND relation=?").get(c,name).n;
+          const power={
+            cards,relations,rules,
+            shikai:rel("shikai_recorded"),
+            bankai:rel("bankai_recorded"),
+            shinuchi:rel("shinuchi_recorded"),
+            resurreccion:rel("resurreccion_recorded"),
+            spiritWeapon:rel("spirit_weapon_recorded"),
+            signatureSkill:rel("signature_skill_recorded"),
+            vollstandig:rel("vollstandig_recorded"),
+            fullbring:rel("fullbring_recorded"),
+            stageLinks:rel("power_stage_recorded"),
+            systemLinks:rel("part_of_power_system_recorded"),
+            projectCanon:db.prepare("SELECT COUNT(*) AS n FROM canon_entities").get().n,
+          };
+          console.log(JSON.stringify(power,null,2));
+          assert(power.rules>=7,"Bleach POWER rule roots/stages unexpectedly thin");
+          assert(power.shikai>30,"Shikai character links unexpectedly thin");
+          assert(power.bankai>10,"Bankai character links unexpectedly thin");
+          assert(power.resurreccion>30,"Resurreccion links unexpectedly thin");
+          assert(power.spiritWeapon>20,"Quincy spirit weapon links unexpectedly thin");
+          assert(power.signatureSkill>20,"Quincy signature skill links unexpectedly thin");
+          assert(power.vollstandig>10,"Vollstandig links unexpectedly thin");
+          assert(power.fullbring>=5,"Fullbring links unexpectedly thin");
+          assert(power.stageLinks>80,"Bleach named forms are not linked to system stages");
+          assert(power.systemLinks>40,"Bleach skills are not linked to power-system roots");
+          assert.equal(power.projectCanon,0);
+          db.close();
+          EOF
+      - name: Capture counts
+        run: |
+          node --input-type=module <<'EOF' >/tmp/bleach-before.json
+          import { DatabaseSync } from "node:sqlite";
+          const db=new DatabaseSync("/tmp/bleach-power.sqlite",{readOnly:true});
+          const rows=db.prepare("SELECT corpus_id,COUNT(*) AS n FROM source_records GROUP BY corpus_id ORDER BY corpus_id").all().map(r=>({corpus_id:r.corpus_id,n:r.n}));
+          console.log(JSON.stringify(rows));
+          db.close();
+          EOF
+      - name: Reimport Bleach
+        run: npm run import:source-world -- --world bleach --db /tmp/bleach-power.sqlite
+      - name: Verify idempotence
+        run: |
+          node --input-type=module <<'EOF'
+          import { DatabaseSync } from "node:sqlite";
+          import { readFileSync } from "node:fs";
+          import assert from "node:assert/strict";
+          const before=JSON.parse(readFileSync("/tmp/bleach-before.json","utf8"));
+          const db=new DatabaseSync("/tmp/bleach-power.sqlite",{readOnly:true});
+          const after=db.prepare("SELECT corpus_id,COUNT(*) AS n FROM source_records GROUP BY corpus_id ORDER BY corpus_id").all().map(r=>({corpus_id:r.corpus_id,n:r.n}));
+          assert.deepEqual(after,before);
+          assert.equal(db.prepare("SELECT COUNT(*) AS n FROM canon_entities").get().n,0);
+          db.close();
+          EOF
