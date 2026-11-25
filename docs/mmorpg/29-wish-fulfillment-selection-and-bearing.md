@@ -598,6 +598,86 @@ price
 ~~~
 
 这和“每个 Requirement 单独举证”共同组成当前反假承重门禁。
+### Module 3 → Module 1｜BLOCKED_WORLD_GAP 已成为真实生产桥
+
+当前 `BLOCKED_WORLD_GAP` 不再只是“告诉作者缺东西”。Story 与 World Builder 现在共享结构化 gap：
+
+~~~text
+StoryUnit 发现某条意淫无法继续
+        ↓
+StoryWorldGap
+  kind
+  anchorObjectIds
+  productionHint
+  wishFulfillmentThreadIds
+  bearingRequirementIds
+        ↓
+worldWorkOrderFromStoryGap()
+        ↓
+Module 1 WorldWorkOrder
+        ↓
+WorldPackRequest.storyWorldGap
+        ↓
+runWorldWorkshops() 第一工序优先补这个 gap
+~~~
+
+`StoryUnitDesign` finalizer 会结合：
+
+- gap kind；
+- gap 的 `anchorObjectIds`；
+- 当前 Wish Threads 的 `targetRefs`；
+- 尚未 grounded 的 Bearing Requirements；
+
+自动补出这个 gap 到底在挡哪条意淫、缺哪类承重。典型映射包括：
+
+~~~text
+missing_object   → person / other
+missing_relation → relationship
+missing_state    → reality
+missing_rule     → rule
+missing_access   → access / qualification
+missing_value    → price / scarcity / reader_prior
+missing_activity → reality / competition
+~~~
+
+Story Director 返回 `BLOCKED_WORLD_GAP` 时，同时返回 `worldWorkOrders`。WorkOrder 使用当前 Project Reality 的真实 Canon 投影寻找锚点，例如：
+
+~~~text
+object:medic
+→ entityId = medic
+→ Project World node = canon:medic
+→ people workshop
+→ 保留原 Wish Thread / Bearing Requirement provenance
+~~~
+
+随后调用现有 Project WorldPack 生产接口时，可以把同一个 `storyWorldGap` 与 Wish Frame 放回 `WorldPackRequest`。Module 1 第一工序必须优先服务这个 gap，而不是再次自由选题或按 Family coverage 改题。
+
+**Authority 边界不变：**
+
+> Story Gap 可以自动变 WorkOrder，可以驱动 WorldPack candidate generation，但不能自动 adopt。
+
+生成结果仍是 draft。只有显式 adoption 才能写回 Project Canon / Reality。Story 因此不能以“我缺这个承重”为理由，偷偷替 Reality 发明人物、关系、权限、技能或事实。
+
+Source World 生产明确拒绝 `storyWorldGap`。Project Story Gap 属于当前项目 Reality 的缺口，不能串进母体 Source World。
+
+### Project WorldPack 纯开荒边界
+
+Project 的 W0/W1 WorldPack 入口可能发生在男主、Story 甚至 Protagonist Camera 尚未建立之前。此时不强行伪造一个 `project_current` 男主幻想。
+
+当前合法分权：
+
+~~~text
+纯开荒 / 尚无具体男主
+→ World Framework 可以先建立可供未来主角使用的世界骨架
+
+已有 Author / Story Wish Frame
+→ Module 1 必须优先服务该意淫与承重
+
+Story 明确 BLOCKED_WORLD_GAP
+→ 必须沿原 Wish Thread / Bearing Requirement 回补
+~~~
+
+也就是说，“意淫是纵轴”不等于“世界任何时候都必须虚构一个具体男主”；它意味着一旦存在具体商业欲望与 Story 方向，后续世界生产不得再次把它丢掉。
 ### Module 3 Settlement｜意淫兑现不等于资产化
 
 当前纵轴把 `realized` 与 `retained` 明确分开：
