@@ -117,6 +117,25 @@ export type FantasyBearingRequirement = z.infer<
   typeof FantasyBearingRequirementSchema
 >;
 
+/**
+ * Story-side proof that one concrete bearing requirement is already supported
+ * by Module-2 surfaces. Evidence is requirement-specific on purpose: proving
+ * public price must not silently prove private trust, access, political
+ * authority, affection scarcity, history, etc.
+ */
+export const WishFulfillmentBearingEvidenceSchema = z
+  .object({
+    requirementId: z.string().trim().min(1).max(300),
+    evidenceRefs: z
+      .array(z.string().trim().min(1).max(1_000))
+      .min(1)
+      .max(100),
+  })
+  .strict();
+export type WishFulfillmentBearingEvidence = z.infer<
+  typeof WishFulfillmentBearingEvidenceSchema
+>;
+
 export const WishFulfillmentSettlementTargetSchema = z
   .object({
     threadId: z.string().trim().min(1).max(300),
