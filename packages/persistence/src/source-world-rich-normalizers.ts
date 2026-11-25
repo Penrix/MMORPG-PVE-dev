@@ -684,7 +684,7 @@ interface OnePiecePowerProjection {
 function addOnePiecePowerRules(input: {
   records: SourceWorldSeedRecord[];
   entities: JsonObject[];
-  hakiVocabulary?: JsonObject;
+  hakiVocabulary: JsonObject | undefined;
   sourceUrl: string;
 }): OnePiecePowerProjection {
   const allKeys = new Set<string>();
