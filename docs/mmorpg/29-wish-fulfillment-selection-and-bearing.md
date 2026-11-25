@@ -390,6 +390,58 @@ bearingRequirementIds
 
 同一个纲手、职位、技能、组织在不同男主、不同阶段可以产生不同 Wish-Fulfillment 价值；第二模块只负责保存它们真实是谁、有什么关系、什么价格、什么 Authority。
 
+### Module 3｜没有既有 Wish Frame 时，先从 Object Field 自动规划意淫展开
+
+此前 `StoryDirectorPipeline` 在作者没有显式提供、父层也没有继承 `WishFulfillmentFrame` 时，会退回一个确定性 fallback：
+
+~~~text
+当前升级收益
++
+进入目标圈层
+~~~
+
+它虽然不会跑偏到别的 Road，但仍然过于保守：没有真正读取 Module 2 中当前高价人物、能力、Reader Price、关系和入口，也无法自然产生“同一个高价对象的多线程意淫展开”。
+
+当前代码已经把这个 fallback 替换为 `StoryAuthoringService.planWishFulfillment()`：
+
+~~~text
+作者显式 Wish Frame
+        ↓ 没有
+父层 / 前序继承 Wish Frame
+        ↓ 没有
+当前 StoryObjectField
++ Protagonist Camera
++ Upgrade Ledger
++ Reader Need / Target Emotion
++ bearingEvidenceCandidates
+        ↓
+Object-grounded Wish Planner
+        ↓
+具体 WishFulfillmentFrame
+        ↓
+Expectation / StoryUnit
+~~~
+
+Planner 的硬边界：
+
+- `targetRefs` 只能引用当前 `StoryObjectField` 中真实 `object.id`；
+- 至少一个高价对象必须承载两条以上不同 Wish Thread，防止重新把关系压成单选题；
+- 每条 thread 都必须有 Bearing Requirement；
+- 自动规划阶段 thread 只能是 `selected / candidate`；
+- bearing 只能是 `candidate / missing`，`evidenceRefs` 必须为空；
+- Planner 无权写 `grounded / realizing / realized / retained`；
+- 至少一条 selected thread 必须声明未来希望结算的真实收益；
+- 不为了凑数量机械枚举八个展开轴，而是围绕当前真实高价对象尽量展开有价格、能持续写 Story 的关系与状态变化。
+
+因此当前第一次自动创作不再是：
+
+> “升级一步，再进一个圈。”
+
+而是先问：
+
+> **眼前这些真实高价人事物，围绕【我】到底还能怎样一层层变得更特殊、更私有、更公开被承认、更能打开未来？**
+
+已有 Author / inherited Wish Frame 时不会重新调用 Planner，避免连续长篇每章重新做梦、浪费模型调用并破坏已形成的意淫曲线。
 ### Module 3｜每一条承重要求必须单独举证
 
 旧 StoryUnit 曾使用一个扁平：
