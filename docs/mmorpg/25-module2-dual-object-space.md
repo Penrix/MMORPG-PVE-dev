@@ -789,21 +789,21 @@ Human
 
 真实导入：
 
-| POWER 投影 | 数量 |
-| --- | ---: |
-| canonical cards | **489** |
+| POWER 投影                |      数量 |
+| ------------------------- | --------: |
+| canonical cards           |   **489** |
 | canonical typed relations | **1,282** |
-| POWER rule roots/stages | **8** |
-| Character → Shikai | **56** |
-| Character → Bankai | **31** |
-| Character → Shin'uchi | **1** |
-| Character → Resurrección | **37** |
-| Quincy → Spirit Weapon | **26** |
-| Quincy → Signature Skill | **26** |
-| Quincy → Vollständig | **11** |
-| Human → Fullbring | **8** |
-| named form → power stage | **130** |
-| skill → power system | **47** |
+| POWER rule roots/stages   |     **8** |
+| Character → Shikai        |    **56** |
+| Character → Bankai        |    **31** |
+| Character → Shin'uchi     |     **1** |
+| Character → Resurrección  |    **37** |
+| Quincy → Spirit Weapon    |    **26** |
+| Quincy → Signature Skill  |    **26** |
+| Quincy → Vollständig      |    **11** |
+| Human → Fullbring         |     **8** |
+| named form → power stage  |   **130** |
+| skill → power system      |    **47** |
 
 当前仍明确缺少更厚的 supporting evidence，例如 Kidō、Hollow/Visored 通用规则、Quincy 通用技术等。搜索到的部分 Bleach 游戏/模组项目混入大量自定义平衡与二创规则，不能直接提升为 Source World evidence；在找到可固定、可追溯的原著资料源前保持为缺口，不用模型常识硬填。
 

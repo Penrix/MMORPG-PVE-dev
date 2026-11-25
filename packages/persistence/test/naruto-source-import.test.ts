@@ -106,22 +106,16 @@ describe("Naruto mother-world import into the ONE NarraLume SQLite", () => {
       ),
     ).toBe(true);
     expect(
-      source.getRecord(
-        NARUTO_DATTEBAYO_CORPUS,
-        "rule:naruto:jutsu-system",
-      )?.kind,
+      source.getRecord(NARUTO_DATTEBAYO_CORPUS, "rule:naruto:jutsu-system")
+        ?.kind,
     ).toBe("rule");
     expect(
-      source.getRecord(
-        NARUTO_DATTEBAYO_CORPUS,
-        "rule:naruto:chakra-nature",
-      )?.kind,
+      source.getRecord(NARUTO_DATTEBAYO_CORPUS, "rule:naruto:chakra-nature")
+        ?.kind,
     ).toBe("rule");
     expect(
-      source.getRecord(
-        NARUTO_DATTEBAYO_CORPUS,
-        "rule:naruto:kekkei-genkai",
-      )?.kind,
+      source.getRecord(NARUTO_DATTEBAYO_CORPUS, "rule:naruto:kekkei-genkai")
+        ?.kind,
     ).toBe("rule");
     expect(
       source
@@ -212,8 +206,7 @@ describe("Naruto mother-world import into the ONE NarraLume SQLite", () => {
       ]),
     );
     expect(
-      worlds.getCard(NARUTO_SOURCE_WORLD_ID, "rule:naruto:chakra-nature")
-        ?.kind,
+      worlds.getCard(NARUTO_SOURCE_WORLD_ID, "rule:naruto:chakra-nature")?.kind,
     ).toBe("rule");
     expect(
       worlds.getCard(NARUTO_SOURCE_WORLD_ID, "rule:naruto:jutsu-system")

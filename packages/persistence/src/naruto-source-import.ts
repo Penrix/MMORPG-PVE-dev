@@ -464,11 +464,7 @@ export function importNarutoDattebayo(
       (id) => sourceKey("character", id),
       "akatsuki",
     );
-    linkNatureTypes(
-      data.kara,
-      (id) => sourceKey("character", id),
-      "kara",
-    );
+    linkNatureTypes(data.kara, (id) => sourceKey("character", id), "kara");
     linkNatureTypes(
       data["tailed-beasts"],
       (id) => sourceKey("beast", id),
