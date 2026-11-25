@@ -429,6 +429,83 @@ bearingEvidence: [
 
 旧 `bearingEvidenceRefs[]` 只保留存档兼容：**只有恰好一个相关未承重 Requirement 时才能自动归属；多 Requirement 时直接判歧义。**
 
+### Module 2 → Module 3｜承重证据不仅要“存在”，还必须证明对的东西
+
+当前 `WorldAtlasStoryContextBuilder` 对每条已有 surface 派生 `bearingKinds`。这是运行时投影，不写回 Source Fact / Project Reality，也不代表某条 Fantasy Bearing 已经自动成立。
+
+例如：
+
+~~~text
+Reader Semantics
+→ reader_prior
+
+人物当前确认状态
+→ reality
+→ 若对象本身是 character，也可作为 person 证据
+
+关系 surface
+→ relationship
+
+能力 / 规则 surface
+→ rule
+→ 只有真的写有学习、前置、训练或取得条件时，才额外支持 qualification
+
+Value / Standing
+→ price
+→ 只有真的有 scarcity 字段时才支持 scarcity
+→ 只有真的有 access 字段时才支持 access
+
+Map / Production
+→ access
+~~~
+
+因此 Module 3 现在有两道门：
+
+1. `evidenceRef` 必须真实存在于当前 `StoryObjectField`；
+2. 该 surface 的 `bearingKinds` 必须包含对应 `FantasyBearingRequirement.kind`。
+
+例如：
+
+~~~text
+“纲手是 Reader 熟知高价人物”
+可以承：
+reader_prior
+
+不能自动承：
+relationship
+access
+私人信任
+政治权限
+~~~
+
+又例如：
+
+~~~text
+“医疗忍者当前负责伤员复核”
+可以承：
+reality
+person
+
+不能自动承：
+price
+~~~
+
+要证明“他的评级真的能改变男主后续任务价格”，必须另有 `price` 类型 surface。
+
+因此当前硬规则是：
+
+> **有证据不等于承重成立；必须是能证明这一类承重的证据。**
+
+如果不存在匹配 `requirement.kind` 的 surface，第三模块不得拿别的高价信息凑数，应返回 `BLOCKED_WORLD_GAP`，把缺失的关系、价格、入口、资格、规则或当前状态送回 Module 1 补世界。
+
+这一层专门防止另一种隐蔽偷懒：
+
+~~~text
+有一条“看起来很贵”的证据
+→ 把所有承重 Requirement 一起标 grounded
+~~~
+
+这和“每个 Requirement 单独举证”共同组成当前反假承重门禁。
 ### Author / Director 与 Character POV 继续严格分权
 
 Wish-Fulfillment Frame、Reader Fantasy、Bearing Plan 属于 Author / Director Side。
