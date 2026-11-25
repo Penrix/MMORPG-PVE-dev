@@ -90,6 +90,15 @@ jobs:
           assert(relationCount(canon["hunter-x-hunter"], "advanced_application_of_recorded") >= 4);
           assert(relationCount(canon["hunter-x-hunter"], "part_of_power_system_recorded") > 50);
 
+          assert(powerCount(canon.bleach, "rule:bleach:") >= 7);
+          assert(relationCount(canon.bleach, "shikai_recorded") > 30);
+          assert(relationCount(canon.bleach, "bankai_recorded") > 10);
+          assert(relationCount(canon.bleach, "resurreccion_recorded") > 30);
+          assert(relationCount(canon.bleach, "vollstandig_recorded") > 10);
+          assert(relationCount(canon.bleach, "fullbring_recorded") >= 5);
+          assert(relationCount(canon.bleach, "power_stage_recorded") > 80);
+          assert(relationCount(canon.bleach, "part_of_power_system_recorded") > 40);
+
           for (const id of Object.keys(canon))
             assert(typeof cognitive[id] === "string" && cognitive[id].length > 10, id + " Cognitive Mother missing");
           assert.equal(projectCanon, 0, "Source imports must not fabricate Project Canon");
