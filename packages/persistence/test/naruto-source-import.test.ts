@@ -98,6 +98,50 @@ describe("Naruto mother-world import into the ONE NarraLume SQLite", () => {
         (l) => l.otherName === "Amaterasu" && l.relation === "jutsu_listed",
       ),
     ).toBe(true);
+    expect(
+      links.some(
+        (l) =>
+          l.otherName === "Fire Release" &&
+          l.relation === "chakra_nature_recorded",
+      ),
+    ).toBe(true);
+    expect(
+      source.getRecord(
+        NARUTO_DATTEBAYO_CORPUS,
+        "rule:naruto:jutsu-system",
+      )?.kind,
+    ).toBe("rule");
+    expect(
+      source.getRecord(
+        NARUTO_DATTEBAYO_CORPUS,
+        "rule:naruto:chakra-nature",
+      )?.kind,
+    ).toBe("rule");
+    expect(
+      source.getRecord(
+        NARUTO_DATTEBAYO_CORPUS,
+        "rule:naruto:kekkei-genkai",
+      )?.kind,
+    ).toBe("rule");
+    expect(
+      source
+        .listRelations(NARUTO_DATTEBAYO_CORPUS, "jutsu:Amaterasu")
+        .some(
+          (l) =>
+            l.otherName === "Jutsu System" &&
+            l.relation === "part_of_power_system_recorded",
+        ),
+    ).toBe(true);
+    expect(
+      source
+        .listRelations(NARUTO_DATTEBAYO_CORPUS, "kekkei:5")
+        .some(
+          (l) =>
+            l.otherName === "Kekkei Genkai" &&
+            l.relation === "part_of_power_system_recorded",
+        ),
+    ).toBe(true);
+
     const chibi = source.listRelations(NARUTO_DATTEBAYO_CORPUS, "character:44");
     expect(chibi.find((e) => e.toKey === "org:akatsuki")?.relation).toBe(
       "listed_in_specialty_dataset",
@@ -160,6 +204,25 @@ describe("Naruto mother-world import into the ONE NarraLume SQLite", () => {
         expect.objectContaining({
           relation: "kekkei_genkai_recorded",
           otherName: "Sharingan",
+        }),
+        expect.objectContaining({
+          relation: "chakra_nature_recorded",
+          otherName: "Fire Release",
+        }),
+      ]),
+    );
+    expect(
+      worlds.getCard(NARUTO_SOURCE_WORLD_ID, "rule:naruto:chakra-nature")
+        ?.kind,
+    ).toBe("rule");
+    expect(
+      worlds.getCard(NARUTO_SOURCE_WORLD_ID, "rule:naruto:jutsu-system")
+        ?.relations,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          relation: "part_of_power_system_recorded",
+          otherName: "Amaterasu",
         }),
       ]),
     );
