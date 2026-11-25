@@ -278,6 +278,119 @@ function upgradeLedger() {
 }
 
 describe("StoryAuthoringService", () => {
+  it("plans multi-thread wish fulfillment from concrete Module-2 objects instead of a generic upgrade fallback", async () => {
+    const objectField = field("S04");
+    const context = creativeContext(objectField);
+    const model: NarrativeModelClient = {
+      text: vi.fn(),
+      structured: vi.fn(
+        async (_run, _step, purpose, request, _contract, validate) => {
+          expect(purpose).toBe("story-wish-fulfillment-planning");
+          const serialized = JSON.stringify(request);
+          expect(serialized).toContain("object:medic");
+          expect(serialized).toContain("负责伤员复核");
+          expect(serialized).toContain("至少让一个高价对象承载两条以上");
+          expect(serialized).toContain("Reader Fantasy 与 protagonistDesire 必须分开");
+          expect(serialized).toContain("bearingEvidenceCandidates");
+
+          const checked = validate({
+            readerFantasy:
+              "看秀信让当前专业人物从普通处理者变成认可者、引路人和公开重新定价者",
+            protagonistDesire: "恢复战斗力并重新进入任务体系",
+            threads: [
+              {
+                id: "wish:auto:medic-recognition",
+                targetRefs: ["object:medic"],
+                targetNames: ["医疗忍者"],
+                dimension: "relationship",
+                readerFantasy: "医疗忍者亲自承认秀信不是普通伤员",
+                protagonistDesire: "让真实训练结果获得专业认可",
+                desiredChange: "从普通处理转为主动改判并认可秀信",
+                privatePrivilege: null,
+                publicRepricing: "专业评级正式提高秀信的任务价格",
+                upgradeLeverage: ["高价任务入口"],
+                phase: "selected",
+              },
+              {
+                id: "wish:auto:medic-access",
+                targetRefs: ["object:medic"],
+                targetNames: ["医疗忍者"],
+                dimension: "circle",
+                readerFantasy: "这个专业人物进一步成为秀信进入高价任务圈的入口",
+                protagonistDesire: "进入上层任务体系",
+                desiredChange: "从被复核者变成由对方主动向上推荐的人",
+                privatePrivilege: "获得普通伤员没有的复核与推荐入口",
+                publicRepricing: null,
+                upgradeLeverage: ["上层任务审核圈"],
+                phase: "candidate",
+              },
+            ],
+            bearingRequirements: [
+              {
+                id: "bearing:auto:medic-person",
+                threadIds: ["wish:auto:medic-recognition"],
+                kind: "person",
+                requirement: "必须由当前真实负责复核的专业人物亲自改判",
+                evidenceRefs: [],
+                status: "candidate",
+                raisesPriceBecause: "可信专业人物亲自改判才有社会价格",
+              },
+              {
+                id: "bearing:auto:medic-access",
+                threadIds: ["wish:auto:medic-access"],
+                kind: "access",
+                requirement: "必须存在这个人物真实能向上推荐或放行的任务入口",
+                evidenceRefs: [],
+                status: "missing",
+                raisesPriceBecause: "只有真实权限才能让私人入口变成资产",
+              },
+            ],
+            settlementTargets: [
+              {
+                threadId: "wish:auto:medic-recognition",
+                assetKind: "status",
+                targetGain: "专业重新估值",
+              },
+            ],
+          });
+          if (!checked.success) throw new Error(checked.issues.join("; "));
+          return {
+            value: checked.data,
+            usage,
+            mode: "native" as const,
+            attempts: 1,
+          };
+        },
+      ),
+    };
+
+    const result = await new StoryAuthoringService(model).planWishFulfillment(
+      run,
+      step,
+      {
+        field: objectField,
+        protagonistCamera: context.protagonistCamera,
+        upgradeLedger: upgradeLedger(),
+        request: "从当前木叶医院对象里找真正值得长期写的男频意淫",
+        readerNeed: "低位男主被高价世界重新定价并获得特殊入口",
+        targetEmotion: "得意",
+      },
+      new AbortController().signal,
+    );
+
+    expect(result.value.threads).toHaveLength(2);
+    expect(
+      result.value.threads.every((thread) =>
+        thread.targetRefs.includes("object:medic"),
+      ),
+    ).toBe(true);
+    expect(result.value.bearingRequirements[1]?.status).toBe("missing");
+    expect(
+      result.value.threads.some((thread) => thread.phase === "realized"),
+    ).toBe(false);
+  });
+
+
   it("searches S03 only on concrete Object Field objects", async () => {
     const objectField = field("S03");
     const context = creativeContext(objectField);
