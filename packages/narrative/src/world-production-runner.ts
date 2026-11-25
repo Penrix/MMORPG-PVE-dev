@@ -255,8 +255,7 @@ export function worldProductionWorkOrderForWishFulfillment(
     .filter((item) => phasePriority.has(item.phase))
     .sort(
       (a, b) =>
-        (phasePriority.get(a.phase) ?? 99) -
-        (phasePriority.get(b.phase) ?? 99),
+        (phasePriority.get(a.phase) ?? 99) - (phasePriority.get(b.phase) ?? 99),
     );
 
   for (const thread of threads) {
@@ -524,11 +523,7 @@ export async function runWorldWorkshops(args: {
               : null)));
     if (!op) break;
     const instruction = {
-      ...worldWorkOrderInput(
-        op,
-        view(),
-        args.request.wishFulfillment ?? null,
-      ),
+      ...worldWorkOrderInput(op, view(), args.request.wishFulfillment ?? null),
       authorRequest: args.request,
       ...(index === 0
         ? {

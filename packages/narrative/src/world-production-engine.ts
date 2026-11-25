@@ -944,7 +944,9 @@ export function applyWorldProductionDelta(
       before: snapshot(current),
       after: snapshot(document),
       changedRefs: [...changes],
-      wishFulfillmentThreadIds: [...(workOrder?.wishFulfillmentThreadIds ?? [])],
+      wishFulfillmentThreadIds: [
+        ...(workOrder?.wishFulfillmentThreadIds ?? []),
+      ],
       bearingRequirementIds: [...(workOrder?.bearingRequirementIds ?? [])],
     },
   };

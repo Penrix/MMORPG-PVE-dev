@@ -11,9 +11,7 @@ import {
   playtestWorld,
   worldWorkOrderInput,
 } from "../src/world-production-engine.js";
-import {
-  worldProductionWorkOrderForWishFulfillment,
-} from "../src/world-production-runner.js";
+import { worldProductionWorkOrderForWishFulfillment } from "../src/world-production-runner.js";
 
 const req: WorldPackRequest = {
   requestId: "00000000-0000-4000-8000-000000000000",
@@ -161,7 +159,9 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
     expect(JSON.stringify(instruction)).toContain("当前");
     expect(JSON.stringify(instruction)).toContain("意淫承重");
     expect(JSON.stringify(instruction)).toContain("承重不是平衡税");
-    expect(JSON.stringify(instruction)).toContain("Selection decides what deserves production");
+    expect(JSON.stringify(instruction)).toContain(
+      "Selection decides what deserves production",
+    );
   });
 
   it("keeps coverage audit separate from creative selection and exposes anti-balance-tax bearing", () => {
@@ -187,7 +187,6 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
       "不得因为能力太强",
     );
   });
-
 
   it("runs explicit wish-fulfillment selection before generic coverage repair and keeps multi-thread expansion", () => {
     const doc = {
@@ -237,7 +236,8 @@ describe("MMORPG world production engine (not a one-shot story prompt)", () => {
           id: "bearing:tsunade-choice",
           threadIds: ["thread:tsunade-recognition"],
           kind: "relationship" as const,
-          requirement: "纲手必须拥有真实选择权、社会价格和与男主逐步积累的共同历史",
+          requirement:
+            "纲手必须拥有真实选择权、社会价格和与男主逐步积累的共同历史",
           evidenceRefs: [],
           status: "missing" as const,
           raisesPriceBecause: "她不是谁都认可，偏偏选择男主才贵",
