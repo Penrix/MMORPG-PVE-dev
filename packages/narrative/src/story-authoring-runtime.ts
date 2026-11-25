@@ -17,6 +17,7 @@ import {
   type StorySceneExpansion,
   type StorySceneExpansionDraft,
   type StoryUnitDesign,
+  type StoryWorldGap,
   type WorldArbitrationReceipt,
   type StoryUnitDesignDraft,
   type WishFulfillmentBearingEvidence,
@@ -556,6 +557,58 @@ export interface StoryUnitRealityFocus {
   firstEventActiveSeedEntityIds: readonly string[];
 }
 
+const STORY_GAP_BEARING_KINDS: Readonly<
+  Record<StoryWorldGap["kind"], readonly FantasyBearingKind[]>
+> = {
+  missing_object: ["person", "other"],
+  missing_relation: ["relationship"],
+  missing_state: ["reality"],
+  missing_rule: ["rule"],
+  missing_access: ["access", "qualification"],
+  missing_value: ["price", "scarcity", "reader_prior"],
+  missing_activity: ["reality", "competition"],
+};
+
+function enrichStoryWorldGapsWithWishFulfillment(
+  gaps: readonly StoryWorldGap[],
+  frame: WishFulfillmentFrame | null | undefined,
+): StoryWorldGap[] {
+  if (!frame) return gaps.map((gap) => ({ ...gap }));
+
+  return gaps.map((gap) => {
+    const anchors = new Set(gap.anchorObjectIds);
+    const relatedThreads = frame.threads.filter((thread) =>
+      thread.targetRefs.some((ref) => anchors.has(ref)),
+    );
+    const threadIds = new Set([
+      ...(gap.wishFulfillmentThreadIds ?? []),
+      ...relatedThreads.map((thread) => thread.id),
+    ]);
+    const allowedKinds = new Set(STORY_GAP_BEARING_KINDS[gap.kind]);
+    const requirementIds = new Set([
+      ...(gap.bearingRequirementIds ?? []),
+      ...frame.bearingRequirements
+        .filter(
+          (requirement) =>
+            requirement.status !== "grounded" &&
+            allowedKinds.has(requirement.kind) &&
+            requirement.threadIds.some((threadId) => threadIds.has(threadId)),
+        )
+        .map((requirement) => requirement.id),
+    ]);
+
+    return {
+      ...gap,
+      ...(threadIds.size > 0
+        ? { wishFulfillmentThreadIds: [...threadIds] }
+        : {}),
+      ...(requirementIds.size > 0
+        ? { bearingRequirementIds: [...requirementIds] }
+        : {}),
+    };
+  });
+}
+
 /**
  * S04 is the writer's room. It owns the commercial story line, stakes and
  * payoff direction. Character execution chooses characterization-consistent
@@ -892,6 +945,10 @@ export function finalizeStoryUnitDesign(
 
   const normalized = {
     ...parsed,
+    worldGaps: enrichStoryWorldGapsWithWishFulfillment(
+      parsed.worldGaps,
+      advancedWishFulfillment ?? wishFrame,
+    ),
     wishFulfillment: advancedWishFulfillment,
     wishFulfillmentAdvances: wishAdvances,
     bearingEvidence: normalizedBearingEvidence,
