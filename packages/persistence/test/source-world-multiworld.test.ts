@@ -629,6 +629,16 @@ describe("multi-world normalizers", () => {
         }),
         expect.objectContaining({ kind: "item", name: "Thousand Sunny" }),
         expect.objectContaining({ kind: "ability", name: "Gear Fifth" }),
+        expect.objectContaining({
+          kind: "rule",
+          name: "Haki System",
+          canonicalKey: "rule:one-piece:haki-system",
+        }),
+        expect.objectContaining({
+          kind: "rule",
+          name: "Conqueror's Haki",
+          canonicalKey: "rule:one-piece:haki:conqueror",
+        }),
       ]),
     );
     expect(corpus.relations.map((edge) => edge.relation)).toEqual(
@@ -637,6 +647,9 @@ describe("multi-world normalizers", () => {
         "captain_of_recorded",
         "ship_recorded",
         "ability_listed",
+        "haki_type_recorded",
+        "power_branch_of_recorded",
+        "power_branch_reference_recorded",
       ]),
     );
   });
