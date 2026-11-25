@@ -6,6 +6,7 @@ on:
       - feat/module3-world-atlas-integration
     paths:
       - .github/workflows/naruto-tsunade-wish-axis-verify-temporary.yml
+      - packages/narrative/test/naruto-tsunade-wish-axis.integration.test.ts
 
 permissions:
   contents: write
