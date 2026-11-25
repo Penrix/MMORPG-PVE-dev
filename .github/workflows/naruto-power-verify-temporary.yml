@@ -1,4 +1,5 @@
 name: Naruto POWER Verify Temporary
+# Rerun after repository formatter.
 
 on:
   push:
