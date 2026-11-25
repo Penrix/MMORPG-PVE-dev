@@ -38,6 +38,40 @@ export function normalizeOnePieceDataset(input: {
     relations.push({ fromKey, toKey, relation, sourceNote });
   };
 
+  const hakiRootEvidenceKey = "power-rule:haki-system";
+  const ensureHakiRule = (type: string, displayName: string): string => {
+    addRecord({
+      sourceKey: hakiRootEvidenceKey,
+      canonicalKey: "rule:one-piece:haki-system",
+      kind: "rule",
+      name: "Haki System",
+      summary:
+        "Haki system context projected from exact Haki names in the pinned character abilities evidence.",
+      raw: { projection: "recognized_from_character_abilities" },
+      sourceUrl: rawUrl(upstream, "characters.json"),
+      originCollection: "characters.abilities",
+    });
+    const branchKey = "power-rule:haki:" + type;
+    addRecord({
+      sourceKey: branchKey,
+      canonicalKey: "rule:one-piece:haki:" + type,
+      kind: "rule",
+      name: displayName,
+      summary:
+        "Haki branch recognized from an exact upstream abilities[] entry.",
+      raw: { hakiType: type, sourceAbilityName: displayName },
+      sourceUrl: rawUrl(upstream, "characters.json"),
+      originCollection: "characters.abilities",
+    });
+    addRelation(
+      branchKey,
+      hakiRootEvidenceKey,
+      "power_branch_of_recorded",
+      "Exact Haki ability label projected into the shared Haki rule hierarchy.",
+    );
+    return branchKey;
+  };
+
   for (const crew of crews) {
     const id = text(crew.id);
     const name = text(crew.name);
@@ -135,6 +169,23 @@ export function normalizeOnePieceDataset(input: {
         "ability_listed",
         "Verbatim upstream abilities[] entry; availability/mechanics remain provenance-aware.",
       );
+
+      const hakiType = onePieceHakiType(ability);
+      if (hakiType) {
+        const branchKey = ensureHakiRule(hakiType, ability);
+        addRelation(
+          characterKey,
+          branchKey,
+          "haki_type_recorded",
+          "Exact Haki name recognized from upstream character abilities[].",
+        );
+        addRelation(
+          abilityKey,
+          branchKey,
+          "power_branch_reference_recorded",
+          "The listed ability is an instance/reference of this Haki branch.",
+        );
+      }
     }
   }
 
@@ -172,6 +223,26 @@ export function normalizeOnePieceDataset(input: {
       relations,
     },
   ]);
+}
+
+function onePieceHakiType(name: string): string | null {
+  const normalized = name
+    .trim()
+    .toLowerCase()
+    .replaceAll("’", "'")
+    .replace(/\s+/g, " ");
+  const exact: Record<string, string> = {
+    "observation haki": "observation",
+    "armament haki": "armament",
+    "conqueror's haki": "conqueror",
+    "advanced observation": "advanced_observation",
+    "advanced observation haki": "advanced_observation",
+    "advanced armament": "advanced_armament",
+    "advanced armament haki": "advanced_armament",
+    "advanced conqueror's": "advanced_conqueror",
+    "advanced conqueror's haki": "advanced_conqueror",
+  };
+  return exact[normalized] ?? null;
 }
 
 export function normalizeBleachDatabase(input: {
