@@ -227,6 +227,124 @@ describe("program-owned world production, not LLM self-reported completion", () 
     expect(operations[0]).toBe("social");
   });
 
+  it("services a StoryWorldGap before wish selection or generic coverage and keeps its provenance", async () => {
+    const gapRequest: WorldPackRequest = {
+      ...request,
+      scale: "W1",
+      premise: "补齐医疗忍者认可线的真实人物承重",
+      focus: "医疗忍者",
+      storyWorldGap: {
+        id: "gap:medic-person",
+        kind: "missing_object",
+        anchorObjectIds: ["object:medic"],
+        need: "补出能真实承担专业改判责任的人物承重",
+        reason: "认可线缺少真实专业人物承重",
+        productionHint: "people",
+        wishFulfillmentThreadIds: ["wish:medic:recognition"],
+        bearingRequirementIds: ["bearing:medic"],
+        status: "OPEN",
+      },
+      wishFulfillment: {
+        version: "wish-fulfillment-frame.v1",
+        authority: "creative-direction",
+        mode: "project_current",
+        protagonistEntityId: "hero",
+        readerFantasy: "让真实专业人物重新给男主定价",
+        protagonistDesire: "获得专业认可",
+        threads: [{
+          id: "wish:medic:recognition",
+          targetRefs: ["medic"],
+          targetNames: ["医疗忍者"],
+          dimension: "relationship",
+          readerFantasy: "医疗忍者亲自认可并改判",
+          protagonistDesire: "获得专业认可",
+          desiredChange: "从普通处理变成主动认可",
+          privatePrivilege: null,
+          publicRepricing: "专业体系提高男主评级",
+          upgradeLeverage: ["高价任务入口"],
+          phase: "selected",
+        }],
+        bearingRequirements: [{
+          id: "bearing:medic",
+          threadIds: ["wish:medic:recognition"],
+          kind: "person",
+          requirement: "真实专业人物亲自承担改判责任",
+          evidenceRefs: [],
+          status: "missing",
+          raisesPriceBecause: "不是路人夸奖，而是专业人物真实改判",
+        }],
+        settlementTargets: [{
+          threadId: "wish:medic:recognition",
+          assetKind: "status",
+          targetGain: "专业重新估值",
+        }],
+      },
+    };
+    const existingWorld: WorldPackDocument = {
+      ...place,
+      nodes: [{
+        ...place.nodes[0]!,
+        localId: "canon:medic",
+        existingCanonId: "medic",
+        type: "character",
+        name: "医疗忍者",
+        description: "当前真实负责秀信伤情复核的医疗忍者",
+      }],
+    };
+    const seen: string[] = [];
+    const model = {
+      async structured<T>(
+        _run: NarrativeRun,
+        _step: NarrativeRunStep,
+        _purpose: string,
+        prompt: { messages: Array<{ content: string }> },
+        _contract: unknown,
+        validate: (
+          value: unknown,
+        ) => { success: true; data: T } | { success: false; issues: string[] },
+      ) {
+        const input = JSON.parse(prompt.messages[0]!.content) as {
+          operation: string;
+          actualSubject: { ref: string | null; name: string };
+          wishFulfillmentThreadIds?: string[];
+          bearingRequirementIds?: string[];
+        };
+        seen.push(input.operation);
+        expect(input.actualSubject).toEqual({
+          ref: "canon:medic",
+          name: "医疗忍者",
+        });
+        expect(input.wishFulfillmentThreadIds).toEqual([
+          "wish:medic:recognition",
+        ]);
+        expect(input.bearingRequirementIds).toEqual(["bearing:medic"]);
+        const parsed = validate(place);
+        if (!parsed.success) throw new Error(parsed.issues.join("; "));
+        return {
+          value: parsed.data,
+          usage,
+          mode: "native" as const,
+          attempts: 1,
+        };
+      },
+    } as unknown as NarrativeModelClient;
+
+    await expect(
+      runWorldWorkshops({
+        run,
+        step,
+        model,
+        request: gapRequest,
+        basePrompt: "从Story缺口回补世界承重",
+        existingWorld,
+        knownCanonIds: new Set(["medic"]),
+        contract: WORLD_PACK_MODEL_CONTRACT,
+        signal: new AbortController().signal,
+      }),
+    ).rejects.toThrow("world.workshop.no_product");
+    expect(seen[0]).toBe("people");
+  });
+
   it("starts W1 from a known historical power instead of recreating geography", async () => {
     const focus: WorldPackRequest = {
       ...request,
