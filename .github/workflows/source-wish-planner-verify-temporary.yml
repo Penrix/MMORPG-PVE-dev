@@ -1,4 +1,5 @@
 name: Source Wish Planner Verify Temporary
+# Rerun after readonly provenance fix.
 
 on:
   push:
