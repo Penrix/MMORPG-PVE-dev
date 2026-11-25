@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  FantasyBearingKindSchema,
   WishFulfillmentBearingEvidenceSchema,
   WishFulfillmentFrameSchema,
   WishFulfillmentThreadAdvanceSchema,
@@ -601,6 +602,8 @@ export const StoryObjectSurfaceSchema = z.object({
   facet: z.string().min(1),
   slotKey: z.string().min(1),
   value: z.unknown(),
+  /** Module-2 derived author/director-side bearing affordances; not world truth. */
+  bearingKinds: z.array(FantasyBearingKindSchema).min(1).optional(),
 });
 export type StoryObjectSurface = z.infer<typeof StoryObjectSurfaceSchema>;
 
