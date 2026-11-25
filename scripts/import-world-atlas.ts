@@ -15,7 +15,10 @@ import { readdir, readFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { WorldAtlasCardKind } from "@narralume/contracts";
+import {
+  inverseWorldAtlasRelation,
+  type WorldAtlasCardKind,
+} from "@narralume/contracts";
 import {
   NARUTO_DATTEBAYO_CORPUS,
   NARUTO_WIKI_CORPUS,
@@ -225,6 +228,24 @@ async function main(): Promise<void> {
       .get(canonicalCorpusId) as { count: number };
     const totalLinks = totalLinksRow?.count ?? 0;
 
+    // Compliance audit against packages/contracts/src/world-atlas.ts
+    const relRows = db.raw
+      .prepare("SELECT relation FROM source_relations WHERE corpus_id = ?")
+      .all(canonicalCorpusId) as Array<{ relation: string }>;
+    let registeredRelCount = 0;
+    for (const row of relRows) {
+      if (inverseWorldAtlasRelation(row.relation) !== null) {
+        registeredRelCount += 1;
+      }
+    }
+    let templatedSectionCards = 0;
+    for (const rec of allCards) {
+      const full = worlds.getCard(bundle.world.id, rec.sourceKey);
+      if (full && /^##\s+/m.test(full.content)) {
+        templatedSectionCards += 1;
+      }
+    }
+
     const kindCounts: Record<string, number> = {};
     for (const rec of allCards) {
       kindCounts[rec.kind] = (kindCounts[rec.kind] ?? 0) + 1;
@@ -241,7 +262,17 @@ async function main(): Promise<void> {
           worldName: bundle.world.name,
           incomingCards: bundle.cards.length,
           totalCardsInWorld: allCards.length,
+          characterCount: kindCounts.character ?? 0,
+          characterRatio: allCards.length
+            ? `${Math.round(((kindCounts.character ?? 0) / allCards.length) * 100)}%`
+            : "0%",
+          templatedSectionRatio: allCards.length
+            ? `${Math.round((templatedSectionCards / allCards.length) * 100)}%`
+            : "0%",
           totalRelations: totalLinks,
+          registeredRelationRatio: totalLinks
+            ? `${Math.round((registeredRelCount / totalLinks) * 100)}%`
+            : "0%",
           kindCounts,
           unresolvedTargetCount: unresolvedCounts.size,
           topUnresolvedTargets: topUnresolved.map(([name, refs]) => ({
