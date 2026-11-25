@@ -59,6 +59,47 @@ const CoCreateChangesSchema = z.object({
   ),
 });
 
+function uniqueNonEmptyClaims(values: readonly string[]): string[] {
+  return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}
+
+/**
+ * Claims grounded in the accepted chapter. These may realize a fantasy thread,
+ * but not all of them are durable protagonist equity.
+ */
+function groundedSettlementRealityClaims(
+  settlement: GroundedSettlement,
+): string[] {
+  return uniqueNonEmptyClaims([
+    settlement.summary,
+    ...settlement.summaryPoints.map((point) => point.text),
+    ...settlement.stateDelta.map((delta) => JSON.stringify(delta)),
+    ...settlement.factCandidates.map((candidate) => JSON.stringify(candidate)),
+    ...settlement.timelineCandidates.map((candidate) =>
+      JSON.stringify(candidate),
+    ),
+    ...settlement.relationshipCandidates.map((candidate) =>
+      JSON.stringify(candidate),
+    ),
+  ]);
+}
+
+/**
+ * Only changes with durable Canon / relationship write-back may support
+ * retainedAssets. A planned Reader-Time payoff or a timeline beat is not
+ * enough to create reusable equity.
+ */
+function groundedSettlementRetainedClaims(
+  settlement: GroundedSettlement,
+): string[] {
+  return uniqueNonEmptyClaims([
+    ...settlement.factCandidates.map((candidate) => JSON.stringify(candidate)),
+    ...settlement.relationshipCandidates.map((candidate) =>
+      JSON.stringify(candidate),
+    ),
+  ]);
+}
+
 // prettier-ignore
 export class SettlementApplicationService {
   private readonly canon: SqliteCanonRepository;
@@ -141,7 +182,11 @@ export class SettlementApplicationService {
         now,
       });
       if (settlement.success) {
-        this.advanceAcceptedChapterCreativeState(changeSet, now);
+        this.advanceAcceptedChapterCreativeState(
+          changeSet,
+          settlement.data,
+          now,
+        );
       }
       return result;
     });
@@ -164,6 +209,7 @@ export class SettlementApplicationService {
 
   private advanceAcceptedChapterCreativeState(
     changeSet: CanonChangeSetView,
+    settlement: GroundedSettlement,
     now: string,
   ): void {
     const run = this.runs.getRun(changeSet.runId);
@@ -203,6 +249,8 @@ export class SettlementApplicationService {
       handoff,
       frameOutlineNodeId: chapterNode.id,
       updatedAt: now,
+      confirmedRealityClaims: groundedSettlementRealityClaims(settlement),
+      confirmedRetainedClaims: groundedSettlementRetainedClaims(settlement),
     });
     stageStoryCreativeFrameState(this.story, nextState, now);
   }
