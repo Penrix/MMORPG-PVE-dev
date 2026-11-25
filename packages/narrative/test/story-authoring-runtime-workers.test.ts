@@ -290,7 +290,9 @@ describe("StoryAuthoringService", () => {
           expect(serialized).toContain("object:medic");
           expect(serialized).toContain("负责伤员复核");
           expect(serialized).toContain("至少让一个高价对象承载两条以上");
-          expect(serialized).toContain("Reader Fantasy 与 protagonistDesire 必须分开");
+          expect(serialized).toContain(
+            "Reader Fantasy 与 protagonistDesire 必须分开",
+          );
           expect(serialized).toContain("bearingEvidenceCandidates");
 
           const checked = validate({
@@ -389,7 +391,6 @@ describe("StoryAuthoringService", () => {
       result.value.threads.some((thread) => thread.phase === "realized"),
     ).toBe(false);
   });
-
 
   it("searches S03 only on concrete Object Field objects", async () => {
     const objectField = field("S03");

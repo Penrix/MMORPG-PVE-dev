@@ -63,10 +63,9 @@ const STORY_AUTHORING_SEARCH_CONTRACT: JsonSchemaContract = {
   schema: z.toJSONSchema(StoryAuthoringSearchOutputSchema),
 };
 
-const WishFulfillmentPlanningThreadSchema =
-  WishFulfillmentThreadSchema.extend({
-    phase: z.enum(["selected", "candidate"]),
-  });
+const WishFulfillmentPlanningThreadSchema = WishFulfillmentThreadSchema.extend({
+  phase: z.enum(["selected", "candidate"]),
+});
 
 const WishFulfillmentPlanningBearingSchema =
   FantasyBearingRequirementSchema.extend({
@@ -533,7 +532,9 @@ function wishFulfillmentPlanningIssues(
     }
     threadIds.add(thread.id);
     if (thread.targetRefs.length === 0) {
-      issues.push(`thread ${thread.id}: targetRefs must name real Module-2 objects`);
+      issues.push(
+        `thread ${thread.id}: targetRefs must name real Module-2 objects`,
+      );
     }
     for (const targetRef of thread.targetRefs) {
       if (!allowedObjectIds.has(targetRef)) {
@@ -579,14 +580,10 @@ function wishFulfillmentPlanningIssues(
   const settlementThreadIds = new Set<string>();
   for (const target of value.settlementTargets) {
     if (!threadIds.has(target.threadId)) {
-      issues.push(
-        `settlementTargets: unknown threadId ${target.threadId}`,
-      );
+      issues.push(`settlementTargets: unknown threadId ${target.threadId}`);
     }
     if (settlementThreadIds.has(target.threadId)) {
-      issues.push(
-        `settlementTargets: duplicate threadId ${target.threadId}`,
-      );
+      issues.push(`settlementTargets: duplicate threadId ${target.threadId}`);
     }
     settlementThreadIds.add(target.threadId);
   }
