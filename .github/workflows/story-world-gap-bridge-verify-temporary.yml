@@ -1,0 +1,39 @@
+name: Story World Gap Bridge Verify Temporary
+
+on:
+  push:
+    branches:
+      - feat/module3-world-atlas-integration
+    paths:
+      - .github/workflows/story-world-gap-bridge-verify-temporary.yml
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format this batch only
+        run: |
+          npx prettier --write             packages/contracts/src/story-runtime.ts             packages/contracts/src/world-pack.ts             packages/narrative/src/story-authoring-runtime.ts             packages/narrative/src/world-production-engine.ts             packages/narrative/src/world-production-runner.ts             packages/narrative/src/story-director-pipeline.ts             packages/narrative/src/source-world-production.ts             packages/narrative/test/story-authoring-runtime.test.ts             packages/narrative/test/story-director-pipeline.test.ts             packages/narrative/test/world-production-runner.test.ts
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- story-authoring-runtime story-director-pipeline world-production-runner source-world-production
+      - run: npm run build
+      - name: Commit batch formatting
+        run: |
+          FILES="packages/contracts/src/story-runtime.ts packages/contracts/src/world-pack.ts packages/narrative/src/story-authoring-runtime.ts packages/narrative/src/world-production-engine.ts packages/narrative/src/world-production-runner.ts packages/narrative/src/story-director-pipeline.ts packages/narrative/src/source-world-production.ts packages/narrative/test/story-authoring-runtime.test.ts packages/narrative/test/story-director-pipeline.test.ts packages/narrative/test/world-production-runner.test.ts"
+          if git diff --quiet -- $FILES; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add $FILES
+          git commit -m "chore: format story-world-gap bridge batch"
+          git push
