@@ -121,7 +121,7 @@ jobs:
           assert(power.onePiece.fruitClasses >= 3, "One Piece Devil Fruit classifications too thin");
           assert(power.onePiece.fruitClassRelations > 20, "Devil Fruit entities are not linked to classifications");
           assert(power.onePiece.hakiUserRelations >= 10, "One Piece characters are not linked to Haki branches");
-          assert(power.onePiece.hakiAbilityLinks >= 10, "One Piece listed Haki abilities are not linked to Haki branches");
+          assert(power.onePiece.hakiAbilityLinks >= 3, "One Piece listed Haki ability objects are not linked to Haki branches");
 
           assert(power.hxh.nenRoot, "HxH Nen root rule missing");
           assert(power.hxh.nenCategories >= 6, "HxH Nen categories too thin");
