@@ -1,4 +1,5 @@
 name: Naruto POWER Format Temporary
+# Final format pass after docs and permanent CI.
 
 on:
   push:
