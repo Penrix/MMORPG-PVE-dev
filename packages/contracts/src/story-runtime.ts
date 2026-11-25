@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  WishFulfillmentBearingEvidenceSchema,
   WishFulfillmentFrameSchema,
   WishFulfillmentThreadAdvanceSchema,
 } from "./wish-fulfillment.js";
@@ -1047,6 +1048,18 @@ export const StoryUnitDesignSchema = z.object({
   wishFulfillmentAdvances: z
     .array(WishFulfillmentThreadAdvanceSchema)
     .optional(),
+  /**
+   * New author-side contract: every bearing requirement names its own
+   * Module-2 evidence. One price surface may not silently ground private
+   * trust, access, history, affection, authority, etc.
+   */
+  bearingEvidence: z
+    .array(WishFulfillmentBearingEvidenceSchema)
+    .optional(),
+  /**
+   * @deprecated Compatibility for older saved StoryUnits. Runtime may map this
+   * only when exactly one ungrounded bearing requirement is relevant.
+   */
   bearingEvidenceRefs: z.array(z.string().min(1)).optional(),
   objectAnchorIds: z.array(z.string().min(1)),
   groundingSurfaceRefs: z.array(z.string().min(1)),
