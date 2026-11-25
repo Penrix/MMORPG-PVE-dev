@@ -1,6 +1,7 @@
 import { worldAtlasNarrativePriority } from "@narralume/contracts";
 import type { ContextSource } from "@narralume/context";
 import type { NarrativeDatabase } from "./database.js";
+import { SqliteUnifiedSourceWorldRepository } from "./unified-source-world-repository.js";
 import {
   SqliteProjectRealityRepository,
   type ProjectRealityView,
@@ -67,9 +68,11 @@ export interface WorldAtlasStoryContextRequest {
  */
 export class WorldAtlasStoryContextBuilder {
   private readonly reality: SqliteProjectRealityRepository;
+  private readonly sourceWorlds: SqliteUnifiedSourceWorldRepository;
 
   constructor(database: NarrativeDatabase) {
     this.reality = new SqliteProjectRealityRepository(database);
+    this.sourceWorlds = new SqliteUnifiedSourceWorldRepository(database);
   }
 
   build(request: WorldAtlasStoryContextRequest): WorldAtlasStoryContext {
@@ -98,6 +101,29 @@ export class WorldAtlasStoryContextBuilder {
       const sourceIdentityAndRelations = source
         .filter((slot) => !(slot.facet === "lore" && slot.slotKey === "card"))
         .sort(compareNarrativeReferenceSlots);
+
+      const readerSemanticSurfaces: WorldAtlasStoryObjectSurface[] = [];
+      for (const sourceReference of view.sourceReferences) {
+        const world = this.sourceWorlds
+          .listWorlds()
+          .find(
+            (candidate) =>
+              candidate.canonicalCorpusId === sourceReference.link.corpusId,
+          );
+        if (!world) continue;
+        const semantics = this.sourceWorlds.getReaderSemantics(
+          world.id,
+          sourceReference.link.sourceKey,
+        );
+        if (!semantics) continue;
+        readerSemanticSurfaces.push({
+          authority: "reference",
+          sourceId: `world-reader-semantics:${view.entity.id}:${world.id}`,
+          facet: "reader_semantics",
+          slotKey: sourceReference.link.sourceKey,
+          value: semantics,
+        });
+      }
 
       const objectSurfaces: WorldAtlasStoryObjectSurface[] = [
         // Canon entity identity is always current Project Reality, even when
@@ -129,6 +155,7 @@ export class WorldAtlasStoryContextBuilder {
           slotKey: slot.slotKey,
           value: slot.value,
         })),
+        ...readerSemanticSurfaces,
       ];
       objects.push({
         entityId: view.entity.id,

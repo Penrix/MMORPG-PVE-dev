@@ -125,6 +125,7 @@ export function storyObjectFieldFromWorldContext(
         (surface) =>
           input.scale === "S01" ||
           surface.authority === "confirmed" ||
+          surface.facet === "reader_semantics" ||
           (surface.facet === "state" && surface.slotKey === "source_identity"),
       );
       return {
@@ -170,6 +171,7 @@ export function finalizeStoryObjectField(
       if (
         parsed.scale !== "S01" &&
         surface.authority === "reference" &&
+        surface.facet !== "reader_semantics" &&
         !(surface.facet === "state" && surface.slotKey === "source_identity")
       ) {
         throw new Error(

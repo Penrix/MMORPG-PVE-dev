@@ -72,6 +72,20 @@ describe("Module 3 World Atlas context adapter", () => {
       content: "# 禁术甲\n\n测试能力。",
       now,
     });
+    worlds.upsertReaderSemantics({
+      worldId: "naruto",
+      entityKey: "kakashi",
+      semantics: {
+        readerPrice: "卡卡西级上忍是 Reader 一眼认识的高价专业评价者",
+        preloadedExpectations: ["他的公开认可会显著抬高男主价格"],
+        familiarRelations: ["木叶上忍与第七班导师"],
+        naturalEntrances: ["任务复核", "忍术指导"],
+        attentionTriggers: ["卡卡西主动注意一个低位忍者"],
+        basis: "author_judgment",
+        sourceNote: "测试 Reader 预装价格",
+      },
+      now,
+    });
     worlds.upsertCard({
       worldId: "naruto",
       entityKey: "hero-source",
@@ -89,6 +103,20 @@ describe("Module 3 World Atlas context adapter", () => {
         "## 原著后续",
         "原著未来会离开木叶。",
       ].join("\n"),
+      now,
+    });
+    worlds.upsertReaderSemantics({
+      worldId: "naruto",
+      entityKey: "hero-source",
+      semantics: {
+        readerPrice: "男主母体身份本身价格低，适合承载重新估值",
+        preloadedExpectations: ["低位进入高价忍者圈"],
+        familiarRelations: [],
+        naturalEntrances: ["木叶医院", "任务体系"],
+        attentionTriggers: ["被高价上忍重新定价"],
+        basis: "author_judgment",
+        sourceNote: "测试男主 Reader semantics",
+      },
       now,
     });
     sources.bindProject("p1", "wiki:naruto");
@@ -213,9 +241,33 @@ describe("Module 3 World Atlas context adapter", () => {
         (surface) => surface.authority === "reference",
       ),
     ).toBe(true);
+    expect(
+      context.objects[0]!.surfaces.some(
+        (surface) =>
+          surface.authority === "reference" &&
+          surface.facet === "reader_semantics" &&
+          JSON.stringify(surface.value).includes("低位进入高价忍者圈"),
+      ),
+    ).toBe(true);
     expect(JSON.stringify(context.objects[0])).not.toContain(
       "原著未来会离开木叶",
     );
+
+    const pricedField = storyObjectFieldFromWorldContext({
+      projectId: "p1",
+      scale: "S04",
+      storyTimeLabel: "当前",
+      realityFingerprint: "reality:priced",
+      storyStateFingerprint: "story:priced",
+      context,
+    });
+    expect(
+      pricedField.objects[0]?.surfaces.some(
+        (surface) =>
+          surface.authority === "reference" &&
+          surface.facet === "reader_semantics",
+      ),
+    ).toBe(true);
 
     expect(context.referenceDetail).toHaveLength(1);
     expect(context.referenceDetail[0]!.content).toContain("原著未来会离开木叶");
