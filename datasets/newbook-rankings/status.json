@@ -1,22 +1,21 @@
 {
-  "updatedAt": "2026-11-24T04:30:47.767Z",
-  "observedDate": "2026-11-24",
+  "updatedAt": "2026-11-26T02:16:51.036Z",
+  "observedDate": "2026-11-26",
   "partial": true,
-  "total": 272,
-  "addedThisRun": 199,
-  "updatedThisRun": 73,
+  "total": 317,
+  "addedThisRun": 45,
+  "updatedThisRun": 220,
   "skippedInvalidThisRun": 0,
   "byPlatform": {
-    "ciweimao": 9,
-    "fanqie": 190,
-    "qidian": 73
+    "fanqie": 225,
+    "qidian": 83,
+    "ciweimao": 9
   },
   "rawFiles": {
-    "刺猬猫新书榜_20261124.md": 9,
-    "番茄男频新书榜_全题材_20261124.md": 190,
-    "起点三江推荐_20261124.md": 17,
-    "起点公众作者新书榜_20261124.md": 20,
-    "起点新人作者新书榜_20261124.md": 20,
-    "起点签约作者新书榜_20261124.md": 20
+    "番茄男频新书榜_全题材_20261126.md": 190,
+    "起点三江推荐_20261126.md": 17,
+    "起点公众作者新书榜_20261126.md": 20,
+    "起点新人作者新书榜_20261126.md": 20,
+    "起点签约作者新书榜_20261126.md": 20
   }
 }
